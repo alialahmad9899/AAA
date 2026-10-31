@@ -19,13 +19,26 @@ class EmailVerifiedApi
     {
         $user = auth()->user();
 
-        // السماح بطلب الصورة الأولية أثناء إكمال التسجيل فقط؛ لا نفتح بقية API قبل التحقق.
-        if (
-            $user &&
-            $request->is('api/member/basic-info/update') &&
-            $request->hasFile('photo')
-        ) {
-            return $next($request);
+        // السماح بكتابات إكمال الملف الشخصي للمستخدم الموثق حسابياً،
+        // حتى يستطيع إتمام التسجيل قبل تأكيد البريد. لا يشمل ذلك أي طلبات قراءة أو محادثات.
+        $profileSetupWritePaths = [
+            'api/member/basic-info/update',
+            'api/member/physical-attributes/update',
+            'api/member/residency-info/update',
+            'api/member/spiritual-background/update',
+            'api/member/partner-expectation/update',
+            'api/member/education',
+            'api/member/education/*',
+            'api/member/career',
+            'api/member/career/*',
+        ];
+
+        if ($user && in_array(strtoupper($request->method()), ['POST', 'PUT', 'PATCH'], true)) {
+            foreach ($profileSetupWritePaths as $allowedPath) {
+                if ($request->is($allowedPath)) {
+                    return $next($request);
+                }
+            }
         }
 
         if (
