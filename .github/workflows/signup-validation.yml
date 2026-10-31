@@ -98,8 +98,8 @@ jobs:
           cp .github/workflows/signup-validation.yml "$FIXES_DIR/CI/"
 
           ZIP_FILE="ملفات الاتسضافة.zip"
-          AUTH_PATH="$(unzip -Z1 "$ZIP_FILE" | grep -E '(^|/)app/Http/Controllers/Api/AuthController.php | head -n 1)"
-          REQUEST_PATH="$(unzip -Z1 "$ZIP_FILE" | grep -E '(^|/)app/Http/Requests/AuthRequest.php | head -n 1)"
+          AUTH_PATH="$(unzip -Z1 "$ZIP_FILE" | grep 'AuthController.php' | head -n 1)"
+          REQUEST_PATH="$(unzip -Z1 "$ZIP_FILE" | grep 'AuthRequest.php' | head -n 1)"
           test -n "$AUTH_PATH"
           test -n "$REQUEST_PATH"
 
