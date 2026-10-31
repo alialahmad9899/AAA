@@ -527,10 +527,10 @@ class _SignupScreenState extends State<SignupScreen> {
             'partner_education': _partnerEducation ?? 'بكالوريوس',
             'pertner_education': _partnerEducation ?? 'بكالوريوس',
             'partner_profession': _partnerProfessionController.text.trim(),
-            if (_partnerMaritalStatusId ?? _maritalStatusId != null)
+            if ((_partnerMaritalStatusId ?? _maritalStatusId) != null)
               'partner_marital_status':
                   _partnerMaritalStatusId ?? _maritalStatusId,
-            if (_partnerReligionId ?? _religionId != null)
+            if ((_partnerReligionId ?? _religionId) != null)
               'partner_religion_id': _partnerReligionId ?? _religionId,
             if (_partnerLanguageId != null)
               'language_id': _partnerLanguageId,
