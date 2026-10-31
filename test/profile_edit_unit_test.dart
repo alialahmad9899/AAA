@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:wesal_app/services/api_service.dart';
 import 'package:wesal_app/models/member_profile_model.dart';
 
 void main() {
@@ -68,4 +69,45 @@ void main() {
       expect(profile.physicalAttributes?.weight, '75');
     });
   });
+  group('ApiService API write response validation', () {
+    test('rejects empty responses', () {
+      expect(ApiService.isSuccessfulResult({}), false);
+      expect(ApiService.isSuccessfulResult(null), false);
+    });
+
+    test('rejects explicit failures and validation errors', () {
+      expect(ApiService.isSuccessfulResult({'result': false}), false);
+      expect(ApiService.isSuccessfulResult({'result': 'false'}), false);
+      expect(
+        ApiService.isSuccessfulResult({
+          'result': true,
+          'errors': {'email': ['Already exists']},
+        }),
+        false,
+      );
+    });
+
+    test('accepts successful API envelopes', () {
+      expect(ApiService.isSuccessfulResult({'result': true}), true);
+      expect(ApiService.isSuccessfulResult({'status': 'success'}), true);
+      expect(
+        ApiService.isSuccessfulResult({
+          'result': true,
+          'message': 'Saved successfully',
+        }),
+        true,
+      );
+    });
+
+    test('rejects nested failed response envelopes', () {
+      expect(
+        ApiService.isSuccessfulResult({
+          'result': true,
+          'data': {'result': false, 'message': 'Rejected'},
+        }),
+        false,
+      );
+    });
+  });
+
 }
