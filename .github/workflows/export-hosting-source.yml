@@ -26,9 +26,9 @@ jobs:
           mkdir -p "$WORK/extracted" "$WORK/source"
           unzip -q "$ZIP_FILE" -d "$WORK/extracted"
 
-          ROOT="$(find "$WORK/extracted" -type f -name artisan -printf '%h\n' | head -n 1)"
+          ROOT="$(find "$WORK/extracted" -type f -path '*/bootstrap/app.php' -printf '%h\n' | sed 's#/bootstrap$##' | head -n 1)"
           if [ -z "$ROOT" ]; then
-            echo "Laravel artisan entrypoint was not found in hosting archive."
+            echo "Laravel bootstrap/app.php entrypoint was not found in hosting archive."
             find "$WORK/extracted" -maxdepth 4 -type f | head -n 200
             exit 1
           fi
