@@ -381,12 +381,8 @@ class ApiService {
     if (statusCode < 200 || statusCode >= 300) return false;
     if (statusCode == 204) return true;
     if (responseData is Map) {
-      // بعض نقاط API القديمة تعيد HTTP 200 مع جسم فارغ أو {} عند النجاح.
-      // نحافظ على توافق تحديثات الملف الشخصي معها، لكن نرفض أي فشل صريح.
-      if (responseData.isEmpty) return true;
       return isSuccessfulResult(Map<String, dynamic>.from(responseData));
     }
-    if (responseData == null) return true;
     if (responseData is bool) return responseData;
     if (responseData is num) return responseData != 0;
     if (responseData is String) {
@@ -901,7 +897,20 @@ class ApiService {
       request.fields['password_confirmation'] = passwordConfirmation.trim();
       request.fields['checkbox_example_1'] = '1';
 
-      if (photoFile != null && await photoFile.exists()) {
+      if (photoFile != null) {
+        if (!await photoFile.exists()) {
+          return {
+            'success': false,
+            'message': 'ملف الصورة المحدد غير موجود. يرجى اختيار الصورة مرة أخرى.',
+          };
+        }
+        final photoSize = await photoFile.length();
+        if (photoSize <= 0 || photoSize > 10 * 1024 * 1024) {
+          return {
+            'success': false,
+            'message': 'يجب أن يكون حجم الصورة أكبر من صفر وألا يتجاوز 10 ميغابايت.',
+          };
+        }
         request.files.add(
           await http.MultipartFile.fromPath('photo', photoFile.path),
         );
@@ -926,27 +935,48 @@ class ApiService {
           ? Map<String, dynamic>.from(decoded)
           : <String, dynamic>{};
 
-      if ((response.statusCode == 200 || response.statusCode == 201) &&
-          responseData['result'] != false) {
+      final bool responseSucceeded =
+          _isHttpResponseSuccessful(response.statusCode, responseData);
+      final dynamic authData =
+          responseData['data'] is Map ? responseData['data'] : const {};
+      final dynamic rawToken = responseData['access_token'] ??
+          responseData['token'] ??
+          (authData is Map
+              ? authData['access_token'] ?? authData['token']
+              : null);
+      final String token = rawToken?.toString().trim() ?? '';
+
+      if (responseSucceeded && token.isNotEmpty) {
         await ProfileCacheService.clearCache();
         clearDropdownCache();
 
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        String? token = responseData['access_token'] ?? responseData['token'];
-        if (token != null) {
-          await saveToken(token);
+        await saveToken(token);
+        final savedToken = await getToken();
+        if (savedToken == null || savedToken.isEmpty) {
+          return {
+            'success': false,
+            'message':
+                'تم إنشاء الحساب لكن تعذر حفظ جلسة الدخول. يرجى تسجيل الدخول.',
+          };
         }
-        if (responseData['user'] != null &&
-            responseData['user']['id'] != null) {
-          await prefs.setInt('user_id', responseData['user']['id']);
+
+        final SharedPreferences prefs = await SharedPreferences.getInstance();
+        final dynamic userData = responseData['user'] ??
+            (authData is Map ? authData['user'] : null);
+        final dynamic rawUserId = userData is Map ? userData['id'] : null;
+        final int? userId = rawUserId is int
+            ? rawUserId
+            : int.tryParse(rawUserId?.toString() ?? '');
+        if (userId != null) {
+          await prefs.setInt('user_id', userId);
         }
         return {'success': true, 'data': responseData};
-      } else {
-        return {
-          'success': false,
-          'message': _parseErrorMessage(responseData, response.statusCode),
-        };
       }
+
+      final message = responseSucceeded && token.isEmpty
+          ? 'استجاب الخادم لإنشاء الحساب دون إرجاع رمز جلسة صالح. يرجى تسجيل الدخول أو التواصل مع الدعم.'
+          : _parseErrorMessage(responseData, response.statusCode);
+      return {'success': false, 'message': message};
     } on TimeoutException {
       return {'success': false, 'message': 'انتهت مهلة الاتصال بالسيرفر'};
     } on SocketException {
@@ -1603,11 +1633,7 @@ class ApiService {
       }
 
       final bool isSuccess =
-          (response.statusCode == 200 || response.statusCode == 201) &&
-              responseData is Map &&
-              (responseData['result'] == true ||
-                  responseData['status'] == true ||
-                  responseData['result'] != false);
+          _isHttpResponseSuccessful(response.statusCode, responseData);
 
       return {
         'success': isSuccess,
@@ -1616,6 +1642,7 @@ class ApiService {
             : (isSuccess
                 ? 'تم تحديث البيانات التعليمية بنجاح'
                 : 'فشل تحديث البيانات التعليمية'),
+        'data': responseData,
       };
     } catch (e) {
       if (kDebugMode) debugPrint('❌ [API ERROR updateEducation]: $e');
@@ -1719,11 +1746,7 @@ class ApiService {
       }
 
       final bool isSuccess =
-          (response.statusCode == 200 || response.statusCode == 201) &&
-              responseData is Map &&
-              (responseData['result'] == true ||
-                  responseData['status'] == true ||
-                  responseData['result'] != false);
+          _isHttpResponseSuccessful(response.statusCode, responseData);
 
       return {
         'success': isSuccess,
@@ -1732,6 +1755,7 @@ class ApiService {
             : (isSuccess
                 ? 'تم تحديث البيانات المهنية بنجاح'
                 : 'فشل تحديث البيانات المهنية'),
+        'data': responseData,
       };
     } catch (e) {
       if (kDebugMode) debugPrint('❌ [API ERROR updateCareer]: $e');
@@ -1775,7 +1799,7 @@ class ApiService {
       if (!enrichedPayload.containsKey('blood_group') ||
           enrichedPayload['blood_group'] == null ||
           enrichedPayload['blood_group'].toString().isEmpty) {
-        enrichedPayload['blood_group'] = 'O+';
+        enrichedPayload['blood_group'] = 'N/A';
       }
       if (!enrichedPayload.containsKey('body_type') ||
           enrichedPayload['body_type'] == null ||
@@ -1823,8 +1847,7 @@ class ApiService {
       }
 
       final bool isSuccess =
-          (response.statusCode == 200 || response.statusCode == 201) &&
-              !(data is Map && data['result'] == false);
+          _isHttpResponseSuccessful(response.statusCode, data);
 
       return {
         'success': isSuccess,
@@ -1899,11 +1922,15 @@ class ApiService {
         data = null;
       }
 
+      final bool isSuccess =
+          _isHttpResponseSuccessful(response.statusCode, data);
       return {
-        'success': response.statusCode == 200 || response.statusCode == 201,
+        'success': isSuccess,
         'message': (data is Map && data['message'] != null)
             ? data['message']
-            : 'تم تحديث البيانات الدينية بنجاح',
+            : (isSuccess
+                ? 'تم تحديث البيانات الدينية بنجاح'
+                : 'فشل تحديث البيانات الدينية'),
       };
     } catch (e) {
       if (kDebugMode) debugPrint('❌ [API ERROR updateSpiritualBackground]: $e');
@@ -1983,11 +2010,15 @@ class ApiService {
         data = null;
       }
 
+      final bool isSuccess =
+          _isHttpResponseSuccessful(response.statusCode, data);
       return {
-        'success': response.statusCode == 200 || response.statusCode == 201,
+        'success': isSuccess,
         'message': (data is Map && data['message'] != null)
             ? data['message']
-            : 'تم تحديث معلومات الإقامة بنجاح',
+            : (isSuccess
+                ? 'تم تحديث معلومات الإقامة بنجاح'
+                : 'فشل تحديث معلومات الإقامة'),
       };
     } catch (e) {
       if (kDebugMode) debugPrint('❌ [API ERROR updateResidencyInfo]: $e');
@@ -2400,11 +2431,7 @@ class ApiService {
         jsonResponse = null;
       }
 
-      if ((response.statusCode == 200 || response.statusCode == 201) &&
-          jsonResponse is Map &&
-          (jsonResponse['status'] == 'success' ||
-              jsonResponse['result'] == true ||
-              jsonResponse['result'] != false)) {
+      if (_isHttpResponseSuccessful(response.statusCode, jsonResponse)) {
         return {
           'success': true,
           'message': jsonResponse['message'] ??
