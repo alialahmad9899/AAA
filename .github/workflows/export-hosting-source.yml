@@ -1,0 +1,58 @@
+name: Export hosting Laravel source for audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/export-hosting-source.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export-hosting-source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract Laravel application source from hosting archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP_FILE="ملفات الاتسضافة.zip"
+          test -s "$ZIP_FILE"
+          WORK="$RUNNER_TEMP/hosting-export"
+          mkdir -p "$WORK/extracted" "$WORK/source"
+          unzip -q "$ZIP_FILE" -d "$WORK/extracted"
+
+          ROOT="$(find "$WORK/extracted" -type f -name artisan -printf '%h\n' | head -n 1)"
+          if [ -z "$ROOT" ]; then
+            echo "Laravel artisan entrypoint was not found in hosting archive."
+            find "$WORK/extracted" -maxdepth 4 -type f | head -n 200
+            exit 1
+          fi
+
+          for directory in app routes config database bootstrap; do
+            if [ -d "$ROOT/$directory" ]; then
+              cp -a "$ROOT/$directory" "$WORK/source/"
+            fi
+          done
+          for file in composer.json composer.lock artisan; do
+            if [ -f "$ROOT/$file" ]; then
+              cp "$ROOT/$file" "$WORK/source/"
+            fi
+          done
+
+          echo "Exported Laravel root: $ROOT"
+          find "$WORK/source" -type f | sort
+          cd "$WORK"
+          zip -qr "$RUNNER_TEMP/hosting-source-audit.zip" source
+
+      - name: Upload extracted Laravel source
+        uses: actions/upload-artifact@v4
+        with:
+          name: hosting-source-audit
+          path: ${{ runner.temp }}/hosting-source-audit.zip
+          if-no-files-found: error
+          retention-days: 2
