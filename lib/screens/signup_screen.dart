@@ -324,6 +324,22 @@ class _SignupScreenState extends State<SignupScreen> {
           isAr ? 'تعذر حفظ المواصفات الجسدية' : 'Failed to save physical details',
         );
 
+        // Read the current user's rows first. This makes retries safe even after
+        // the app is closed or the previous create response was interrupted.
+        final educationResponse =
+            await ApiService.getEducation(lang: widget.currentLanguage);
+        if (educationResponse == null || educationResponse['result'] == false) {
+          throw _SignupStepSaveException(
+            isAr
+                ? 'تعذر التحقق من السجل التعليمي الحالي. لم نرسل طلب إنشاء جديد لتجنب التكرار.'
+                : 'Could not verify existing education records. No create request was sent to avoid duplicates.',
+          );
+        }
+        _educationRecordId ??= _extractRecordId(
+          educationResponse,
+          const {'id', 'education_id'},
+        );
+
         final educationPayload = <String, dynamic>{
           'degree': _educationDegree ?? 'بكالوريوس',
           'institution': _institutionController.text.trim(),
@@ -353,6 +369,20 @@ class _SignupScreenState extends State<SignupScreen> {
               _extractRecordId(result, const {'id', 'education_id'});
           _educationSavedFingerprint = educationFingerprint;
         }
+
+        final careerResponse =
+            await ApiService.getCareer(lang: widget.currentLanguage);
+        if (careerResponse == null || careerResponse['result'] == false) {
+          throw _SignupStepSaveException(
+            isAr
+                ? 'تعذر التحقق من سجل العمل الحالي. لم نرسل طلب إنشاء جديد لتجنب التكرار.'
+                : 'Could not verify existing career records. No create request was sent to avoid duplicates.',
+          );
+        }
+        _careerRecordId ??= _extractRecordId(
+          careerResponse,
+          const {'id', 'career_id'},
+        );
 
         final careerPayload = <String, dynamic>{
           'designation': _designationController.text.trim(),
@@ -497,10 +527,13 @@ class _SignupScreenState extends State<SignupScreen> {
             'partner_education': _partnerEducation ?? 'بكالوريوس',
             'pertner_education': _partnerEducation ?? 'بكالوريوس',
             'partner_profession': _partnerProfessionController.text.trim(),
-            'partner_marital_status':
-                _partnerMaritalStatusId ?? _maritalStatusId ?? '1',
-            'partner_religion_id': _partnerReligionId ?? _religionId ?? '1',
-            'language_id': _partnerLanguageId ?? '1',
+            if (_partnerMaritalStatusId ?? _maritalStatusId != null)
+              'partner_marital_status':
+                  _partnerMaritalStatusId ?? _maritalStatusId,
+            if (_partnerReligionId ?? _religionId != null)
+              'partner_religion_id': _partnerReligionId ?? _religionId,
+            if (_partnerLanguageId != null)
+              'language_id': _partnerLanguageId,
             'partner_children_acceptable': _partnerChildrenAcceptable,
             'smoking_acceptable': _partnerSmokingAcceptable,
             'drinking_acceptable': _partnerDrinkingAcceptable,
