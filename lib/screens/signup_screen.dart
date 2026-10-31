@@ -5,6 +5,7 @@
 //        مع دعم استقبال بيانات Google التلقائية وإشتراط رفع الصورة الشخصية.
 // ============================================================================
 
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -20,6 +21,14 @@ import 'widgets/step1_basic_info.dart';
 import 'widgets/step2_personal_details.dart';
 import 'widgets/step3_residency_religion.dart';
 import 'widgets/step4_partner_expectations.dart';
+
+class _SignupStepSaveException implements Exception {
+  final String message;
+  const _SignupStepSaveException(this.message);
+
+  @override
+  String toString() => message;
+}
 
 class SignupScreen extends StatefulWidget {
   final String currentLanguage;
@@ -43,6 +52,11 @@ class _SignupScreenState extends State<SignupScreen> {
   int _currentStep = 0;
   bool _isLoading = false;
   bool _isAccountCreated = false;
+
+  String? _educationSavedFingerprint;
+  String? _careerSavedFingerprint;
+  int? _educationRecordId;
+  int? _careerRecordId;
 
   // مفاتيح التحقق من صحة حقول النماذج لكل خطوة
   final _step1Key = GlobalKey<FormState>();
@@ -137,6 +151,43 @@ class _SignupScreenState extends State<SignupScreen> {
     super.dispose();
   }
 
+  Future<Map<String, dynamic>> _requireSignupSave(
+    Future<Map<String, dynamic>> request,
+    String fallbackMessage,
+  ) async {
+    final result = await request;
+    if (result['success'] != true) {
+      final message = result['message']?.toString().trim();
+      throw _SignupStepSaveException(
+        message != null && message.isNotEmpty ? message : fallbackMessage,
+      );
+    }
+    return result;
+  }
+
+  int? _extractRecordId(dynamic value, Set<String> idKeys) {
+    if (value is Map) {
+      for (final key in idKeys) {
+        final rawId = value[key];
+        final parsedId = rawId is int
+            ? rawId
+            : int.tryParse(rawId?.toString() ?? '');
+        if (parsedId != null && parsedId > 0) return parsedId;
+      }
+      for (final key in const ['data', 'education', 'career', 'record']) {
+        final found = _extractRecordId(value[key], idKeys);
+        if (found != null) return found;
+      }
+    } else if (value is List && value.isNotEmpty) {
+      return _extractRecordId(value.first, idKeys);
+    }
+    return null;
+  }
+
+  String _stepErrorMessage(Object error, String fallback) {
+    return error is _SignupStepSaveException ? error.message : fallback;
+  }
+
   /// 🔄 معالجة الانتقال والتثبت من صحة البيانات في كل خطوة
   Future<void> _handleNextStep() async {
     FocusScope.of(context).unfocus();
@@ -146,11 +197,22 @@ class _SignupScreenState extends State<SignupScreen> {
     // 🟢 الخطوة الأولى: إنشاء الحساب ورفع الصورة الشخصية
     // ------------------------------------------------------------------------
     if (_currentStep == 0) {
-      if (_profilePhoto == null) {
+      final profilePhoto = _profilePhoto;
+      if (profilePhoto == null || !await profilePhoto.exists()) {
         _showNotification(
           isAr
-              ? 'يرجى اختيار صورة شخصية لإكمال إنشاء الحساب'
-              : 'Profile photo is required to complete registration',
+              ? 'يرجى اختيار صورة شخصية موجودة لإكمال إنشاء الحساب'
+              : 'Please select an existing profile photo',
+          NotificationType.warning,
+        );
+        return;
+      }
+      final photoSize = await profilePhoto.length();
+      if (photoSize <= 0 || photoSize > 10 * 1024 * 1024) {
+        _showNotification(
+          isAr
+              ? 'يجب أن يكون حجم الصورة أكبر من صفر وألا يتجاوز 10 ميغابايت'
+              : 'The profile photo must be larger than zero and no more than 10 MB',
           NotificationType.warning,
         );
         return;
@@ -192,35 +254,23 @@ class _SignupScreenState extends State<SignupScreen> {
             password: _passwordController.text.trim(),
             passwordConfirmation: _confirmPasswordController.text.trim(),
             onBehalf: _onBehalf,
+            photoFile: profilePhoto,
           );
 
           if (!mounted) return;
 
           if (result['success'] == true) {
-            _isAccountCreated = true;
-            final token =
-                result['data']?['access_token'] ?? result['data']?['token'];
-            if (token != null && token.toString().isNotEmpty) {
-              await ApiService.saveToken(token.toString());
-            }
-
-            // 🟢 رفع الصورة الشخصية المحددة فور نجاح إنشاء الحساب
-            try {
-              await ApiService.updateBasicInfo(
-                firstName: _firstNameController.text.trim(),
-                lastName: _lastNameController.text.trim(),
-                phone: '',
-                gender: _gender,
-                dateOfBirth: _dobController.text.trim(),
-                maritalStatus: '1',
-                onBehalf: _onBehalf,
-                children: '0',
-                photoFile: _profilePhoto,
-                lang: widget.currentLanguage,
+            final token = await ApiService.getToken();
+            if (token == null || token.isEmpty) {
+              _showNotification(
+                isAr
+                    ? 'تم إنشاء الحساب لكن تعذر حفظ جلسة الدخول. يرجى تسجيل الدخول مجدداً'
+                    : 'The account was created, but the login session could not be saved. Please sign in again.',
+                NotificationType.error,
               );
-            } catch (e) {
-              debugPrint('⚠️ [Upload Signup Photo Error]: $e');
+              return;
             }
+            _isAccountCreated = true;
 
             // ربط رمز الإشعارات عبر الخدمة المركزية بعد حفظ جلسة الحساب.
             try {
@@ -260,37 +310,91 @@ class _SignupScreenState extends State<SignupScreen> {
 
       setState(() => _isLoading = true);
       try {
-        await Future.wait([
+        await _requireSignupSave(
           ApiService.updatePhysicalAttributes({
             'height': (_height / 100).toStringAsFixed(2),
             'weight': _weight.round().toString(),
             'eye_color': _eyeColor,
             'hair_color': _hairColor,
             'complexion': _complexion,
-            'blood_group': 'O+',
+            'blood_group': 'N/A',
             'body_type': _bodyType,
             'body_art': _bodyArt,
           }, lang: widget.currentLanguage),
-          ApiService.updateEducation({
-            'degree': _educationDegree ?? 'بكالوريوس',
-            'institution': _institutionController.text.trim(),
-            'education_start': '2026',
-          }, lang: widget.currentLanguage),
-          ApiService.updateCareer({
-            'designation': _designationController.text.trim(),
-            'company': 'مستقل',
-            'career_start': '2026',
-          }, lang: widget.currentLanguage),
-        ]);
+          isAr ? 'تعذر حفظ المواصفات الجسدية' : 'Failed to save physical details',
+        );
+
+        final educationPayload = <String, dynamic>{
+          'degree': _educationDegree ?? 'بكالوريوس',
+          'institution': _institutionController.text.trim(),
+          'education_start': '2026',
+        };
+        final educationFingerprint = jsonEncode(educationPayload);
+        if (_educationSavedFingerprint != educationFingerprint) {
+          if (_educationSavedFingerprint != null && _educationRecordId == null) {
+            throw _SignupStepSaveException(
+              isAr
+                  ? 'تم حفظ التعليم سابقاً، لكن الخادم لم يُرجع معرّف السجل اللازم لتعديله. لم نكرر الإرسال حتى لا ينشأ سجل مكرر.'
+                  : 'Education was saved already, but the server did not return its record ID. It was not resent to avoid a duplicate row.',
+            );
+          }
+          final educationRequest = <String, dynamic>{
+            ...educationPayload,
+            if (_educationRecordId != null) 'id': _educationRecordId,
+          };
+          final result = await _requireSignupSave(
+            ApiService.updateEducation(
+              educationRequest,
+              lang: widget.currentLanguage,
+            ),
+            isAr ? 'تعذر حفظ البيانات التعليمية' : 'Failed to save education details',
+          );
+          _educationRecordId ??=
+              _extractRecordId(result, const {'id', 'education_id'});
+          _educationSavedFingerprint = educationFingerprint;
+        }
+
+        final careerPayload = <String, dynamic>{
+          'designation': _designationController.text.trim(),
+          'company': '',
+          'career_start': '2026',
+        };
+        final careerFingerprint = jsonEncode(careerPayload);
+        if (_careerSavedFingerprint != careerFingerprint) {
+          if (_careerSavedFingerprint != null && _careerRecordId == null) {
+            throw _SignupStepSaveException(
+              isAr
+                  ? 'تم حفظ العمل سابقاً، لكن الخادم لم يُرجع معرّف السجل اللازم لتعديله. لم نكرر الإرسال حتى لا ينشأ سجل مكرر.'
+                  : 'Career was saved already, but the server did not return its record ID. It was not resent to avoid a duplicate row.',
+            );
+          }
+          final careerRequest = <String, dynamic>{
+            ...careerPayload,
+            if (_careerRecordId != null) 'id': _careerRecordId,
+          };
+          final result = await _requireSignupSave(
+            ApiService.updateCareer(
+              careerRequest,
+              lang: widget.currentLanguage,
+            ),
+            isAr ? 'تعذر حفظ بيانات العمل' : 'Failed to save career details',
+          );
+          _careerRecordId ??=
+              _extractRecordId(result, const {'id', 'career_id'});
+          _careerSavedFingerprint = careerFingerprint;
+        }
 
         if (!mounted) return;
         _goToNextPage();
       } catch (e) {
         if (mounted) {
           _showNotification(
-            isAr
-                ? 'تعذر حفظ البيانات البدنية'
-                : 'Failed saving physical details',
+            _stepErrorMessage(
+              e,
+              isAr
+                  ? 'تعذر حفظ بيانات الخطوة الثانية'
+                  : 'Failed saving step two',
+            ),
             NotificationType.error,
           );
         }
@@ -326,29 +430,46 @@ class _SignupScreenState extends State<SignupScreen> {
 
       setState(() => _isLoading = true);
       try {
-        await Future.wait([
+        await _requireSignupSave(
           ApiService.updateResidencyInfo({
             'birth_country_id': _birthCountryId!,
             'recidency_country_id': _residenceCountryId!,
-            'recidency_state_id': _stateId ?? '0',
-            'recidency_city_id': _cityId ?? '0',
+            'recidency_state_id': _stateId!,
+            if (_cityId != null && _cityId!.isNotEmpty)
+              'recidency_city_id': _cityId!,
             'growup_country_id': _birthCountryId!,
           }, lang: widget.currentLanguage),
-          ApiService.updateSpiritualBackground({
-            'member_religion_id': _religionId ?? '1',
-            'family_value_id': '1',
-            'marital_status': _maritalStatusId ?? '1',
-          }, lang: widget.currentLanguage),
-        ]);
+          isAr ? 'تعذر حفظ بيانات الإقامة' : 'Failed to save residency details',
+        );
+
+        // لا نكتب ديانة أو حالة اجتماعية أو قيماً عائلية لم يحددها المستخدم.
+        final spiritualPayload = <String, dynamic>{
+          if (_religionId != null && _religionId!.isNotEmpty)
+            'member_religion_id': _religionId!,
+          if (_maritalStatusId != null && _maritalStatusId!.isNotEmpty)
+            'marital_status': _maritalStatusId!,
+        };
+        if (spiritualPayload.isNotEmpty) {
+          await _requireSignupSave(
+            ApiService.updateSpiritualBackground(
+              spiritualPayload,
+              lang: widget.currentLanguage,
+            ),
+            isAr ? 'تعذر حفظ البيانات الدينية' : 'Failed to save religious details',
+          );
+        }
 
         if (!mounted) return;
         _goToNextPage();
       } catch (e) {
         if (mounted) {
           _showNotification(
-            isAr
-                ? 'تعذر حفظ بيانات الإقامة'
-                : 'Failed saving residency details',
+            _stepErrorMessage(
+              e,
+              isAr
+                  ? 'تعذر حفظ بيانات الإقامة والدين'
+                  : 'Failed saving residency and religion details',
+            ),
             NotificationType.error,
           );
         }
@@ -364,34 +485,37 @@ class _SignupScreenState extends State<SignupScreen> {
 
       setState(() => _isLoading = true);
       try {
-        await ApiService.updatePartnerExpectations({
-          'general': _partnerGeneralController.text.trim(),
-          'residence_country_id': _residenceCountryId ?? '1',
-          'partner_country_id': _residenceCountryId ?? '1',
-          'partner_state_id': _stateId ?? '0',
-          'partner_height':
-              (_partnerHeightRange.start / 100).toStringAsFixed(2),
-          'partner_weight': _partnerWeightRange.end.round().toString(),
-          'partner_education': _partnerEducation ?? 'بكالوريوس',
-          'pertner_education': _partnerEducation ?? 'بكالوريوس',
-          'partner_profession': _partnerProfessionController.text.trim(),
-          'partner_marital_status':
-              _partnerMaritalStatusId ?? _maritalStatusId ?? '1',
-          'partner_religion_id': _partnerReligionId ?? _religionId ?? '1',
-          'language_id': _partnerLanguageId ?? '1',
-          'partner_children_acceptable': _partnerChildrenAcceptable,
-          'smoking_acceptable': _partnerSmokingAcceptable,
-          'drinking_acceptable': _partnerDrinkingAcceptable,
-          'pertner_complexion': _partnerComplexion ?? 'حنطي',
-          'complexion': _partnerComplexion ?? 'حنطي',
-          'partner_diet': 'dose_not_matter',
-          'partner_manglik': 'dose_not_matter',
-          'partner_caste_id': '0',
-          'partner_sub_caste_id': '0',
-          'partner_body_type': '0',
-          'partner_personal_value': '0',
-          'family_value_id': '0',
-        }, lang: widget.currentLanguage);
+        await _requireSignupSave(
+          ApiService.updatePartnerExpectations({
+            'general': _partnerGeneralController.text.trim(),
+            'residence_country_id': _residenceCountryId ?? '1',
+            'partner_country_id': _residenceCountryId ?? '1',
+            'partner_state_id': _stateId ?? '0',
+            'partner_height':
+                (_partnerHeightRange.start / 100).toStringAsFixed(2),
+            'partner_weight': _partnerWeightRange.end.round().toString(),
+            'partner_education': _partnerEducation ?? 'بكالوريوس',
+            'pertner_education': _partnerEducation ?? 'بكالوريوس',
+            'partner_profession': _partnerProfessionController.text.trim(),
+            'partner_marital_status':
+                _partnerMaritalStatusId ?? _maritalStatusId ?? '1',
+            'partner_religion_id': _partnerReligionId ?? _religionId ?? '1',
+            'language_id': _partnerLanguageId ?? '1',
+            'partner_children_acceptable': _partnerChildrenAcceptable,
+            'smoking_acceptable': _partnerSmokingAcceptable,
+            'drinking_acceptable': _partnerDrinkingAcceptable,
+            'pertner_complexion': _partnerComplexion ?? 'حنطي',
+            'complexion': _partnerComplexion ?? 'حنطي',
+            'partner_diet': 'dose_not_matter',
+            'partner_manglik': 'dose_not_matter',
+            'partner_caste_id': '0',
+            'partner_sub_caste_id': '0',
+            'partner_body_type': '0',
+            'partner_personal_value': '0',
+            'family_value_id': '0',
+          }, lang: widget.currentLanguage),
+          isAr ? 'تعذر حفظ توقعات الشريك' : 'Failed to save partner expectations',
+        );
 
         await ProfileCacheService.clearCache();
 
@@ -400,7 +524,10 @@ class _SignupScreenState extends State<SignupScreen> {
       } catch (e) {
         if (mounted) {
           _showNotification(
-            isAr ? 'تعذر حفظ توقعات الشريك' : 'Failed saving expectations',
+            _stepErrorMessage(
+              e,
+              isAr ? 'تعذر حفظ توقعات الشريك' : 'Failed saving expectations',
+            ),
             NotificationType.error,
           );
         }
