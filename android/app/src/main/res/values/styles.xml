@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+============================================================================
+مشروع: تطبيق وصال (Wesal)
+الملف: android/app/src/main/res/values/styles.xml
+الوصف: ملف ثيمات الأندرويد الأصلية المتوافقة مع Stripe و Material Components
+============================================================================
+-->
+<resources>
+
+    <!-- 🟢 1. ثيم شاشة الإقلاع (LaunchTheme) -->
+    <!-- يظهر أثناء إقلاع التطبيق بالذاكرة وقبل أن يبدأ كود Flutter بالرسم -->
+    <style name="LaunchTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- عرض خلفية الإقلاع المخصصة المحددة في مجلد drawable -->
+        <item name="android:windowBackground">@drawable/launch_background</item>
+    </style>
+
+    <!-- 🟢 2. الثيم الرئيسي للتطبيق (NormalTheme) -->
+    <!-- يتم الانتقال إليه فور جاهزية Flutter، وهو شرط إجباري لمكتبة flutter_stripe -->
+    <style name="NormalTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:windowBackground">?android:colorBackground</item>
+    </style>
+
+</resources>
