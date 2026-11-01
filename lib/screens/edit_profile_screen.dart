@@ -1251,11 +1251,16 @@ class _EditProfileScreenState extends State<EditProfileScreen>
         _currentPhotoUrl =
             _fieldString(basic['photo'] ?? basic['avatar']) ?? '';
       }
-      if (basic.containsKey('gender') || fullData.containsKey('gender') ||
-          basic.containsKey('is_female') || fullData.containsKey('is_female')) {
+      if (basic.containsKey('gender_id') ||
+          basic.containsKey('gender') ||
+          fullData.containsKey('gender_id') ||
+          fullData.containsKey('gender') ||
+          basic.containsKey('is_female') ||
+          fullData.containsKey('is_female')) {
         _genderWasLoaded = true;
         _selectedGender = _parseGenderId(
-          basic['gender'] ?? fullData['gender'],
+          basic['gender_id'] ?? basic['gender'] ??
+              fullData['gender_id'] ?? fullData['gender'],
           isFemaleFlag: basic['is_female'] ?? fullData['is_female'],
         );
       }
