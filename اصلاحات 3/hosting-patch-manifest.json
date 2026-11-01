@@ -16,7 +16,8 @@
     "app/Http/Resources/PublicProfile/BasicInformation.php",
     "app/Http/Resources/PublicProfile/PartnerExpectationResource.php",
     "app/Http/Resources/PublicProfile/SpiritualSocialBackground.php",
-    "database/migrations/2026_11_01_000000_make_profile_start_years_nullable.php"
+    "database/migrations/2026_11_01_000000_make_profile_start_years_nullable.php",
+    "routes/api.php"
   ],
   "flutter_files": [
     "lib/models/member_profile_model.dart",

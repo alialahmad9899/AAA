@@ -53,7 +53,6 @@ class ProfileRequest extends FormRequest
             'date_of_birth.required'          => translate('Date Of Birth is required'),
             'on_behalf.required'              => translate('On Behalf is required'),
             'marital_status.required'         => translate('Marital Status is required'),
-            'phone.required'         => translate('Marital Status is required'),
             'children.required'         => translate('Marital Status is required'),
             'photo.required'         => translate('Marital Status is required'),
         ];
