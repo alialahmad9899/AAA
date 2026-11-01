@@ -20,6 +20,9 @@ PATCHED: dict[str, str] = {}
 
 def require_replace(source: str, old: str, new: str, label: str) -> str:
     count = source.count(old)
+    if count == 0 and source.count(new) == 1:
+        # The exact replacement is already present; keep the patcher idempotent.
+        return source
     if count != 1:
         raise RuntimeError(f"{label}: expected one exact source block, found {count}")
     return source.replace(old, new, 1)
@@ -804,8 +807,7 @@ def main() -> None:
             # Normalize source line endings before applying exact patch anchors.
             original = original.replace("\r\n", "\n")
             updated = patcher(original)
-            if updated == original:
-                raise RuntimeError(f"{suffix}: patch made no changes")
+            # An unchanged file is valid when every expected patch is already applied.
             patched_entries[entry] = updated.encode("utf-8")
             PATCHED[suffix] = updated
 
