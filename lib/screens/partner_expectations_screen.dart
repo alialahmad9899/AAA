@@ -55,6 +55,10 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
   // النطاقات المحددة بالطول والوزن
   RangeValues _partnerHeightRange = const RangeValues(155, 180);
   RangeValues _partnerWeightRange = const RangeValues(50, 80);
+  bool _heightRangeEdited = false;
+  bool _weightRangeEdited = false;
+  bool _generalWasLoaded = false;
+  bool _professionWasLoaded = false;
 
   // المتغيرات المحددة للخيارات
   String? _selectedEducation;
@@ -63,7 +67,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
   String? _selectedReligionId;
   String? _selectedLanguageId;
   String _selectedSmokingAcceptable = 'dose_not_matter';
-  String _selectedDrinkingAcceptable = 'no';
+  String _selectedDrinkingAcceptable = 'dose_not_matter';
   String? _selectedComplexion;
   String? _selectedResidenceCountryId;
   String? _selectedStateId;
@@ -146,6 +150,9 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
       }
 
       if (expectations != null) {
+        _generalWasLoaded = expectations.containsKey('general');
+        _professionWasLoaded = expectations.containsKey('profession') ||
+            expectations.containsKey('partner_profession');
         _generalCtrl.text = expectations['general']?.toString() ?? '';
         _professionCtrl.text = expectations['profession']?.toString() ??
             expectations['partner_profession']?.toString() ??
@@ -331,63 +338,54 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
   /// 4️⃣ إرسال وحفظ بيانات توقعات الشريك للسيرفر
   Future<void> _saveExpectations() async {
     FocusScope.of(context).unfocus();
+    if (_isSaving) return;
     setState(() => _isSaving = true);
 
     try {
-      final Map<String, dynamic> payload = {};
-
+      final Map<String, dynamic> payload = <String, dynamic>{};
       final String formattedHeight =
           (_partnerHeightRange.start / 100).toStringAsFixed(2);
       final String formattedWeight = _partnerWeightRange.end.round().toString();
 
-      final String fallbackLangId =
-          (_selectedLanguageId != null && _selectedLanguageId!.isNotEmpty)
-              ? _selectedLanguageId!
-              : (_languages.isNotEmpty
-                  ? (_languages.first['id'] ?? '1').toString()
-                  : '1');
+      if (_generalCtrl.text.trim().isNotEmpty || _generalWasLoaded) {
+        payload['general'] = _generalCtrl.text.trim();
+      }
+      if (_professionCtrl.text.trim().isNotEmpty || _professionWasLoaded) {
+        payload['partner_profession'] = _professionCtrl.text.trim();
+      }
 
-      final String fallbackStateId =
-          (_selectedStateId != null && _selectedStateId!.isNotEmpty)
-              ? _selectedStateId!
-              : (_states.isNotEmpty
-                  ? (_states.first['id'] ?? '0').toString()
-                  : '0');
+      if (_selectedResidenceCountryId != null &&
+          _selectedResidenceCountryId!.isNotEmpty) {
+        payload['residence_country_id'] = _selectedResidenceCountryId;
+        payload['partner_country_id'] = _selectedResidenceCountryId;
+        if (_selectedStateId != null && _selectedStateId!.isNotEmpty) {
+          payload['partner_state_id'] = _selectedStateId;
+        }
+      }
+      if (_heightRangeEdited) payload['partner_height'] = formattedHeight;
+      if (_weightRangeEdited) payload['partner_weight'] = formattedWeight;
+      if (_selectedMaritalStatusId != null &&
+          _selectedMaritalStatusId!.isNotEmpty) {
+        payload['partner_marital_status'] = _selectedMaritalStatusId;
+      }
+      if (_selectedReligionId != null && _selectedReligionId!.isNotEmpty) {
+        payload['partner_religion_id'] = _selectedReligionId;
+      }
+      if (_selectedLanguageId != null && _selectedLanguageId!.isNotEmpty) {
+        payload['language_id'] = _selectedLanguageId;
+      }
+      if (_selectedEducation != null && _selectedEducation!.isNotEmpty) {
+        payload['partner_education'] = _selectedEducation;
+        payload['pertner_education'] = _selectedEducation;
+      }
+      if (_selectedComplexion != null && _selectedComplexion!.isNotEmpty) {
+        payload['partner_complexion'] = _selectedComplexion;
+        payload['pertner_complexion'] = _selectedComplexion;
+      }
 
-      final String rawGeneral = _generalCtrl.text.trim();
-      payload['general'] = rawGeneral.isEmpty ? ' ' : rawGeneral;
-
-      payload['residence_country_id'] = _selectedResidenceCountryId ?? '1';
-      payload['partner_country_id'] = _selectedResidenceCountryId ?? '1';
-      payload['partner_state_id'] = fallbackStateId;
-
-      payload['partner_height'] = formattedHeight;
-      payload['partner_weight'] = formattedWeight;
-
-      payload['partner_marital_status'] = _selectedMaritalStatusId ?? '1';
       payload['partner_children_acceptable'] = _selectedChildrenAcceptable;
-
-      payload['partner_religion_id'] = _selectedReligionId ?? '1';
-      payload['language_id'] = fallbackLangId;
-
-      payload['pertner_education'] = _selectedEducation ?? 'بكالوريوس';
-      payload['partner_education'] = _selectedEducation ?? 'بكالوريوس';
-      payload['partner_profession'] = _professionCtrl.text.trim().isEmpty
-          ? ' '
-          : _professionCtrl.text.trim();
-
       payload['smoking_acceptable'] = _selectedSmokingAcceptable;
       payload['drinking_acceptable'] = _selectedDrinkingAcceptable;
-      payload['pertner_complexion'] = _selectedComplexion ?? 'حنطي';
-      payload['complexion'] = _selectedComplexion ?? 'حنطي';
-
-      payload['partner_diet'] = 'dose_not_matter';
-      payload['partner_manglik'] = 'dose_not_matter';
-      payload['partner_caste_id'] = '0';
-      payload['partner_sub_caste_id'] = '0';
-      payload['partner_body_type'] = '0';
-      payload['partner_personal_value'] = '0';
-      payload['family_value_id'] = '0';
 
       final result = await ApiService.updatePartnerExpectations(
         payload,
@@ -395,7 +393,6 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
       );
 
       if (!mounted) return;
-
       final bool success = result['success'] == true;
       final bool isAr = widget.currentLanguage == 'ar';
       final String message = result['message'] != null
@@ -407,6 +404,13 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
               : (isAr
                   ? 'حدث خطأ أثناء حفظ التوقعات'
                   : 'Failed to save expectations'));
+
+      if (success) {
+        _generalWasLoaded = true;
+        _professionWasLoaded = true;
+        _heightRangeEdited = false;
+        _weightRangeEdited = false;
+      }
 
       AppSnackBar.show(
         context: context,
@@ -422,14 +426,14 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
           context: context,
           type: NotificationType.error,
           isArabic: isAr,
-          messageAr: 'حدث خطأ في الاتصال بالسيرفر، يرجى المحاولة لاحقاً',
+          messageAr: e.toString().contains('لا توجد') 
+              ? e.toString()
+              : 'حدث خطأ في الاتصال بالسيرفر، يرجى المحاولة لاحقاً',
           messageEn: 'Network connection error, please try again later',
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isSaving = false);
-      }
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
@@ -1183,8 +1187,8 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                           Colors.white24,
                                                       onChanged: (newRange) {
                                                         setState(() {
-                                                          _partnerHeightRange =
-                                                              newRange;
+                                                          _partnerHeightRange = newRange;
+                                                          _heightRangeEdited = true;
                                                         });
                                                       }),
                                                 ],
@@ -1252,8 +1256,8 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                           Colors.white24,
                                                       onChanged: (newRange) {
                                                         setState(() {
-                                                          _partnerWeightRange =
-                                                              newRange;
+                                                          _partnerWeightRange = newRange;
+                                                          _weightRangeEdited = true;
                                                         });
                                                       }),
                                                 ],
