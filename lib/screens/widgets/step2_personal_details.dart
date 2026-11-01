@@ -11,6 +11,9 @@ class Step2PersonalDetails extends StatelessWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController institutionController;
   final TextEditingController designationController;
+  final TextEditingController companyController;
+  final TextEditingController educationStartYearController;
+  final TextEditingController careerStartYearController;
   final String? educationDegree;
   final double height;
   final double weight;
@@ -35,6 +38,9 @@ class Step2PersonalDetails extends StatelessWidget {
     required this.formKey,
     required this.institutionController,
     required this.designationController,
+    required this.companyController,
+    required this.educationStartYearController,
+    required this.careerStartYearController,
     required this.educationDegree,
     required this.height,
     required this.weight,
@@ -302,6 +308,22 @@ class Step2PersonalDetails extends StatelessWidget {
                   }).toList(),
                 ),
                 const SizedBox(height: 14),
+                TextFormField(
+                  controller: educationStartYearController,
+                  keyboardType: TextInputType.number,
+                  decoration: _buildInputDecoration(
+                    hintText: _isAr ? 'سنة بدء التعليم *' : 'Education start year *',
+                    prefixIcon: Icons.calendar_today_outlined,
+                  ),
+                  validator: (value) {
+                    final year = int.tryParse((value ?? '').trim());
+                    if (year == null || year < 1900 || year > DateTime.now().year) {
+                      return _isAr ? 'أدخل سنة تعليم صحيحة' : 'Enter a valid education year';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 14),
 
                 // 2. التخصص والمهنة
                 _buildQuestionTitle(
@@ -345,6 +367,30 @@ class Step2PersonalDetails extends StatelessWidget {
                   validator: (val) => (val == null || val.trim().isEmpty)
                       ? (_isAr ? 'مطلوب إدخال المهنة الحالية' : 'Required')
                       : null,
+                ),
+                const SizedBox(height: 10),
+                TextFormField(
+                  controller: companyController,
+                  decoration: _buildInputDecoration(
+                    hintText: _isAr ? 'جهة العمل (اختياري)' : 'Company / Employer (optional)',
+                    prefixIcon: Icons.business_outlined,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextFormField(
+                  controller: careerStartYearController,
+                  keyboardType: TextInputType.number,
+                  decoration: _buildInputDecoration(
+                    hintText: _isAr ? 'سنة بدء العمل *' : 'Career start year *',
+                    prefixIcon: Icons.calendar_month_outlined,
+                  ),
+                  validator: (value) {
+                    final year = int.tryParse((value ?? '').trim());
+                    if (year == null || year < 1900 || year > DateTime.now().year) {
+                      return _isAr ? 'أدخل سنة عمل صحيحة' : 'Enter a valid career year';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
 
