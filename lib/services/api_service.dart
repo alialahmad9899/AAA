@@ -1739,7 +1739,6 @@ class ApiService {
 
       if (!isUpdate &&
           (!bodyData.containsKey('designation') ||
-              !bodyData.containsKey('company') ||
               !bodyData.containsKey('start'))) {
         return {
           'success': false,
