@@ -15,6 +15,7 @@
     "app/Http/Resources/EducationResource.php",
     "app/Http/Resources/PublicProfile/BasicInformation.php",
     "app/Http/Resources/PublicProfile/PartnerExpectationResource.php",
+    "app/Http/Resources/PublicProfile/PhysicalAttributes.php",
     "app/Http/Resources/PublicProfile/SpiritualSocialBackground.php",
     "database/migrations/2026_11_01_000000_make_profile_start_years_nullable.php",
     "routes/api.php"

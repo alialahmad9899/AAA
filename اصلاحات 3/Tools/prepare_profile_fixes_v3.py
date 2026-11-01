@@ -80,6 +80,47 @@ def patch_resource(source,label):
         raise RuntimeError(f"{label} still returns start year")
     return source
 
+def patch_physical_attributes_resource(source):
+    """Return original physical-attribute values; the legacy translate() helper
+    strips Arabic characters while constructing translation keys, which can
+    make valid Arabic values come back empty or as a placeholder.
+    """
+    helper = """        $cleanPhysicalAttribute = static function ($value): string {
+            $value = trim((string) ($value ?? ''));
+            if ($value === '' || preg_match('/^[-_]+$/', $value) ||
+                in_array(strtolower($value), ['null', 'undefined', 'n/a'], true) ||
+                in_array($value, ['ارسل رسالة الان', 'ارسل رسالة الآن'], true)) {
+                return '';
+            }
+            return $value;
+        };
+"""
+    if '$cleanPhysicalAttribute = static function' not in source:
+        lang_line = "        $lang = $request->header('Accept-Language') ?? $request->header('app_language') ?? $request->get('lang') ?? 'ar';\n"
+        if source.count(lang_line) != 1:
+            raise RuntimeError('PhysicalAttributes resource language line not found exactly once')
+        source = source.replace(lang_line, lang_line + '\n' + helper, 1)
+
+    fields = {
+        'eye_color': '$cleanPhysicalAttribute($this->eye_color)',
+        'hair_color': '$cleanPhysicalAttribute($this->hair_color)',
+        'complexion': '$cleanPhysicalAttribute($this->complexion)',
+    }
+    for field, expression in fields.items():
+        pattern = r"(?m)^([\s]*)['\"]" + re.escape(field) + r"['\"]\s*=>.*$"
+        replacement = lambda match, expr=expression, key=field: match.group(1) + "'" + key + "' => " + expr + ","
+        source, count = re.subn(pattern, replacement, source, count=1)
+        if count != 1:
+            expected = "'" + field + "' => " + expression + ","
+            if expected not in source:
+                raise RuntimeError('PhysicalAttributes resource field not found: ' + field)
+
+    for field in fields:
+        if re.search(r"['\"]" + re.escape(field) + r"['\"]\s*=>\s*function_exists\('translate'\)", source):
+            raise RuntimeError('PhysicalAttributes still translates raw field: ' + field)
+    return source
+
+
 def migration():
     return """<?php
 use Illuminate\\Database\\Migrations\\Migration;
@@ -171,6 +212,7 @@ def main():
             "app/Http/Requests/CareerRequest.php":patch_career_request,
             "app/Http/Resources/EducationResource.php":lambda x:patch_resource(x,"EducationResource"),
             "app/Http/Resources/CareerResource.php":lambda x:patch_resource(x,"CareerResource"),
+            "app/Http/Resources/PublicProfile/PhysicalAttributes.php":patch_physical_attributes_resource,
         }
         changes={}
         for suffix,fn in patchers.items():
