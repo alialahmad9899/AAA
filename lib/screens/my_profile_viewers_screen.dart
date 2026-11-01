@@ -30,6 +30,8 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
   bool _isLoading = true;
   bool _hasQuotaError = false;
   String _quotaErrorMessage = '';
+  bool _hasLoadError = false;
+  String _loadErrorMessage = '';
   List<dynamic> _viewers = [];
   bool _isFemale = false;
   bool _hasActivePackage = false;
@@ -47,6 +49,7 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
     setState(() {
       _isLoading = true;
       _hasQuotaError = false;
+      _hasLoadError = false;
     });
 
     try {
@@ -68,29 +71,41 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
       if (!mounted) return;
 
       // الإناث لديهن وصول مجاني مفتوح دائماً
-      if (!_isFemale &&
-          !_hasActivePackage &&
-          (res['status'] == 'quota_exceeded' || res['result'] == false)) {
+      if (res['status'] == 'quota_exceeded') {
         setState(() {
           _isLoading = false;
           _hasQuotaError = true;
+          _hasLoadError = false;
           _quotaErrorMessage = res['message'] ??
               (_isAr
                   ? 'استنفدت حصة مشاهدة الزوار المجانية (3 مشاهدات للشباب). اشترك الآن في إحدى باقات وصال المميزة لمشاهدة كافة الزوار.'
                   : 'You have used your 3 free profile views. Upgrade to Wesal Premium to see all visitors.');
         });
-      } else {
-        final List rawData = res['data'] ?? [];
+      } else if (res['result'] != true || res['data'] is! List) {
         setState(() {
-          _viewers = rawData;
           _isLoading = false;
           _hasQuotaError = false;
+          _hasLoadError = true;
+          _loadErrorMessage = res['message']?.toString() ??
+              (_isAr ? 'تعذر تحميل زوار الملف الشخصي' : 'Could not load profile visitors');
+        });
+      } else {
+        setState(() {
+          _viewers = res['data'];
+          _isLoading = false;
+          _hasQuotaError = false;
+          _hasLoadError = false;
         });
       }
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
+        _hasQuotaError = false;
+        _hasLoadError = true;
+        _loadErrorMessage = _isAr
+            ? 'تعذر الاتصال بالسيرفر لتحميل زوار الملف الشخصي'
+            : 'Could not connect to load profile visitors';
       });
     }
   }
@@ -164,7 +179,9 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
                   )
                 : _hasQuotaError
                     ? _buildQuotaErrorView()
-                    : _viewers.isEmpty
+                    : _hasLoadError
+                        ? _buildLoadErrorView()
+                        : _viewers.isEmpty
                         ? _buildEmptyStateView()
                         : RefreshIndicator(
                             onRefresh: _fetchViewers,
@@ -379,6 +396,37 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadErrorView() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.cloud_off_rounded,
+                color: Colors.white70, size: 48),
+            const SizedBox(height: 14),
+            Text(
+              _loadErrorMessage,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontFamily: 'Cairo',
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: _fetchViewers,
+              icon: const Icon(Icons.refresh_rounded),
+              label: Text(_isAr ? 'إعادة المحاولة' : 'Retry'),
+            ),
+          ],
         ),
       ),
     );
