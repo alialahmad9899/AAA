@@ -154,6 +154,19 @@ void main() {
     });
   });
 
+  group('Arabic physical attribute values', () {
+    test('keeps Arabic eye and hair colors unchanged in Arabic', () {
+      expect(AttributeTranslator.translate('بني', isArabic: true), 'بني');
+      expect(AttributeTranslator.translate('أسود', isArabic: true), 'أسود');
+    });
+
+    test('localizes raw Arabic physical attributes in English', () {
+      expect(AttributeTranslator.translate('بني', isArabic: false), 'Brown');
+      expect(AttributeTranslator.translate('حنطي', isArabic: false), 'Wheat / Tan');
+      expect(AttributeTranslator.translate('أشقر', isArabic: false), 'Blonde');
+    });
+  });
+
   group('Profile field change detection', () {
     test('does not resend an unchanged loaded value', () {
       expect(
