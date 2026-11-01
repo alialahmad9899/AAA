@@ -28,6 +28,10 @@ jobs:
           lib/screens/edit_profile/widgets/step1_basic_physical_tab.dart
           lib/services/api_service.dart
           lib/models/member_profile_model.dart
+          lib/screens/home/tabs/account_tab.dart
+          lib/screens/my_interests_screen.dart
+          lib/screens/my_profile_viewers_screen.dart
+          lib/screens/chat_detail_screen.dart
           test/profile_edit_unit_test.dart
       - run: flutter test --no-pub
 
@@ -120,6 +124,19 @@ jobs:
           test -f "اصلاحات 4/README.md"
           test -f "اصلاحات 4/hosting-patch-manifest.json"
           unzip -tq "اصلاحات 4.zip"
+          while IFS= read -r -d '' file; do php -l "$file"; done < <(find "اصلاحات 4/Laravel" -type f -name '*.php' -print0)
+          host_tmp="$(mktemp -d)"
+          unzip -q "اصلاحات 4/Hosting/ملفات الاتسضافة.zip" -d "$host_tmp"
+          find "$host_tmp" -type f \( -path '*/app/Http/Controllers/Api/AuthController.php' -o -path '*/app/Http/Controllers/Api/Payment/StripeController.php' -o -path '*/app/Http/Controllers/Api/ProfileController.php' \) -print0 | while IFS= read -r -d '' file; do php -l "$file"; done
+          stripe_file="$(find "$host_tmp" -type f -path '*/app/Http/Controllers/Api/Payment/StripeController.php' -print -quit)"
+          auth_file="$(find "$host_tmp" -type f -path '*/app/Http/Controllers/Api/AuthController.php' -print -quit)"
+          profile_file="$(find "$host_tmp" -type f -path '*/app/Http/Controllers/Api/ProfileController.php' -print -quit)"
+          test -n "$stripe_file" && test -n "$auth_file" && test -n "$profile_file"
+          ! grep -Fq '1265' "$stripe_file"
+          grep -Fq 'confirm_payment_intent' "$stripe_file"
+          grep -Fq '$autoVerify = true;' "$auth_file"
+          grep -Fq 'remaining_profile_viewer_view' "$auth_file"
+          ! grep -Fq 'remaining_profile_viewer_view = $usermember->remaining_profile_viewer_view - 1' "$profile_file"
       - uses: actions/upload-artifact@v4
         with:
           name: اصلاحات-4
