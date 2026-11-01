@@ -493,22 +493,36 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
     try {
       final firstMsgId = _messages.first.id;
-      final oldMsgs = await ApiService.getOldMessages(
+      final result = await ApiService.getOldMessages(
         firstMsgId,
         widget.thread.userId,
         lang: widget.currentLanguage,
       );
+      final List<ChatMessageModel> oldMsgs =
+          result['messages'] is List ? result['messages'] : <ChatMessageModel>[];
 
       if (mounted) {
         setState(() {
           _isLoadingMore = false;
-          if (oldMsgs.isNotEmpty) {
+          if (result['success'] != true) {
+            // Keep pagination enabled: a network error is not proof that
+            // the conversation has no older messages.
+          } else if (oldMsgs.isNotEmpty) {
             _messages.insertAll(0, oldMsgs);
             _globalMessagesCache[_activeThreadId] = List.from(_messages);
           } else {
             _hasMoreOldMessages = false;
           }
         });
+        if (result['success'] != true) {
+          AppSnackBar.show(
+            context: context,
+            type: NotificationType.error,
+            isArabic: _isArabic,
+            messageAr: result['message']?.toString() ?? 'تعذر تحميل الرسائل السابقة',
+            messageEn: result['message']?.toString() ?? 'Could not load older messages',
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
