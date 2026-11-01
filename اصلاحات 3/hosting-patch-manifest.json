@@ -1,6 +1,7 @@
 {
   "version": 3,
   "hosting_archive": "ملفات الاتسضافة.zip",
+  "hosting_archive_path": "Hosting/ملفات الاتسضافة.zip",
   "laravel_files": [
     "app/Http/Controllers/Api/AuthController.php",
     "app/Http/Controllers/Api/CareerController.php",
