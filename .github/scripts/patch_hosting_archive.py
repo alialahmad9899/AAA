@@ -801,6 +801,8 @@ def main() -> None:
                 raise RuntimeError(f"{suffix}: expected exactly one archive entry, found {len(matches)}")
             entry = matches[0]
             original = source_zip.read(entry).decode("utf-8")
+            # Normalize source line endings before applying exact patch anchors.
+            original = original.replace("\\r\\n", "\\n")
             updated = patcher(original)
             if updated == original:
                 raise RuntimeError(f"{suffix}: patch made no changes")
