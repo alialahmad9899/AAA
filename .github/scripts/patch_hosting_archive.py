@@ -20,8 +20,8 @@ PATCHED: dict[str, str] = {}
 
 def require_replace(source: str, old: str, new: str, label: str) -> str:
     count = source.count(old)
-    if count == 0 and source.count(new) == 1:
-        # The exact replacement is already present; keep the patcher idempotent.
+    if count == 0 and (not new or source.count(new) == 1):
+        # The exact replacement is already present (or the removed block is absent).
         return source
     if count != 1:
         raise RuntimeError(f"{label}: expected one exact source block, found {count}")
