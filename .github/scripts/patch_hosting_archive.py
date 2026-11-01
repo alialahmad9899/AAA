@@ -32,7 +32,7 @@ def replace_method(source: str, start: str, end: str, new_method: str, label: st
     end_at = source.find(end, start_at + len(start))
     if end_at < 0:
         raise RuntimeError(f"{label}: end marker not found: {end}")
-    return source[:start_at] + new_method.rstrip() + "\n\n    " + source[end_at:]
+    return source[:start_at] + new_method.rstrip() + "\n\n" + source[end_at:]
 
 
 def patch_profile_controller(source: str) -> str:
@@ -41,6 +41,17 @@ def patch_profile_controller(source: str) -> str:
         "use App\\Models\\User;\n",
         "use App\\Models\\Upload;\nuse App\\Models\\User;\n",
         "ProfileController Upload import",
+    )
+
+    source = require_replace(
+        source,
+        """        if ($request->email == null && $request->phone == null) {
+            return response()->json('Email and Phone number both can not be null. ');
+        }
+
+""",
+        "",
+        "ProfileController remove stale email/phone gate",
     )
 
     source = replace_method(
@@ -231,6 +242,7 @@ def patch_profile_controller(source: str) -> str:
             $residency->recidency_country_id = $countryId;
         }
 
+        $oldStateId = $residency->recidency_state_id;
         $stateWasProvided = array_key_exists('recidency_state_id', $input)
             || array_key_exists('residency_state_id', $input)
             || array_key_exists('state_id', $input);
@@ -247,6 +259,8 @@ def patch_profile_controller(source: str) -> str:
             $residency->recidency_state_id = null;
         }
         $effectiveStateId = $residency->recidency_state_id;
+        $stateChanged = $stateWasProvided &&
+            (string) $oldStateId !== (string) $effectiveStateId;
 
         $cityWasProvided = array_key_exists('recidency_city_id', $input)
             || array_key_exists('residency_city_id', $input)
@@ -258,7 +272,7 @@ def patch_profile_controller(source: str) -> str:
 
         if ($cityWasProvided) {
             $residency->recidency_city_id = $cityId ?: null;
-        } elseif ($countryChanged || ($stateWasProvided && (string) $effectiveStateId !== (string) $residency->getOriginal('recidency_state_id'))) {
+        } elseif ($countryChanged || $stateChanged) {
             $residency->recidency_city_id = null;
         }
         $effectiveCityId = $residency->recidency_city_id;
