@@ -377,6 +377,31 @@ class ApiService {
     return true;
   }
 
+  /// Extract the first actual model record from Laravel resource responses.
+  /// Supports a bare map, a JsonResource {data: {...}}, a collection
+  /// {data: [...]}, or a nested response envelope.
+  static Map<String, dynamic>? extractFirstResourceMap(dynamic value) {
+    if (value is List) {
+      for (final item in value) {
+        final found = extractFirstResourceMap(item);
+        if (found != null) return found;
+      }
+      return null;
+    }
+    if (value is! Map) return null;
+
+    final map = Map<String, dynamic>.from(value);
+    if (map['data'] is Map || map['data'] is List) {
+      return extractFirstResourceMap(map['data']);
+    }
+
+    const envelopeKeys = {
+      'result', 'success', 'message', 'status', 'errors', 'error'
+    };
+    final hasModelFields = map.keys.any((key) => !envelopeKeys.contains(key));
+    return hasModelFields ? map : null;
+  }
+
   static bool _isHttpResponseSuccessful(int statusCode, dynamic responseData) {
     if (statusCode < 200 || statusCode >= 300) return false;
     if (statusCode == 204) return true;
@@ -1432,67 +1457,60 @@ class ApiService {
     required String phone,
     String? gender,
     required String dateOfBirth,
-    required String maritalStatus,
+    String? maritalStatus,
     String? onBehalf,
-    required String children,
+    String? children,
     String? introduction,
     File? photoFile,
     String? lang,
   }) async {
     try {
       final token = await getToken();
+      if (token == null || token.trim().isEmpty) {
+        return {'success': false, 'message': 'انتهت جلسة الدخول. يرجى تسجيل الدخول مجدداً.'};
+      }
+
       final Uri url = Uri.parse('$baseUrl/member/basic-info/update');
       final String currentLang = lang ??
           (await SharedPreferences.getInstance()).getString('app_language') ??
           'ar';
 
-      var request = http.MultipartRequest('POST', url);
-      if (token != null) request.headers['Authorization'] = 'Bearer $token';
+      final request = http.MultipartRequest('POST', url);
+      request.headers['Authorization'] = 'Bearer $token';
       request.headers['Accept'] = 'application/json';
       request.headers['Accept-Language'] = currentLang;
       request.headers['app_language'] = currentLang;
 
       request.fields['first_name'] = firstName.trim();
-      request.fields['firs_name'] = firstName.trim();
       request.fields['last_name'] = lastName.trim();
       request.fields['phone'] = phone.trim();
-      // قد لا تكون قيمة الجنس قد حُمّلت من الخادم؛ لا نرسلها عند غيابها
-      // حتى لا نستبدل قيمة محفوظة مسبقاً بقيمة افتراضية غير مؤكدة.
-      final cleanGender = gender?.trim();
-      if (cleanGender != null && cleanGender.isNotEmpty) {
-        request.fields['gender'] = cleanGender;
+      if (gender != null && gender.trim().isNotEmpty) {
+        request.fields['gender'] = gender.trim();
       }
-      request.fields['date_of_birth'] = dateOfBirth.trim();
-      request.fields['children'] = children.trim();
-
-      request.fields['marital_status'] = maritalStatus.trim();
-      request.fields['maritial_status'] = maritalStatus.trim();
-      request.fields['marital_status_id'] = maritalStatus.trim();
-      request.fields['maritial_status_id'] = maritalStatus.trim();
-
-      // قيمة onBehalf اختيارية في بعض الحسابات/استجابات API.
-      // لا تُرسل مفاتيحها إطلاقاً عندما تكون null أو فارغة.
-      final cleanOnBehalf = onBehalf?.trim();
-      if (cleanOnBehalf != null && cleanOnBehalf.isNotEmpty) {
-        request.fields['on_behalf'] = cleanOnBehalf;
-        request.fields['onbehalf'] = cleanOnBehalf;
-        request.fields['on_behalf_id'] = cleanOnBehalf;
-        request.fields['onbehalf_id'] = cleanOnBehalf;
+      if (dateOfBirth.trim().isNotEmpty) {
+        request.fields['date_of_birth'] = dateOfBirth.trim();
       }
-
+      if (maritalStatus != null && maritalStatus.trim().isNotEmpty) {
+        request.fields['marital_status'] = maritalStatus.trim();
+      }
+      if (onBehalf != null && onBehalf.trim().isNotEmpty) {
+        request.fields['on_behalf'] = onBehalf.trim();
+      }
+      if (children != null) {
+        request.fields['children'] = children.trim();
+      }
       if (introduction != null) {
         request.fields['introduction'] = introduction;
-        request.fields['intoduction'] = introduction;
       }
 
-      if (request.fields.isEmpty && photoFile == null) {
-        return {
-          'success': false,
-          'message': 'لا توجد بيانات أساسية لتحديثها',
-        };
-      }
-
-      if (photoFile != null && await photoFile.exists()) {
+      if (photoFile != null) {
+        if (!await photoFile.exists()) {
+          return {'success': false, 'message': 'ملف الصورة المحدد غير موجود. اختر الصورة مرة أخرى.'};
+        }
+        final photoSize = await photoFile.length();
+        if (photoSize <= 0 || photoSize > 10 * 1024 * 1024) {
+          return {'success': false, 'message': 'يجب أن يكون حجم الصورة أكبر من صفر وألا يتجاوز 10 ميغابايت.'};
+        }
         request.files.add(
           await http.MultipartFile.fromPath('photo', photoFile.path),
         );
@@ -1500,13 +1518,13 @@ class ApiService {
 
       if (kDebugMode) {
         debugPrint(
-            '🌐 [API POST Multipart] UpdateBasicInfo -> $url | Fields: ${request.fields}');
+            '🌐 [API POST Multipart] UpdateBasicInfo -> $url | Fields: ${request.fields.keys.toList()} | HasPhoto: ${photoFile != null}');
       }
-      var streamedResponse = await request.send().timeout(_timeoutDuration);
-      var response = await http.Response.fromStream(streamedResponse);
+
+      final streamedResponse = await request.send().timeout(_timeoutDuration);
+      final response = await http.Response.fromStream(streamedResponse);
       if (kDebugMode) {
-        debugPrint(
-            '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
+        debugPrint('📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
       }
 
       dynamic data;
@@ -1524,13 +1542,14 @@ class ApiService {
           'message': data is Map && data['message'] != null
               ? data['message']
               : 'تم تحديث البيانات الأساسية بنجاح',
-        };
-      } else {
-        return {
-          'success': false,
-          'message': _parseErrorMessage(data, response.statusCode),
+          'data': data,
         };
       }
+      return {
+        'success': false,
+        'message': _parseErrorMessage(data, response.statusCode),
+        'data': data,
+      };
     } on TimeoutException {
       return {'success': false, 'message': 'انتهت مهلة حفظ البيانات'};
     } catch (e) {
@@ -1568,22 +1587,10 @@ class ApiService {
       {String? lang}) async {
     try {
       final headers = await _getHeaders(lang: lang);
-
       final dynamic rawId = payload['id'] ?? payload['education_id'];
-      final int? eduId = rawId is int ? rawId : int.tryParse(rawId.toString());
-
-      final dynamic startVal =
-          payload['education_start'] ?? payload['start'] ?? 2020;
-      final int startYear = startVal is int
-          ? startVal
-          : (int.tryParse(startVal.toString()) ?? 2020);
-
-      final dynamic endVal = payload['education_end'] ?? payload['end'];
-      final int? endYear =
-          (endVal != null && endVal.toString().trim().isNotEmpty)
-              ? (endVal is int ? endVal : int.tryParse(endVal.toString()))
-              : null;
-
+      final int? eduId = rawId == null
+          ? null
+          : (rawId is int ? rawId : int.tryParse(rawId.toString()));
       final bool isUpdate = eduId != null && eduId > 0;
       final Uri url = Uri.parse(isUpdate
           ? '$baseUrl/member/education/$eduId'
@@ -1595,46 +1602,61 @@ class ApiService {
 
       final Map<String, dynamic> bodyData = {
         if (isUpdate) '_method': 'PUT',
-        'degree': (payload['degree'] != null &&
-                payload['degree'].toString().isNotEmpty)
-            ? payload['degree']
-            : 'غير محدد',
-        'institution': (payload['institution'] != null &&
-                payload['institution'].toString().isNotEmpty)
-            ? payload['institution']
-            : 'غير محدد',
-        'education_start': startYear,
-        if (endYear != null) 'education_end': endYear,
       };
+      final degree = payload['degree']?.toString().trim();
+      final institution = payload['institution']?.toString().trim();
+      final rawStart = payload['education_start'] ?? payload['start'];
+      final int? startYear = rawStart == null || rawStart.toString().trim().isEmpty
+          ? null
+          : int.tryParse(rawStart.toString().trim());
+      final rawEnd = payload['education_end'] ?? payload['end'];
+      final int? endYear = rawEnd == null || rawEnd.toString().trim().isEmpty
+          ? null
+          : int.tryParse(rawEnd.toString().trim());
 
-      if (kDebugMode) {
-        debugPrint(
-            '🌐 [API ${isUpdate ? "PUT" : "POST"}] UpdateEducation -> $url | Body: $bodyData');
+      if (degree != null && degree.isNotEmpty) bodyData['degree'] = degree;
+      if (institution != null && institution.isNotEmpty) {
+        bodyData['institution'] = institution;
+      }
+      if (startYear != null) bodyData['education_start'] = startYear;
+      if (payload.containsKey('education_end') || payload.containsKey('end')) {
+        bodyData['education_end'] = endYear;
+      }
+
+      if (!isUpdate &&
+          (!bodyData.containsKey('degree') ||
+              !bodyData.containsKey('institution') ||
+              !bodyData.containsKey('education_start'))) {
+        return {
+          'success': false,
+          'message': 'أدخل الشهادة والجامعة/التخصص وسنة بدء التعليم قبل الحفظ.',
+        };
+      }
+      if (isUpdate &&
+          bodyData.keys.every((key) => key == '_method')) {
+        return {'success': false, 'message': 'لا توجد تغييرات تعليمية لحفظها'};
+      }
+      if (startYear != null &&
+          (startYear < 1900 || startYear > DateTime.now().year)) {
+        return {'success': false, 'message': 'سنة بدء التعليم غير صحيحة'};
+      }
+      if (endYear != null &&
+          (endYear < 1900 || endYear > DateTime.now().year)) {
+        return {'success': false, 'message': 'سنة انتهاء التعليم غير صحيحة'};
       }
 
       final response = await http
-          .post(
-            url,
-            headers: headers,
-            body: jsonEncode(bodyData),
-          )
+          .post(url, headers: headers, body: jsonEncode(bodyData))
           .timeout(_timeoutDuration);
-
-      if (kDebugMode) {
-        debugPrint(
-            '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
-      }
-
       dynamic responseData;
       try {
         responseData = jsonDecode(response.body);
       } catch (_) {
-        responseData = {};
+        responseData = null;
       }
 
       final bool isSuccess =
           _isHttpResponseSuccessful(response.statusCode, responseData);
-
       return {
         'success': isSuccess,
         'message': (responseData is Map && responseData['message'] != null)
@@ -1674,27 +1696,15 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> updateCareer(Map<String, dynamic> payload,
+  static Future<Map<String, dynamic>> updateCareer(
+      Map<String, dynamic> payload,
       {String? lang}) async {
     try {
       final headers = await _getHeaders(lang: lang);
-
       final dynamic rawId = payload['id'] ?? payload['career_id'];
-      final int? careerId =
-          rawId is int ? rawId : int.tryParse(rawId.toString());
-
-      final dynamic startVal =
-          payload['career_start'] ?? payload['start'] ?? 2020;
-      final int startYear = startVal is int
-          ? startVal
-          : (int.tryParse(startVal.toString()) ?? 2020);
-
-      final dynamic endVal = payload['career_end'] ?? payload['end'];
-      final int? endYear =
-          (endVal != null && endVal.toString().trim().isNotEmpty)
-              ? (endVal is int ? endVal : int.tryParse(endVal.toString()))
-              : null;
-
+      final int? careerId = rawId == null
+          ? null
+          : (rawId is int ? rawId : int.tryParse(rawId.toString()));
       final bool isUpdate = careerId != null && careerId > 0;
       final Uri url = Uri.parse(isUpdate
           ? '$baseUrl/member/career/$careerId'
@@ -1706,48 +1716,60 @@ class ApiService {
 
       final Map<String, dynamic> bodyData = {
         if (isUpdate) '_method': 'PUT',
-        'designation': (payload['designation'] != null &&
-                payload['designation'].toString().isNotEmpty)
-            ? payload['designation']
-            : 'غير محدد',
-        'company': (payload['company'] != null &&
-                payload['company'].toString().isNotEmpty)
-            ? payload['company']
-            : 'غير محدد',
-        'start': startYear,
-        'career_start': startYear,
-        if (endYear != null) 'end': endYear,
-        if (endYear != null) 'career_end': endYear,
       };
+      final designation = payload['designation']?.toString().trim();
+      final company = payload['company']?.toString().trim();
+      final rawStart = payload['start'] ?? payload['career_start'];
+      final int? startYear = rawStart == null || rawStart.toString().trim().isEmpty
+          ? null
+          : int.tryParse(rawStart.toString().trim());
+      final rawEnd = payload['end'] ?? payload['career_end'];
+      final int? endYear = rawEnd == null || rawEnd.toString().trim().isEmpty
+          ? null
+          : int.tryParse(rawEnd.toString().trim());
 
-      if (kDebugMode) {
-        debugPrint(
-            '🌐 [API ${isUpdate ? "PUT" : "POST"}] UpdateCareer -> $url | Body: $bodyData');
+      if (designation != null && designation.isNotEmpty) {
+        bodyData['designation'] = designation;
+      }
+      if (company != null && company.isNotEmpty) bodyData['company'] = company;
+      if (startYear != null) bodyData['start'] = startYear;
+      if (payload.containsKey('end') || payload.containsKey('career_end')) {
+        bodyData['end'] = endYear;
+      }
+
+      if (!isUpdate &&
+          (!bodyData.containsKey('designation') ||
+              !bodyData.containsKey('company') ||
+              !bodyData.containsKey('start'))) {
+        return {
+          'success': false,
+          'message': 'أدخل المسمى الوظيفي وجهة العمل وسنة بدء العمل قبل الحفظ.',
+        };
+      }
+      if (isUpdate && bodyData.keys.every((key) => key == '_method')) {
+        return {'success': false, 'message': 'لا توجد تغييرات مهنية لحفظها'};
+      }
+      if (startYear != null &&
+          (startYear < 1900 || startYear > DateTime.now().year)) {
+        return {'success': false, 'message': 'سنة بدء العمل غير صحيحة'};
+      }
+      if (endYear != null &&
+          (endYear < 1900 || endYear > DateTime.now().year)) {
+        return {'success': false, 'message': 'سنة انتهاء العمل غير صحيحة'};
       }
 
       final response = await http
-          .post(
-            url,
-            headers: headers,
-            body: jsonEncode(bodyData),
-          )
+          .post(url, headers: headers, body: jsonEncode(bodyData))
           .timeout(_timeoutDuration);
-
-      if (kDebugMode) {
-        debugPrint(
-            '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
-      }
-
       dynamic responseData;
       try {
         responseData = jsonDecode(response.body);
       } catch (_) {
-        responseData = {};
+        responseData = null;
       }
 
       final bool isSuccess =
           _isHttpResponseSuccessful(response.statusCode, responseData);
-
       return {
         'success': isSuccess,
         'message': (responseData is Map && responseData['message'] != null)
@@ -1795,48 +1817,31 @@ class ApiService {
       final headers = await _getHeaders(lang: lang);
       final Uri url = Uri.parse('$baseUrl/member/physical-attributes/update');
 
+      // Send only fields actually present in the form. The server performs
+      // a partial update, so missing fields never become fabricated defaults.
       final Map<String, dynamic> enrichedPayload = Map.from(payload);
-      if (!enrichedPayload.containsKey('blood_group') ||
-          enrichedPayload['blood_group'] == null ||
-          enrichedPayload['blood_group'].toString().isEmpty) {
-        enrichedPayload['blood_group'] = 'N/A';
-      }
-      if (!enrichedPayload.containsKey('body_type') ||
-          enrichedPayload['body_type'] == null ||
-          enrichedPayload['body_type'].toString().isEmpty) {
-        enrichedPayload['body_type'] = 'متوسط';
-      }
-      if (!enrichedPayload.containsKey('body_art') ||
-          enrichedPayload['body_art'] == null ||
-          enrichedPayload['body_art'].toString().isEmpty) {
-        enrichedPayload['body_art'] = 'لا يوجد';
-      }
-      if (!enrichedPayload.containsKey('disability') ||
-          enrichedPayload['disability'] == null) {
-        enrichedPayload['disability'] = '';
-      }
-      if (enrichedPayload['eye_color'] != null) {
+      enrichedPayload.remove('_method');
+      if (enrichedPayload.containsKey('eye_color')) {
         enrichedPayload['eye_colour'] = enrichedPayload['eye_color'];
       }
-      if (enrichedPayload['hair_color'] != null) {
+      if (enrichedPayload.containsKey('hair_color')) {
         enrichedPayload['hair_colour'] = enrichedPayload['hair_color'];
       }
 
+      if (enrichedPayload.isEmpty) {
+        return {'success': false, 'message': 'لا توجد مواصفات جسدية لتحديثها'};
+      }
+
       if (kDebugMode) {
         debugPrint(
-            '🌐 [API POST] UpdatePhysicalAttributes -> $url | Payload: $enrichedPayload');
+            '🌐 [API POST] UpdatePhysicalAttributes -> $url | Keys: ${enrichedPayload.keys.toList()}');
       }
 
       final response = await http
-          .post(
-            url,
-            headers: headers,
-            body: jsonEncode(enrichedPayload),
-          )
+          .post(url, headers: headers, body: jsonEncode(enrichedPayload))
           .timeout(_timeoutDuration);
       if (kDebugMode) {
-        debugPrint(
-            '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
+        debugPrint('📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
       }
 
       dynamic data;
@@ -1848,7 +1853,6 @@ class ApiService {
 
       final bool isSuccess =
           _isHttpResponseSuccessful(response.statusCode, data);
-
       return {
         'success': isSuccess,
         'message': (data is Map && data['message'] != null)
@@ -2080,7 +2084,7 @@ class ApiService {
       }
 
       return {
-        'success': response.statusCode == 200 || response.statusCode == 201,
+        'success': _isHttpResponseSuccessful(response.statusCode, data),
         'message': (data is Map && data['message'] != null)
             ? data['message']
             : 'تم تحديث نمط الحياة بنجاح',
@@ -2145,7 +2149,7 @@ class ApiService {
       }
 
       return {
-        'success': response.statusCode == 200 || response.statusCode == 201,
+        'success': _isHttpResponseSuccessful(response.statusCode, data),
         'message': (data is Map && data['message'] != null)
             ? data['message']
             : 'تم تحديث الهوايات بنجاح',
@@ -2212,7 +2216,7 @@ class ApiService {
       }
 
       return {
-        'success': response.statusCode == 200 || response.statusCode == 201,
+        'success': _isHttpResponseSuccessful(response.statusCode, data),
         'message': (data is Map && data['message'] != null)
             ? data['message']
             : 'تم تحديث بيانات الطباع والسلوك بنجاح',
@@ -2283,7 +2287,7 @@ class ApiService {
       }
 
       return {
-        'success': response.statusCode == 200 || response.statusCode == 201,
+        'success': _isHttpResponseSuccessful(response.statusCode, data),
         'message': (data is Map && data['message'] != null)
             ? data['message']
             : 'تم تحديث البرج الشمسي بنجاح',
@@ -2372,14 +2376,16 @@ class ApiService {
       final response =
           await http.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) {
-        debugPrint(
-            '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
+        debugPrint('📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
       }
 
-      if (response.statusCode == 200) {
-        return await compute(_parseGenericMapIsolate, response.body);
-      }
-      return null;
+      if (response.statusCode != 200) return null;
+      final parsed = await compute(_parseGenericMapIsolate, response.body);
+      if (parsed == null || !isSuccessfulResult(parsed)) return null;
+
+      final record = extractFirstResourceMap(parsed);
+      if (record == null) return null;
+      return {...record, 'result': true};
     } catch (e) {
       if (kDebugMode) debugPrint('❌ [API ERROR getPartnerExpectations]: $e');
       return null;
