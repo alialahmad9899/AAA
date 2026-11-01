@@ -1663,16 +1663,13 @@ class ApiService {
       }
 
       if (kDebugMode) {
-        debugPrint('🌐 [API POST] UpdateEducation -> ' + url.toString() +
-            ' | Method: ' + (isUpdate ? 'PUT' : 'POST') +
-            ' | Keys: ' + bodyData.keys.toList().toString());
+        debugPrint('🌐 [API POST] UpdateEducation -> $url | Method: ${isUpdate ? 'PUT' : 'POST'} | Keys: ${bodyData.keys.toList()}');
       }
       final response = await http
           .post(url, headers: headers, body: jsonEncode(bodyData))
           .timeout(_timeoutDuration);
       if (kDebugMode) {
-        debugPrint('📥 [API RESPONSE UpdateEducation ' +
-            response.statusCode.toString() + ']: ' + response.body);
+        debugPrint('📥 [API RESPONSE UpdateEducation ${response.statusCode}]: ${response.body}');
       }
       dynamic responseData;
       try {
@@ -1773,16 +1770,13 @@ class ApiService {
       }
 
       if (kDebugMode) {
-        debugPrint('🌐 [API POST] UpdateCareer -> ' + url.toString() +
-            ' | Method: ' + (isUpdate ? 'PUT' : 'POST') +
-            ' | Keys: ' + bodyData.keys.toList().toString());
+        debugPrint('🌐 [API POST] UpdateCareer -> $url | Method: ${isUpdate ? 'PUT' : 'POST'} | Keys: ${bodyData.keys.toList()}');
       }
       final response = await http
           .post(url, headers: headers, body: jsonEncode(bodyData))
           .timeout(_timeoutDuration);
       if (kDebugMode) {
-        debugPrint('📥 [API RESPONSE UpdateCareer ' +
-            response.statusCode.toString() + ']: ' + response.body);
+        debugPrint('📥 [API RESPONSE UpdateCareer ${response.statusCode}]: ${response.body}');
       }
       dynamic responseData;
       try {
