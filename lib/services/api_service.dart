@@ -1376,7 +1376,7 @@ class ApiService {
       return {
         'success': false,
         'status': response.statusCode,
-        'message': 'تعذر جلب الباقات (HTTP ' + response.statusCode.toString() + ')',
+        'message': 'تعذر جلب الباقات (HTTP ${response.statusCode})',
       };
     } catch (e) {
       if (kDebugMode) debugPrint('❌ [API ERROR getActivePackages]: $e');
@@ -2713,7 +2713,7 @@ class ApiService {
 
       if (response.statusCode != 200 && response.statusCode != 201) {
         throw HttpException(
-          'تعذر تحميل المحادثات (HTTP ' + response.statusCode.toString() + ')',
+          'تعذر تحميل المحادثات (HTTP ${response.statusCode})',
           uri: url,
         );
       }
@@ -2845,7 +2845,7 @@ class ApiService {
       return {
         'success': false,
         'status': response.statusCode,
-        'message': 'تعذر تحميل الرسائل (HTTP ' + response.statusCode.toString() + ')',
+        'message': 'تعذر تحميل الرسائل (HTTP ${response.statusCode})',
         'messages': <ChatMessageModel>[],
         'chat_rules': null,
       };
