@@ -19,7 +19,14 @@ PATCHED: dict[str, str] = {}
 
 
 def require_replace(source: str, old: str, new: str, label: str) -> str:
+    # Check the replacement first: the old anchor may still exist inside a
+    # correctly patched block (for example, an import retained after insertion).
+    if new and source.count(new) == 1:
+        return source
     count = source.count(old)
+    if count == 0 and not new:
+        # The removed block is already absent.
+        return source
     if count != 1:
         raise RuntimeError(f"{label}: expected one exact source block, found {count}")
     return source.replace(old, new, 1)
@@ -41,6 +48,13 @@ def patch_profile_controller(source: str) -> str:
         "use App\\Models\\User;\n",
         "use App\\Models\\Upload;\nuse App\\Models\\User;\n",
         "ProfileController Upload import",
+    )
+
+    # Remove duplicate imports left by an interrupted/repeated earlier patch run.
+    duplicate_upload_import = "use App\\Models\\Upload;\nuse App\\Models\\Upload;\n"
+    source = source.replace(
+        duplicate_upload_import,
+        "use App\\Models\\Upload;\n",
     )
 
     source = require_replace(
@@ -804,8 +818,7 @@ def main() -> None:
             # Normalize source line endings before applying exact patch anchors.
             original = original.replace("\r\n", "\n")
             updated = patcher(original)
-            if updated == original:
-                raise RuntimeError(f"{suffix}: patch made no changes")
+            # An unchanged file is valid when every expected patch is already applied.
             patched_entries[entry] = updated.encode("utf-8")
             PATCHED[suffix] = updated
 
