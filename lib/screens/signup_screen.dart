@@ -85,11 +85,18 @@ class _SignupScreenState extends State<SignupScreen> {
   final _careerStartYearController = TextEditingController();
   double _height = 170.0;
   double _weight = 70.0;
+  bool _heightWasSelected = false;
+  bool _weightWasSelected = false;
   String _eyeColor = 'بني';
   String _hairColor = 'أسود';
   String _complexion = 'حنطي';
   String _bodyType = 'عادي';
   String _bodyArt = 'لا يوجد';
+  bool _eyeColorWasSelected = false;
+  bool _hairColorWasSelected = false;
+  bool _complexionWasSelected = false;
+  bool _bodyTypeWasSelected = false;
+  bool _bodyArtWasSelected = false;
 
   // 3️⃣ متغيّرات الخطوة الثالثة (الإقامة والدين)
   String? _birthCountryId;
@@ -325,19 +332,24 @@ class _SignupScreenState extends State<SignupScreen> {
 
       setState(() => _isLoading = true);
       try {
-        await _requireSignupSave(
-          ApiService.updatePhysicalAttributes({
-            'height': (_height / 100).toStringAsFixed(2),
-            'weight': _weight.round().toString(),
-            'eye_color': _eyeColor,
-            'hair_color': _hairColor,
-            'complexion': _complexion,
-            'blood_group': 'N/A',
-            'body_type': _bodyType,
-            'body_art': _bodyArt,
-          }, lang: widget.currentLanguage),
-          isAr ? 'تعذر حفظ المواصفات الجسدية' : 'Failed to save physical details',
-        );
+        final physicalPayload = <String, dynamic>{
+          if (_heightWasSelected) 'height': (_height / 100).toStringAsFixed(2),
+          if (_weightWasSelected) 'weight': _weight.round().toString(),
+          if (_eyeColorWasSelected) 'eye_color': _eyeColor,
+          if (_hairColorWasSelected) 'hair_color': _hairColor,
+          if (_complexionWasSelected) 'complexion': _complexion,
+          if (_bodyTypeWasSelected) 'body_type': _bodyType,
+          if (_bodyArtWasSelected) 'body_art': _bodyArt,
+        };
+        if (physicalPayload.isNotEmpty) {
+          await _requireSignupSave(
+            ApiService.updatePhysicalAttributes(
+              physicalPayload,
+              lang: widget.currentLanguage,
+            ),
+            isAr ? 'تعذر حفظ المواصفات الجسدية' : 'Failed to save physical details',
+          );
+        }
 
         // Read the current user's rows first. This makes retries safe even after
         // the app is closed or the previous create response was interrupted.
@@ -868,17 +880,34 @@ class _SignupScreenState extends State<SignupScreen> {
                           lang: widget.currentLanguage,
                           onEducationChanged: (v) =>
                               setState(() => _educationDegree = v),
-                          onHeightChanged: (v) => setState(() => _height = v),
-                          onWeightChanged: (v) => setState(() => _weight = v),
-                          onEyeColorChanged: (v) =>
-                              setState(() => _eyeColor = v),
-                          onHairColorChanged: (v) =>
-                              setState(() => _hairColor = v),
-                          onComplexionChanged: (v) =>
-                              setState(() => _complexion = v),
-                          onBodyTypeChanged: (v) =>
-                              setState(() => _bodyType = v),
-                          onBodyArtChanged: (v) => setState(() => _bodyArt = v),
+                          onHeightChanged: (v) => setState(() {
+                            _height = v;
+                            _heightWasSelected = true;
+                          }),
+                          onWeightChanged: (v) => setState(() {
+                            _weight = v;
+                            _weightWasSelected = true;
+                          }),
+                          onEyeColorChanged: (v) => setState(() {
+                            _eyeColor = v;
+                            _eyeColorWasSelected = true;
+                          }),
+                          onHairColorChanged: (v) => setState(() {
+                            _hairColor = v;
+                            _hairColorWasSelected = true;
+                          }),
+                          onComplexionChanged: (v) => setState(() {
+                            _complexion = v;
+                            _complexionWasSelected = true;
+                          }),
+                          onBodyTypeChanged: (v) => setState(() {
+                            _bodyType = v;
+                            _bodyTypeWasSelected = true;
+                          }),
+                          onBodyArtChanged: (v) => setState(() {
+                            _bodyArt = v;
+                            _bodyArtWasSelected = true;
+                          }),
                         ),
                         Step3ResidencyReligion(
                           formKey: _step3Key,
