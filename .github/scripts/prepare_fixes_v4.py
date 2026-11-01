@@ -247,31 +247,46 @@ def patch_profile(text):
                     'viewed_by' => $auth_user->id,
                 ]);
                 $isNewVisit = !$profileViewed->exists;
-                // Do not consume the profile owner's quota for seeing their own visitors.
-                $profileViewed->updated_at = now();
-                $profileViewed->save();
+                $ownerMember = $user->member;
+                $canRecordNewVisit = !$isNewVisit || (
+                    $ownerMember &&
+                    package_validity($user->id) &&
+                    (int) ($ownerMember->remaining_profile_viewer_view ?? 0) > 0
+                );
 
-                if ($isNewVisit) {
-                    try {
-                        $notify_type = 'profile_viewed';
-                        $id = unique_notify_id();
-                        $notify_by = $auth_user->id;
-                        $info_id = $user->id;
-                        $message = $auth_user->first_name . ' ' . $auth_user->last_name . ' ' . translate(' has viewed your profile.');
-                        $route = route('member_profile', $auth_user->id);
-                        if (get_setting('firebase_push_notification') == 1) {
-                            $fcmTokens = User::where('id', $user->id)->whereNotNull('fcm_token')->pluck('fcm_token')->toArray();
-                            self::sendFirebaseNotification($fcmTokens, $user, $notify_type, $message, $notify_by);
+                if ($canRecordNewVisit) {
+                    // Re-visits refresh ordering without consuming another quota slot.
+                    $profileViewed->updated_at = now();
+                    $profileViewed->save();
+
+                    if ($isNewVisit) {
+                        $ownerMember->remaining_profile_viewer_view =
+                            max(0, (int) $ownerMember->remaining_profile_viewer_view - 1);
+                        $ownerMember->save();
+                    }
+
+                    if ($isNewVisit) {
+                        try {
+                            $notify_type = 'profile_viewed';
+                            $id = unique_notify_id();
+                            $notify_by = $auth_user->id;
+                            $info_id = $user->id;
+                            $message = $auth_user->first_name . ' ' . $auth_user->last_name . ' ' . translate(' has viewed your profile.');
+                            $route = route('member_profile', $auth_user->id);
+                            if (get_setting('firebase_push_notification') == 1) {
+                                $fcmTokens = User::where('id', $user->id)->whereNotNull('fcm_token')->pluck('fcm_token')->toArray();
+                                self::sendFirebaseNotification($fcmTokens, $user, $notify_type, $message, $notify_by);
+                            }
+                            Notification::send($user, new DbStoreNotification($notify_type, $id, $notify_by, $info_id, $message, $route));
+                        } catch (\Exception $e) {
+                            \Log::warning('Profile view notification failed: ' . $e->getMessage());
                         }
-                        Notification::send($user, new DbStoreNotification($notify_type, $id, $notify_by, $info_id, $message, $route));
-                    } catch (\Exception $e) {
-                        \Log::warning('Profile view notification failed: ' . $e->getMessage());
                     }
                 }
             }"""
     result, n = re.subn(pattern, lambda _: replacement, text, count=1, flags=re.S)
-    if n != 1 and "Do not consume the profile owner's quota" not in text:
-        raise RuntimeError("Profile visit block not found for safe update")
+    if n != 1 and "Re-visits refresh ordering without consuming another quota slot." not in text:
+        raise RuntimeError("Profile visit block not found for quota-preserving update")
     return result if n else text
 
 def patch_hosting(path):
@@ -346,7 +361,7 @@ def main():
         "Stripe intents are authenticated and verified server-side against Stripe status, user, package, currency, and amount; activation is idempotent.",
         "Signup email/OTP verification is disabled; Laravel logs detailed signup exception diagnostics.",
         "New accounts initialize their own profile-visitor quota from the selected default package.",
-        "Profile views are recorded without decrementing the visited user's allowance; first-visit notifications are retained.",
+        "Profile visits preserve the owner package quota: a first visit consumes one slot only when the package is valid and quota remains; repeat visits refresh order without double-decrement; first-visit notifications are retained.",
         "Logout revokes the current Sanctum token and unlinks FCM only when the supplied device token matches.",
         "Interest, profile visitors, chats, chat messages, and older messages distinguish API failures from successful empty results and provide retry UI.",
         "Includes all prior V3 profile, optional phone, image, and field compatibility fixes.",
@@ -363,7 +378,7 @@ def main():
 - Stripe: إنشاء الدفع وتأكيده يتطلبان Sanctum. يتحقق الخادم من PaymentIntent الحقيقي، حالة succeeded، مالك العملية، الباقة، العملة والمبلغ. يمنع تفعيل نفس PaymentIntent أكثر من مرة.
 - الدفع اليدوي: يبقى طلباً بانتظار مراجعة الإدارة، وليس تفعيل اشتراك فوري.
 - الاهتمامات والمحادثات والزوار: أخطاء الاتصال لا تظهر كقوائم فارغة؛ تتوفر حالات خطأ وإعادة محاولة.
-- الزيارات: لا تستهلك زيارة الملف حصة صاحب الملف لمشاهدة زواره؛ يُحدّث وقت آخر زيارة ويُرسل إشعار عند أول زيارة فقط.
+- الزيارات: تُسجّل الزيارة الأولى إذا كانت باقة صاحب الملف صالحة وبقيت حصة؛ تخصم زيارة واحدة فقط، والزيارات المتكررة تحدّث ترتيب السجل دون خصم إضافي. يُرسل إشعار الزيارة الأولى فقط.
 - الخروج: إلغاء Sanctum token ومسح FCM من الحساب فقط إذا طابق رمز الجهاز الذي خرج، لمنع فصل جهاز آخر.
 
 ## النشر
