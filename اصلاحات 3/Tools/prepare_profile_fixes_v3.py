@@ -21,8 +21,12 @@ def patch_auth(source):
     return source
 
 def patch_profile_request(source):
-    source,n=re.subn(r"(?m)^(\s*'phone'\s*=>\s*)\[[^\n]*\](\s*,?\s*)$",
-        r"\1['sometimes','nullable','string','max:32']\2",source,count=1)
+    source,n=re.subn(
+        r"(?m)^(\s*'phone'\s*=>\s*)\[[^\n]*\](\s*,?\s*)$",
+        lambda match: match.group(1) + r"['sometimes','nullable','string','max:32', \Illuminate\Validation\Rule::unique('users', 'phone')->ignore(auth()->id())]" + match.group(2),
+        source,
+        count=1,
+    )
     if n==0 and not re.search(r"'phone'\s*=>\s*\[[^\]]*'sometimes'[^]]*'nullable'",source):
         raise RuntimeError("ProfileRequest phone rule not optional")
     if re.search(r"'phone'\s*=>\s*\[[^\]]*'required'",source):

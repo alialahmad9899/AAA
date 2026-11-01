@@ -29,7 +29,7 @@ class ProfileRequest extends FormRequest
             'gender'        => ['sometimes', 'nullable', 'in:1,2'],
             'date_of_birth' => ['sometimes', 'nullable', 'date', 'before:today'],
             'on_behalf'     => ['sometimes', 'nullable', 'integer', 'exists:on_behalves,id'],
-            'phone'         => ['sometimes','nullable','string','max:32'],
+            'phone'         => ['sometimes','nullable','string','max:32', \Illuminate\Validation\Rule::unique('users', 'phone')->ignore(auth()->id())],
             'children'      => ['sometimes', 'nullable', 'integer', 'min:0'],
             'marital_status' => ['sometimes', 'nullable', 'integer', 'exists:marital_statuses,id'],
             'introduction'  => ['sometimes', 'nullable', 'string', 'max:5000'],
