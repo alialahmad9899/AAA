@@ -165,3 +165,31 @@ jobs:
           fi
           git commit -m "Collect verified signup and profile fixes in اصلاحات 2 [skip ci]"
           git push origin HEAD:main
+
+
+  export-fixes-zip:
+    name: Export اصلاحات 2 as ZIP artifact
+    needs: [package-fixes]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout packaged fixes
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Verify fixes package
+        run: |
+          test -f "اصلاحات 2/README.md"
+          test -f "اصلاحات 2/hosting-patch-manifest.json"
+          test -d "اصلاحات 2/Flutter"
+          test -d "اصلاحات 2/Laravel"
+
+      - name: Upload ZIP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: اصلاحات-2
+          path: اصلاحات 2/
+          if-no-files-found: error
+          compression-level: 9
+          retention-days: 7
