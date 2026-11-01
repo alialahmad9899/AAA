@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import json, re, zipfile
+import json, re, shutil, zipfile
 from pathlib import Path
 
 ARCHIVE=Path("ملفات الاتسضافة.zip")
@@ -144,6 +144,10 @@ def main():
         finally:
             if temp.exists(): temp.unlink()
 
+    # Rebuild the output folder from scratch so removed/stale files cannot leak
+    # into the package from an earlier run.
+    shutil.rmtree(OUT, ignore_errors=True)
+
     # Bring forward the complete Laravel baseline from اصلاحات 2, including
     # ProfileController and the photo/basic-profile transaction fixes.
     baseline_laravel = Path("اصلاحات 2/Laravel")
@@ -210,13 +214,20 @@ def main():
         item.relative_to(OUT/"Flutter").as_posix()
         for item in (OUT/"Flutter").rglob("*") if item.is_file()
     )
+    hosting_dir = OUT/"Hosting"
+    hosting_dir.mkdir(parents=True, exist_ok=True)
+    hosting_copy = hosting_dir/ARCHIVE.name
+    shutil.copy2(ARCHIVE, hosting_copy)
+
     manifest={"version":3,"hosting_archive":ARCHIVE.name,
+       "hosting_archive_path":hosting_copy.relative_to(OUT).as_posix(),
        "laravel_files":laravel_manifest,
        "flutter_files":flutter_manifest}
     (OUT/"hosting-patch-manifest.json").write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     (OUT/"README.md").write_text("""# اصلاحات 3
 
-تشمل الحزمة ملفات Flutter وLaravel وأرشيف الاستضافة بعد التعديل.
+تشمل الحزمة ملفات Flutter وLaravel، ونسخة كاملة من أرشيف الاستضافة بعد تطبيق التعديلات داخل المجلد:
+`Hosting/ملفات الاتسضافة.zip`.
 
 - رقم الهاتف اختياري في التسجيل وتحديث الملف.
 - أزيلت سنة بدء التعليم وسنة بدء العمل من التطبيق وطلبات API والتحقق والاستجابات.
