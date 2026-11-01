@@ -70,43 +70,53 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
   }
 
   Future<void> _fetchProfileData() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _hasError = false;
     });
 
     try {
-      final results = await Future.wait([
-        ApiService.getPublicProfile(widget.userId,
-            lang: widget.currentLanguage),
-        ApiService.getCurrentUserProfile(lang: widget.currentLanguage),
-      ]);
+      // Fetch permissions in parallel, but do not block rendering the public profile.
+      final currentUserFuture =
+          ApiService.getCurrentUserProfile(lang: widget.currentLanguage);
+      final data = await ApiService.getPublicProfile(
+        widget.userId,
+        lang: widget.currentLanguage,
+      );
 
-      final data = results[0];
-      final currentUser = results[1];
+      if (!mounted) return;
+      if (data == null) {
+        setState(() {
+          _hasError = true;
+          _isLoading = false;
+        });
+        return;
+      }
 
-      if (mounted) {
-        if (data != null) {
+      // Show the requested profile as soon as its own response is ready.
+      setState(() {
+        _profile = data;
+        _isInterestSent = data.isInterested || data.isInterestSent;
+        _isLoading = false;
+      });
+
+      // Permission-dependent controls update when the secondary request completes.
+      try {
+        final currentUser = await currentUserFuture;
+        if (mounted && currentUser != null) {
           setState(() {
-            _profile = data;
-            _isInterestSent = data.isInterested || data.isInterestSent;
-            if (currentUser != null) {
-              _currentUserIsSubscribedOrFemale =
-                  currentUser.isFemale || currentUser.isSubscribedActive;
-            }
-            _isLoading = false;
-          });
-        } else {
-          setState(() {
-            _hasError = true;
-            _isLoading = false;
+            _currentUserIsSubscribedOrFemale =
+                currentUser.isFemale || currentUser.isSubscribedActive;
           });
         }
+      } catch (e) {
+        debugPrint('تعذر تحميل صلاحيات المستخدم الحالي: $e');
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _hasError = true;
+          _hasError = _profile == null;
           _isLoading = false;
         });
       }
