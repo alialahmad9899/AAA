@@ -79,10 +79,8 @@ class _SignupScreenState extends State<SignupScreen> {
   // 2️⃣ متغيّرات ومتحكمات الخطوة الثانية (التفاصيل الشخصية)
   String? _educationDegree;
   final _institutionController = TextEditingController();
-  final _educationStartYearController = TextEditingController();
   final _designationController = TextEditingController();
   final _companyController = TextEditingController();
-  final _careerStartYearController = TextEditingController();
   double _height = 170.0;
   double _weight = 70.0;
   bool _heightWasSelected = false;
@@ -155,10 +153,8 @@ class _SignupScreenState extends State<SignupScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _institutionController.dispose();
-    _educationStartYearController.dispose();
     _designationController.dispose();
     _companyController.dispose();
-    _careerStartYearController.dispose();
     _partnerGeneralController.dispose();
     _partnerProfessionController.dispose();
     super.dispose();
@@ -368,7 +364,6 @@ class _SignupScreenState extends State<SignupScreen> {
         final educationPayload = <String, dynamic>{
           'degree': _educationDegree!,
           'institution': _institutionController.text.trim(),
-          'education_start': _educationStartYearController.text.trim(),
         };
         final educationFingerprint = jsonEncode(educationPayload);
         if (_educationSavedFingerprint != educationFingerprint) {
@@ -413,7 +408,6 @@ class _SignupScreenState extends State<SignupScreen> {
           'designation': _designationController.text.trim(),
           if (_companyController.text.trim().isNotEmpty)
             'company': _companyController.text.trim(),
-          'career_start': _careerStartYearController.text.trim(),
         };
         final careerFingerprint = jsonEncode(careerPayload);
         if (_careerSavedFingerprint != careerFingerprint) {
@@ -865,8 +859,6 @@ class _SignupScreenState extends State<SignupScreen> {
                           institutionController: _institutionController,
                           designationController: _designationController,
                           companyController: _companyController,
-                          educationStartYearController: _educationStartYearController,
-                          careerStartYearController: _careerStartYearController,
                           educationDegree: _educationDegree,
                           height: _height,
                           weight: _weight,

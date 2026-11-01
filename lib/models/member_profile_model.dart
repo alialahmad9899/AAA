@@ -1128,12 +1128,10 @@ class HobbiesModel {
 class EducationModel {
   final String degree;
   final String institution;
-  final String start;
 
   EducationModel({
     required this.degree,
     required this.institution,
-    required this.start,
   });
 
   String getLocalizedDegree({bool isArabic = true}) =>
@@ -1146,8 +1144,6 @@ class EducationModel {
     return EducationModel(
       degree: MemberProfileModel._safeString(json['degree']),
       institution: MemberProfileModel._safeString(json['institution']),
-      start: MemberProfileModel._safeString(
-          json['start'] ?? json['education_start']),
     );
   }
 }
@@ -1155,12 +1151,10 @@ class EducationModel {
 class CareerModel {
   final String designation;
   final String company;
-  final String start;
 
   CareerModel({
     required this.designation,
     required this.company,
-    required this.start,
   });
 
   String getLocalizedDesignation({bool isArabic = true}) =>
@@ -1173,8 +1167,6 @@ class CareerModel {
     return CareerModel(
       designation: MemberProfileModel._safeString(json['designation']),
       company: MemberProfileModel._safeString(json['company']),
-      start:
-          MemberProfileModel._safeString(json['start'] ?? json['career_start']),
     );
   }
 }

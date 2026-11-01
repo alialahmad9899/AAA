@@ -1019,6 +1019,18 @@ class ApiService {
 
   static Future<Map<String, dynamic>?> getFullProfile({String? lang}) async {
     try {
+      // Prefer the consolidated Laravel endpoint (one authenticated request).
+      // Fall back to the established per-section requests on older hosting builds.
+      final consolidatedResponse =
+          await get('/member/full-my-profile', lang: lang);
+      final consolidatedData = _extractMapData(consolidatedResponse);
+      if (consolidatedResponse != null &&
+          consolidatedResponse['result'] != false &&
+          consolidatedData != null &&
+          consolidatedData.containsKey('basic_info')) {
+        return consolidatedData;
+      }
+
       final results = await Future.wait([
         getBasicInfo(lang: lang),
         getEducation(lang: lang),
@@ -1454,7 +1466,7 @@ class ApiService {
   static Future<Map<String, dynamic>> updateBasicInfo({
     required String firstName,
     required String lastName,
-    required String phone,
+    String? phone,
     String? gender,
     required String dateOfBirth,
     String? maritalStatus,
@@ -1483,7 +1495,7 @@ class ApiService {
 
       request.fields['first_name'] = firstName.trim();
       request.fields['last_name'] = lastName.trim();
-      request.fields['phone'] = phone.trim();
+      if (phone != null) request.fields['phone'] = phone.trim();
       if (gender != null && gender.trim().isNotEmpty) {
         request.fields['gender'] = gender.trim();
       }
@@ -1605,10 +1617,6 @@ class ApiService {
       };
       final degree = payload['degree']?.toString().trim();
       final institution = payload['institution']?.toString().trim();
-      final rawStart = payload['education_start'] ?? payload['start'];
-      final int? startYear = rawStart == null || rawStart.toString().trim().isEmpty
-          ? null
-          : int.tryParse(rawStart.toString().trim());
       final rawEnd = payload['education_end'] ?? payload['end'];
       final int? endYear = rawEnd == null || rawEnd.toString().trim().isEmpty
           ? null
@@ -1618,27 +1626,21 @@ class ApiService {
       if (institution != null && institution.isNotEmpty) {
         bodyData['institution'] = institution;
       }
-      if (startYear != null) bodyData['education_start'] = startYear;
       if (payload.containsKey('education_end') || payload.containsKey('end')) {
         bodyData['education_end'] = endYear;
       }
 
       if (!isUpdate &&
           (!bodyData.containsKey('degree') ||
-              !bodyData.containsKey('institution') ||
-              !bodyData.containsKey('education_start'))) {
+              !bodyData.containsKey('institution'))) {
         return {
           'success': false,
-          'message': 'أدخل الشهادة والجامعة/التخصص وسنة بدء التعليم قبل الحفظ.',
+          'message': 'أدخل الشهادة والجامعة/التخصص قبل الحفظ.',
         };
       }
       if (isUpdate &&
           bodyData.keys.every((key) => key == '_method')) {
         return {'success': false, 'message': 'لا توجد تغييرات تعليمية لحفظها'};
-      }
-      if (startYear != null &&
-          (startYear < 1900 || startYear > DateTime.now().year)) {
-        return {'success': false, 'message': 'سنة بدء التعليم غير صحيحة'};
       }
       if (endYear != null &&
           (endYear < 1900 || endYear > DateTime.now().year)) {
@@ -1719,10 +1721,6 @@ class ApiService {
       };
       final designation = payload['designation']?.toString().trim();
       final company = payload['company']?.toString().trim();
-      final rawStart = payload['start'] ?? payload['career_start'];
-      final int? startYear = rawStart == null || rawStart.toString().trim().isEmpty
-          ? null
-          : int.tryParse(rawStart.toString().trim());
       final rawEnd = payload['end'] ?? payload['career_end'];
       final int? endYear = rawEnd == null || rawEnd.toString().trim().isEmpty
           ? null
@@ -1732,25 +1730,18 @@ class ApiService {
         bodyData['designation'] = designation;
       }
       if (company != null && company.isNotEmpty) bodyData['company'] = company;
-      if (startYear != null) bodyData['start'] = startYear;
       if (payload.containsKey('end') || payload.containsKey('career_end')) {
         bodyData['end'] = endYear;
       }
 
-      if (!isUpdate &&
-          (!bodyData.containsKey('designation') ||
-              !bodyData.containsKey('start'))) {
+      if (!isUpdate && !bodyData.containsKey('designation')) {
         return {
           'success': false,
-          'message': 'أدخل المسمى الوظيفي وجهة العمل وسنة بدء العمل قبل الحفظ.',
+          'message': 'أدخل المسمى الوظيفي قبل الحفظ.',
         };
       }
       if (isUpdate && bodyData.keys.every((key) => key == '_method')) {
         return {'success': false, 'message': 'لا توجد تغييرات مهنية لحفظها'};
-      }
-      if (startYear != null &&
-          (startYear < 1900 || startYear > DateTime.now().year)) {
-        return {'success': false, 'message': 'سنة بدء العمل غير صحيحة'};
       }
       if (endYear != null &&
           (endYear < 1900 || endYear > DateTime.now().year)) {

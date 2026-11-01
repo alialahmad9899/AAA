@@ -12,8 +12,6 @@ class Step2PersonalDetails extends StatelessWidget {
   final TextEditingController institutionController;
   final TextEditingController designationController;
   final TextEditingController companyController;
-  final TextEditingController educationStartYearController;
-  final TextEditingController careerStartYearController;
   final String? educationDegree;
   final double height;
   final double weight;
@@ -39,8 +37,6 @@ class Step2PersonalDetails extends StatelessWidget {
     required this.institutionController,
     required this.designationController,
     required this.companyController,
-    required this.educationStartYearController,
-    required this.careerStartYearController,
     required this.educationDegree,
     required this.height,
     required this.weight,
@@ -308,24 +304,7 @@ class Step2PersonalDetails extends StatelessWidget {
                   }).toList(),
                 ),
                 const SizedBox(height: 14),
-                TextFormField(
-                  controller: educationStartYearController,
-                  keyboardType: TextInputType.number,
-                  decoration: _buildInputDecoration(
-                    hintText: _isAr ? 'سنة بدء التعليم *' : 'Education start year *',
-                    prefixIcon: Icons.calendar_today_outlined,
-                  ),
-                  validator: (value) {
-                    final year = int.tryParse((value ?? '').trim());
-                    if (year == null || year < 1900 || year > DateTime.now().year) {
-                      return _isAr ? 'أدخل سنة تعليم صحيحة' : 'Enter a valid education year';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 14),
-
-                // 2. التخصص والمهنة
+                // 2. التخصص والمهنة                // 2. التخصص والمهنة
                 _buildQuestionTitle(
                   _isAr
                       ? '2. التخصص أو المهنة والحقل العلمي'
@@ -377,22 +356,9 @@ class Step2PersonalDetails extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                TextFormField(
-                  controller: careerStartYearController,
-                  keyboardType: TextInputType.number,
-                  decoration: _buildInputDecoration(
-                    hintText: _isAr ? 'سنة بدء العمل *' : 'Career start year *',
-                    prefixIcon: Icons.calendar_month_outlined,
-                  ),
-                  validator: (value) {
-                    final year = int.tryParse((value ?? '').trim());
-                    if (year == null || year < 1900 || year > DateTime.now().year) {
-                      return _isAr ? 'أدخل سنة عمل صحيحة' : 'Enter a valid career year';
-                    }
-                    return null;
-                  },
-                ),
                 const SizedBox(height: 16),
+
+                // 3. الطول والوزن                const SizedBox(height: 16),
 
                 // 3. الطول والوزن
                 _buildQuestionTitle(

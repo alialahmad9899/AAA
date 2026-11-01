@@ -19,10 +19,8 @@ class Step1BasicPhysicalTab extends StatelessWidget {
   final TextEditingController childrenCtrl;
   final TextEditingController introCtrl;
   final TextEditingController institutionCtrl;
-  final TextEditingController educationStartCtrl;
   final TextEditingController designationCtrl;
   final TextEditingController companyCtrl;
-  final TextEditingController careerStartCtrl;
   final String selectedGender;
   final String currentPhotoUrl;
   final File? pickedImageFile;
@@ -57,10 +55,8 @@ class Step1BasicPhysicalTab extends StatelessWidget {
     required this.childrenCtrl,
     required this.introCtrl,
     required this.institutionCtrl,
-    required this.educationStartCtrl,
     required this.designationCtrl,
     required this.companyCtrl,
-    required this.careerStartCtrl,
     required this.selectedGender,
     required this.currentPhotoUrl,
     required this.pickedImageFile,
@@ -516,15 +512,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                     Icons.account_balance_rounded)),
             const SizedBox(height: 10),
             TextFormField(
-                controller: educationStartCtrl,
-                keyboardType: TextInputType.number,
-                style: const TextStyle(
-                    color: Colors.white, fontSize: 15, fontFamily: 'Cairo'),
-                decoration: _buildInput(
-                    isAr ? 'سنة بدء التعليم' : 'Education start year',
-                    Icons.calendar_today_outlined)),
-            const SizedBox(height: 14),
-            TextFormField(
+                controller: designationCtrl,            TextFormField(
                 controller: designationCtrl,
                 style: const TextStyle(
                     color: Colors.white, fontSize: 15, fontFamily: 'Cairo'),
@@ -540,16 +528,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                     isAr ? 'جهة العمل' : 'Company / Employer',
                     Icons.business_outlined)),
             const SizedBox(height: 10),
-            TextFormField(
-                controller: careerStartCtrl,
-                keyboardType: TextInputType.number,
-                style: const TextStyle(
-                    color: Colors.white, fontSize: 15, fontFamily: 'Cairo'),
-                decoration: _buildInput(
-                    isAr ? 'سنة بدء العمل' : 'Career start year',
-                    Icons.calendar_month_outlined)),
-
-            // 4. السمات والمظهر الجسدي
+            // 4. السمات والمظهر الجسدي            // 4. السمات والمظهر الجسدي
             _buildSectionHeader(
                 isAr ? 'السمات والمظهر الجسدي' : 'Physical Attributes',
                 Icons.accessibility_new_rounded),
