@@ -1938,7 +1938,8 @@ class _SubscriptionsModalContentState
   Future<void> _startStripeNativePaymentSheet() async {
     if (_isSubmitting) return;
 
-    if (_selectedPackageId == null) {
+    final int? packageId = _selectedPackageId;
+    if (packageId == null) {
       setState(() {
         _cardErrorMessage = widget.isArabic
             ? 'يرجى اختيار الباقة أولاً'
@@ -1953,75 +1954,100 @@ class _SubscriptionsModalContentState
     });
 
     try {
-      final res = await ApiService.post('/stripe/create-payment-intent', {
-        'package_id': _selectedPackageId,
-      });
+      final createResponse = await ApiService.post(
+        '/stripe/create-payment-intent',
+        {'package_id': packageId},
+      );
 
       if (!mounted) return;
 
-      if (res != null &&
-          (res['result'] == true || res['status'] == 200) &&
-          res['client_secret'] != null) {
-        final String clientSecret = res['client_secret'];
-        final String publishableKey = res['publishable_key'] ?? '';
+      final clientSecret = createResponse?['client_secret']?.toString();
+      final paymentIntentId =
+          createResponse?['payment_intent_id']?.toString();
+      final publishableKey =
+          createResponse?['publishable_key']?.toString() ?? '';
 
-        if (publishableKey.isNotEmpty) {
-          Stripe.publishableKey = publishableKey;
-        }
-
-        await Stripe.instance.initPaymentSheet(
-          paymentSheetParameters: SetupPaymentSheetParameters(
-            paymentIntentClientSecret: clientSecret,
-            merchantDisplayName: 'تطبيق وصال - Wesal',
-            style: ThemeMode.dark,
-            appearance: const PaymentSheetAppearance(
-              colors: PaymentSheetAppearanceColors(
-                primary: Color(0xFF0288D1),
-                background: Color(0xFF0F172A),
-                componentBackground: Color(0xFF1E293B),
-                componentText: Colors.white,
-                primaryText: Colors.white,
-                secondaryText: Colors.white70,
-                placeholderText: Colors.white38,
-                icon: Color(0xFF38BDF8),
-                error: Colors.redAccent,
-              ),
-              shapes: PaymentSheetShape(
-                borderRadius: 16.0,
-                borderWidth: 1.2,
-              ),
-            ),
-          ),
-        );
-
-        if (!mounted) return;
-
-        await Stripe.instance.presentPaymentSheet();
-
-        if (!mounted) return;
-
-        await ApiService.post('/stripe/success', {
-          'package_id': _selectedPackageId,
-          'amount': _selectedAmount,
-        });
-
-        await ProfileCacheService.clearCache();
-        if (widget.onSubscriptionUpdated != null) {
-          widget.onSubscriptionUpdated!();
-        }
-
-        if (!mounted) return;
-        setState(() => _isSubmitting = false);
-        _showInstantVisaSuccessDialog();
-      } else {
+      if (createResponse == null ||
+          createResponse['result'] != true ||
+          clientSecret == null ||
+          clientSecret.isEmpty ||
+          paymentIntentId == null ||
+          paymentIntentId.isEmpty) {
         setState(() {
           _isSubmitting = false;
-          _cardErrorMessage = res?['message'] ??
+          _cardErrorMessage = createResponse?['message']?.toString() ??
               (widget.isArabic
-                  ? 'فشلت معالجة إنشاء عملية الدفع'
-                  : 'Failed to create payment intent');
+                  ? 'لم يتمكن السيرفر من إنشاء عملية دفع آمنة'
+                  : 'The server could not create a secure payment');
         });
+        return;
       }
+
+      if (publishableKey.isNotEmpty) {
+        Stripe.publishableKey = publishableKey;
+      }
+
+      await Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: SetupPaymentSheetParameters(
+          paymentIntentClientSecret: clientSecret,
+          merchantDisplayName: 'تطبيق وصال - Wesal',
+          style: ThemeMode.dark,
+          appearance: const PaymentSheetAppearance(
+            colors: PaymentSheetAppearanceColors(
+              primary: Color(0xFF0288D1),
+              background: Color(0xFF0F172A),
+              componentBackground: Color(0xFF1E293B),
+              componentText: Colors.white,
+              primaryText: Colors.white,
+              secondaryText: Colors.white70,
+              placeholderText: Colors.white38,
+              icon: Color(0xFF38BDF8),
+              error: Colors.redAccent,
+            ),
+            shapes: PaymentSheetShape(
+              borderRadius: 16.0,
+              borderWidth: 1.2,
+            ),
+          ),
+        ),
+      );
+
+      if (!mounted) return;
+      await Stripe.instance.presentPaymentSheet();
+      if (!mounted) return;
+
+      // لا نعتمد على نجاح واجهة Stripe وحدها. السيرفر يسترجع PaymentIntent
+      // من Stripe ويتحقق من المستخدم والباقة والمبلغ قبل تفعيل الاشتراك.
+      final confirmation = await ApiService.post(
+        '/stripe/confirm-payment-intent',
+        {
+          'package_id': packageId,
+          'payment_intent_id': paymentIntentId,
+        },
+      );
+
+      if (!mounted) return;
+
+      if (confirmation == null ||
+          confirmation['result'] != true ||
+          confirmation['success'] == false) {
+        setState(() {
+          _isSubmitting = false;
+          _cardErrorMessage = widget.isArabic
+              ? 'قد تكون عملية الدفع تمت، لكن لم يصل تأكيد التفعيل من السيرفر. لا تعاود الدفع الآن؛ حدّث حالة الاشتراك أو تواصل مع الدعم مع الاحتفاظ برقم العملية: $paymentIntentId'
+              : 'Payment may have completed, but the server did not confirm activation. Do not pay again. Refresh your subscription or contact support with payment reference: $paymentIntentId';
+        });
+        return;
+      }
+
+      await ProfileCacheService.clearCache();
+      if (widget.onSubscriptionUpdated != null) {
+        widget.onSubscriptionUpdated!();
+      }
+
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
+      _showInstantVisaSuccessDialog();
     } on StripeException catch (e) {
       if (!mounted) return;
       setState(() => _isSubmitting = false);
@@ -2039,8 +2065,8 @@ class _SubscriptionsModalContentState
       setState(() {
         _isSubmitting = false;
         _cardErrorMessage = widget.isArabic
-            ? 'خطأ في تشغيل نافذة الدفع: ${e.toString().split('\n').first}'
-            : 'Payment Sheet error: $e';
+            ? 'تعذر إكمال الدفع أو التحقق من حالته. لا تعاود الدفع قبل التأكد من سجل العملية.'
+            : 'Payment or payment verification could not be completed. Do not retry before checking the payment status.';
       });
     }
   }
