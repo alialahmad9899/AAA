@@ -1,0 +1,23 @@
+{
+  "version": 3,
+  "hosting_archive": "ملفات الاتسضافة.zip",
+  "laravel_files": [
+    "app/Http/Controllers/Api/AuthController.php",
+    "app/Http/Controllers/Api/EducationController.php",
+    "app/Http/Requests/AuthRequest.php",
+    "app/Http/Requests/CareerRequest.php",
+    "app/Http/Requests/ProfileRequest.php",
+    "app/Http/Resources/CareerResource.php",
+    "app/Http/Resources/EducationResource.php",
+    "database/migrations/2026_11_01_000000_make_profile_start_years_nullable.php"
+  ],
+  "flutter_files": [
+    "lib/screens/signup_screen.dart",
+    "lib/screens/widgets/step2_personal_details.dart",
+    "lib/screens/edit_profile_screen.dart",
+    "lib/screens/edit_profile/widgets/step1_basic_physical_tab.dart",
+    "lib/services/api_service.dart",
+    "lib/models/member_profile_model.dart",
+    "test/profile_edit_unit_test.dart"
+  ]
+}
