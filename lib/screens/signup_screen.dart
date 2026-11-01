@@ -77,9 +77,12 @@ class _SignupScreenState extends State<SignupScreen> {
   File? _profilePhoto; // متغير الصورة الشخصية الإجبارية
 
   // 2️⃣ متغيّرات ومتحكمات الخطوة الثانية (التفاصيل الشخصية)
-  String? _educationDegree = 'بكالوريوس';
+  String? _educationDegree;
   final _institutionController = TextEditingController();
+  final _educationStartYearController = TextEditingController();
   final _designationController = TextEditingController();
+  final _companyController = TextEditingController();
+  final _careerStartYearController = TextEditingController();
   double _height = 170.0;
   double _weight = 70.0;
   String _eyeColor = 'بني';
@@ -101,14 +104,16 @@ class _SignupScreenState extends State<SignupScreen> {
   final _partnerProfessionController = TextEditingController();
   RangeValues _partnerHeightRange = const RangeValues(155, 180);
   RangeValues _partnerWeightRange = const RangeValues(50, 80);
-  String? _partnerEducation = 'بكالوريوس';
-  String? _partnerComplexion = 'حنطي';
+  bool _partnerHeightWasSelected = false;
+  bool _partnerWeightWasSelected = false;
+  String? _partnerEducation;
+  String? _partnerComplexion;
   String? _partnerLanguageId;
   String? _partnerReligionId;
   String? _partnerMaritalStatusId;
   String _partnerChildrenAcceptable = 'dose_not_matter';
   String _partnerSmokingAcceptable = 'dose_not_matter';
-  String _partnerDrinkingAcceptable = 'no';
+  String _partnerDrinkingAcceptable = 'dose_not_matter';
 
   @override
   void initState() {
@@ -145,7 +150,10 @@ class _SignupScreenState extends State<SignupScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _institutionController.dispose();
+    _educationStartYearController.dispose();
     _designationController.dispose();
+    _companyController.dispose();
+    _careerStartYearController.dispose();
     _partnerGeneralController.dispose();
     _partnerProfessionController.dispose();
     super.dispose();
@@ -307,6 +315,13 @@ class _SignupScreenState extends State<SignupScreen> {
     // ------------------------------------------------------------------------
     else if (_currentStep == 1) {
       if (!_step2Key.currentState!.validate()) return;
+      if (_educationDegree == null || _educationDegree!.trim().isEmpty) {
+        _showNotification(
+          isAr ? 'يرجى تحديد المستوى التعليمي' : 'Please select your education level',
+          NotificationType.warning,
+        );
+        return;
+      }
 
       setState(() => _isLoading = true);
       try {
@@ -341,9 +356,9 @@ class _SignupScreenState extends State<SignupScreen> {
         );
 
         final educationPayload = <String, dynamic>{
-          'degree': _educationDegree ?? 'بكالوريوس',
+          'degree': _educationDegree!,
           'institution': _institutionController.text.trim(),
-          'education_start': '2026',
+          'education_start': _educationStartYearController.text.trim(),
         };
         final educationFingerprint = jsonEncode(educationPayload);
         if (_educationSavedFingerprint != educationFingerprint) {
@@ -386,8 +401,9 @@ class _SignupScreenState extends State<SignupScreen> {
 
         final careerPayload = <String, dynamic>{
           'designation': _designationController.text.trim(),
-          'company': '',
-          'career_start': '2026',
+          if (_companyController.text.trim().isNotEmpty)
+            'company': _companyController.text.trim(),
+          'career_start': _careerStartYearController.text.trim(),
         };
         final careerFingerprint = jsonEncode(careerPayload);
         if (_careerSavedFingerprint != careerFingerprint) {
@@ -467,7 +483,6 @@ class _SignupScreenState extends State<SignupScreen> {
             'recidency_state_id': _stateId!,
             if (_cityId != null && _cityId!.isNotEmpty)
               'recidency_city_id': _cityId!,
-            'growup_country_id': _birthCountryId!,
           }, lang: widget.currentLanguage),
           isAr ? 'تعذر حفظ بيانات الإقامة' : 'Failed to save residency details',
         );
@@ -515,38 +530,38 @@ class _SignupScreenState extends State<SignupScreen> {
 
       setState(() => _isLoading = true);
       try {
-        await _requireSignupSave(
-          ApiService.updatePartnerExpectations({
+        final partnerPayload = <String, dynamic>{
+          if (_partnerGeneralController.text.trim().isNotEmpty)
             'general': _partnerGeneralController.text.trim(),
-            'residence_country_id': _residenceCountryId ?? '1',
-            'partner_country_id': _residenceCountryId ?? '1',
-            'partner_state_id': _stateId ?? '0',
+          if (_partnerHeightWasSelected)
             'partner_height':
                 (_partnerHeightRange.start / 100).toStringAsFixed(2),
+          if (_partnerWeightWasSelected)
             'partner_weight': _partnerWeightRange.end.round().toString(),
-            'partner_education': _partnerEducation ?? 'بكالوريوس',
-            'pertner_education': _partnerEducation ?? 'بكالوريوس',
+          if (_partnerEducation != null && _partnerEducation!.isNotEmpty) ...{
+            'partner_education': _partnerEducation,
+            'pertner_education': _partnerEducation,
+          },
+          if (_partnerProfessionController.text.trim().isNotEmpty)
             'partner_profession': _partnerProfessionController.text.trim(),
-            if ((_partnerMaritalStatusId ?? _maritalStatusId) != null)
-              'partner_marital_status':
-                  _partnerMaritalStatusId ?? _maritalStatusId,
-            if ((_partnerReligionId ?? _religionId) != null)
-              'partner_religion_id': _partnerReligionId ?? _religionId,
-            if (_partnerLanguageId != null)
-              'language_id': _partnerLanguageId,
-            'partner_children_acceptable': _partnerChildrenAcceptable,
-            'smoking_acceptable': _partnerSmokingAcceptable,
-            'drinking_acceptable': _partnerDrinkingAcceptable,
-            'pertner_complexion': _partnerComplexion ?? 'حنطي',
-            'complexion': _partnerComplexion ?? 'حنطي',
-            'partner_diet': 'dose_not_matter',
-            'partner_manglik': 'dose_not_matter',
-            'partner_caste_id': '0',
-            'partner_sub_caste_id': '0',
-            'partner_body_type': '0',
-            'partner_personal_value': '0',
-            'family_value_id': '0',
-          }, lang: widget.currentLanguage),
+          'partner_children_acceptable': _partnerChildrenAcceptable,
+          'smoking_acceptable': _partnerSmokingAcceptable,
+          'drinking_acceptable': _partnerDrinkingAcceptable,
+          if (_partnerComplexion != null && _partnerComplexion!.isNotEmpty) ...{
+            'partner_complexion': _partnerComplexion,
+            'pertner_complexion': _partnerComplexion,
+          },
+        };
+        if (partnerPayload.isEmpty) {
+          throw const _SignupStepSaveException(
+            'يرجى تحديد تفضيل واحد على الأقل للشريك قبل إنهاء التسجيل.',
+          );
+        }
+        await _requireSignupSave(
+          ApiService.updatePartnerExpectations(
+            partnerPayload,
+            lang: widget.currentLanguage,
+          ),
           isAr ? 'تعذر حفظ توقعات الشريك' : 'Failed to save partner expectations',
         );
 
@@ -839,6 +854,9 @@ class _SignupScreenState extends State<SignupScreen> {
                           formKey: _step2Key,
                           institutionController: _institutionController,
                           designationController: _designationController,
+                          companyController: _companyController,
+                          educationStartYearController: _educationStartYearController,
+                          careerStartYearController: _careerStartYearController,
                           educationDegree: _educationDegree,
                           height: _height,
                           weight: _weight,
@@ -873,18 +891,20 @@ class _SignupScreenState extends State<SignupScreen> {
                           lang: widget.currentLanguage,
                           onBirthCountryChanged: (v) =>
                               setState(() => _birthCountryId = v),
-                          onResidenceCountryChanged: (v) =>
-                              setState(() => _residenceCountryId = v),
-                          onStateChanged: (v) => setState(() => _stateId = v),
+                                          onResidenceCountryChanged: (v) => setState(() {
+                            if (_residenceCountryId != v) {
+                              _stateId = null;
+                              _cityId = null;
+                            }
+                            _residenceCountryId = v;
+                          }),
+                          onStateChanged: (v) => setState(() {
+                            if (_stateId != v) _cityId = null;
+                            _stateId = v;
+                          }),
                           onCityChanged: (v) => setState(() => _cityId = v),
-                          onReligionChanged: (v) => setState(() {
-                            _religionId = v;
-                            _partnerReligionId = v;
-                          }),
-                          onMaritalStatusChanged: (v) => setState(() {
-                            _maritalStatusId = v;
-                            _partnerMaritalStatusId = v;
-                          }),
+                          onReligionChanged: (v) => setState(() => _religionId = v),
+                          onMaritalStatusChanged: (v) => setState(() => _maritalStatusId = v),
                         ),
                         Step4PartnerExpectations(
                           formKey: _step4Key,
@@ -899,10 +919,14 @@ class _SignupScreenState extends State<SignupScreen> {
                           smokingAcceptable: _partnerSmokingAcceptable,
                           drinkingAcceptable: _partnerDrinkingAcceptable,
                           lang: widget.currentLanguage,
-                          onHeightRangeChanged: (v) =>
-                              setState(() => _partnerHeightRange = v),
-                          onWeightRangeChanged: (v) =>
-                              setState(() => _partnerWeightRange = v),
+                          onHeightRangeChanged: (v) => setState(() {
+                            _partnerHeightRange = v;
+                            _partnerHeightWasSelected = true;
+                          }),
+                          onWeightRangeChanged: (v) => setState(() {
+                            _partnerWeightRange = v;
+                            _partnerWeightWasSelected = true;
+                          }),
                           onEducationChanged: (v) =>
                               setState(() => _partnerEducation = v),
                           onComplexionChanged: (v) =>
