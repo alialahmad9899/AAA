@@ -165,7 +165,7 @@ def unique_entry(names, suffix):
 
 def patch_auth(text):
     text, n = re.subn(
-        r"(?m)^\s*\$autoVerify\s*=.*?;\s*$",
+        r"(?ms)^[ \t]*\$autoVerify[ \t]*=.*?;[ \t]*$",
         "            // Email/OTP verification is disabled for Wesal registration.\n            $autoVerify = true;",
         text, count=1
     )
