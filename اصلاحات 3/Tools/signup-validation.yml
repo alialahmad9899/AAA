@@ -137,7 +137,9 @@ jobs:
           grep -Fq 'confirm_payment_intent' "$stripe_file"
           grep -Fq '$autoVerify = true;' "$auth_file"
           grep -Fq 'remaining_profile_viewer_view' "$auth_file"
-          ! grep -Fq 'remaining_profile_viewer_view = $usermember->remaining_profile_viewer_view - 1' "$profile_file"
+          grep -Fq 'firstOrNew' "$profile_file"
+          grep -Fq 'remaining_profile_viewer_view - 1' "$profile_file"
+          grep -Fq 'if ($isNewVisit)' "$profile_file"
       - uses: actions/upload-artifact@v4
         with:
           name: اصلاحات-4
