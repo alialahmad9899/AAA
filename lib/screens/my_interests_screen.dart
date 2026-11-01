@@ -31,6 +31,8 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
 
   bool _isLoadingReceived = true;
   bool _isLoadingSent = true;
+  String? _receivedLoadError;
+  String? _sentLoadError;
   late String _activeLang;
 
   List<dynamic> _receivedInterests = [];
@@ -84,14 +86,27 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
       final res = await ApiService.getReceivedInterests(lang: _activeLang);
       if (mounted) {
         setState(() {
-          _receivedInterests = res['data'] is List ? res['data'] : [];
+          if (res['success'] == true && res['data'] is List) {
+            _receivedInterests = res['data'];
+            _receivedLoadError = null;
+          } else {
+            _receivedLoadError = res['message']?.toString() ??
+                (_activeLang == 'ar'
+                    ? 'تعذر تحميل الطلبات الواردة'
+                    : 'Could not load received requests');
+          }
           _isLoadingReceived = false;
         });
       }
     } catch (e) {
       debugPrint('خطأ في جلب الطلبات الواردة: $e');
       if (mounted) {
-        setState(() => _isLoadingReceived = false);
+        setState(() {
+          _receivedLoadError = _activeLang == 'ar'
+              ? 'تعذر الاتصال بالسيرفر لتحميل الطلبات الواردة'
+              : 'Could not connect to load received requests';
+          _isLoadingReceived = false;
+        });
       }
     }
   }
@@ -104,14 +119,27 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
       final res = await ApiService.getSentInterests(lang: _activeLang);
       if (mounted) {
         setState(() {
-          _sentInterests = res['data'] is List ? res['data'] : [];
+          if (res['success'] == true && res['data'] is List) {
+            _sentInterests = res['data'];
+            _sentLoadError = null;
+          } else {
+            _sentLoadError = res['message']?.toString() ??
+                (_activeLang == 'ar'
+                    ? 'تعذر تحميل الطلبات المرسلة'
+                    : 'Could not load sent requests');
+          }
           _isLoadingSent = false;
         });
       }
     } catch (e) {
       debugPrint('خطأ في جلب الطلبات المرسلة: $e');
       if (mounted) {
-        setState(() => _isLoadingSent = false);
+        setState(() {
+          _sentLoadError = _activeLang == 'ar'
+              ? 'تعذر الاتصال بالسيرفر لتحميل الطلبات المرسلة'
+              : 'Could not connect to load sent requests';
+          _isLoadingSent = false;
+        });
       }
     }
   }
@@ -336,6 +364,8 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                   items: _receivedInterests,
                   isReceived: true,
                   isAr: isAr,
+                  errorMessage: _receivedLoadError,
+                  onRetry: _fetchReceivedInterests,
                   emptyMessage: isAr
                       ? 'لا توجد طلبات اهتمام واردة حالياً'
                       : 'No received interest requests yet',
@@ -345,6 +375,8 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                   items: _sentInterests,
                   isReceived: false,
                   isAr: isAr,
+                  errorMessage: _sentLoadError,
+                  onRetry: _fetchSentInterests,
                   emptyMessage: isAr
                       ? 'لم تقم بإرسال أي طلب اهتمام حتى الآن'
                       : 'You have not sent any interest requests',
@@ -363,10 +395,48 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
     required bool isReceived,
     required bool isAr,
     required String emptyMessage,
+    required String? errorMessage,
+    required VoidCallback onRetry,
   }) {
     if (isLoading) {
       return const Center(
         child: CircularProgressIndicator(color: Color(0xFFE91E63)),
+      );
+    }
+
+    if (errorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.cloud_off_rounded,
+                  color: Colors.white60, size: 48),
+              const SizedBox(height: 14),
+              Text(
+                errorMessage,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                  fontFamily: 'Cairo',
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh_rounded),
+                label: Text(isAr ? 'إعادة المحاولة' : 'Retry'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFE91E63),
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
