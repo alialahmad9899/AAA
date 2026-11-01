@@ -99,7 +99,7 @@ def patch_physical_attributes_resource(source):
         lang_line = "        $lang = $request->header('Accept-Language') ?? $request->header('app_language') ?? $request->get('lang') ?? 'ar';\n"
         if source.count(lang_line) != 1:
             raise RuntimeError('PhysicalAttributes resource language line not found exactly once')
-        source = source.replace(lang_line, lang_line + '\\n' + helper, 1)
+        source = source.replace(lang_line, lang_line + '\n' + helper, 1)
 
     fields = {
         'eye_color': '$cleanPhysicalAttribute($this->eye_color)',
@@ -107,7 +107,7 @@ def patch_physical_attributes_resource(source):
         'complexion': '$cleanPhysicalAttribute($this->complexion)',
     }
     for field, expression in fields.items():
-        pattern = r"(?m)^(\\s*)['\"]" + re.escape(field) + r"['\"]\\s*=>.*$"
+        pattern = r"(?m)^([\s]*)['\"]" + re.escape(field) + r"['\"]\s*=>.*$"
         replacement = lambda match, expr=expression, key=field: match.group(1) + "'" + key + "' => " + expr + ","
         source, count = re.subn(pattern, replacement, source, count=1)
         if count != 1:
@@ -116,7 +116,7 @@ def patch_physical_attributes_resource(source):
                 raise RuntimeError('PhysicalAttributes resource field not found: ' + field)
 
     for field in fields:
-        if re.search(r"['\"]" + re.escape(field) + r"['\"]\\s*=>\\s*function_exists\\('translate'\\)", source):
+        if re.search(r"['\"]" + re.escape(field) + r"['\"]\s*=>\s*function_exists\('translate'\)", source):
             raise RuntimeError('PhysicalAttributes still translates raw field: ' + field)
     return source
 
