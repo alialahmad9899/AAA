@@ -438,14 +438,22 @@ class _EditProfileScreenState extends State<EditProfileScreen>
   String? _resolveDropdownId(dynamic raw, List<dynamic> options) {
     if (raw == null) return null;
     if (raw is Map) {
-      final directId = raw['id'] ?? raw['value'] ?? raw['religion_id'] ??
-          raw['marital_status_id'] ?? raw['maritial_status_id'];
+      final directId = raw['id'] ??
+          raw['value'] ??
+          raw['religion_id'] ??
+          raw['marital_status_id'] ??
+          raw['maritial_status_id'];
       if (directId != null) return _resolveDropdownId(directId, options);
       raw = raw['name'] ?? raw['name_ar'] ?? raw['name_en'] ?? raw['title'];
     }
+
     final value = raw?.toString().trim() ?? '';
     if (value.isEmpty || value == 'null' || value == 'undefined') return null;
-    if (RegExp(r'^\d+
+    if (RegExp(r'^\d+$').hasMatch(value)) return value;
+
+    String normalize(String input) => input
+        .toLowerCase()
+        .replaceAll(RegExp(r'[\s_-]+'), '')
         .trim();
 
     final target = normalize(value);
@@ -454,20 +462,21 @@ class _EditProfileScreenState extends State<EditProfileScreen>
       final id = option['id']?.toString();
       if (id == null || id.isEmpty) continue;
       final candidates = [
-        option['name'], option['name_ar'], option['name_en'],
-        option['title'], option['value'],
+        option['name'],
+        option['name_ar'],
+        option['name_en'],
+        option['title'],
+        option['value'],
       ];
       if (candidates.any((candidate) =>
           candidate != null && normalize(candidate.toString()) == target)) {
         return id;
       }
     }
+
     // Never guess a foreign key from a translated display label.
     return null;
   }
-
-  String? _sanitizeMaritalStatusId(dynamic raw) =>
-      _resolveDropdownId(raw, _maritalStatuses);
 
   String? _sanitizeReligionId(dynamic raw) =>
       _resolveDropdownId(raw, _religions);
@@ -980,8 +989,9 @@ class _EditProfileScreenState extends State<EditProfileScreen>
 
   void _recordLoadedFields(String section, Map<String, dynamic>? data) {
     if (data == null || data.isEmpty) return;
-    _loadedProfileFields.putIfAbsent(section, () => <String>{})
-      ..addAll(data.keys.map((key) => key.toString()));
+    final loadedFields =
+        _loadedProfileFields.putIfAbsent(section, () => <String>{});
+    loadedFields.addAll(data.keys.map((key) => key.toString()));
   }
 
   bool _wasFieldLoaded(String section, List<String> aliases) {
