@@ -42,8 +42,9 @@ class AuthController extends Controller
         $storedPhotoPath = null;
 
         try {
-            $autoVerify = (get_setting('email_verification') != 1 && !addon_activation('otp_system'))
-                || get_setting('registration_verification') === '1';
+            // Wesal does not require email/OTP verification: allow the new account
+            // to continue through all authenticated profile-setup endpoints.
+            $autoVerify = true;
 
             $user = DB::transaction(function () use ($request, &$storedPhotoPath, $autoVerify) {
                 $package = Package::where('id', 1)->first();
@@ -126,7 +127,13 @@ class AuthController extends Controller
                 }
             }
 
-            \Log::error('API signup transaction failed: ' . $e->getMessage());
+            \Log::error('API signup transaction failed', [
+                'exception' => get_class($e),
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
 
             return response()->json([
                 'result' => false,
@@ -380,10 +387,15 @@ class AuthController extends Controller
     {
         $user = auth()->user();
         if ($user) {
-            $user
-                ->tokens()
-                ->where('id', $user->currentAccessToken()->id)
-                ->delete();
+            $currentToken = $user->currentAccessToken();
+            if ($currentToken) {
+                $user->tokens()->where('id', $currentToken->id)->delete();
+            }
+
+            // Detach this device's push token from the account on logout.
+            // The app may register the same device token again after next login.
+            $user->fcm_token = null;
+            $user->save();
         }
         return $this->success_message('Successfully logged out');
     }
