@@ -47,6 +47,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
   bool _isLoading = true;
   bool _isSaving = false;
   bool _isLoadingStates = false;
+  int _statesRequestGeneration = 0;
 
   // متحكمات النصوص
   final _generalCtrl = TextEditingController();
@@ -294,13 +295,23 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
   /// 3️⃣ جلب المحافظات التابعة للدولة المختارة
   Future<void> _loadStatesForCountry(String countryId,
       {dynamic rawStateTarget}) async {
-    if (countryId.isEmpty) return;
+    final int requestGeneration = ++_statesRequestGeneration;
     final parsedCountryId = int.tryParse(countryId);
-    if (parsedCountryId == null) return;
+    if (countryId.isEmpty || parsedCountryId == null) {
+      if (mounted) {
+        setState(() {
+          _states = [];
+          _selectedStateId = null;
+          _isLoadingStates = false;
+        });
+      }
+      return;
+    }
 
     setState(() {
       _isLoadingStates = true;
       _states = [];
+      _selectedStateId = null;
     });
 
     try {
@@ -308,28 +319,25 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
         parsedCountryId,
         lang: widget.currentLanguage,
       );
-      if (mounted) {
-        setState(() {
-          _states = resStates;
-          _isLoadingStates = false;
+      if (!mounted || requestGeneration != _statesRequestGeneration) return;
 
-          if (rawStateTarget != null && _states.isNotEmpty) {
-            final strVal = rawStateTarget.toString().trim();
-            final match = _states.firstWhere(
-              (s) =>
-                  s['id'].toString() == strVal ||
-                  _cleanText((s['name'] ?? '').toString()) ==
-                      _cleanText(strVal),
-              orElse: () => null,
-            );
-            if (match != null) {
-              _selectedStateId = match['id'].toString();
-            }
-          }
-        });
-      }
+      setState(() {
+        _states = resStates;
+        _isLoadingStates = false;
+
+        if (rawStateTarget != null && _states.isNotEmpty) {
+          final strVal = rawStateTarget.toString().trim();
+          final match = _states.firstWhere(
+            (s) =>
+                s['id'].toString() == strVal ||
+                _cleanText((s['name'] ?? '').toString()) == _cleanText(strVal),
+            orElse: () => null,
+          );
+          if (match != null) _selectedStateId = match['id'].toString();
+        }
+      });
     } catch (e) {
-      if (mounted) {
+      if (mounted && requestGeneration == _statesRequestGeneration) {
         setState(() => _isLoadingStates = false);
       }
     }
