@@ -327,6 +327,7 @@ def main():
         "lib/screens/my_interests_screen.dart",
         "lib/screens/my_profile_viewers_screen.dart",
         "lib/screens/chat_detail_screen.dart",
+        "lib/screens/widgets/step1_basic_info.dart",
     ]
     for rel in flutter:
         source = ROOT / rel
