@@ -46,6 +46,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   List<ChatMessageModel> _messages = [];
   ChatRulesModel? _chatRules;
   bool _isLoading = false;
+  bool _hasMessageLoadError = false;
+  String _messageLoadError = '';
   bool _isSending = false;
   bool _isLoadingMore = false;
   bool _hasMoreOldMessages = true;
@@ -426,9 +428,29 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         lang: widget.currentLanguage,
       );
 
+      if (res['success'] != true) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _hasMessageLoadError = true;
+            _messageLoadError = res['message']?.toString() ??
+                (_isArabic ? 'تعذر تحميل الرسائل' : 'Could not load messages');
+          });
+          if (!silent && _messages.isEmpty) {
+            AppSnackBar.show(
+              context: context,
+              type: NotificationType.error,
+              isArabic: _isArabic,
+              messageAr: _messageLoadError,
+              messageEn: _messageLoadError,
+            );
+          }
+        }
+        return;
+      }
+
       final List<ChatMessageModel> messages = res['messages'] ?? [];
       final ChatRulesModel? rules = res['chat_rules'];
-
       _globalMessagesCache[_activeThreadId] = List.from(messages);
 
       if (mounted) {
@@ -436,6 +458,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           _messages = messages;
           _chatRules = rules;
           _isLoading = false;
+          _hasMessageLoadError = false;
+          _messageLoadError = '';
         });
         if (!silent) {
           _scrollToBottom();
@@ -443,14 +467,20 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {
+          _isLoading = false;
+          _hasMessageLoadError = true;
+          _messageLoadError = _isArabic
+              ? 'تعذر الاتصال بالسيرفر أثناء تحميل الرسائل'
+              : 'Could not connect to load messages';
+        });
         if (!silent && _messages.isEmpty) {
           AppSnackBar.show(
             context: context,
             type: NotificationType.error,
             isArabic: _isArabic,
-            messageAr: 'تعذر تحميل الرسائل، يرجى التأكد من الاتصال بالشبكة',
-            messageEn: 'Failed to load messages, please check connection',
+            messageAr: _messageLoadError,
+            messageEn: _messageLoadError,
           );
         }
       }
@@ -1509,17 +1539,51 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                               child: CircularProgressIndicator(
                                   color: Colors.white))
                           : _messages.isEmpty
-                              ? Center(
-                                  child: Text(
-                                    _isArabic
-                                        ? 'لا توجد رسائل سابقة في هذه المحادثة'
-                                        : 'No message history in this chat',
-                                    style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 15,
-                                        fontFamily: 'Cairo'),
-                                  ),
-                                )
+                              ? _hasMessageLoadError
+                                  ? Center(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(24),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(
+                                              Icons.cloud_off_rounded,
+                                              color: Colors.white70,
+                                              size: 46,
+                                            ),
+                                            const SizedBox(height: 12),
+                                            Text(
+                                              _messageLoadError,
+                                              textAlign: TextAlign.center,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 14,
+                                                fontFamily: 'Cairo',
+                                              ),
+                                            ),
+                                            const SizedBox(height: 14),
+                                            ElevatedButton.icon(
+                                              onPressed: () => _loadMessages(),
+                                              icon: const Icon(Icons.refresh_rounded),
+                                              label: Text(_isArabic
+                                                  ? 'إعادة المحاولة'
+                                                  : 'Retry'),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  : Center(
+                                      child: Text(
+                                        _isArabic
+                                            ? 'لا توجد رسائل سابقة في هذه المحادثة'
+                                            : 'No message history in this chat',
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 15,
+                                            fontFamily: 'Cairo'),
+                                      ),
+                                    )
                               : ListView.builder(
                                   controller: _scrollController,
                                   padding: const EdgeInsets.symmetric(
