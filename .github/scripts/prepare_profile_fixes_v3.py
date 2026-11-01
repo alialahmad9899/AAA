@@ -29,6 +29,32 @@ def patch_profile_request(source):
         raise RuntimeError("ProfileRequest phone still required")
     return source
 
+def patch_signup_member_mapping(source):
+    old = """                $request->merge(['user_id' => $user->id]);
+                $member_service->store(
+                    $request->only(['gender', 'birthday', 'on_behalves_id', 'user_id']),
+                    $package
+                );
+"""
+    new = """                // Normalize the field names sent by the Flutter signup form.
+                // The app sends date_of_birth and on_behalf; MemberService expects
+                // birthday and on_behalves_id.
+                $memberData = [
+                    'gender' => $request->input('gender'),
+                    'birthday' => $request->input('date_of_birth') ?? $request->input('birthday'),
+                    'on_behalves_id' => $request->input('on_behalf') ?? $request->input('on_behalves_id'),
+                    'user_id' => $user->id,
+                ];
+                $member_service->store($memberData, $package);
+"""
+    if new in source:
+        return source
+    count = source.count(old)
+    if count != 1:
+        raise RuntimeError(f"AuthController signup field mapping: expected one original block, found {count}")
+    return source.replace(old, new, 1)
+
+
 def patch_education(source):
     source=re.sub(r"(?m)^\s*'education_start'\s*=>\s*\[[^\n]*\],?\s*\n","",source)
     source=re.sub(r"(?m)^\s*(?:if\s*\(.*\)\s*)?\$education->start\s*=.*;\s*\n","",source)
@@ -85,6 +111,7 @@ def main():
     with zipfile.ZipFile(ARCHIVE,"r") as z:
         names=z.namelist()
         patchers={
+            "app/Http/Controllers/Api/AuthController.php":patch_signup_member_mapping,
             "app/Http/Requests/AuthRequest.php":patch_auth,
             "app/Http/Requests/ProfileRequest.php":patch_profile_request,
             "app/Http/Controllers/Api/EducationController.php":patch_education,
