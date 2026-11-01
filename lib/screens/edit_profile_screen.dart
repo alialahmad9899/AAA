@@ -1581,9 +1581,11 @@ class _EditProfileScreenState extends State<EditProfileScreen>
             phone: _phoneCtrl.text.trim(),
             gender: _genderWasLoaded ? _selectedGender : null,
             dateOfBirth: _dobCtrl.text.trim(),
-            maritalStatus: _selectedMaritalStatusId ?? '',
+            maritalStatus: _selectedMaritalStatusId,
             onBehalf: _onBehalfValue,
-            children: _childrenCtrl.text.trim(),
+            children: _wasFieldLoaded('basic_info', const ['no_of_children', 'children'])
+                ? _childrenCtrl.text.trim()
+                : null,
             introduction: sendIntroduction ? _introCtrl.text.trim() : null,
             photoFile: _pickedImageFile,
             lang: lang,
@@ -1747,6 +1749,26 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                 _isArabic ? 'فشل حفظ بعض البيانات' : 'Some profile changes could not be saved',
               );
             }
+          }
+        }
+
+        // Basic-info is the first request in this section. Confirm the stored
+        // photo URL from the server before discarding the locally picked file.
+        if (index == 0 &&
+            _pickedImageFile != null &&
+            results.isNotEmpty &&
+            ApiService.isSuccessfulResult(results.first)) {
+          final refreshedBasic = await ApiService.getBasicInfo(lang: lang);
+          final refreshedRecord =
+              ApiService.extractFirstResourceMap(refreshedBasic) ??
+                  (refreshedBasic is Map<String, dynamic> ? refreshedBasic : null);
+          final refreshedPhoto = refreshedRecord?['photo'] ?? refreshedRecord?['avatar'];
+          final photoUrl = _fieldString(refreshedPhoto);
+          if (mounted && photoUrl != null && photoUrl.isNotEmpty) {
+            setState(() {
+              _currentPhotoUrl = photoUrl;
+              _pickedImageFile = null;
+            });
           }
         }
         if (allSuccess) {
