@@ -117,7 +117,6 @@ class _SignupScreenState extends State<SignupScreen> {
   String? _partnerComplexion;
   String? _partnerLanguageId;
   String? _partnerReligionId;
-  String? _partnerMaritalStatusId;
   String _partnerChildrenAcceptable = 'dose_not_matter';
   String _partnerSmokingAcceptable = 'dose_not_matter';
   String _partnerDrinkingAcceptable = 'dose_not_matter';
