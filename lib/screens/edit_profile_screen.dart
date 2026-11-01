@@ -52,9 +52,9 @@ class _EditProfileScreenState extends State<EditProfileScreen>
   final _institutionCtrl = TextEditingController();
   final _designationCtrl = TextEditingController();
   final _companyCtrl = TextEditingController();
+  final _educationStartCtrl = TextEditingController();
+  final _careerStartCtrl = TextEditingController();
   String? _selectedEducationDegree;
-  String _educationStart = '';
-  String _careerStart = '';
 
   // الحقول التي استلمناها فعلياً. نستخدمها للسماح بمسح قيمة موجودة
   // مع منع إرسال فراغات/قيم افتراضية لحقول لم تُحمّل من الخادم.
@@ -883,6 +883,8 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     _institutionCtrl.dispose();
     _designationCtrl.dispose();
     _companyCtrl.dispose();
+    _educationStartCtrl.dispose();
+    _careerStartCtrl.dispose();
     super.dispose();
   }
 
@@ -1284,7 +1286,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
           _institutionCtrl, educationData, const ['institution']);
       final educationStart =
           educationData['education_start'] ?? educationData['start'];
-      if (educationStart != null) _educationStart = educationStart.toString();
+      if (educationStart != null) _educationStartCtrl.text = educationStart.toString();
     }
 
     if (careerData != null) {
@@ -1294,7 +1296,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
           _designationCtrl, careerData, const ['designation']);
       _setControllerIfPresent(_companyCtrl, careerData, const ['company']);
       final careerStart = careerData['career_start'] ?? careerData['start'];
-      if (careerStart != null) _careerStart = careerStart.toString();
+      if (careerStart != null) _careerStartCtrl.text = careerStart.toString();
     }
 
     if (residency != null) {
@@ -1620,9 +1622,9 @@ class _EditProfileScreenState extends State<EditProfileScreen>
           if (_shouldSendProfileField('education', const ['institution'], _institutionCtrl.text)) {
             educationPayload['institution'] = _institutionCtrl.text.trim();
           }
-          if (_shouldSendProfileField('education', const ['education_start', 'start'], _educationStart)) {
-            educationPayload['education_start'] = _educationStart;
-            educationPayload['start'] = _educationStart;
+          if (_shouldSendProfileField('education', const ['education_start', 'start'], _educationStartCtrl.text)) {
+            educationPayload['education_start'] = _educationStartCtrl.text.trim();
+            educationPayload['start'] = _educationStartCtrl.text.trim();
           }
           if (educationPayload.keys.any((key) => key != 'id' && key != 'education_id')) {
             requests.add(ApiService.updateEducation(educationPayload, lang: lang));
@@ -1639,9 +1641,9 @@ class _EditProfileScreenState extends State<EditProfileScreen>
           if (_shouldSendProfileField('career', const ['company'], _companyCtrl.text)) {
             careerPayload['company'] = _companyCtrl.text.trim();
           }
-          if (_shouldSendProfileField('career', const ['career_start', 'start'], _careerStart)) {
-            careerPayload['career_start'] = _careerStart;
-            careerPayload['start'] = _careerStart;
+          if (_shouldSendProfileField('career', const ['career_start', 'start'], _careerStartCtrl.text)) {
+            careerPayload['career_start'] = _careerStartCtrl.text.trim();
+            careerPayload['start'] = _careerStartCtrl.text.trim();
           }
           if (careerPayload.keys.any((key) => key != 'id' && key != 'career_id')) {
             requests.add(ApiService.updateCareer(careerPayload, lang: lang));
