@@ -120,12 +120,17 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
       final picker = ImagePicker();
       final pickedFile = await picker.pickImage(
         source: ImageSource.gallery,
-        imageQuality: 90,
+        maxWidth: 1440,
+        maxHeight: 1800,
+        imageQuality: 85,
       );
 
       if (pickedFile != null) {
         final croppedFile = await ImageCropper().cropImage(
           sourcePath: pickedFile.path,
+          maxWidth: 1440,
+          maxHeight: 1800,
+          compressQuality: 85,
           aspectRatio: const CropAspectRatio(ratioX: 4, ratioY: 5),
           uiSettings: [
             AndroidUiSettings(
@@ -341,8 +346,13 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(15),
                                 child: widget.profilePhoto != null
-                                    ? Image.file(widget.profilePhoto!,
-                                        fit: BoxFit.cover)
+                                    ? Image.file(
+                                        widget.profilePhoto!,
+                                        fit: BoxFit.cover,
+                                        cacheWidth: 480,
+                                        cacheHeight: 600,
+                                        filterQuality: FilterQuality.medium,
+                                      )
                                     : Container(
                                         color: Colors.white
                                             .withValues(alpha: 0.15),
