@@ -1268,7 +1268,9 @@ class _EditProfileScreenState extends State<EditProfileScreen>
           ? (rawOnBehalf['id'] ?? rawOnBehalf['value'])
           : rawOnBehalf;
       final onBehalfId = resolvedOnBehalf?.toString().trim();
-      if (onBehalfId != null && RegExp(r'^\\d+
+      if (onBehalfId != null && RegExp(r'^\d+$').hasMatch(onBehalfId)) {
+        _onBehalfValue = onBehalfId;
+      }
     }
 
     if (educationData != null) {
