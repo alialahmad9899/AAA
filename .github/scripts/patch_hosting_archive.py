@@ -277,6 +277,18 @@ def patch_profile_controller(source: str) -> str:
         }
         $effectiveCityId = $residency->recidency_city_id;
 
+        if ($effectiveStateId && !$countryId) {
+            return response()->json([
+                'result' => false,
+                'message' => translate('A country must be selected before assigning a governorate.'),
+            ], 422);
+        }
+        if ($effectiveCityId && !$effectiveStateId) {
+            return response()->json([
+                'result' => false,
+                'message' => translate('A governorate must be selected before assigning a city.'),
+            ], 422);
+        }
         if ($effectiveStateId && $countryId &&
             !State::where('id', $effectiveStateId)->where('country_id', $countryId)->exists()) {
             return response()->json([
@@ -468,6 +480,28 @@ def patch_profile_controller(source: str) -> str:
         }
 
         $user = User::with('member')->findOrFail(auth()->id());
+        $effectivePreferredCountry = array_key_exists('partner_country_id', $input)
+            ? $input['partner_country_id']
+            : ($partner ? $partner->preferred_country_id : null);
+        $effectivePreferredState = $stateWasProvided
+            ? ($input['partner_state_id'] ?: null)
+            : ($partner ? $partner->preferred_state_id : null);
+
+        if ($effectivePreferredState && !$effectivePreferredCountry) {
+            return response()->json([
+                'result' => false,
+                'message' => translate('A country must be selected before assigning a preferred governorate.'),
+            ], 422);
+        }
+        if ($effectivePreferredState && $effectivePreferredCountry &&
+            !State::where('id', $effectivePreferredState)
+                ->where('country_id', $effectivePreferredCountry)
+                ->exists()) {
+            return response()->json([
+                'result' => false,
+                'message' => translate('The preferred governorate does not belong to the preferred country.'),
+            ], 422);
+        }
 
         DB::transaction(function () use ($input, $fields, $stateWasProvided, $oldPreferredCountry) {
             $partner = PartnerExpectation::firstOrNew(['user_id' => auth()->id()]);
@@ -502,13 +536,6 @@ def patch_profile_controller(source: str) -> str:
             }
             if ($stateWasProvided) {
                 $partner->preferred_state_id = $input['partner_state_id'] ?: null;
-            }
-
-            if (!empty($partner->preferred_state_id) && !empty($partner->preferred_country_id) &&
-                !State::where('id', $partner->preferred_state_id)
-                    ->where('country_id', $partner->preferred_country_id)
-                    ->exists()) {
-                throw new \InvalidArgumentException('Preferred governorate does not belong to selected country.');
             }
 
             $partner->save();
