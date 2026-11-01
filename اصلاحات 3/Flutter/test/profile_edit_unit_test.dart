@@ -187,14 +187,25 @@ void main() {
       );
     });
 
-    test('does not send an empty value', () {
+    test('does not send an unchanged empty value', () {
+      expect(
+        ApiService.shouldSendChangedProfileField(
+          wasLoaded: true,
+          originalValue: '',
+          currentValue: '',
+        ),
+        false,
+      );
+    });
+
+    test('sends an intentionally cleared loaded optional value', () {
       expect(
         ApiService.shouldSendChangedProfileField(
           wasLoaded: true,
           originalValue: 'مستقل',
           currentValue: '',
         ),
-        false,
+        true,
       );
     });
   });
