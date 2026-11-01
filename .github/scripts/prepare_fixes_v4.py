@@ -172,16 +172,82 @@ def patch_auth(text):
     if n != 1 and "$autoVerify = true;" not in text:
         raise RuntimeError("Could not patch signup verification setting")
 
+    # Attach a trace reference and explicit stage marker to every transaction.
+    text = text.replace(
+        "$storedPhotoPath = null;\n\n        try {",
+        "$storedPhotoPath = null;\n        $signupStage = 'initializing';\n        $signupReference = (string) Str::uuid();\n        $signupUserId = null;\n\n        try {",
+        1
+    )
+    text = text.replace(
+        "function () use ($request, &$storedPhotoPath, $autoVerify)",
+        "function () use ($request, &$storedPhotoPath, $autoVerify, &$signupStage, &$signupUserId)",
+        1
+    )
+    stage_replacements = [
+        ("                $package = Package::where('id', 1)->first();",
+         "                $signupStage = 'load_default_package';\n                $package = Package::where('id', 1)->first();"),
+        ("                $user_service = new UserService();",
+         "                $signupStage = 'prepare_user_data';\n                $user_service = new UserService();"),
+        ("                $member_service = new MemberService();",
+         "                $signupStage = 'create_member_record';\n                $member_service = new MemberService();"),
+        ("                $photoFile = $request->file('photo')",
+         "                $signupStage = 'inspect_profile_photo';\n                $photoFile = $request->file('photo')"),
+        ("                    $storedPhotoPath = $photoFile->store('uploads/all');",
+         "                    $signupStage = 'store_profile_photo_file';\n                    $storedPhotoPath = $photoFile->store('uploads/all');"),
+        ("                    $upload = new Upload();",
+         "                    $signupStage = 'create_profile_upload_record';\n                    $upload = new Upload();"),
+        ("                    $user->avatar_original = $upload->id;",
+         "                    $signupStage = 'link_profile_photo_to_user';\n                    $user->avatar_original = $upload->id;"),
+        ("                if ($autoVerify && ($user->email != null || $user->phone != null)) {",
+         "                $signupStage = 'mark_account_verified';\n                if ($autoVerify && ($user->email != null || $user->phone != null)) {"),
+        ("                $fcmToken = $request->fcm_token ?? $request->device_token;",
+         "                $signupStage = 'save_device_token';\n                $fcmToken = $request->fcm_token ?? $request->device_token;"),
+        ("                return $user;\n            });",
+         "                $signupStage = 'transaction_completed';\n                return $user;\n            });"),
+    ]
+    for old, new in stage_replacements:
+        text = text.replace(old, new, 1)
+
+    old_user_data = """                $userData = $request->safe()->except([
+                    'gender', 'birthday', 'on_behalves_id', 'date_of_birth',
+                    'on_behalf', 'photo', 'avatar', 'image',
+                ]);
+                $user = $user_service->store($userData);"""
+    new_user_data = """                $userData = $request->safe()->except([
+                    'gender', 'birthday', 'on_behalves_id', 'date_of_birth',
+                    'on_behalf', 'photo', 'avatar', 'image',
+                ]);
+                // AuthRequest::prepareForValidation adds membership=1, but
+                // safe() drops it because membership has no validation rule.
+                // Pass it explicitly or UserService may attempt to create a
+                // member without the required default membership.
+                $userData['membership'] = (int) ($request->input('membership') ?: 1);
+
+                $signupStage = 'create_user_record';
+                $user = $user_service->store($userData);
+                $signupUserId = (int) $user->id;
+                $user->membership = $userData['membership'];
+                $user->user_type = 'member';
+                $user->save();"""
+    if old_user_data in text:
+        text = text.replace(old_user_data, new_user_data, 1)
+    elif "$userData['membership']" not in text:
+        raise RuntimeError("Signup user-data block not found")
+
     old_log = r"\Log::error('API signup transaction failed: ' . $e->getMessage());"
     if old_log in text:
         text = text.replace(old_log, r"""\Log::error('API signup transaction failed', [
+                'signup_reference' => $signupReference,
+                'stage' => $signupStage,
+                'user_id' => $signupUserId,
+                'request_id' => $request->header('X-Request-ID'),
                 'exception' => get_class($e),
                 'message' => $e->getMessage(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
             ]);""", 1)
-    elif "API signup transaction failed', [" not in text:
+    elif "signup_reference' => $signupReference" not in text:
         raise RuntimeError("Signup transaction log anchor missing")
 
     text = text.replace(
@@ -195,6 +261,21 @@ def patch_auth(text):
         text = text.replace(member_line, member_new, 1)
     elif member_new not in text:
         raise RuntimeError("Signup member quota field was not inserted")
+
+    error_response_old = """            return response()->json([
+                'result' => false,
+                'message' => translate('Unable to complete registration. Please try again.'),
+            ], 500);"""
+    error_response_new = """            return response()->json([
+                'result' => false,
+                'reference' => $signupReference,
+                'stage' => $signupStage,
+                'message' => translate('Unable to complete registration. Please try again.'),
+            ], 500);"""
+    if error_response_old in text:
+        text = text.replace(error_response_old, error_response_new, 1)
+    elif "'reference' => $signupReference" not in text:
+        raise RuntimeError("Signup error response anchor missing")
 
     logout = r"""public function logout(Request $request)
     {
