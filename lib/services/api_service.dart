@@ -386,9 +386,9 @@ class ApiService {
     dynamic currentValue,
   }) {
     final current = currentValue?.toString().trim() ?? '';
-    if (current.isEmpty) return false;
-    if (!wasLoaded) return true;
+    if (!wasLoaded) return current.isNotEmpty;
     final original = originalValue?.toString().trim() ?? '';
+    // An intentionally cleared optional field is also a real change.
     return current != original;
   }
 
