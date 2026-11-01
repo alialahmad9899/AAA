@@ -103,3 +103,27 @@ jobs:
           if-no-files-found: error
           compression-level: 9
           retention-days: 90
+
+  export-fixes-v4:
+    name: Export اصلاحات 4 ZIP artifact
+    needs: [export-fixes-zip]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Build and verify اصلاحات 4
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/prepare_fixes_v4.py
+          test -f "اصلاحات 4/README.md"
+          test -f "اصلاحات 4/hosting-patch-manifest.json"
+          unzip -tq "اصلاحات 4.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: اصلاحات-4
+          path: "اصلاحات 4.zip"
+          if-no-files-found: error
+          compression-level: 9
+          retention-days: 90
