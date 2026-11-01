@@ -58,6 +58,8 @@ class _EditProfileScreenState extends State<EditProfileScreen>
   // مع منع إرسال فراغات/قيم افتراضية لحقول لم تُحمّل من الخادم.
   final Map<String, Set<String>> _loadedProfileFields =
       <String, Set<String>>{};
+  final Map<String, Map<String, String>> _loadedProfileValues =
+      <String, Map<String, String>>{};
 
   List<String> get _educationDegreeOptions => _isArabic
       ? [
@@ -996,6 +998,30 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     return aliases.any(fields.contains);
   }
 
+  void _recordLoadedProfileValue(String section, String key, dynamic value) {
+    final values = _loadedProfileValues.putIfAbsent(
+      section,
+      () => <String, String>{},
+    );
+    values[key] = value?.toString().trim() ?? '';
+  }
+
+  bool _shouldSendExistingProfileField(
+    String section,
+    String key,
+    dynamic value, {
+    required bool hasRecord,
+  }) {
+    if (!hasRecord) {
+      return _shouldSendProfileField(section, [key], value);
+    }
+    return ApiService.shouldSendChangedProfileField(
+      wasLoaded: _wasFieldLoaded(section, [key]),
+      originalValue: _loadedProfileValues[section]?[key],
+      currentValue: value,
+    );
+  }
+
   bool _shouldSendProfileField(
     String section,
     List<String> aliases,
@@ -1290,9 +1316,15 @@ class _EditProfileScreenState extends State<EditProfileScreen>
       if (educationData.containsKey('degree')) {
         _selectedEducationDegree = _matchStringOption(
             educationData['degree']?.toString(), _educationDegreeOptions);
+        _recordLoadedProfileValue(
+            'education', 'degree', _selectedEducationDegree);
       }
       _setControllerIfPresent(
           _institutionCtrl, educationData, const ['institution']);
+      if (educationData.containsKey('institution')) {
+        _recordLoadedProfileValue(
+            'education', 'institution', _institutionCtrl.text);
+      }
     }
 
     if (careerData != null) {
@@ -1301,6 +1333,13 @@ class _EditProfileScreenState extends State<EditProfileScreen>
       _setControllerIfPresent(
           _designationCtrl, careerData, const ['designation']);
       _setControllerIfPresent(_companyCtrl, careerData, const ['company']);
+      if (careerData.containsKey('designation')) {
+        _recordLoadedProfileValue(
+            'career', 'designation', _designationCtrl.text);
+      }
+      if (careerData.containsKey('company')) {
+        _recordLoadedProfileValue('career', 'company', _companyCtrl.text);
+      }
     }
 
     if (residency != null) {
@@ -1619,10 +1658,14 @@ class _EditProfileScreenState extends State<EditProfileScreen>
             educationPayload['id'] = _educationId;
             educationPayload['education_id'] = _educationId;
           }
-          if (_shouldSendProfileField('education', const ['degree'], _selectedEducationDegree)) {
+          if (_shouldSendExistingProfileField(
+              'education', 'degree', _selectedEducationDegree,
+              hasRecord: _educationId != null && _educationId!.isNotEmpty)) {
             educationPayload['degree'] = _selectedEducationDegree ?? '';
           }
-          if (_shouldSendProfileField('education', const ['institution'], _institutionCtrl.text)) {
+          if (_shouldSendExistingProfileField(
+              'education', 'institution', _institutionCtrl.text,
+              hasRecord: _educationId != null && _educationId!.isNotEmpty)) {
             educationPayload['institution'] = _institutionCtrl.text.trim();
           }
           if (educationPayload.keys.any((key) => key != 'id' && key != 'education_id')) {
@@ -1634,10 +1677,14 @@ class _EditProfileScreenState extends State<EditProfileScreen>
             careerPayload['id'] = _careerId;
             careerPayload['career_id'] = _careerId;
           }
-          if (_shouldSendProfileField('career', const ['designation'], _designationCtrl.text)) {
+          if (_shouldSendExistingProfileField(
+              'career', 'designation', _designationCtrl.text,
+              hasRecord: _careerId != null && _careerId!.isNotEmpty)) {
             careerPayload['designation'] = _designationCtrl.text.trim();
           }
-          if (_shouldSendProfileField('career', const ['company'], _companyCtrl.text)) {
+          if (_shouldSendExistingProfileField(
+              'career', 'company', _companyCtrl.text,
+              hasRecord: _careerId != null && _careerId!.isNotEmpty)) {
             careerPayload['company'] = _companyCtrl.text.trim();
           }
           if (careerPayload.keys.any((key) => key != 'id' && key != 'career_id')) {
@@ -1766,6 +1813,20 @@ class _EditProfileScreenState extends State<EditProfileScreen>
               _currentPhotoUrl = photoUrl;
               _pickedImageFile = null;
             });
+          }
+        }
+        if (allSuccess && index == 0) {
+          if (_educationId != null && _educationId!.isNotEmpty) {
+            _recordLoadedProfileValue(
+                'education', 'degree', _selectedEducationDegree);
+            _recordLoadedProfileValue(
+                'education', 'institution', _institutionCtrl.text);
+          }
+          if (_careerId != null && _careerId!.isNotEmpty) {
+            _recordLoadedProfileValue(
+                'career', 'designation', _designationCtrl.text);
+            _recordLoadedProfileValue(
+                'career', 'company', _companyCtrl.text);
           }
         }
         if (allSuccess) {

@@ -154,6 +154,51 @@ void main() {
     });
   });
 
+  group('Profile field change detection', () {
+    test('does not resend an unchanged loaded value', () {
+      expect(
+        ApiService.shouldSendChangedProfileField(
+          wasLoaded: true,
+          originalValue: 'بكالوريوس',
+          currentValue: 'بكالوريوس',
+        ),
+        false,
+      );
+    });
+
+    test('sends a changed loaded value', () {
+      expect(
+        ApiService.shouldSendChangedProfileField(
+          wasLoaded: true,
+          originalValue: 'جامعة دمشق',
+          currentValue: 'جامعة حمص',
+        ),
+        true,
+      );
+    });
+
+    test('sends a new non-empty value that was not loaded', () {
+      expect(
+        ApiService.shouldSendChangedProfileField(
+          wasLoaded: false,
+          currentValue: 'مطور',
+        ),
+        true,
+      );
+    });
+
+    test('does not send an empty value', () {
+      expect(
+        ApiService.shouldSendChangedProfileField(
+          wasLoaded: true,
+          originalValue: 'مستقل',
+          currentValue: '',
+        ),
+        false,
+      );
+    });
+  });
+
 
   group('Optional profile fields compatibility', () {
     test('parses profiles without a phone and ignores legacy start years', () {
