@@ -154,4 +154,36 @@ void main() {
     });
   });
 
+
+  group('Optional profile fields compatibility', () {
+    test('parses profiles without a phone and ignores legacy start years', () {
+      final profile = MemberProfileModel.fromJson({
+        'id': 106,
+        'basic_info': {
+          'first_name': 'سارة',
+          'last_name': 'محمد',
+          'gender': '2',
+          'phone': null,
+        },
+        'education': {
+          'degree': 'بكالوريوس',
+          'institution': 'جامعة دمشق',
+          'start': 2018,
+          'education_start': 2018,
+        },
+        'career': {
+          'designation': 'مصممة',
+          'company': '',
+          'start': 2021,
+          'career_start': 2021,
+        },
+      });
+      expect(profile.basicInfo.phone, isEmpty);
+      expect(profile.education?.degree, 'بكالوريوس');
+      expect(profile.education?.institution, 'جامعة دمشق');
+      expect(profile.career?.designation, 'مصممة');
+      expect(profile.career?.company, isEmpty);
+    });
+  });
+
 }

@@ -1,195 +1,102 @@
-name: Signup and profile data integrity validation
-
+name: Signup and profile persistence validation
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
-
 permissions:
-  contents: read
-
+  contents: write
 jobs:
   flutter:
     name: Flutter analyze and tests
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
-
-      - name: Resolve dependencies
-        run: flutter pub get
-
-      - name: Analyze all changed signup and profile files
+      - run: flutter pub get
+      - name: Analyze signup and profile data flow
         run: >
           flutter analyze --no-pub
           lib/screens/signup_screen.dart
           lib/screens/edit_profile_screen.dart
-          lib/screens/partner_expectations_screen.dart
           lib/screens/widgets/step2_personal_details.dart
           lib/screens/edit_profile/widgets/step1_basic_physical_tab.dart
           lib/services/api_service.dart
+          lib/models/member_profile_model.dart
           test/profile_edit_unit_test.dart
-
-      - name: Run Flutter tests
-        run: flutter test --no-pub
+      - run: flutter test --no-pub
 
   laravel-php-syntax:
-    name: Patch hosting archive and lint every changed PHP file
+    name: Patch hosting archive and lint Laravel files
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-
-      - name: Patch Laravel source in hosting archive
-        run: python3 .github/scripts/patch_hosting_archive.py
-
-      - name: Verify archive integrity
-        run: unzip -tq "ملفات الاتسضافة.zip"
-
-      - name: Lint every exported Laravel PHP file
+      - name: Patch baseline then prepare v3
+        run: |
+          python3 .github/scripts/patch_hosting_archive.py
+          python3 .github/scripts/prepare_profile_fixes_v3.py
+          unzip -tq "ملفات الاتسضافة.zip"
+      - name: Lint exported PHP files
         shell: bash
         run: |
           set -euo pipefail
-          test -d "اصلاحات 2/Laravel"
-          while IFS= read -r -d '' file; do
-            php -l "$file"
-          done < <(find "اصلاحات 2/Laravel" -type f -name '*.php' -print0)
+          test -d "اصلاحات 3/Laravel"
+          while IFS= read -r -d '' file; do php -l "$file"; done < <(find "اصلاحات 3/Laravel" -type f -name '*.php' -print0)
 
   package-fixes:
-    name: Commit complete repaired source into اصلاحات 2
+    name: Commit اصلاحات 3
     needs: [flutter, laravel-php-syntax]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: Checkout main
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: main
-
-      - name: Collect and verify all repaired files
-        shell: bash
+      - name: Build and verify package
         run: |
           set -euo pipefail
-
           python3 .github/scripts/patch_hosting_archive.py
-
-          FIXES_DIR="اصلاحات 2"
-          mkdir -p \
-            "$FIXES_DIR/Flutter/lib/screens" \
-            "$FIXES_DIR/Flutter/lib/screens/widgets" \
-            "$FIXES_DIR/Flutter/lib/screens/edit_profile/widgets" \
-            "$FIXES_DIR/Flutter/lib/services" \
-            "$FIXES_DIR/Flutter/test" \
-            "$FIXES_DIR/CI" \
-            "$FIXES_DIR/Tools"
-
-          cp lib/screens/signup_screen.dart "$FIXES_DIR/Flutter/lib/screens/"
-          cp lib/screens/edit_profile_screen.dart "$FIXES_DIR/Flutter/lib/screens/"
-          cp lib/screens/partner_expectations_screen.dart "$FIXES_DIR/Flutter/lib/screens/"
-          cp lib/screens/widgets/step2_personal_details.dart "$FIXES_DIR/Flutter/lib/screens/widgets/"
-          cp lib/screens/edit_profile/widgets/step1_basic_physical_tab.dart "$FIXES_DIR/Flutter/lib/screens/edit_profile/widgets/"
-          cp lib/services/api_service.dart "$FIXES_DIR/Flutter/lib/services/"
-          cp test/profile_edit_unit_test.dart "$FIXES_DIR/Flutter/test/"
-          cp test/widget_test.dart "$FIXES_DIR/Flutter/test/"
-          cp .github/workflows/signup-validation.yml "$FIXES_DIR/CI/"
-          cp .github/scripts/patch_hosting_archive.py "$FIXES_DIR/Tools/"
-
-          find "$FIXES_DIR/Laravel" -type f -name '*.php' -print0 | while IFS= read -r -d '' file; do
-            php -l "$file"
-          done
+          python3 .github/scripts/prepare_profile_fixes_v3.py
           unzip -tq "ملفات الاتسضافة.zip"
-
-          cat > "$FIXES_DIR/README.md" <<'EOF'
-          # اصلاحات 2 — إصلاحات التسجيل والملف الشخصي وربط بيانات العضو
-
-          يحتوي هذا المجلد على الملفات النهائية المطابقة لما تم فحصه في CI.
-
-          ## Flutter
-          - `Flutter/lib/screens/signup_screen.dart` — تدفق التسجيل المرحلي، والتحقق من الحقول، وعدم تمرير تفضيلات العضو على أنها تفضيلات الشريك.
-          - `Flutter/lib/screens/edit_profile_screen.dart` — تحميل البيانات ومعرّفات السجلات وتحديث الملف الشخصي والصورة.
-          - `Flutter/lib/screens/partner_expectations_screen.dart` — تحميل وحفظ تفضيلات الشريك دون قيم افتراضية مختلقة.
-          - `Flutter/lib/screens/widgets/step2_personal_details.dart` — حقول التعليم والعمل وسنوات البدء.
-          - `Flutter/lib/screens/edit_profile/widgets/step1_basic_physical_tab.dart` — حقول تعديل التعليم والعمل وسنوات البدء.
-          - `Flutter/lib/services/api_service.dart` — فك استجابات Laravel والتحقق الصارم من نجاح الكتابة وإرسال الحقول المقدمة فقط.
-          - `Flutter/test/` — اختبارات استجابات الكتابة وموارد Laravel واختبار بناء التطبيق.
-
-          ## Laravel — ملفات يمكن نسخها إلى المسارات النسبية نفسها داخل جذر Laravel
-          - `Laravel/app/Http/Controllers/Api/AuthController.php`
-          - `Laravel/app/Http/Controllers/Api/ProfileController.php`
-          - `Laravel/app/Http/Controllers/Api/EducationController.php`
-          - `Laravel/app/Http/Controllers/Api/CareerController.php`
-          - `Laravel/app/Http/Requests/ProfileRequest.php`
-          - `Laravel/app/Http/Requests/CareerRequest.php`
-          - `Laravel/app/Http/Requests/PartnerExpectationRequest.php`
-          - `Laravel/app/Http/Resources/PublicProfile/BasicInformation.php`
-          - `Laravel/app/Http/Resources/PublicProfile/SpiritualSocialBackground.php`
-          - `Laravel/app/Http/Resources/PublicProfile/PartnerExpectationResource.php`
-
-          كما يحتوي جذر المستودع على أرشيف الاستضافة `ملفات الاتسضافة.zip` بعد تطبيق التعديلات نفسها.
-
-          ## أدوات الفحص
-          - `Tools/patch_hosting_archive.py` — يعيد تطبيق التعديلات على أرشيف الاستضافة مع فشل صريح عند عدم مطابقة المصدر.
-          - `CI/signup-validation.yml` — تحليل Flutter والاختبارات وفحص PHP وسلامة الأرشيف.
-
-          **مهم:** هذه الملفات مرفوعة على GitHub ومفحوصة بناءً على المصدر المتاح في الأرشيف. لا يعني ذلك أنها نُشرت تلقائياً على الاستضافة الحية أو أنها اختُبرت على قاعدة البيانات الحية. خذ نسخة احتياطية قبل استبدال أي ملف على الخادم ثم نفّذ اختبار تسجيل وتعديل فعلي.
-          EOF
-
-      - name: Commit repaired source and patched hosting archive
-        shell: bash
+          while IFS= read -r -d '' file; do php -l "$file"; done < <(find "اصلاحات 3/Laravel" -type f -name '*.php' -print0)
+          test -f "اصلاحات 3/README.md"
+          test -f "اصلاحات 3/hosting-patch-manifest.json"
+      - name: Commit package and hosting archive
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "ملفات الاتسضافة.zip" "اصلاحات 2"
-          if [ -f ".github/workflows/export-hosting-source.yml" ]; then
-            git rm ".github/workflows/export-hosting-source.yml"
-          fi
-          if git diff --cached --quiet; then
-            echo "No new fixes to commit."
-            exit 0
-          fi
-          git commit -m "Collect verified signup and profile fixes in اصلاحات 2 [skip ci]"
+          git add "ملفات الاتسضافة.zip" "اصلاحات 3"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Package signup and profile fixes in اصلاحات 3 [skip ci]"
           git push origin HEAD:main
 
-
   export-fixes-zip:
-    name: Export اصلاحات 2 as ZIP artifact
+    name: Export اصلاحات 3 ZIP artifact
     needs: [package-fixes]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout packaged fixes
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: main
-
-      - name: Verify fixes package
+      - name: Build ZIP
         run: |
-          test -f "اصلاحات 2/README.md"
-          test -f "اصلاحات 2/hosting-patch-manifest.json"
-          test -d "اصلاحات 2/Flutter"
-          test -d "اصلاحات 2/Laravel"
-
-      - name: Upload ZIP artifact
-        uses: actions/upload-artifact@v4
+          test -f "اصلاحات 3/README.md"
+          zip -qr "اصلاحات 3.zip" "اصلاحات 3"
+      - uses: actions/upload-artifact@v4
         with:
-          name: اصلاحات-2
-          path: اصلاحات 2/
+          name: اصلاحات-3
+          path: "اصلاحات 3.zip"
           if-no-files-found: error
           compression-level: 9
-          retention-days: 7
+          retention-days: 90
