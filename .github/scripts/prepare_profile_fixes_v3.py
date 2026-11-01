@@ -144,6 +144,19 @@ def main():
         finally:
             if temp.exists(): temp.unlink()
 
+    # Bring forward the complete Laravel baseline from اصلاحات 2, including
+    # ProfileController and the photo/basic-profile transaction fixes.
+    baseline_laravel = Path("اصلاحات 2/Laravel")
+    if not baseline_laravel.is_dir():
+        raise RuntimeError("The validated Laravel baseline in اصلاحات 2 is missing")
+    for source_file in sorted(baseline_laravel.rglob("*.php")):
+        relative = source_file.relative_to(baseline_laravel)
+        destination = OUT/"Laravel"/relative
+        destination.parent.mkdir(parents=True,exist_ok=True)
+        destination.write_bytes(source_file.read_bytes())
+
+    # Overlay the current v3 Laravel updates, including optional phone, year
+    # removal, and the signup field-name normalization.
     for suffix in patchers:
         name=entry_for(names,suffix)
         dest=OUT/"Laravel"/suffix
@@ -162,6 +175,19 @@ def main():
       "lib/models/member_profile_model.dart",
       "test/profile_edit_unit_test.dart",
     ]
+    # Include the previously repaired supporting Flutter files, then always
+    # overwrite every file touched in this v3 pass with the current main source.
+    baseline_flutter = Path("اصلاحات 2/Flutter")
+    if not baseline_flutter.is_dir():
+        raise RuntimeError("The validated Flutter baseline in اصلاحات 2 is missing")
+    for source_file in sorted(baseline_flutter.rglob("*")):
+        if not source_file.is_file():
+            continue
+        relative = source_file.relative_to(baseline_flutter)
+        destination = OUT/"Flutter"/relative
+        destination.parent.mkdir(parents=True,exist_ok=True)
+        destination.write_bytes(source_file.read_bytes())
+
     for rel in flutter:
         src=Path(rel)
         if not src.is_file(): raise RuntimeError("Missing Flutter source: "+rel)
@@ -173,9 +199,17 @@ def main():
                 ".github/scripts/prepare_profile_fixes_v3.py",
                 ".github/workflows/signup-validation.yml"]:
         (tools/Path(rel).name).write_bytes(Path(rel).read_bytes())
+    laravel_manifest = sorted(
+        item.relative_to(OUT/"Laravel").as_posix()
+        for item in (OUT/"Laravel").rglob("*.php")
+    )
+    flutter_manifest = sorted(
+        item.relative_to(OUT/"Flutter").as_posix()
+        for item in (OUT/"Flutter").rglob("*") if item.is_file()
+    )
     manifest={"version":3,"hosting_archive":ARCHIVE.name,
-       "laravel_files":sorted(list(patchers.keys())+["database/migrations/2026_11_01_000000_make_profile_start_years_nullable.php"]),
-       "flutter_files":flutter}
+       "laravel_files":laravel_manifest,
+       "flutter_files":flutter_manifest}
     (OUT/"hosting-patch-manifest.json").write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     (OUT/"README.md").write_text("""# اصلاحات 3
 
