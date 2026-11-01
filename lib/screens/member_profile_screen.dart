@@ -43,6 +43,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
 
   bool _isSendingInterest = false;
   bool _currentUserIsSubscribedOrFemale = false;
+  bool _currentUserPermissionsReady = false;
 
   bool _isModalActive = false;
 
@@ -74,6 +75,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
     setState(() {
       _isLoading = true;
       _hasError = false;
+      _currentUserPermissionsReady = false;
     });
 
     try {
@@ -104,14 +106,20 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
       // Permission-dependent controls update when the secondary request completes.
       try {
         final currentUser = await currentUserFuture;
-        if (mounted && currentUser != null) {
+        if (mounted) {
           setState(() {
-            _currentUserIsSubscribedOrFemale =
-                currentUser.isFemale || currentUser.isSubscribedActive;
+            if (currentUser != null) {
+              _currentUserIsSubscribedOrFemale =
+                  currentUser.isFemale || currentUser.isSubscribedActive;
+            }
+            _currentUserPermissionsReady = true;
           });
         }
       } catch (e) {
         debugPrint('تعذر تحميل صلاحيات المستخدم الحالي: $e');
+        if (mounted) {
+          setState(() => _currentUserPermissionsReady = true);
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -370,6 +378,9 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
 
   void _startChat() {
     if (_profile == null) return;
+    // The profile is rendered before this secondary lookup completes.
+    // Avoid treating the temporary default as a final subscription decision.
+    if (!_currentUserPermissionsReady) return;
 
     if (!_currentUserIsSubscribedOrFemale) {
       _showMessageFeatureModal();
