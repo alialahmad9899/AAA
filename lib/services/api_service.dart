@@ -377,6 +377,21 @@ class ApiService {
     return true;
   }
 
+  /// Returns true only when a profile field should be sent to the API.
+  /// Existing records are updated only when a value differs from the value
+  /// loaded from the server; new non-empty values are submitted.
+  static bool shouldSendChangedProfileField({
+    required bool wasLoaded,
+    dynamic originalValue,
+    dynamic currentValue,
+  }) {
+    final current = currentValue?.toString().trim() ?? '';
+    if (current.isEmpty) return false;
+    if (!wasLoaded) return true;
+    final original = originalValue?.toString().trim() ?? '';
+    return current != original;
+  }
+
   /// Extract the first actual model record from Laravel resource responses.
   /// Supports a bare map, a JsonResource {data: {...}}, a collection
   /// {data: [...]}, or a nested response envelope.
@@ -1647,9 +1662,18 @@ class ApiService {
         return {'success': false, 'message': 'سنة انتهاء التعليم غير صحيحة'};
       }
 
+      if (kDebugMode) {
+        debugPrint('🌐 [API POST] UpdateEducation -> ' + url.toString() +
+            ' | Method: ' + (isUpdate ? 'PUT' : 'POST') +
+            ' | Keys: ' + bodyData.keys.toList().toString());
+      }
       final response = await http
           .post(url, headers: headers, body: jsonEncode(bodyData))
           .timeout(_timeoutDuration);
+      if (kDebugMode) {
+        debugPrint('📥 [API RESPONSE UpdateEducation ' +
+            response.statusCode.toString() + ']: ' + response.body);
+      }
       dynamic responseData;
       try {
         responseData = jsonDecode(response.body);
@@ -1748,9 +1772,18 @@ class ApiService {
         return {'success': false, 'message': 'سنة انتهاء العمل غير صحيحة'};
       }
 
+      if (kDebugMode) {
+        debugPrint('🌐 [API POST] UpdateCareer -> ' + url.toString() +
+            ' | Method: ' + (isUpdate ? 'PUT' : 'POST') +
+            ' | Keys: ' + bodyData.keys.toList().toString());
+      }
       final response = await http
           .post(url, headers: headers, body: jsonEncode(bodyData))
           .timeout(_timeoutDuration);
+      if (kDebugMode) {
+        debugPrint('📥 [API RESPONSE UpdateCareer ' +
+            response.statusCode.toString() + ']: ' + response.body);
+      }
       dynamic responseData;
       try {
         responseData = jsonDecode(response.body);
