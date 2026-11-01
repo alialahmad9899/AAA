@@ -168,12 +168,14 @@ def main():
 
     flutter=[
       "lib/screens/signup_screen.dart",
+      "lib/screens/partner_expectations_screen.dart",
       "lib/screens/widgets/step2_personal_details.dart",
       "lib/screens/edit_profile_screen.dart",
       "lib/screens/edit_profile/widgets/step1_basic_physical_tab.dart",
       "lib/services/api_service.dart",
       "lib/models/member_profile_model.dart",
       "test/profile_edit_unit_test.dart",
+      "test/widget_test.dart",
     ]
     # Include the previously repaired supporting Flutter files, then always
     # overwrite every file touched in this v3 pass with the current main source.
