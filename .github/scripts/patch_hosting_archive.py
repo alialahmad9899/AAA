@@ -628,7 +628,7 @@ def patch_partner_request(source: str) -> str:
     return replace_method(
         source,
         "    public function rules()",
-        "}",
+        "\\n}",
         r"""    public function rules()
     {
         return [
