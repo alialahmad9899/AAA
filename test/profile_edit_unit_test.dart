@@ -69,6 +69,50 @@ void main() {
       expect(profile.physicalAttributes?.weight, '75');
     });
   });
+  group('Laravel API resource envelope parsing', () {
+    test('unwraps a single model wrapped in data', () {
+      expect(
+        ApiService.extractFirstResourceMap({
+          'result': true,
+          'data': {
+            'id': 12,
+            'degree': 'بكالوريوس',
+          },
+        }),
+        {'id': 12, 'degree': 'بكالوريوس'},
+      );
+    });
+
+    test('returns the first row from a resource collection', () {
+      expect(
+        ApiService.extractFirstResourceMap({
+          'result': true,
+          'data': [
+            {'id': 31, 'designation': 'Developer'},
+            {'id': 32, 'designation': 'Designer'},
+          ],
+        }),
+        {'id': 31, 'designation': 'Developer'},
+      );
+    });
+
+    test('unwraps nested data envelopes and rejects empty collections', () {
+      expect(
+        ApiService.extractFirstResourceMap({
+          'data': {
+            'data': {'id': 44, 'company': 'Wesal'},
+          },
+        }),
+        {'id': 44, 'company': 'Wesal'},
+      );
+      expect(
+        ApiService.extractFirstResourceMap({'result': true, 'data': []}),
+        isNull,
+      );
+      expect(ApiService.extractFirstResourceMap(null), isNull);
+    });
+  });
+
   group('ApiService API write response validation', () {
     test('rejects empty responses', () {
       expect(ApiService.isSuccessfulResult({}), false);
