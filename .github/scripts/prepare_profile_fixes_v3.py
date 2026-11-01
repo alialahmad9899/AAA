@@ -169,6 +169,7 @@ def main():
     flutter=[
       "lib/screens/signup_screen.dart",
       "lib/screens/partner_expectations_screen.dart",
+      "lib/screens/member_profile_screen.dart",
       "lib/screens/widgets/step2_personal_details.dart",
       "lib/screens/edit_profile_screen.dart",
       "lib/screens/edit_profile/widgets/step1_basic_physical_tab.dart",
