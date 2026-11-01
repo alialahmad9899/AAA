@@ -589,7 +589,7 @@ def patch_auth_controller(source: str) -> str:
 
 
 def patch_profile_request(source: str) -> str:
-    return replace_method(
+    source = replace_method(
         source,
         "    public function rules()",
         "    /**\n     * Get the validation messages",
@@ -601,7 +601,7 @@ def patch_profile_request(source: str) -> str:
             'gender'        => ['sometimes', 'nullable', 'in:1,2'],
             'date_of_birth' => ['sometimes', 'nullable', 'date', 'before:today'],
             'on_behalf'     => ['sometimes', 'nullable', 'integer', 'exists:on_behalves,id'],
-            'phone'         => ['sometimes', 'nullable', 'string', 'max:32'],
+            'phone'         => ['sometimes', 'nullable', 'string', 'max:32', \Illuminate\Validation\Rule::unique('users', 'phone')->ignore(auth()->id())],
             'children'      => ['sometimes', 'nullable', 'integer', 'min:0'],
             'marital_status' => ['sometimes', 'nullable', 'integer', 'exists:marital_statuses,id'],
             'introduction'  => ['sometimes', 'nullable', 'string', 'max:5000'],
@@ -612,6 +612,11 @@ def patch_profile_request(source: str) -> str:
     """,
         "ProfileRequest partial profile validation",
     )
+    source = source.replace(
+        "            'phone.required'         => translate('Marital Status is required'),\n",
+        "",
+    )
+    return source
 
 
 def patch_career_request(source: str) -> str:
@@ -788,6 +793,18 @@ def patch_partner_resource(source: str) -> str:
     return source
 
 
+def patch_api_routes(source: str) -> str:
+    route = "            Route::get('/full-my-profile', 'ProfileController@get_full_my_profile');\n"
+    if source.count(route) > 1:
+        raise RuntimeError("API route full-my-profile is duplicated")
+    if route in source:
+        return source
+    anchor = "            Route::get('/basic-info', 'ProfileController@get_basic_info');\n"
+    if source.count(anchor) != 1:
+        raise RuntimeError("API routes: expected one basic-info route anchor")
+    return source.replace(anchor, route + anchor, 1)
+
+
 PATCHERS = {
     "app/Http/Controllers/Api/AuthController.php": patch_auth_controller,
     "app/Http/Controllers/Api/ProfileController.php": patch_profile_controller,
@@ -796,6 +813,7 @@ PATCHERS = {
     "app/Http/Requests/PartnerExpectationRequest.php": patch_partner_request,
     "app/Http/Controllers/Api/EducationController.php": patch_education_controller,
     "app/Http/Controllers/Api/CareerController.php": patch_career_controller,
+    "routes/api.php": patch_api_routes,
     "app/Http/Resources/PublicProfile/BasicInformation.php": patch_basic_resource,
     "app/Http/Resources/PublicProfile/SpiritualSocialBackground.php": patch_spiritual_resource,
     "app/Http/Resources/PublicProfile/PartnerExpectationResource.php": patch_partner_resource,

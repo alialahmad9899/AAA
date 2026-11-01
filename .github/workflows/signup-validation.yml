@@ -49,6 +49,8 @@ jobs:
         run: |
           set -euo pipefail
           test -d "اصلاحات 3/Laravel"
+          grep -Fq "Route::get('/full-my-profile', 'ProfileController@get_full_my_profile');" "اصلاحات 3/Laravel/routes/api.php"
+          grep -Fq "function get_full_my_profile" "اصلاحات 3/Laravel/app/Http/Controllers/Api/ProfileController.php"
           while IFS= read -r -d '' file; do php -l "$file"; done < <(find "اصلاحات 3/Laravel" -type f -name '*.php' -print0)
 
   package-fixes:
