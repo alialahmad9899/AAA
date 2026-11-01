@@ -337,7 +337,7 @@ def main():
 
     manifest_file = OUT / "hosting-patch-manifest.json"
     raw = manifest_file.read_text(encoding="utf-8").strip()
-    if raw.endswith("\\\\n"): raw = raw[:-2]
+    if raw.endswith("\\n"): raw = raw[:-2]
     manifest = json.loads(raw)
     manifest["version"] = 4
     manifest["release"] = "اصلاحات 4"
