@@ -1,0 +1,15 @@
+{
+  "archive": "ملفات الاتسضافة.zip",
+  "patched_files": [
+    "app/Http/Controllers/Api/AuthController.php",
+    "app/Http/Controllers/Api/CareerController.php",
+    "app/Http/Controllers/Api/EducationController.php",
+    "app/Http/Controllers/Api/ProfileController.php",
+    "app/Http/Requests/CareerRequest.php",
+    "app/Http/Requests/PartnerExpectationRequest.php",
+    "app/Http/Requests/ProfileRequest.php",
+    "app/Http/Resources/PublicProfile/BasicInformation.php",
+    "app/Http/Resources/PublicProfile/PartnerExpectationResource.php",
+    "app/Http/Resources/PublicProfile/SpiritualSocialBackground.php"
+  ]
+}
