@@ -2861,7 +2861,7 @@ class ApiService {
     }
   }
 
-  static Future<List<ChatMessageModel>> getOldMessages(
+  static Future<Map<String, dynamic>> getOldMessages(
       int firstMessageId, int partnerUserId,
       {String? lang}) async {
     try {
@@ -2886,33 +2886,45 @@ class ApiService {
             '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
       }
 
-      if (response.statusCode == 200) {
-        dynamic decoded;
-        try {
-          decoded = jsonDecode(response.body);
-        } catch (_) {
-          decoded = null;
-        }
-
-        if (decoded is Map &&
-            decoded['result'] == true &&
-            decoded['messages'] != null &&
-            decoded['messages'] is List) {
-          final List list = decoded['messages'];
-          final parsed = list
-              .map((item) => ChatMessageModel.fromJson(
-                    Map<String, dynamic>.from(item),
-                    partnerUserId,
-                    currentUserId: currentUserId,
-                  ))
-              .toList();
-          return parsed.reversed.toList();
-        }
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        return {
+          'success': false,
+          'message': 'تعذر تحميل الرسائل السابقة (HTTP ${response.statusCode})',
+          'messages': <ChatMessageModel>[],
+        };
       }
-      return [];
+
+      final dynamic decoded = jsonDecode(response.body);
+      if (decoded is! Map || decoded['result'] != true ||
+          decoded['messages'] is! List) {
+        return {
+          'success': false,
+          'message': decoded is Map
+              ? (decoded['message'] ?? 'استجابة الرسائل السابقة غير صالحة')
+              : 'استجابة الرسائل السابقة غير صالحة',
+          'messages': <ChatMessageModel>[],
+        };
+      }
+
+      final List list = decoded['messages'];
+      final parsed = list
+          .map((item) => ChatMessageModel.fromJson(
+                Map<String, dynamic>.from(item),
+                partnerUserId,
+                currentUserId: currentUserId,
+              ))
+          .toList();
+      return {
+        'success': true,
+        'messages': parsed.reversed.toList(),
+      };
     } catch (e) {
       if (kDebugMode) debugPrint('❌ [API ERROR getOldMessages]: $e');
-      return [];
+      return {
+        'success': false,
+        'message': 'تعذر الاتصال بالسيرفر لتحميل الرسائل السابقة',
+        'messages': <ChatMessageModel>[],
+      };
     }
   }
 
