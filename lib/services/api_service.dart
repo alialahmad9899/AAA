@@ -12,6 +12,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../models/member_model.dart';
@@ -487,8 +488,17 @@ class ApiService {
   /// 🟢 دالة تسجيل الخروج المباشرة وإبلاغ سيرفر Laravel بتصفير الجلسة وتوكن FCM
   static Future<Map<String, dynamic>?> logout() async {
     try {
+      String? deviceToken;
+      try {
+        deviceToken = await FirebaseMessaging.instance.getToken();
+      } catch (e) {
+        if (kDebugMode) debugPrint('⚠️ تعذر قراءة FCM token عند الخروج: $e');
+      }
       if (kDebugMode) debugPrint('🌐 [API POST] Logout -> $baseUrl/logout');
-      final response = await post('/logout', {});
+      final response = await post('/logout', {
+        if (deviceToken != null && deviceToken.isNotEmpty)
+          'device_token': deviceToken,
+      });
       await clearToken();
       return response;
     } catch (e) {
@@ -496,7 +506,7 @@ class ApiService {
       await clearToken();
       return {
         'result': false,
-        'message': 'حدث خطأ في الاتصال بالسيرفر أثناء تسجيل الخروج: $e',
+        'message': 'حدث خطأ في الاتصال بالسيرفر أثناء تسجيل الخروج',
       };
     }
   }
@@ -1344,15 +1354,30 @@ class ApiService {
       }
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map &&
+            decoded['result'] != false &&
+            decoded['data'] is List) {
+          return {
+            'success': true,
+            'is_free': decoded['is_free'] == true,
+            'message': decoded['message'] ?? '',
+            'data': decoded['data'],
+          };
+        }
         return {
-          'success': true,
-          'is_free': data['is_free'] == true,
-          'message': data['message'] ?? '',
-          'data': data['data'] ?? []
+          'success': false,
+          'status': response.statusCode,
+          'message': decoded is Map
+              ? (decoded['message'] ?? 'استجابة الباقات غير صالحة')
+              : 'استجابة الباقات غير صالحة',
         };
       }
-      return {'success': false, 'message': 'تعذر جلب الباقات'};
+      return {
+        'success': false,
+        'status': response.statusCode,
+        'message': 'تعذر جلب الباقات (HTTP ' + response.statusCode.toString() + ')',
+      };
     } catch (e) {
       if (kDebugMode) debugPrint('❌ [API ERROR getActivePackages]: $e');
       return {'success': false, 'message': 'خطأ في الاتصال بالشبكة'};
@@ -2598,43 +2623,50 @@ class ApiService {
   // 🟢 قسم طلبات الاهتمام
   // ============================================================================
 
+  static Map<String, dynamic> _interestListResult(
+      Map<String, dynamic>? response, String failureMessage) {
+    if (response == null ||
+        response['result'] == false ||
+        response['success'] == false) {
+      return {
+        'success': false,
+        'data': <dynamic>[],
+        'status': response?['status'] ?? 'request_failed',
+        'message': response?['message'] ?? failureMessage,
+      };
+    }
+    final dynamic rawData = response['data'];
+    final List<dynamic>? items = rawData is List
+        ? rawData.cast<dynamic>()
+        : (rawData is Map && rawData['data'] is List)
+            ? (rawData['data'] as List).cast<dynamic>()
+            : null;
+    if (items == null) {
+      return {
+        'success': false,
+        'data': <dynamic>[],
+        'status': 'invalid_response',
+        'message': failureMessage,
+      };
+    }
+    return {'success': true, 'data': items, 'status': 'success'};
+  }
+
   static Future<Map<String, dynamic>> getReceivedInterests(
       {String? lang}) async {
-    try {
-      final res = await get('/member/interest-requests', lang: lang);
-      if (res != null) {
-        List items = [];
-        if (res['data'] is List) {
-          items = res['data'];
-        } else if (res['data'] is Map && res['data']['data'] is List) {
-          items = res['data']['data'];
-        }
-        return {'success': true, 'data': items};
-      }
-      return {'success': false, 'data': []};
-    } catch (e) {
-      if (kDebugMode) debugPrint('❌ [API ERROR getReceivedInterests]: $e');
-      return {'success': false, 'data': []};
-    }
+    final res = await get('/member/interest-requests', lang: lang);
+    return _interestListResult(
+      res,
+      'تعذر تحميل طلبات الاهتمام الواردة. اسحب لإعادة المحاولة.',
+    );
   }
 
   static Future<Map<String, dynamic>> getSentInterests({String? lang}) async {
-    try {
-      final res = await get('/member/my-interests', lang: lang);
-      if (res != null) {
-        List items = [];
-        if (res['data'] is List) {
-          items = res['data'];
-        } else if (res['data'] is Map && res['data']['data'] is List) {
-          items = res['data']['data'];
-        }
-        return {'success': true, 'data': items};
-      }
-      return {'success': false, 'data': []};
-    } catch (e) {
-      if (kDebugMode) debugPrint('❌ [API ERROR getSentInterests]: $e');
-      return {'success': false, 'data': []};
-    }
+    final res = await get('/member/my-interests', lang: lang);
+    return _interestListResult(
+      res,
+      'تعذر تحميل طلبات الاهتمام المرسلة. اسحب لإعادة المحاولة.',
+    );
   }
 
   static Future<bool> acceptInterestRequest(int interestId) async {
@@ -2644,9 +2676,8 @@ class ApiService {
         'id': interestId,
       });
       return res != null &&
-          (res['result'] == true ||
-              res['status'] == 200 ||
-              res['success'] == true);
+          res['result'] != false &&
+          (res['result'] == true || res['success'] == true);
     } catch (e) {
       if (kDebugMode) debugPrint('❌ [API ERROR acceptInterestRequest]: $e');
       return false;
@@ -2660,9 +2691,8 @@ class ApiService {
         'id': interestId,
       });
       return res != null &&
-          (res['result'] == true ||
-              res['status'] == 200 ||
-              res['success'] == true);
+          res['result'] != false &&
+          (res['result'] == true || res['success'] == true);
     } catch (e) {
       if (kDebugMode) debugPrint('❌ [API ERROR rejectInterestRequest]: $e');
       return false;
@@ -2681,13 +2711,35 @@ class ApiService {
           await http.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) debugPrint('📥 [API RESPONSE ${response.statusCode}]');
 
-      if (response.statusCode == 200) {
-        return await compute(_parseChatThreadsIsolate, response.body);
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw HttpException(
+          'تعذر تحميل المحادثات (HTTP ' + response.statusCode.toString() + ')',
+          uri: url,
+        );
       }
-      return [];
+      dynamic decoded;
+      try {
+        decoded = jsonDecode(response.body);
+      } on FormatException {
+        throw const FormatException('استجابة المحادثات ليست JSON صالحاً');
+      }
+      if (decoded is Map && decoded['result'] == false) {
+        throw HttpException(
+          decoded['message']?.toString() ?? 'رفض الخادم جلب المحادثات',
+          uri: url,
+        );
+      }
+      final bool containsThreadList = decoded is List ||
+          (decoded is Map &&
+              ['data', 'chat_threads', 'chats', 'threads']
+                  .any((key) => decoded[key] is List));
+      if (!containsThreadList) {
+        throw const FormatException('هيكل استجابة المحادثات غير متوقع');
+      }
+      return await compute(_parseChatThreadsIsolate, response.body);
     } catch (e) {
       if (kDebugMode) debugPrint('❌ [API ERROR getChatThreads]: $e');
-      return [];
+      rethrow;
     }
   }
 
@@ -2717,17 +2769,44 @@ class ApiService {
           decoded = null;
         }
 
-        final data = decoded is Map ? decoded : {};
+        if (decoded is! Map) {
+          return {
+            'success': false,
+            'status': 'invalid_response',
+            'message': 'استجابة المحادثة غير صالحة',
+            'messages': <ChatMessageModel>[],
+            'chat_rules': null,
+          };
+        }
+        if (decoded['result'] == false) {
+          return {
+            'success': false,
+            'status': decoded['status'] ?? 'request_failed',
+            'message': decoded['message'] ?? 'تعذر تحميل الرسائل',
+            'messages': <ChatMessageModel>[],
+            'chat_rules': null,
+          };
+        }
+        final Map data = decoded;
         Map<String, dynamic> threadData = {};
-
-        if (data['data'] != null && data['data'] is Map) {
+        if (data['data'] is Map) {
           threadData = Map<String, dynamic>.from(data['data']);
-        } else if (data is Map<String, dynamic>) {
-          threadData = data;
+        } else {
+          threadData = Map<String, dynamic>.from(decoded);
         }
 
-        final List messagesList =
+        final dynamic rawMessages =
             threadData['messages'] ?? threadData['chats'] ?? [];
+        if (rawMessages is! List) {
+          return {
+            'success': false,
+            'status': 'invalid_response',
+            'message': 'قائمة رسائل المحادثة غير صالحة',
+            'messages': <ChatMessageModel>[],
+            'chat_rules': null,
+          };
+        }
+        final List messagesList = rawMessages;
 
         List<ChatMessageModel> parsedMessages = [];
         for (var item in messagesList) {
@@ -2757,14 +2836,28 @@ class ApiService {
         }
 
         return {
+          'success': true,
+          'status': 'success',
           'messages': parsedMessages.reversed.toList(),
           'chat_rules': chatRules,
         };
       }
-      return {'messages': <ChatMessageModel>[], 'chat_rules': null};
+      return {
+        'success': false,
+        'status': response.statusCode,
+        'message': 'تعذر تحميل الرسائل (HTTP ' + response.statusCode.toString() + ')',
+        'messages': <ChatMessageModel>[],
+        'chat_rules': null,
+      };
     } catch (e) {
       if (kDebugMode) debugPrint('❌ [API ERROR getChatMessages]: $e');
-      return {'messages': <ChatMessageModel>[], 'chat_rules': null};
+      return {
+        'success': false,
+        'status': 'network_error',
+        'message': 'تعذر الاتصال بالسيرفر أثناء تحميل الرسائل',
+        'messages': <ChatMessageModel>[],
+        'chat_rules': null,
+      };
     }
   }
 
@@ -3294,13 +3387,23 @@ class ApiService {
   static Future<Map<String, dynamic>> getProfileViewers({int page = 1}) async {
     try {
       final res = await get('/member/my-profile-viewers?page=$page');
-      if (res != null) {
+      if (res != null && res['result'] == true && res['data'] is List) {
         return res;
       }
-      return {'result': false, 'data': []};
+      return {
+        'result': false,
+        'status': res?['status'] ?? 'invalid_response',
+        'message': res?['message'] ?? 'تعذر تحميل زوار الملف الشخصي',
+        'data': <dynamic>[],
+      };
     } catch (e) {
       if (kDebugMode) debugPrint('❌ [API ERROR getProfileViewers]: $e');
-      return {'result': false, 'data': []};
+      return {
+        'result': false,
+        'status': 'network_error',
+        'message': 'تعذر الاتصال بالسيرفر أثناء تحميل الزوار',
+        'data': <dynamic>[],
+      };
     }
   }
 
