@@ -435,64 +435,46 @@ class _EditProfileScreenState extends State<EditProfileScreen>
         ];
 
   /// 🟢 دالة تنقية واستخراج معرف الحالة الاجتماعية بأسلوب آمن ودقيق
-  String _sanitizeMaritalStatusId(dynamic raw) {
-    if (raw == null) return '1';
-
+  String? _resolveDropdownId(dynamic raw, List<dynamic> options) {
+    if (raw == null) return null;
     if (raw is Map) {
-      final idVal = raw['id'] ??
-          raw['marital_status_id'] ??
-          raw['maritial_status_id'] ??
-          raw['value'];
-      if (idVal != null) return _sanitizeMaritalStatusId(idVal);
-      final nameVal = raw['name'] ?? raw['title'] ?? '';
-      if (nameVal.toString().isNotEmpty) {
-        return _sanitizeMaritalStatusId(nameVal.toString());
+      final directId = raw['id'] ?? raw['value'] ?? raw['religion_id'] ??
+          raw['marital_status_id'] ?? raw['maritial_status_id'];
+      if (directId != null) return _resolveDropdownId(directId, options);
+      raw = raw['name'] ?? raw['name_ar'] ?? raw['name_en'] ?? raw['title'];
+    }
+    final value = raw?.toString().trim() ?? '';
+    if (value.isEmpty || value == 'null' || value == 'undefined') return null;
+    if (RegExp(r'^\\d+$').hasMatch(value)) return value;
+
+    String normalize(String input) => input
+        .toLowerCase()
+        .replaceAll(RegExp(r'[\\s_\\-]+'), '')
+        .trim();
+
+    final target = normalize(value);
+    for (final option in options) {
+      if (option is! Map) continue;
+      final id = option['id']?.toString();
+      if (id == null || id.isEmpty) continue;
+      final candidates = [
+        option['name'], option['name_ar'], option['name_en'],
+        option['title'], option['value'],
+      ];
+      if (candidates.any((candidate) =>
+          candidate != null && normalize(candidate.toString()) == target)) {
+        return id;
       }
     }
-
-    final String trimmed = raw.toString().trim();
-    if (trimmed.isEmpty || trimmed == 'null') return '1';
-
-    if (RegExp(r'^\d+$').hasMatch(trimmed)) return trimmed;
-
-    final lower = trimmed.toLowerCase();
-    if (lower.contains('أعزب') ||
-        lower.contains('عزباء') ||
-        lower.contains('single') ||
-        lower.contains('unmarried')) {
-      return '1';
-    }
-    if (lower.contains('متزوج') ||
-        lower.contains('متزوجة') ||
-        lower.contains('married')) {
-      return '2';
-    }
-    if (lower.contains('مطلق') ||
-        lower.contains('مطلقة') ||
-        lower.contains('divorced')) {
-      return '3';
-    }
-    if (lower.contains('أرمل') ||
-        lower.contains('أرملة') ||
-        lower.contains('widowed')) {
-      return '4';
-    }
-
-    final digits = trimmed.replaceAll(RegExp(r'[^\d]'), '');
-    return digits.isNotEmpty ? digits : '1';
+    // Never guess a foreign key from a translated display label.
+    return null;
   }
 
-  String _sanitizeReligionId(dynamic raw) {
-    if (raw == null) return '1';
-    final String trimmed = raw.toString().trim();
-    if (trimmed.isEmpty || trimmed == 'null') return '1';
-    if (RegExp(r'^\d+$').hasMatch(trimmed)) return trimmed;
-    final lower = trimmed.toLowerCase();
-    if (lower.contains('مسيح') || lower.contains('christian')) return '2';
-    if (lower.contains('إسلام') || lower.contains('islam')) return '1';
-    final digits = trimmed.replaceAll(RegExp(r'[^\d]'), '');
-    return digits.isNotEmpty ? digits : '1';
-  }
+  String? _sanitizeMaritalStatusId(dynamic raw) =>
+      _resolveDropdownId(raw, _maritalStatuses);
+
+  String? _sanitizeReligionId(dynamic raw) =>
+      _resolveDropdownId(raw, _religions);
 
   String _getLocalizedCityName(dynamic cityData, bool isAr) {
     if (cityData == null) return '';
@@ -1147,21 +1129,10 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     final MemberProfileModel fullProfile =
         MemberProfileModel.fromJson(fullData, 0);
 
-    final dynamic eduRaw = fullData['education'];
-    Map<String, dynamic>? educationData;
-    if (eduRaw is List && eduRaw.isNotEmpty) {
-      educationData = Map<String, dynamic>.from(eduRaw[0]);
-    } else if (eduRaw is Map) {
-      educationData = Map<String, dynamic>.from(eduRaw);
-    }
-
-    final dynamic careerRaw = fullData['career'];
-    Map<String, dynamic>? careerData;
-    if (careerRaw is List && careerRaw.isNotEmpty) {
-      careerData = Map<String, dynamic>.from(careerRaw[0]);
-    } else if (careerRaw is Map) {
-      careerData = Map<String, dynamic>.from(careerRaw);
-    }
+    final Map<String, dynamic>? educationData =
+        ApiService.extractFirstResourceMap(fullData['education']);
+    final Map<String, dynamic>? careerData =
+        ApiService.extractFirstResourceMap(fullData['career']);
 
     final residency = _unwrapSection(
       fullData['residency_information'] ??
@@ -1291,19 +1262,1115 @@ class _EditProfileScreenState extends State<EditProfileScreen>
         );
       }
 
-      final rawOnBehalf = basic['on_behalf'] ??
-          basic['onbehalf'] ??
-          basic['on_behalf_id'] ??
-          basic['onbehalf_id'];
-      if (rawOnBehalf != null) _onBehalfValue = rawOnBehalf.toString();
+      final rawOnBehalf = basic['on_behalf_id'] ??
+          basic['onbehalf_id'] ??
+          basic['on_behalf'] ??
+          basic['onbehalf'];
+      final resolvedOnBehalf = rawOnBehalf is Map
+          ? (rawOnBehalf['id'] ?? rawOnBehalf['value'])
+          : rawOnBehalf;
+      final onBehalfId = resolvedOnBehalf?.toString().trim();
+      if (onBehalfId != null && RegExp(r'^\\d+
+    }
 
-      final rawMarital = basic['marital_status'] ??
-          basic['maritial_status'] ??
-          basic['marital_status_id'] ??
-          basic['maritial_status_id'];
-      if (rawMarital != null) {
-        _selectedMaritalStatusId = _sanitizeMaritalStatusId(rawMarital);
+    if (educationData != null) {
+      _educationId = educationData['id']?.toString() ??
+          educationData['education_id']?.toString();
+      if (educationData.containsKey('degree')) {
+        _selectedEducationDegree = _matchStringOption(
+            educationData['degree']?.toString(), _educationDegreeOptions);
       }
+      _setControllerIfPresent(
+          _institutionCtrl, educationData, const ['institution']);
+      final educationStart =
+          educationData['education_start'] ?? educationData['start'];
+      if (educationStart != null) _educationStart = educationStart.toString();
+    }
+
+    if (careerData != null) {
+      _careerId =
+          careerData['id']?.toString() ?? careerData['career_id']?.toString();
+      _setControllerIfPresent(
+          _designationCtrl, careerData, const ['designation']);
+      _setControllerIfPresent(_companyCtrl, careerData, const ['company']);
+      final careerStart = careerData['career_start'] ?? careerData['start'];
+      if (careerStart != null) _careerStart = careerStart.toString();
+    }
+
+    if (residency != null) {
+      if (residency.containsKey('birth_country_id')) {
+        _selectedBirthCountryId = residency['birth_country_id']?.toString();
+      }
+      if (residency.containsKey('growup_country_id') ||
+          residency.containsKey('birth_country_id')) {
+        _selectedGrowupCountryId = residency['growup_country_id']?.toString() ??
+            residency['birth_country_id']?.toString();
+      }
+      if (residency.containsKey('residency_country_id') ||
+          residency.containsKey('recidency_country_id')) {
+        _selectedResidencyCountryId =
+            residency['residency_country_id']?.toString() ??
+                residency['recidency_country_id']?.toString();
+      }
+      if (residency.containsKey('residency_state_id') ||
+          residency.containsKey('recidency_state_id')) {
+        _selectedResidencyStateId =
+            residency['residency_state_id']?.toString() ??
+                residency['recidency_state_id']?.toString();
+      }
+      if (residency.containsKey('residency_city_id') ||
+          residency.containsKey('recidency_city_id')) {
+        _selectedResidencyCityId =
+            residency['residency_city_id']?.toString() ??
+                residency['recidency_city_id']?.toString();
+      }
+
+      residencyCountryToFetch = _selectedResidencyCountryId;
+      residencyStateToFetch = _selectedResidencyStateId;
+      _setControllerIfPresent(
+          _immigrationStatusCtrl, residency, const ['immigration_status']);
+    }
+
+    if (spiritual != null) {
+      final religionValue = spiritual['raw_religion_id'] ??
+          spiritual['member_religion_id'] ??
+          spiritual['religion_id'];
+      _selectedReligionId = _sanitizeReligionId(religionValue);
+      if (spiritual.containsKey('family_value_id')) {
+        _selectedFamilyValueId = spiritual['family_value_id']?.toString();
+      }
+    }
+
+    if (physical != null) {
+      if (physical.containsKey('height')) {
+        _selectedHeight = _fieldString(physical['height']);
+      }
+      if (physical.containsKey('weight')) {
+        _selectedWeight = _fieldString(physical['weight']);
+      }
+      if (physical.containsKey('eye_color') || physical.containsKey('eye_colour')) {
+        _selectedEyeColor = _matchListedOption(
+            physical['eye_color'] ?? physical['eye_colour'], _eyeColors);
+      }
+      if (physical.containsKey('hair_color') || physical.containsKey('hair_colour')) {
+        _selectedHairColor = _matchListedOption(
+            physical['hair_color'] ?? physical['hair_colour'], _hairColors);
+      }
+      if (physical.containsKey('complexion')) {
+        _selectedComplexion =
+            _matchListedOption(physical['complexion'], _complexions);
+      }
+      if (physical.containsKey('blood_group')) {
+        _selectedBloodGroup = _fieldString(physical['blood_group']);
+      }
+      if (physical.containsKey('body_type')) {
+        _selectedBodyType = _fieldString(physical['body_type']);
+      }
+      if (physical.containsKey('body_art')) {
+        _selectedBodyArt = _fieldString(physical['body_art']);
+      }
+    } else if (fullProfile.physicalAttributes != null) {
+      final phys = fullProfile.physicalAttributes!;
+      if (phys.height.isNotEmpty) _selectedHeight = phys.height;
+      if (phys.weight.isNotEmpty) _selectedWeight = phys.weight;
+      _selectedEyeColor = _matchListedOption(phys.eyeColor, _eyeColors);
+      _selectedHairColor = _matchListedOption(phys.hairColor, _hairColors);
+      _selectedComplexion =
+          _matchListedOption(phys.complexion, _complexions);
+      if (phys.bloodGroup.isNotEmpty) _selectedBloodGroup = phys.bloodGroup;
+      if (phys.bodyType.isNotEmpty) _selectedBodyType = phys.bodyType;
+      if (phys.bodyArt.isNotEmpty) _selectedBodyArt = phys.bodyArt;
+    }
+
+    if (lifestyle != null) {
+      _selectedDiet = _fieldString(lifestyle['diet']);
+      _selectedLivingWith = _matchStringOption(
+          lifestyle['living_with'], _livingWithOptions);
+      _selectedSmoke = _mapSmokeFromBackend(
+          _fieldString(lifestyle['smoke']), lang == 'ar');
+      _selectedDrink = _fieldString(lifestyle['drink']);
+    }
+
+    if (hobbies != null) {
+      _selectedHobby =
+          _matchStringOption(hobbies['hobbies'], _hobbiesOptions);
+      _selectedInterest =
+          _matchStringOption(hobbies['interests'], _interestsOptions);
+      _selectedMusic = _matchStringOption(hobbies['music'], _musicOptions);
+      _selectedBook = _matchStringOption(hobbies['books'], _booksOptions);
+      _selectedMovie = _matchStringOption(hobbies['movies'], _moviesOptions);
+      _selectedTvShow = _fieldString(hobbies['tv_shows']);
+      _selectedSport = _matchStringOption(hobbies['sports'], _sportsOptions);
+      _selectedFitness = _fieldString(hobbies['fitness_activities']);
+      _selectedCuisine = _fieldString(hobbies['cuisines']);
+      _selectedDressStyle =
+          _matchStringOption(hobbies['dress_styles'], _dressStylesOptions);
+    }
+
+    if (attitude != null) {
+      _selectedAffection =
+          _matchStringOption(attitude['affection'], _affectionOptions);
+      _selectedHumor = _matchStringOption(attitude['humor'], _humorOptions);
+      _selectedReligiousService = _fieldString(attitude['religious_service']);
+      _selectedPoliticalView = _fieldString(attitude['political_views']);
+    }
+
+    if (astro != null) {
+      _selectedSunSign =
+          _matchStringOption(astro['sun_sign']?.toString(), _sunSignsKeys);
+    }
+
+    if (residencyCountryToFetch != null) {
+      await _loadResidencyStates(residencyCountryToFetch, keepSelected: true);
+      if (residencyStateToFetch != null) {
+        await _loadResidencyCities(residencyStateToFetch, keepSelected: true);
+      }
+    }
+  }
+
+  void _showCustomBottomSheetPicker({
+    required String title,
+    required List<Map<String, dynamic>> items,
+    required String? currentValue,
+    required ValueChanged<String> onSelected,
+    bool isAr = true,
+    bool enableSearch = false,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return GenericPickerBottomSheetContent(
+          title: title,
+          items: items,
+          currentValue: currentValue,
+          onSelected: onSelected,
+          isAr: isAr,
+          enableSearch: enableSearch || items.length > 5,
+        );
+      },
+    );
+  }
+
+  void _showCountryPickerBottomSheet(bool isAr,
+      {required bool isBirthCountry}) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return CountryPickerBottomSheetContent(
+          countries: _countries,
+          selectedCountryId: isBirthCountry
+              ? _selectedBirthCountryId
+              : _selectedResidencyCountryId,
+          isBirthCountry: isBirthCountry,
+          isAr: isAr,
+          onCountrySelected: (id) {
+            if (isBirthCountry) {
+              setState(() {
+                _selectedBirthCountryId = id;
+                _selectedGrowupCountryId = id;
+              });
+            } else {
+              setState(() => _selectedResidencyCountryId = id);
+              _loadResidencyStates(id);
+            }
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
+
+    if (pickedFile != null) {
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: pickedFile.path,
+        aspectRatio: const CropAspectRatio(ratioX: 4, ratioY: 5),
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle:
+                _isArabic ? 'اقتصاص الصورة الشخصية' : 'Crop Profile Photo',
+            toolbarColor: const Color(0xFF01579B),
+            toolbarWidgetColor: Colors.white,
+            activeControlsWidgetColor: Colors.amberAccent,
+            initAspectRatio: CropAspectRatioPreset.original,
+            lockAspectRatio: true,
+          ),
+          IOSUiSettings(
+            title: _isArabic ? 'اقتصاص الصورة الشخصية' : 'Crop Profile Photo',
+            aspectRatioLockEnabled: true,
+            resetAspectRatioEnabled: false,
+          ),
+        ],
+      );
+
+      if (croppedFile != null) {
+        setState(() => _pickedImageFile = File(croppedFile.path));
+      }
+    }
+  }
+
+  Future<void> _selectDateOfBirth() async {
+    DateTime initial = DateTime.tryParse(_dobCtrl.text) ?? DateTime(1998, 1, 1);
+
+    if (initial.isBefore(DateTime(1940))) initial = DateTime(1940);
+    if (initial.isAfter(DateTime(2008))) initial = DateTime(2008);
+
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(1940),
+      lastDate: DateTime(2008),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: Color(0xFF0288D1),
+              onPrimary: Colors.white,
+              surface: Color(0xFF01579B),
+              onSurface: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        _dobCtrl.text =
+            "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+      });
+    }
+  }
+
+  Future<void> _saveCurrentSection() async {
+    if (_isSaving || !mounted) return;
+    setState(() => _isSaving = true);
+
+    bool allSuccess = true;
+    bool anySuccess = false;
+    String lastMessage = '';
+    final int index = _tabController.index;
+    final lang = widget.currentLanguage;
+    final List<Future<Map<String, dynamic>>> requests = [];
+
+    try {
+      if (index == 0) {
+        if (_firstNameCtrl.text.trim().isEmpty ||
+            _lastNameCtrl.text.trim().isEmpty ||
+            _phoneCtrl.text.trim().isEmpty ||
+            _dobCtrl.text.trim().isEmpty) {
+          allSuccess = false;
+          lastMessage = _isArabic
+              ? 'يرجى التأكد من إدخال الاسم ورقم الهاتف وتاريخ الميلاد'
+              : 'Please complete name, phone and date of birth';
+        } else {
+          final bool sendIntroduction = _introCtrl.text.trim().isNotEmpty ||
+              _wasFieldLoaded('basic_info', const ['introduction', 'intoduction', 'about']);
+          requests.add(ApiService.updateBasicInfo(
+            firstName: _firstNameCtrl.text.trim(),
+            lastName: _lastNameCtrl.text.trim(),
+            phone: _phoneCtrl.text.trim(),
+            gender: _genderWasLoaded ? _selectedGender : null,
+            dateOfBirth: _dobCtrl.text.trim(),
+            maritalStatus: _selectedMaritalStatusId ?? '',
+            onBehalf: _onBehalfValue,
+            children: _childrenCtrl.text.trim(),
+            introduction: sendIntroduction ? _introCtrl.text.trim() : null,
+            photoFile: _pickedImageFile,
+            lang: lang,
+          ));
+
+          final physicalPayload = <String, dynamic>{};
+          void addPhysical(String key, List<String> aliases, dynamic value) {
+            if (_shouldSendProfileField('physical_attributes', aliases, value)) {
+              physicalPayload[key] = value ?? '';
+            }
+          }
+          addPhysical('height', const ['height'], _selectedHeight);
+          addPhysical('weight', const ['weight'], _selectedWeight);
+          addPhysical('eye_color', const ['eye_color', 'eye_colour'], _selectedEyeColor);
+          addPhysical('hair_color', const ['hair_color', 'hair_colour'], _selectedHairColor);
+          addPhysical('complexion', const ['complexion'], _selectedComplexion);
+          addPhysical('blood_group', const ['blood_group'], _selectedBloodGroup);
+          addPhysical('body_type', const ['body_type'], _selectedBodyType);
+          addPhysical('body_art', const ['body_art'], _selectedBodyArt);
+          if (physicalPayload.isNotEmpty) {
+            requests.add(ApiService.updatePhysicalAttributes(physicalPayload, lang: lang));
+          }
+
+          final educationPayload = <String, dynamic>{};
+          if (_educationId != null && _educationId!.isNotEmpty) {
+            educationPayload['id'] = _educationId;
+            educationPayload['education_id'] = _educationId;
+          }
+          if (_shouldSendProfileField('education', const ['degree'], _selectedEducationDegree)) {
+            educationPayload['degree'] = _selectedEducationDegree ?? '';
+          }
+          if (_shouldSendProfileField('education', const ['institution'], _institutionCtrl.text)) {
+            educationPayload['institution'] = _institutionCtrl.text.trim();
+          }
+          if (_shouldSendProfileField('education', const ['education_start', 'start'], _educationStart)) {
+            educationPayload['education_start'] = _educationStart;
+            educationPayload['start'] = _educationStart;
+          }
+          if (educationPayload.keys.any((key) => key != 'id' && key != 'education_id')) {
+            requests.add(ApiService.updateEducation(educationPayload, lang: lang));
+          }
+
+          final careerPayload = <String, dynamic>{};
+          if (_careerId != null && _careerId!.isNotEmpty) {
+            careerPayload['id'] = _careerId;
+            careerPayload['career_id'] = _careerId;
+          }
+          if (_shouldSendProfileField('career', const ['designation'], _designationCtrl.text)) {
+            careerPayload['designation'] = _designationCtrl.text.trim();
+          }
+          if (_shouldSendProfileField('career', const ['company'], _companyCtrl.text)) {
+            careerPayload['company'] = _companyCtrl.text.trim();
+          }
+          if (_shouldSendProfileField('career', const ['career_start', 'start'], _careerStart)) {
+            careerPayload['career_start'] = _careerStart;
+            careerPayload['start'] = _careerStart;
+          }
+          if (careerPayload.keys.any((key) => key != 'id' && key != 'career_id')) {
+            requests.add(ApiService.updateCareer(careerPayload, lang: lang));
+          }
+        }
+      } else if (index == 1) {
+        final residencyPayload = <String, dynamic>{};
+        void addResidency(String key, List<String> aliases, dynamic value) {
+          if (_shouldSendProfileField('residency_information', aliases, value)) {
+            residencyPayload[key] = value ?? '';
+          }
+        }
+        addResidency('birth_country_id', const ['birth_country_id'], _selectedBirthCountryId);
+        addResidency('growup_country_id', const ['growup_country_id'], _selectedGrowupCountryId);
+        addResidency('recidency_country_id', const ['residency_country_id', 'recidency_country_id'], _selectedResidencyCountryId);
+        addResidency('recidency_state_id', const ['residency_state_id', 'recidency_state_id'], _selectedResidencyStateId);
+        addResidency('recidency_city_id', const ['residency_city_id', 'recidency_city_id'], _selectedResidencyCityId);
+        addResidency('immigration_status', const ['immigration_status'], _immigrationStatusCtrl.text);
+        if (residencyPayload.isNotEmpty) {
+          requests.add(ApiService.updateResidencyInfo(residencyPayload, lang: lang));
+        }
+
+        final spiritualPayload = <String, dynamic>{};
+        if (_shouldSendProfileField('spiritual_background', const ['religion_id', 'member_religion_id'], _selectedReligionId)) {
+          spiritualPayload['member_religion_id'] = _selectedReligionId == null
+              ? ''
+              : _sanitizeReligionId(_selectedReligionId);
+        }
+        if (_shouldSendProfileField('spiritual_background', const ['family_value_id'], _selectedFamilyValueId)) {
+          spiritualPayload['family_value_id'] = _selectedFamilyValueId ?? '';
+        }
+        if (spiritualPayload.isNotEmpty) {
+          requests.add(ApiService.updateSpiritualBackground(spiritualPayload, lang: lang));
+        }
+      } else if (index == 2) {
+        final lifestylePayload = <String, dynamic>{};
+        void addLifestyle(String key, dynamic value, [List<String>? aliases]) {
+          if (_shouldSendProfileField('lifestyle', aliases ?? [key], value)) {
+            lifestylePayload[key] = value ?? '';
+          }
+        }
+        addLifestyle('diet', _selectedDiet);
+        addLifestyle('living_with', _sanitizeForApi(_selectedLivingWith));
+        addLifestyle('smoke', _selectedSmoke == null ? null : _mapSmokeToBackend(_selectedSmoke));
+        addLifestyle('drink', _selectedDrink);
+        if (lifestylePayload.isNotEmpty) {
+          requests.add(ApiService.updateLifeStyle(lifestylePayload, lang: lang));
+        }
+
+        final hobbiesPayload = <String, dynamic>{};
+        void addHobby(String key, dynamic value) {
+          if (_shouldSendProfileField('hobbies_interest', [key], value)) {
+            hobbiesPayload[key] = value ?? '';
+          }
+        }
+        addHobby('hobbies', _sanitizeForApi(_selectedHobby));
+        addHobby('interests', _sanitizeForApi(_selectedInterest));
+        addHobby('music', _sanitizeForApi(_selectedMusic));
+        addHobby('books', _sanitizeForApi(_selectedBook));
+        addHobby('movies', _sanitizeForApi(_selectedMovie));
+        addHobby('tv_shows', _sanitizeForApi(_selectedTvShow));
+        addHobby('sports', _sanitizeForApi(_selectedSport));
+        addHobby('fitness_activities', _sanitizeForApi(_selectedFitness));
+        addHobby('cuisines', _sanitizeForApi(_selectedCuisine));
+        addHobby('dress_styles', _sanitizeForApi(_selectedDressStyle));
+        if (hobbiesPayload.isNotEmpty) {
+          requests.add(ApiService.updateHobbies(hobbiesPayload, lang: lang));
+        }
+
+        final attitudePayload = <String, dynamic>{};
+        void addAttitude(String key, dynamic value) {
+          if (_shouldSendProfileField('attitude_behavior', [key], value)) {
+            attitudePayload[key] = value ?? '';
+          }
+        }
+        addAttitude('affection', _sanitizeForApi(_selectedAffection));
+        addAttitude('humor', _sanitizeForApi(_selectedHumor));
+        addAttitude('religious_service', _sanitizeForApi(_selectedReligiousService));
+        addAttitude('political_views', _sanitizeForApi(_selectedPoliticalView));
+        if (attitudePayload.isNotEmpty) {
+          requests.add(ApiService.updateAttitudeBehavior(attitudePayload, lang: lang));
+        }
+
+        final astroPayload = <String, dynamic>{};
+        if (_shouldSendProfileField('astronomic_information', const ['sun_sign'], _selectedSunSign)) {
+          astroPayload['sun_sign'] = _selectedSunSign ?? '';
+        }
+        if (astroPayload.isNotEmpty) {
+          requests.add(ApiService.updateAstronomicInfo(astroPayload, lang: lang));
+        }
+      }
+
+      if (allSuccess && requests.isEmpty) {
+        lastMessage = _isArabic ? 'لا توجد تغييرات جديدة لحفظها' : 'There are no changes to save';
+      } else if (requests.isNotEmpty) {
+        final results = await Future.wait(requests, eagerError: false);
+        for (final result in results) {
+          if (ApiService.isSuccessfulResult(result)) {
+            anySuccess = true;
+          } else {
+            allSuccess = false;
+            if (lastMessage.isEmpty) {
+              lastMessage = _extractErrorMessage(
+                result,
+                _isArabic ? 'فشل حفظ بعض البيانات' : 'Some profile changes could not be saved',
+              );
+            }
+          }
+        }
+        if (allSuccess) {
+          lastMessage = _isArabic ? 'تمت عملية الحفظ بنجاح ✨' : 'Saved successfully ✨';
+        }
+      }
+    } catch (e) {
+      allSuccess = false;
+      lastMessage = _isArabic
+          ? 'حدث خطأ غير متوقع أثناء الحفظ'
+          : 'Unexpected error during save';
+      debugPrint('Edit profile save error: $e');
+    }
+
+    // عند نجاح جزء من الحفظ وفشل جزء آخر، لا نترك نسخة كاش قديمة توحي
+    // بأن كل شيء تم أو لم يتم. نجبر الشاشة على جلب الحالة من الخادم لاحقاً.
+    if (anySuccess) {
+      await ProfileCacheService.clearCache();
+    }
+
+    if (!mounted) return;
+    setState(() => _isSaving = false);
+    _showNotification(
+      lastMessage.isEmpty
+          ? (_isArabic ? 'تعذر حفظ البيانات' : 'Unable to save profile data')
+          : lastMessage,
+      allSuccess,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const Color primarySkyBlue = Color(0xFF0288D1);
+    final double completionRatio = _calculateProfileCompletion();
+
+    return GestureDetector(
+      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+      child: Directionality(
+        textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
+        child: Scaffold(
+          body: Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFF01579B),
+                  Color(0xFF0288D1),
+                  Color(0xFF4FC3F7)
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                              _isArabic
+                                  ? Icons.arrow_back_ios_new_rounded
+                                  : Icons.arrow_back_rounded,
+                              color: Colors.white,
+                              size: 20),
+                          onPressed: () => Navigator.pop(context, true),
+                        ),
+                        Expanded(
+                          child: Text(
+                            _isArabic ? 'تعديل الملف الشخصي' : 'Edit Profile',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Cairo'),
+                          ),
+                        ),
+                        const SizedBox(width: 48),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(18)),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                _isArabic
+                                    ? 'اكتمال الملف الشخصي ✨'
+                                    : 'Profile Completion ✨',
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Cairo'),
+                              ),
+                              Text(
+                                '${(completionRatio * 100).toInt()}%',
+                                style: const TextStyle(
+                                    color: Colors.amberAccent,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Cairo'),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: LinearProgressIndicator(
+                              value: completionRatio,
+                              minHeight: 6,
+                              backgroundColor: Colors.white24,
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                  Colors.amberAccent),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.3),
+                              width: 1.1),
+                        ),
+                        child: TabBar(
+                          controller: _tabController,
+                          isScrollable: true,
+                          tabAlignment: TabAlignment.start,
+                          dividerColor: Colors.transparent,
+                          indicatorPadding: const EdgeInsets.all(2),
+                          indicator: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.12),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3)),
+                            ],
+                          ),
+                          labelColor: primarySkyBlue,
+                          unselectedLabelColor:
+                              Colors.white.withValues(alpha: 0.85),
+                          labelStyle: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Cairo'),
+                          unselectedLabelStyle: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Cairo'),
+                          labelPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 4),
+                          tabs: [
+                            Tab(
+                                child: Row(children: [
+                              const Text('👤 ', style: TextStyle(fontSize: 15)),
+                              Text(_isArabic
+                                  ? 'البيانات الشخصية'
+                                  : 'Personal Info')
+                            ])),
+                            Tab(
+                                child: Row(children: [
+                              const Text('🌍 ', style: TextStyle(fontSize: 15)),
+                              Text(_isArabic
+                                  ? 'الإقامة والدين'
+                                  : 'Residency & Religion')
+                            ])),
+                            Tab(
+                                child: Row(children: [
+                              const Text('🎨 ', style: TextStyle(fontSize: 15)),
+                              Text(_isArabic ? 'نمط الحياة' : 'Lifestyle')
+                            ])),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: _isLoading
+                        ? const Center(
+                            child:
+                                CircularProgressIndicator(color: Colors.white))
+                        : TabBarView(
+                            controller: _tabController,
+                            children: [
+                              Step1BasicPhysicalTab(
+                                isAr: _isArabic,
+                                firstNameCtrl: _firstNameCtrl,
+                                lastNameCtrl: _lastNameCtrl,
+                                phoneCtrl: _phoneCtrl,
+                                dobCtrl: _dobCtrl,
+                                childrenCtrl: _childrenCtrl,
+                                introCtrl: _introCtrl,
+                                institutionCtrl: _institutionCtrl,
+                                designationCtrl: _designationCtrl,
+                                selectedGender: _selectedGender,
+                                currentPhotoUrl: _currentPhotoUrl,
+                                pickedImageFile: _pickedImageFile,
+                                selectedMaritalStatusId:
+                                    _selectedMaritalStatusId,
+                                selectedEducationDegree:
+                                    _selectedEducationDegree,
+                                selectedHeight: _selectedHeight,
+                                selectedWeight: _selectedWeight,
+                                selectedEyeColor: _localizedOption(
+                                    _selectedEyeColor, _eyeColors),
+                                selectedHairColor: _localizedOption(
+                                    _selectedHairColor, _hairColors),
+                                selectedComplexion: _localizedOption(
+                                    _selectedComplexion, _complexions),
+                                eyeColorMap: _eyeColorMap,
+                                hairColorMap: _hairColorMap,
+                                complexionMap: _complexionMap,
+                                onPickImage: _pickImage,
+                                onSelectDateOfBirth: _selectDateOfBirth,
+                                onSelectMaritalStatus: () {
+                                  final items = _maritalStatuses.isNotEmpty
+                                      ? _maritalStatuses.map((ms) {
+                                          if (ms is Map) {
+                                            final id = ms['id'] ??
+                                                ms['marital_status_id'] ??
+                                                ms['maritial_status_id'] ??
+                                                ms['value'] ??
+                                                '1';
+                                            final name = ms['name'] ??
+                                                ms['title'] ??
+                                                ms['label'] ??
+                                                '';
+                                            return {
+                                              'id': id.toString(),
+                                              'name': name.toString().isNotEmpty
+                                                  ? name.toString()
+                                                  : id.toString()
+                                            };
+                                          }
+                                          return {
+                                            'id': ms.toString(),
+                                            'name': ms.toString()
+                                          };
+                                        }).toList()
+                                      : [
+                                          {
+                                            'id': '1',
+                                            'name': _isArabic
+                                                ? 'أعزب / عزباء 💍'
+                                                : 'Single 💍'
+                                          },
+                                          {
+                                            'id': '2',
+                                            'name': _isArabic
+                                                ? 'متزوج / متزوجة 💍'
+                                                : 'Married 💍'
+                                          },
+                                          {
+                                            'id': '3',
+                                            'name': _isArabic
+                                                ? 'مطلق / مطلقة 💍'
+                                                : 'Divorced 💍'
+                                          },
+                                          {
+                                            'id': '4',
+                                            'name': _isArabic
+                                                ? 'أرمل / أرملة 💍'
+                                                : 'Widowed 💍'
+                                          },
+                                        ];
+                                  _showCustomBottomSheetPicker(
+                                      title: _isArabic
+                                          ? 'الحالة الاجتماعية 💍'
+                                          : 'Marital Status 💍',
+                                      items: items,
+                                      currentValue: _selectedMaritalStatusId,
+                                      isAr: _isArabic,
+                                      onSelected: (val) => setState(() =>
+                                          _selectedMaritalStatusId = val));
+                                },
+                                onSelectEducationDegree: () {
+                                  final items = _educationDegreeOptions
+                                      .map((d) => {'id': d, 'name': d})
+                                      .toList();
+                                  _showCustomBottomSheetPicker(
+                                      title: _isArabic
+                                          ? 'المؤهل العلمي 🎓'
+                                          : 'Education Degree 🎓',
+                                      items: items,
+                                      currentValue: _selectedEducationDegree,
+                                      isAr: _isArabic,
+                                      onSelected: (val) => setState(() =>
+                                          _selectedEducationDegree = val));
+                                },
+                                onHeightChanged: (val) =>
+                                    setState(() => _selectedHeight = val),
+                                onWeightChanged: (val) =>
+                                    setState(() => _selectedWeight = val),
+                                onSelectEyeColor: () {
+                                  final items = _eyeColors
+                                      .map((e) => {
+                                            'id': e['key'],
+                                            'name':
+                                                _isArabic ? e['ar'] : e['en'],
+                                            'color': e['color']
+                                          })
+                                      .toList();
+                                  _showCustomBottomSheetPicker(
+                                      title: _isArabic
+                                          ? 'اختر لون العينين 👁️'
+                                          : 'Select Eye Color 👁️',
+                                      items: items,
+                                      currentValue: _selectedEyeColor,
+                                      isAr: _isArabic,
+                                      onSelected: (val) => setState(
+                                          () => _selectedEyeColor = val));
+                                },
+                                onSelectHairColor: () {
+                                  final items = _hairColors
+                                      .map((e) => {
+                                            'id': e['key'],
+                                            'name':
+                                                _isArabic ? e['ar'] : e['en'],
+                                            'color': e['color']
+                                          })
+                                      .toList();
+                                  _showCustomBottomSheetPicker(
+                                      title: _isArabic
+                                          ? 'اختر لون الشعر 💈'
+                                          : 'Select Hair Color 💈',
+                                      items: items,
+                                      currentValue: _selectedHairColor,
+                                      isAr: _isArabic,
+                                      onSelected: (val) => setState(
+                                          () => _selectedHairColor = val));
+                                },
+                                onSelectComplexion: () {
+                                  final items = _complexions
+                                      .map((e) => {
+                                            'id': e['key'],
+                                            'name':
+                                                _isArabic ? e['ar'] : e['en'],
+                                            'color': e['color']
+                                          })
+                                      .toList();
+                                  _showCustomBottomSheetPicker(
+                                      title: _isArabic
+                                          ? 'اختر لون البشرة 🎨'
+                                          : 'Select Complexion 🎨',
+                                      items: items,
+                                      currentValue: _selectedComplexion,
+                                      isAr: _isArabic,
+                                      onSelected: (val) => setState(
+                                          () => _selectedComplexion = val));
+                                },
+                              ),
+                              Step2ResidencySpiritualTab(
+                                isAr: _isArabic,
+                                selectedBirthCountryId: _selectedBirthCountryId,
+                                selectedResidencyCountryId:
+                                    _selectedResidencyCountryId,
+                                selectedResidencyStateId:
+                                    _selectedResidencyStateId,
+                                selectedResidencyCityId:
+                                    _selectedResidencyCityId,
+                                selectedReligionId: _selectedReligionId,
+                                selectedFamilyValueId: _selectedFamilyValueId,
+                                immigrationStatusCtrl: _immigrationStatusCtrl,
+                                countries: _countries,
+                                residencyStates: _residencyStates,
+                                residencyCities: _residencyCities,
+                                familyValues: _familyValues,
+                                isLoadingResidencyStates:
+                                    _isLoadingResidencyStates,
+                                isLoadingResidencyCities:
+                                    _isLoadingResidencyCities,
+                                onSelectBirthCountry: () =>
+                                    _showCountryPickerBottomSheet(_isArabic,
+                                        isBirthCountry: true),
+                                onSelectResidencyCountry: () =>
+                                    _showCountryPickerBottomSheet(_isArabic,
+                                        isBirthCountry: false),
+                                onSelectState: () {
+                                  final items = _residencyStates
+                                      .map((st) => {
+                                            'id': (st as Map)['id'].toString(),
+                                            'name': _getLocalizedCityName(
+                                                st, _isArabic)
+                                          })
+                                      .toList();
+                                  _showCustomBottomSheetPicker(
+                                      title: _isArabic
+                                          ? 'المحافظة 🏛️'
+                                          : 'Governorate / State 🏛️',
+                                      items: items,
+                                      currentValue: _selectedResidencyStateId,
+                                      isAr: _isArabic,
+                                      enableSearch: true,
+                                      onSelected: (val) {
+                                        setState(() =>
+                                            _selectedResidencyStateId = val);
+                                        _loadResidencyCities(val);
+                                      });
+                                },
+                                onSelectCity: () {
+                                  final items = _residencyCities
+                                      .map((ct) => {
+                                            'id': (ct as Map)['id'].toString(),
+                                            'name': _getLocalizedCityName(
+                                                ct, _isArabic)
+                                          })
+                                      .toList();
+                                  _showCustomBottomSheetPicker(
+                                      title:
+                                          _isArabic ? 'المدينة 🏙' : 'City 🏙️',
+                                      items: items,
+                                      currentValue: _selectedResidencyCityId,
+                                      isAr: _isArabic,
+                                      enableSearch: true,
+                                      onSelected: (val) => setState(() =>
+                                          _selectedResidencyCityId = val));
+                                },
+                                onSelectReligion: () {
+                                  final items = _religions.isNotEmpty
+                                      ? _religions
+                                          .map((r) => {
+                                                'id':
+                                                    (r as Map)['id'].toString(),
+                                                'name':
+                                                    (r['name'] ?? '').toString()
+                                              })
+                                          .toList()
+                                      : [
+                                          {
+                                            'id': '1',
+                                            'name': _isArabic
+                                                ? 'إسلام ☪️'
+                                                : 'Islam ☪️'
+                                          },
+                                          {
+                                            'id': '2',
+                                            'name': _isArabic
+                                                ? 'مسيحية ✝️'
+                                                : 'Christianity ✝️'
+                                          },
+                                        ];
+                                  _showCustomBottomSheetPicker(
+                                      title: _isArabic
+                                          ? 'الديانة *'
+                                          : 'Religion *',
+                                      items: items,
+                                      currentValue: _selectedReligionId,
+                                      isAr: _isArabic,
+                                      onSelected: (val) => setState(
+                                          () => _selectedReligionId = val));
+                                },
+                                onSelectFamilyValue: () {
+                                  final items = _familyValues
+                                      .map((fv) => {
+                                            'id': (fv as Map)['id'].toString(),
+                                            'name':
+                                                (fv['name'] ?? '').toString()
+                                          })
+                                      .toList();
+                                  _showCustomBottomSheetPicker(
+                                      title: _isArabic
+                                          ? 'القيم العائلية'
+                                          : 'Family Values',
+                                      items: items,
+                                      currentValue: _selectedFamilyValueId,
+                                      isAr: _isArabic,
+                                      enableSearch: true,
+                                      onSelected: (val) => setState(
+                                          () => _selectedFamilyValueId = val));
+                                },
+                                onImmigrationStatusChanged: (val) => setState(
+                                    () => _immigrationStatusCtrl.text = val),
+                                getLocalizedCityName: _getLocalizedCityName,
+                                getCountryFlagUrl: _getCountryFlagUrl,
+                              ),
+                              Step3LifestyleHobbiesTab(
+                                isAr: _isArabic,
+                                selectedSunSign: _selectedSunSign,
+                                selectedLivingWith: _selectedLivingWith,
+                                selectedSmoke: _selectedSmoke,
+                                selectedHobby: _selectedHobby,
+                                selectedInterest: _selectedInterest,
+                                selectedMusic: _selectedMusic,
+                                selectedBook: _selectedBook,
+                                selectedMovie: _selectedMovie,
+                                selectedSport: _selectedSport,
+                                selectedDressStyle: _selectedDressStyle,
+                                selectedAffection: _selectedAffection,
+                                selectedHumor: _selectedHumor,
+                                sunSignsKeys: _sunSignsKeys,
+                                livingWithOptions: _livingWithOptions,
+                                hobbiesOptions: _hobbiesOptions,
+                                interestsOptions: _interestsOptions,
+                                musicOptions: _musicOptions,
+                                booksOptions: _booksOptions,
+                                moviesOptions: _moviesOptions,
+                                sportsOptions: _sportsOptions,
+                                dressStylesOptions: _dressStylesOptions,
+                                affectionOptions: _affectionOptions,
+                                humorOptions: _humorOptions,
+                                onSelectSunSign: (val) =>
+                                    setState(() => _selectedSunSign = val),
+                                onSelectLivingWith: (val) =>
+                                    setState(() => _selectedLivingWith = val),
+                                onSelectSmoke: (val) =>
+                                    setState(() => _selectedSmoke = val),
+                                onSelectHobby: (val) =>
+                                    setState(() => _selectedHobby = val),
+                                onSelectInterest: (val) =>
+                                    setState(() => _selectedInterest = val),
+                                onSelectMusic: (val) =>
+                                    setState(() => _selectedMusic = val),
+                                onSelectBook: (val) =>
+                                    setState(() => _selectedBook = val),
+                                onSelectMovie: (val) =>
+                                    setState(() => _selectedMovie = val),
+                                onSelectSport: (val) =>
+                                    setState(() => _selectedSport = val),
+                                onSelectDressStyle: (val) =>
+                                    setState(() => _selectedDressStyle = val),
+                                onSelectAffection: (val) =>
+                                    setState(() => _selectedAffection = val),
+                                onSelectHumor: (val) =>
+                                    setState(() => _selectedHumor = val),
+                              ),
+                            ],
+                          ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.centerFloat,
+          floatingActionButton: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 24),
+                height: 52,
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isSaving ? null : _saveCurrentSection,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: primarySkyBlue,
+                    elevation: 10,
+                    shadowColor: Colors.black45,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: _isSaving
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                              color: primarySkyBlue, strokeWidth: 2.5))
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.save_rounded,
+                                color: primarySkyBlue, size: 22),
+                            const SizedBox(width: 8),
+                            Text(
+                              _isArabic ? 'حفظ هذا القسم' : 'Save Section',
+                              style: const TextStyle(
+                                  color: primarySkyBlue,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16.5,
+                                  fontFamily: 'Cairo'),
+                            ),
+                          ],
+                        ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+Map<String, dynamic> parseProfileData(Map<String, dynamic> jsonResponse) {
+  return jsonResponse;
+}
+).hasMatch(onBehalfId)) {
+        _onBehalfValue = onBehalfId;
+      }
+
+      final rawMarital = basic['marital_status_id'] ??
+          basic['maritial_status_id'] ??
+          basic['marital_status'] ??
+          basic['maritial_status'];
+      _selectedMaritalStatusId = _sanitizeMaritalStatusId(rawMarital);
     }
 
     if (educationData != null) {
