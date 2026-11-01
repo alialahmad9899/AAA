@@ -52,6 +52,7 @@ class _SignupScreenState extends State<SignupScreen> {
   int _currentStep = 0;
   bool _isLoading = false;
   bool _isAccountCreated = false;
+  bool _isSignupRequestInFlight = false;
 
   String? _educationSavedFingerprint;
   String? _careerSavedFingerprint;
@@ -250,6 +251,10 @@ class _SignupScreenState extends State<SignupScreen> {
       }
 
       if (!_isAccountCreated) {
+        // Prevent multiple multipart signup requests when the user taps
+        // the create-account button repeatedly before the first response.
+        if (_isSignupRequestInFlight) return;
+        _isSignupRequestInFlight = true;
         setState(() => _isLoading = true);
         try {
           await ApiService.clearToken();
@@ -305,6 +310,7 @@ class _SignupScreenState extends State<SignupScreen> {
             );
           }
         } finally {
+          _isSignupRequestInFlight = false;
           if (mounted) setState(() => _isLoading = false);
         }
       } else {
