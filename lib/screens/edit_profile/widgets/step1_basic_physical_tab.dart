@@ -512,7 +512,6 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                     Icons.account_balance_rounded)),
             const SizedBox(height: 10),
             TextFormField(
-                controller: designationCtrl,            TextFormField(
                 controller: designationCtrl,
                 style: const TextStyle(
                     color: Colors.white, fontSize: 15, fontFamily: 'Cairo'),
@@ -528,7 +527,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                     isAr ? 'جهة العمل' : 'Company / Employer',
                     Icons.business_outlined)),
             const SizedBox(height: 10),
-            // 4. السمات والمظهر الجسدي            // 4. السمات والمظهر الجسدي
+            // 4. السمات والمظهر الجسدي
             _buildSectionHeader(
                 isAr ? 'السمات والمظهر الجسدي' : 'Physical Attributes',
                 Icons.accessibility_new_rounded),
