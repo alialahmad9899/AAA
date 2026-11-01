@@ -1023,10 +1023,25 @@ class ApiService {
         return {'success': true, 'data': responseData};
       }
 
+      final rawServerMessage = responseData['message']?.toString() ?? '';
+      final signupReference = responseData['reference']?.toString();
+      final bool isServerSignupFailure = response.statusCode >= 500 &&
+          rawServerMessage.toLowerCase().contains('unable to complete registration');
+
       final message = responseSucceeded && token.isEmpty
           ? 'استجاب الخادم لإنشاء الحساب دون إرجاع رمز جلسة صالح. يرجى تسجيل الدخول أو التواصل مع الدعم.'
-          : _parseErrorMessage(responseData, response.statusCode);
-      return {'success': false, 'message': message};
+          : isServerSignupFailure
+              ? (signupReference != null && signupReference.isNotEmpty
+                  ? 'تعذر إنشاء الحساب بسبب خطأ في السيرفر. رمز المتابعة: $signupReference'
+                  : 'تعذر إنشاء الحساب بسبب خطأ في السيرفر. يرجى المحاولة لاحقاً.')
+              : _parseErrorMessage(responseData, response.statusCode);
+      return {
+        'success': false,
+        'status': response.statusCode,
+        'message': message,
+        if (signupReference != null && signupReference.isNotEmpty)
+          'reference': signupReference,
+      };
     } on TimeoutException {
       return {'success': false, 'message': 'انتهت مهلة الاتصال بالسيرفر'};
     } on SocketException {
