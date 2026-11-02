@@ -673,7 +673,8 @@ class Step4PartnerExpectations extends StatelessWidget {
                   )
                 else
                   DropdownButtonFormField<String>(
-                    value: safeLanguageId,
+                    key: ValueKey('partner-language-$safeLanguageId'),
+                    initialValue: safeLanguageId,
                     isExpanded: true,
                     decoration: _buildInputDecoration(
                       hintText: _isAr ? 'اختر اللغة المفضلة' : 'Select preferred language',
@@ -690,7 +691,8 @@ class Step4PartnerExpectations extends StatelessWidget {
                                 if (religionItems.isNotEmpty) ...[
                   _buildSectionTitle(_isAr ? 'الديانة المفضلة للشريك' : 'Preferred Partner Religion'),
                   DropdownButtonFormField<String>(
-                    value: religionItems.any((e) => e.value == preferredReligionId) ? preferredReligionId : null,
+                    key: ValueKey('partner-religion-$preferredReligionId'),
+                    initialValue: religionItems.any((e) => e.value == preferredReligionId) ? preferredReligionId : null,
                     isExpanded: true,
                     decoration: _buildInputDecoration(hintText: _isAr ? 'اختر الديانة' : 'Select religion', icon: Icons.auto_awesome_rounded),
                     items: religionItems,
@@ -701,7 +703,8 @@ class Step4PartnerExpectations extends StatelessWidget {
                 if (countryItems.isNotEmpty) ...[
                   _buildSectionTitle(_isAr ? 'بلد الشريك المفضل' : 'Preferred Partner Country'),
                   DropdownButtonFormField<String>(
-                    value: countryItems.any((e) => e.value == preferredCountryId) ? preferredCountryId : null,
+                    key: ValueKey('partner-country-$preferredCountryId'),
+                    initialValue: countryItems.any((e) => e.value == preferredCountryId) ? preferredCountryId : null,
                     isExpanded: true,
                     decoration: _buildInputDecoration(hintText: _isAr ? 'اختر البلد' : 'Select country', icon: Icons.public_rounded),
                     items: countryItems,
@@ -712,7 +715,8 @@ class Step4PartnerExpectations extends StatelessWidget {
                 if (stateItems.isNotEmpty) ...[
                   _buildSectionTitle(_isAr ? 'المحافظة المفضلة للشريك' : 'Preferred Partner Governorate'),
                   DropdownButtonFormField<String>(
-                    value: stateItems.any((e) => e.value == preferredStateId) ? preferredStateId : null,
+                    key: ValueKey('partner-state-$preferredStateId'),
+                    initialValue: stateItems.any((e) => e.value == preferredStateId) ? preferredStateId : null,
                     isExpanded: true,
                     decoration: _buildInputDecoration(hintText: _isAr ? 'اختر المحافظة' : 'Select governorate', icon: Icons.location_city_rounded),
                     items: stateItems,
