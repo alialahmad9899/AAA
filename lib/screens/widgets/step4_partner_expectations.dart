@@ -12,8 +12,14 @@ class Step4PartnerExpectations extends StatelessWidget {
   final TextEditingController professionController;
   final RangeValues heightRange;
   final RangeValues weightRange;
+  final bool heightRangeWasSelected;
+  final bool weightRangeWasSelected;
   final String? education;
   final String? complexion;
+  final String? eyeColor;
+  final String? hairColor;
+  final List<dynamic> languages;
+  final bool isLoadingLanguages;
   final String? languageId;
   final String childrenAcceptable;
   final String smokingAcceptable;
@@ -24,7 +30,10 @@ class Step4PartnerExpectations extends StatelessWidget {
   final ValueChanged<RangeValues> onWeightRangeChanged;
   final ValueChanged<String?> onEducationChanged;
   final ValueChanged<String?> onComplexionChanged;
+  final ValueChanged<String?> onEyeColorChanged;
+  final ValueChanged<String?> onHairColorChanged;
   final ValueChanged<String?> onLanguageChanged;
+  final VoidCallback onRetryLanguages;
   final ValueChanged<String> onChildrenChanged;
   final ValueChanged<String> onSmokingChanged;
   final ValueChanged<String> onDrinkingChanged;
@@ -36,8 +45,14 @@ class Step4PartnerExpectations extends StatelessWidget {
     required this.professionController,
     required this.heightRange,
     required this.weightRange,
+    required this.heightRangeWasSelected,
+    required this.weightRangeWasSelected,
     required this.education,
     required this.complexion,
+    required this.eyeColor,
+    required this.hairColor,
+    required this.languages,
+    required this.isLoadingLanguages,
     required this.languageId,
     required this.childrenAcceptable,
     required this.smokingAcceptable,
@@ -47,11 +62,79 @@ class Step4PartnerExpectations extends StatelessWidget {
     required this.onWeightRangeChanged,
     required this.onEducationChanged,
     required this.onComplexionChanged,
+    required this.onEyeColorChanged,
+    required this.onHairColorChanged,
     required this.onLanguageChanged,
+    required this.onRetryLanguages,
     required this.onChildrenChanged,
     required this.onSmokingChanged,
     required this.onDrinkingChanged,
   });
+
+  // Labels are bilingual; the submitted value remains the real member_languages id.
+  static const Map<String, String> _bilingualLanguageLabels = {
+    'arabic': 'العربية / Arabic',
+    'العربية': 'العربية / Arabic',
+    'english': 'الإنجليزية / English',
+    'الإنجليزية': 'الإنجليزية / English',
+    'french': 'الفرنسية / French',
+    'français': 'الفرنسية / French',
+    'الفرنسية': 'الفرنسية / French',
+    'turkish': 'التركية / Turkish',
+    'türkçe': 'التركية / Turkish',
+    'التركية': 'التركية / Turkish',
+    'german': 'الألمانية / German',
+    'deutsch': 'الألمانية / German',
+    'الألمانية': 'الألمانية / German',
+    'spanish': 'الإسبانية / Spanish',
+    'español': 'الإسبانية / Spanish',
+    'الإسبانية': 'الإسبانية / Spanish',
+    'russian': 'الروسية / Russian',
+    'русский': 'الروسية / Russian',
+    'الروسية': 'الروسية / Russian',
+    'kurdish': 'الكردية / Kurdish',
+    'کوردی': 'الكردية / Kurdish',
+    'الكردية': 'الكردية / Kurdish',
+    'persian': 'الفارسية / Persian',
+    'farsi': 'الفارسية / Persian',
+    'فارسی': 'الفارسية / Persian',
+    'الفارسية': 'الفارسية / Persian',
+    'urdu': 'الأردية / Urdu',
+    'اردو': 'الأردية / Urdu',
+    'الأردية': 'الأردية / Urdu',
+    'hindi': 'الهندية / Hindi',
+    'हिन्दी': 'الهندية / Hindi',
+    'الهندية': 'الهندية / Hindi',
+    'italian': 'الإيطالية / Italian',
+    'italiano': 'الإيطالية / Italian',
+    'الإيطالية': 'الإيطالية / Italian',
+    'chinese': 'الصينية / Chinese',
+    '中文': 'الصينية / Chinese',
+    'الصينية': 'الصينية / Chinese',
+    'japanese': 'اليابانية / Japanese',
+    '日本語': 'اليابانية / Japanese',
+    'اليابانية': 'اليابانية / Japanese',
+    'portuguese': 'البرتغالية / Portuguese',
+    'português': 'البرتغالية / Portuguese',
+    'البرتغالية': 'البرتغالية / Portuguese',
+    'dutch': 'الهولندية / Dutch',
+    'nederlands': 'الهولندية / Dutch',
+    'الهولندية': 'الهولندية / Dutch',
+    'greek': 'اليونانية / Greek',
+    'ελληνικά': 'اليونانية / Greek',
+    'اليونانية': 'اليونانية / Greek',
+  };
+
+  String _languageLabel(Map language) {
+    final rawName = (language['name'] ??
+            language['name_en'] ??
+            language['name_ar'] ??
+            '')
+        .toString()
+        .trim();
+    if (rawName.isEmpty) return '';
+    return _bilingualLanguageLabels[rawName.toLowerCase()] ?? rawName;
+  }
 
   bool get _isAr => lang == 'ar';
 
@@ -67,8 +150,30 @@ class Step4PartnerExpectations extends StatelessWidget {
 
   static const List<Map<String, String>> _complexions = [
     {'ar': 'أبيض', 'en': 'Fair / White'},
+    {'ar': 'حنطي فاتح', 'en': 'Light Tan'},
     {'ar': 'حنطي', 'en': 'Wheat / Tan'},
-    {'ar': 'أسمر', 'en': 'Dark'},
+    {'ar': 'أسمر', 'en': 'Dark Tan'},
+    {'ar': 'أسمر داكن', 'en': 'Dark'},
+    {'ar': 'لا يهم', 'en': "Doesn't matter"},
+  ];
+
+  static const List<Map<String, String>> _eyeColors = [
+    {'ar': 'بني', 'en': 'Brown'},
+    {'ar': 'أسود', 'en': 'Black'},
+    {'ar': 'أزرق', 'en': 'Blue'},
+    {'ar': 'أخضر', 'en': 'Green'},
+    {'ar': 'عسلي', 'en': 'Hazel'},
+    {'ar': 'رمادي', 'en': 'Grey'},
+    {'ar': 'لا يهم', 'en': "Doesn't matter"},
+  ];
+
+  static const List<Map<String, String>> _hairColors = [
+    {'ar': 'أسود', 'en': 'Black'},
+    {'ar': 'بني داكن', 'en': 'Dark Brown'},
+    {'ar': 'بني فاتح', 'en': 'Light Brown'},
+    {'ar': 'أشقر', 'en': 'Blonde'},
+    {'ar': 'أحمر', 'en': 'Red'},
+    {'ar': 'رمادي / شيب', 'en': 'Grey / White'},
     {'ar': 'لا يهم', 'en': "Doesn't matter"},
   ];
 
@@ -182,6 +287,27 @@ class Step4PartnerExpectations extends StatelessWidget {
   Widget build(BuildContext context) {
     final safeHeightRange = _clampRange(heightRange, 140, 210);
     final safeWeightRange = _clampRange(weightRange, 40, 140);
+    final languageItems = languages.whereType<Map>().map((language) {
+      final id = (language['id'] ?? '').toString().trim();
+      final label = _languageLabel(language);
+      if (id.isEmpty || label.isEmpty) return null;
+      return DropdownMenuItem<String>(
+        value: id,
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textDirection: TextDirection.rtl,
+          style: const TextStyle(
+            color: Colors.black87,
+            fontFamily: 'Cairo',
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+    }).whereType<DropdownMenuItem<String>>().toList();
+    final safeLanguageId =
+        languageItems.any((item) => item.value == languageId) ? languageId : null;
 
     return Directionality(
       textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
@@ -256,8 +382,8 @@ class Step4PartnerExpectations extends StatelessWidget {
 
                 // 2. نطاق الطول
                 _buildSectionTitle(_isAr
-                    ? '2. نطاق الطول المطلوب (سم) 📏'
-                    : '2. Preferred Height Range (cm) 📏'),
+                    ? '2. نطاق الطول المطلوب (سم) 📏 *'
+                    : '2. Preferred Height Range (cm) 📏 *'),
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -268,25 +394,46 @@ class Step4PartnerExpectations extends StatelessWidget {
                   child: Column(
                     children: [
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            _isAr
-                                ? 'من: ${safeHeightRange.start.round()} سم'
-                                : 'From: ${safeHeightRange.start.round()} cm',
-                            style: const TextStyle(
+                          Expanded(
+                            child: Text(
+                              _isAr
+                                  ? (heightRangeWasSelected
+                                      ? 'من: ${safeHeightRange.start.round()} سم'
+                                      : 'لم يتم تحديد نطاق الطول بعد')
+                                  : (heightRangeWasSelected
+                                      ? 'From: ${safeHeightRange.start.round()} cm'
+                                      : 'Height range not selected yet'),
+                              softWrap: true,
+                              textAlign: TextAlign.start,
+                              style: const TextStyle(
                                 color: Colors.amberAccent,
                                 fontWeight: FontWeight.bold,
-                                fontFamily: 'Cairo'),
+                                fontFamily: 'Cairo',
+                                fontSize: 12,
+                              ),
+                            ),
                           ),
-                          Text(
-                            _isAr
-                                ? 'إلى: ${safeHeightRange.end.round()} سم'
-                                : 'To: ${safeHeightRange.end.round()} cm',
-                            style: const TextStyle(
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _isAr
+                                  ? (heightRangeWasSelected
+                                      ? 'إلى: ${safeHeightRange.end.round()} سم'
+                                      : 'حرّك المؤشر لاختيار النطاق')
+                                  : (heightRangeWasSelected
+                                      ? 'To: ${safeHeightRange.end.round()} cm'
+                                      : 'Move the slider to choose a range'),
+                              softWrap: true,
+                              textAlign: TextAlign.end,
+                              style: const TextStyle(
                                 color: Colors.amberAccent,
                                 fontWeight: FontWeight.bold,
-                                fontFamily: 'Cairo'),
+                                fontFamily: 'Cairo',
+                                fontSize: 12,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -301,7 +448,9 @@ class Step4PartnerExpectations extends StatelessWidget {
                           min: 140,
                           max: 210,
                           divisions: 70,
-                          activeColor: Colors.amberAccent,
+                          activeColor: heightRangeWasSelected
+                              ? Colors.amberAccent
+                              : Colors.white24,
                           inactiveColor: Colors.white24,
                           onChanged: onHeightRangeChanged,
                         ),
@@ -313,8 +462,8 @@ class Step4PartnerExpectations extends StatelessWidget {
 
                 // 3. نطاق الوزن
                 _buildSectionTitle(_isAr
-                    ? '3. نطاق الوزن المطلوب (كغ) ⚖️'
-                    : '3. Preferred Weight Range (kg) ⚖️'),
+                    ? '3. نطاق الوزن المطلوب (كغ) ⚖️ *'
+                    : '3. Preferred Weight Range (kg) ⚖️ *'),
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -325,25 +474,46 @@ class Step4PartnerExpectations extends StatelessWidget {
                   child: Column(
                     children: [
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            _isAr
-                                ? 'من: ${safeWeightRange.start.round()} كغ'
-                                : 'From: ${safeWeightRange.start.round()} kg',
-                            style: const TextStyle(
+                          Expanded(
+                            child: Text(
+                              _isAr
+                                  ? (weightRangeWasSelected
+                                      ? 'من: ${safeWeightRange.start.round()} كغ'
+                                      : 'لم يتم تحديد نطاق الوزن بعد')
+                                  : (weightRangeWasSelected
+                                      ? 'From: ${safeWeightRange.start.round()} kg'
+                                      : 'Weight range not selected yet'),
+                              softWrap: true,
+                              textAlign: TextAlign.start,
+                              style: const TextStyle(
                                 color: Colors.amberAccent,
                                 fontWeight: FontWeight.bold,
-                                fontFamily: 'Cairo'),
+                                fontFamily: 'Cairo',
+                                fontSize: 12,
+                              ),
+                            ),
                           ),
-                          Text(
-                            _isAr
-                                ? 'إلى: ${safeWeightRange.end.round()} كغ'
-                                : 'To: ${safeWeightRange.end.round()} kg',
-                            style: const TextStyle(
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _isAr
+                                  ? (weightRangeWasSelected
+                                      ? 'إلى: ${safeWeightRange.end.round()} كغ'
+                                      : 'حرّك المؤشر لاختيار النطاق')
+                                  : (weightRangeWasSelected
+                                      ? 'To: ${safeWeightRange.end.round()} kg'
+                                      : 'Move the slider to choose a range'),
+                              softWrap: true,
+                              textAlign: TextAlign.end,
+                              style: const TextStyle(
                                 color: Colors.amberAccent,
                                 fontWeight: FontWeight.bold,
-                                fontFamily: 'Cairo'),
+                                fontFamily: 'Cairo',
+                                fontSize: 12,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -358,7 +528,9 @@ class Step4PartnerExpectations extends StatelessWidget {
                           min: 40,
                           max: 140,
                           divisions: 100,
-                          activeColor: Colors.amberAccent,
+                          activeColor: weightRangeWasSelected
+                              ? Colors.amberAccent
+                              : Colors.white24,
                           inactiveColor: Colors.white24,
                           onChanged: onWeightRangeChanged,
                         ),
@@ -370,8 +542,8 @@ class Step4PartnerExpectations extends StatelessWidget {
 
                 // 4. المستوى التعليمي المفضل
                 _buildSectionTitle(_isAr
-                    ? '4. المؤهل العلمي المفضل 🎓'
-                    : '4. Education Level 🎓'),
+                    ? '4. المؤهل العلمي المفضل 🎓 *'
+                    : '4. Education Level 🎓 *'),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -390,8 +562,8 @@ class Step4PartnerExpectations extends StatelessWidget {
 
                 // 5. لون البشرة المفضل
                 _buildSectionTitle(_isAr
-                    ? '5. لون البشرة المفضل 🎨'
-                    : '5. Preferred Complexion 🎨'),
+                    ? '5. لون البشرة المفضل 🎨 *'
+                    : '5. Preferred Complexion 🎨 *'),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -408,7 +580,83 @@ class Step4PartnerExpectations extends StatelessWidget {
                 ),
                 const SizedBox(height: 18),
 
-                // 6. مهنة الشريك
+                // 6. لون العينين المفضل
+                _buildSectionTitle(_isAr
+                    ? '6. لون العينين المفضل 👁️ *'
+                    : '6. Preferred Eye Color 👁️ *'),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _eyeColors.map((item) {
+                    final key = item['ar']!;
+                    final label = _isAr ? item['ar']! : item['en']!;
+                    return _buildCustomChip(
+                      label: label,
+                      isSelected: eyeColor == key,
+                      onTap: () => onEyeColorChanged(key),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 18),
+
+                // 7. لون الشعر المفضل
+                _buildSectionTitle(_isAr
+                    ? '7. لون الشعر المفضل 💇 *'
+                    : '7. Preferred Hair Color 💇 *'),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _hairColors.map((item) {
+                    final key = item['ar']!;
+                    final label = _isAr ? item['ar']! : item['en']!;
+                    return _buildCustomChip(
+                      label: label,
+                      isSelected: hairColor == key,
+                      onTap: () => onHairColorChanged(key),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 18),
+
+                // 8. اللغة المفضلة للشريك
+                _buildSectionTitle(_isAr
+                    ? '8. اللغة المفضلة للشريك *'
+                    : '8. Preferred Partner Language *'),
+                if (isLoadingLanguages)
+                  const Center(
+                    child: CircularProgressIndicator(color: Colors.amberAccent),
+                  )
+                else if (languageItems.isEmpty)
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: TextButton.icon(
+                      onPressed: onRetryLanguages,
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: Text(
+                        _isAr
+                            ? 'تعذر تحميل قائمة اللغات. اضغط لإعادة المحاولة'
+                            : 'Language list could not be loaded. Tap to retry',
+                        style: const TextStyle(fontFamily: 'Cairo'),
+                      ),
+                    ),
+                  )
+                else
+                  DropdownButtonFormField<String>(
+                    value: safeLanguageId,
+                    isExpanded: true,
+                    decoration: _buildInputDecoration(
+                      hintText: _isAr ? 'اختر اللغة المفضلة' : 'Select preferred language',
+                      icon: Icons.translate_rounded,
+                    ),
+                    items: languageItems,
+                    onChanged: onLanguageChanged,
+                    validator: (value) => value == null || value.isEmpty
+                        ? (_isAr ? 'يرجى اختيار لغة الشريك' : 'Select a language')
+                        : null,
+                  ),
+                const SizedBox(height: 18),
+
+                // 9. مهنة الشريك
                 _buildSectionTitle(_isAr
                     ? '6. مجال العمل أو المهنة المفضلة 💼'
                     : '6. Preferred Career 💼'),
@@ -431,8 +679,8 @@ class Step4PartnerExpectations extends StatelessWidget {
 
                 // 7. قبول وجود أطفال
                 _buildSectionTitle(_isAr
-                    ? '7. قبول وجود أطفال من زواج سابق 👶'
-                    : '7. Accept Children? 👶'),
+                    ? '10. قبول وجود أطفال من زواج سابق 👶 *'
+                    : '10. Accept Children? 👶 *'),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -458,7 +706,7 @@ class Step4PartnerExpectations extends StatelessWidget {
 
                 // 8. موقف التدخين
                 _buildSectionTitle(
-                    _isAr ? '8. موقف التدخين 🚬' : '8. Accept Smoking? 🚬'),
+                    _isAr ? '11. موقف التدخين 🚬 *' : '11. Accept Smoking? 🚬 *'),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -484,8 +732,8 @@ class Step4PartnerExpectations extends StatelessWidget {
 
                 // 9. موقف الكحول / المشروبات
                 _buildSectionTitle(_isAr
-                    ? '9. موقف تناول الكحول والمشروبات 🍷'
-                    : '9. Accept Alcohol? 🍷'),
+                    ? '12. موقف تناول الكحول والمشروبات 🍷 *'
+                    : '12. Accept Alcohol? 🍷 *'),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
