@@ -1429,13 +1429,11 @@ class PartnerExpectationModel {
         'residence_country_id'
       ]),
       religion: MemberProfileModel._firstValidString(
-          json, ['religion', 'religion_name', 'religion_id']),
+          json, ['religion', 'religion_name', 'partner_religion_id', 'religion_id']),
       education: MemberProfileModel._firstValidString(
           json, ['education', 'partner_education']),
       profession: MemberProfileModel._firstValidString(
           json, ['profession', 'partner_profession']),
-      religion: MemberProfileModel._firstValidString(
-          json, ['religion', 'religion_name', 'partner_religion_id', 'religion_id']),
       language: MemberProfileModel._firstValidString(
           json, ['language', 'language_name', 'language_id']),
       preferredCountry: MemberProfileModel._firstValidString(json,
