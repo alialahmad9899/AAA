@@ -109,7 +109,7 @@ class _SignupScreenState extends State<SignupScreen> {
   String? _religionId;
   String? _maritalStatusId;
   final _childrenCountController = TextEditingController();
-  bool get _requiresChildrenCount => const {'2', '3', '4'}.contains(_maritalStatusId);
+  bool get _requiresChildrenCount => const <String>{'2', '3', '4'}.contains(_maritalStatusId);
 
   // 4️⃣ متغيّرات الخطوة الرابعة (توقعات الشريك)
   final _partnerGeneralController = TextEditingController();
@@ -149,10 +149,17 @@ class _SignupScreenState extends State<SignupScreen> {
         ApiService.getProfileDropdowns(lang: widget.currentLanguage),
       ]);
       if (!mounted) return;
-      final languageResponse = results[0];
-      final dropdowns = results[1];
+      final languageRaw = results[0];
+      final dropdownRaw = results[1];
+      final Map<String, dynamic>? languageResponse = languageRaw is Map
+          ? Map<String, dynamic>.from(languageRaw)
+          : null;
+      final Map<String, dynamic>? dropdowns = dropdownRaw is Map
+          ? Map<String, dynamic>.from(dropdownRaw)
+          : null;
+      final nestedLanguageData = languageResponse?['data'];
       final rawLanguages = languageResponse?['languages'] ??
-          (languageResponse?['data'] is Map ? languageResponse?['data']['languages'] : null);
+          (nestedLanguageData is Map ? nestedLanguageData['languages'] : null);
       final loadedLanguages = rawLanguages is List
           ? rawLanguages.whereType<Map>()
               .map((item) => Map<String, dynamic>.from(item))
