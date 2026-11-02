@@ -1066,6 +1066,7 @@ class _SignupScreenState extends State<SignupScreen> {
                               setState(() => _partnerHairColor = v),
                           onLanguageChanged: (v) =>
                               setState(() => _partnerLanguageId = v),
+                          onRetryLanguages: _loadPartnerLanguages,
                           onChildrenChanged: (v) =>
                               setState(() => _partnerChildrenAcceptable = v),
                           onSmokingChanged: (v) =>
