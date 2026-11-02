@@ -72,9 +72,9 @@ class _SignupScreenState extends State<SignupScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  String _gender = '1';
-  String _onBehalf = '1';
-  bool _agreedToTerms = true;
+  String _gender = '';
+  String _onBehalf = '';
+  bool _agreedToTerms = false;
   File? _profilePhoto; // متغير الصورة الشخصية الإجبارية
 
   // 2️⃣ متغيّرات ومتحكمات الخطوة الثانية (التفاصيل الشخصية)
@@ -82,15 +82,15 @@ class _SignupScreenState extends State<SignupScreen> {
   final _institutionController = TextEditingController();
   final _designationController = TextEditingController();
   final _companyController = TextEditingController();
-  double _height = 170.0;
-  double _weight = 70.0;
+  double _height = 140.0;
+  double _weight = 40.0;
   bool _heightWasSelected = false;
   bool _weightWasSelected = false;
-  String _eyeColor = 'بني';
-  String _hairColor = 'أسود';
-  String _complexion = 'حنطي';
-  String _bodyType = 'عادي';
-  String _bodyArt = 'لا يوجد';
+  String _eyeColor = '';
+  String _hairColor = '';
+  String _complexion = '';
+  String _bodyType = '';
+  String _bodyArt = '';
   bool _eyeColorWasSelected = false;
   bool _hairColorWasSelected = false;
   bool _complexionWasSelected = false;
@@ -114,15 +114,63 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _partnerWeightWasSelected = false;
   String? _partnerEducation;
   String? _partnerComplexion;
+  String? _partnerEyeColor;
+  String? _partnerHairColor;
   String? _partnerLanguageId;
-  String _partnerChildrenAcceptable = 'dose_not_matter';
-  String _partnerSmokingAcceptable = 'dose_not_matter';
-  String _partnerDrinkingAcceptable = 'dose_not_matter';
+  String _partnerChildrenAcceptable = '';
+  String _partnerSmokingAcceptable = '';
+  String _partnerDrinkingAcceptable = '';
+  List<dynamic> _partnerLanguages = [];
+  bool _isLoadingPartnerLanguages = true;
 
   @override
   void initState() {
     super.initState();
     _initializeFieldsFromGoogle();
+  }
+
+  Future<void> _loadPartnerLanguages() async {
+    if (mounted) setState(() => _isLoadingPartnerLanguages = true);
+    try {
+      // PartnerExpectation.language_id references member_languages.id.
+      // profile-dropdown does not expose this table; profile-settings does.
+      // Fetch it after signup authentication, using a non-cached generic GET.
+      final profileSettings = await ApiService.get(
+        '/member/profile-settings',
+        lang: widget.currentLanguage,
+      );
+      if (!mounted) return;
+
+      final rawLanguages = profileSettings?['languages'];
+      final loadedLanguages = rawLanguages is List
+          ? rawLanguages
+              .whereType<Map>()
+              .map((item) => Map<String, dynamic>.from(item))
+              .where((item) =>
+                  item['id'] != null &&
+                  item['name'] != null &&
+                  item['name'].toString().trim().isNotEmpty)
+              .toList()
+          : <Map<String, dynamic>>[];
+
+      setState(() {
+        _partnerLanguages = loadedLanguages;
+        _isLoadingPartnerLanguages = false;
+      });
+      if (loadedLanguages.isEmpty) {
+        debugPrint(
+          '⚠️ [Signup] /member/profile-settings returned no member languages: '
+          '${profileSettings?['message'] ?? 'empty languages list'}',
+        );
+      } else {
+        debugPrint(
+          '✅ [Signup] Loaded ${loadedLanguages.length} real member language options',
+        );
+      }
+    } catch (e) {
+      debugPrint('Partner language options could not be loaded: $e');
+      if (mounted) setState(() => _isLoadingPartnerLanguages = false);
+    }
   }
 
   /// 🟢 دالة ملء بيانات الاسم والبريد تلقائياً إذا كانت قادمة من Google Sign-In
@@ -230,6 +278,16 @@ class _SignupScreenState extends State<SignupScreen> {
 
       if (!_step1Key.currentState!.validate()) return;
 
+      if (_gender.isEmpty || _onBehalf.isEmpty) {
+        _showNotification(
+          isAr
+              ? 'يرجى تحديد الجنس ولمن يتم إنشاء الحساب'
+              : 'Please select gender and who this profile is for',
+          NotificationType.warning,
+        );
+        return;
+      }
+
       if (_dobController.text.isEmpty) {
         _showNotification(
           isAr
@@ -329,27 +387,40 @@ class _SignupScreenState extends State<SignupScreen> {
         );
         return;
       }
+      if (!_heightWasSelected ||
+          !_weightWasSelected ||
+          !_eyeColorWasSelected ||
+          !_hairColorWasSelected ||
+          !_complexionWasSelected ||
+          !_bodyTypeWasSelected ||
+          !_bodyArtWasSelected) {
+        _showNotification(
+          isAr
+              ? 'يرجى تحديد الطول والوزن ولون العينين والشعر والبشرة وبنية الجسد والوشم'
+              : 'Please select height, weight, eye color, hair color, complexion, body type, and body art',
+          NotificationType.warning,
+        );
+        return;
+      }
 
       setState(() => _isLoading = true);
       try {
         final physicalPayload = <String, dynamic>{
-          if (_heightWasSelected) 'height': (_height / 100).toStringAsFixed(2),
-          if (_weightWasSelected) 'weight': _weight.round().toString(),
-          if (_eyeColorWasSelected) 'eye_color': _eyeColor,
-          if (_hairColorWasSelected) 'hair_color': _hairColor,
-          if (_complexionWasSelected) 'complexion': _complexion,
-          if (_bodyTypeWasSelected) 'body_type': _bodyType,
-          if (_bodyArtWasSelected) 'body_art': _bodyArt,
+          'height': (_height / 100).toStringAsFixed(2),
+          'weight': _weight.round().toString(),
+          'eye_color': _eyeColor,
+          'hair_color': _hairColor,
+          'complexion': _complexion,
+          'body_type': _bodyType,
+          'body_art': _bodyArt,
         };
-        if (physicalPayload.isNotEmpty) {
-          await _requireSignupSave(
-            ApiService.updatePhysicalAttributes(
-              physicalPayload,
-              lang: widget.currentLanguage,
-            ),
-            isAr ? 'تعذر حفظ المواصفات الجسدية' : 'Failed to save physical details',
-          );
-        }
+        await _requireSignupSave(
+          ApiService.updatePhysicalAttributes(
+            physicalPayload,
+            lang: widget.currentLanguage,
+          ),
+          isAr ? 'تعذر حفظ المواصفات الجسدية' : 'Failed to save physical details',
+        );
 
         // Read the current user's rows first. This makes retries safe even after
         // the app is closed or the previous create response was interrupted.
@@ -476,9 +547,30 @@ class _SignupScreenState extends State<SignupScreen> {
         );
         return;
       }
-      if (_stateId == null) {
+      if (_stateId == null || _stateId!.isEmpty) {
         _showNotification(
           isAr ? 'يرجى تحديد المحافظة' : 'Select Governorate / State',
+          NotificationType.warning,
+        );
+        return;
+      }
+      if (_cityId == null || _cityId!.isEmpty) {
+        _showNotification(
+          isAr ? 'يرجى تحديد المدينة' : 'Select City',
+          NotificationType.warning,
+        );
+        return;
+      }
+      if (_maritalStatusId == null || _maritalStatusId!.isEmpty) {
+        _showNotification(
+          isAr ? 'يرجى تحديد الحالة الاجتماعية' : 'Select marital status',
+          NotificationType.warning,
+        );
+        return;
+      }
+      if (_religionId == null || _religionId!.isEmpty) {
+        _showNotification(
+          isAr ? 'يرجى تحديد الديانة' : 'Select religion',
           NotificationType.warning,
         );
         return;
@@ -491,28 +583,26 @@ class _SignupScreenState extends State<SignupScreen> {
             'birth_country_id': _birthCountryId!,
             'recidency_country_id': _residenceCountryId!,
             'recidency_state_id': _stateId!,
-            if (_cityId != null && _cityId!.isNotEmpty)
-              'recidency_city_id': _cityId!,
+            'recidency_city_id': _cityId!,
           }, lang: widget.currentLanguage),
           isAr ? 'تعذر حفظ بيانات الإقامة' : 'Failed to save residency details',
         );
 
-        // لا نكتب ديانة أو حالة اجتماعية أو قيماً عائلية لم يحددها المستخدم.
         final spiritualPayload = <String, dynamic>{
-          if (_religionId != null && _religionId!.isNotEmpty)
-            'member_religion_id': _religionId!,
-          if (_maritalStatusId != null && _maritalStatusId!.isNotEmpty)
-            'marital_status': _maritalStatusId!,
+          'member_religion_id': _religionId!,
+          'marital_status': _maritalStatusId!,
         };
-        if (spiritualPayload.isNotEmpty) {
-          await _requireSignupSave(
-            ApiService.updateSpiritualBackground(
-              spiritualPayload,
-              lang: widget.currentLanguage,
-            ),
-            isAr ? 'تعذر حفظ البيانات الدينية' : 'Failed to save religious details',
-          );
-        }
+        await _requireSignupSave(
+          ApiService.updateSpiritualBackground(
+            spiritualPayload,
+            lang: widget.currentLanguage,
+          ),
+          isAr ? 'تعذر حفظ البيانات الدينية' : 'Failed to save religious details',
+        );
+
+        // Profile-dropdown endpoints require an authenticated member account.
+        // Load the mandatory partner language options only after signup/login.
+        await _loadPartnerLanguages();
 
         if (!mounted) return;
         _goToNextPage();
@@ -537,17 +627,45 @@ class _SignupScreenState extends State<SignupScreen> {
     // ------------------------------------------------------------------------
     else if (_currentStep == 3) {
       if (!_step4Key.currentState!.validate()) return;
+      if (!_partnerHeightWasSelected ||
+          !_partnerWeightWasSelected ||
+          _partnerEducation == null ||
+          _partnerComplexion == null ||
+          _partnerEyeColor == null ||
+          _partnerHairColor == null ||
+          _partnerLanguageId == null ||
+          _partnerChildrenAcceptable.isEmpty ||
+          _partnerSmokingAcceptable.isEmpty ||
+          _partnerDrinkingAcceptable.isEmpty) {
+        _showNotification(
+          isAr
+              ? 'يرجى اختيار جميع تفضيلات الشريك، بما فيها نطاقات الطول والوزن والألوان واللغة'
+              : 'Please complete all partner preferences, including height, weight, colors, and language',
+          NotificationType.warning,
+        );
+        return;
+      }
 
       setState(() => _isLoading = true);
       try {
         final partnerPayload = <String, dynamic>{
           if (_partnerGeneralController.text.trim().isNotEmpty)
             'general': _partnerGeneralController.text.trim(),
-          if (_partnerHeightWasSelected)
+          if (_partnerHeightWasSelected) ...{
+            'min_height':
+                (_partnerHeightRange.start / 100).toStringAsFixed(2),
+            'max_height':
+                (_partnerHeightRange.end / 100).toStringAsFixed(2),
+            // Legacy scalar retained for older matching code / app versions.
             'partner_height':
                 (_partnerHeightRange.start / 100).toStringAsFixed(2),
-          if (_partnerWeightWasSelected)
+          },
+          if (_partnerWeightWasSelected) ...{
+            'min_weight': _partnerWeightRange.start.toStringAsFixed(2),
+            'max_weight': _partnerWeightRange.end.toStringAsFixed(2),
+            // Legacy scalar retained for older matching code / app versions.
             'partner_weight': _partnerWeightRange.end.round().toString(),
+          },
           if (_partnerEducation != null && _partnerEducation!.isNotEmpty) ...{
             'partner_education': _partnerEducation,
             'pertner_education': _partnerEducation,
@@ -561,6 +679,9 @@ class _SignupScreenState extends State<SignupScreen> {
             'partner_complexion': _partnerComplexion,
             'pertner_complexion': _partnerComplexion,
           },
+          'partner_eye_color': _partnerEyeColor,
+          'partner_hair_color': _partnerHairColor,
+          'language_id': _partnerLanguageId,
         };
         if (partnerPayload.isEmpty) {
           throw const _SignupStepSaveException(
@@ -868,6 +989,8 @@ class _SignupScreenState extends State<SignupScreen> {
                           educationDegree: _educationDegree,
                           height: _height,
                           weight: _weight,
+                          heightWasSelected: _heightWasSelected,
+                          weightWasSelected: _weightWasSelected,
                           eyeColor: _eyeColor,
                           hairColor: _hairColor,
                           complexion: _complexion,
@@ -937,8 +1060,14 @@ class _SignupScreenState extends State<SignupScreen> {
                           professionController: _partnerProfessionController,
                           heightRange: _partnerHeightRange,
                           weightRange: _partnerWeightRange,
+                          heightRangeWasSelected: _partnerHeightWasSelected,
+                          weightRangeWasSelected: _partnerWeightWasSelected,
                           education: _partnerEducation,
                           complexion: _partnerComplexion,
+                          eyeColor: _partnerEyeColor,
+                          hairColor: _partnerHairColor,
+                          languages: _partnerLanguages,
+                          isLoadingLanguages: _isLoadingPartnerLanguages,
                           languageId: _partnerLanguageId,
                           childrenAcceptable: _partnerChildrenAcceptable,
                           smokingAcceptable: _partnerSmokingAcceptable,
@@ -956,8 +1085,13 @@ class _SignupScreenState extends State<SignupScreen> {
                               setState(() => _partnerEducation = v),
                           onComplexionChanged: (v) =>
                               setState(() => _partnerComplexion = v),
+                          onEyeColorChanged: (v) =>
+                              setState(() => _partnerEyeColor = v),
+                          onHairColorChanged: (v) =>
+                              setState(() => _partnerHairColor = v),
                           onLanguageChanged: (v) =>
                               setState(() => _partnerLanguageId = v),
+                          onRetryLanguages: _loadPartnerLanguages,
                           onChildrenChanged: (v) =>
                               setState(() => _partnerChildrenAcceptable = v),
                           onSmokingChanged: (v) =>
