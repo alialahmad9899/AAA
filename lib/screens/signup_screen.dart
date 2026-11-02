@@ -151,15 +151,15 @@ class _SignupScreenState extends State<SignupScreen> {
       if (!mounted) return;
       final languageRaw = results[0];
       final dropdownRaw = results[1];
-      final Map<String, dynamic>? languageResponse = languageRaw is Map
-          ? languageRaw.cast<String, dynamic>()
-          : null;
-      final Map<String, dynamic>? dropdowns = dropdownRaw is Map
-          ? dropdownRaw.cast<String, dynamic>()
-          : null;
-      final nestedLanguageData = languageResponse?['data'];
-      final rawLanguages = languageResponse?['languages'] ??
-          (nestedLanguageData is Map ? nestedLanguageData['languages'] : null);
+      final languageResponse = languageRaw is Map ? languageRaw : null;
+      final dropdowns = dropdownRaw is Map ? dropdownRaw : null;
+      final nestedLanguageData =
+          languageResponse is Map ? languageResponse['data'] : null;
+      final rawLanguages =
+          (languageResponse is Map ? languageResponse['languages'] : null) ??
+          (nestedLanguageData is Map
+              ? nestedLanguageData['languages']
+              : null);
       final loadedLanguages = rawLanguages is List
           ? rawLanguages.whereType<Map>()
               .map((item) => Map<String, dynamic>.from(item))
