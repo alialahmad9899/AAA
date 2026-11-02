@@ -170,11 +170,11 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
       }
 
       final Map<String, dynamic>? languageMap = languageResponse is Map
-          ? Map<String, dynamic>.from(languageResponse)
+          ? languageResponse.cast<String, dynamic>()
           : null;
       final nestedLanguageData = languageMap?['data'];
       final Map<String, dynamic>? nestedLanguageMap = nestedLanguageData is Map
-          ? Map<String, dynamic>.from(nestedLanguageData)
+          ? nestedLanguageData.cast<String, dynamic>()
           : null;
       final rawLanguages =
           languageMap?['languages'] ?? nestedLanguageMap?['languages'];
