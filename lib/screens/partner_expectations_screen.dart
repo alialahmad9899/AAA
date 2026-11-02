@@ -93,15 +93,28 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
   ];
 
   final List<String> _complexionOptions = [
-  final List<String> _eyeColorOptions = ['بني', 'أسود', 'أزرق', 'أخضر', 'عسلي', 'رمادي'];
-  final List<String> _hairColorOptions = ['أسود', 'بني داكن', 'بني فاتح', 'أشقر', 'أحمر', 'رمادي / شيب'];
-
     'أبيض',
     'حنطي فاتح',
     'حنطي',
     'أسمر',
     'أسمر داكن',
     'لا يهم'
+  ];
+  final List<String> _eyeColorOptions = [
+    'بني',
+    'أسود',
+    'أزرق',
+    'أخضر',
+    'عسلي',
+    'رمادي',
+  ];
+  final List<String> _hairColorOptions = [
+    'أسود',
+    'بني داكن',
+    'بني فاتح',
+    'أشقر',
+    'أحمر',
+    'رمادي / شيب',
   ];
 
   @override
