@@ -12,6 +12,7 @@ class Step3LifestyleHobbiesTab extends StatelessWidget {
   final String? selectedSunSign;
   final String? selectedLivingWith;
   final String? selectedSmoke;
+  final String? selectedDrink;
   final String? selectedHobby;
   final String? selectedInterest;
   final String? selectedMusic;
@@ -37,6 +38,7 @@ class Step3LifestyleHobbiesTab extends StatelessWidget {
   final ValueChanged<String> onSelectSunSign;
   final ValueChanged<String> onSelectLivingWith;
   final ValueChanged<String> onSelectSmoke;
+  final ValueChanged<String> onSelectDrink;
   final ValueChanged<String> onSelectHobby;
   final ValueChanged<String> onSelectInterest;
   final ValueChanged<String> onSelectMusic;
@@ -53,6 +55,7 @@ class Step3LifestyleHobbiesTab extends StatelessWidget {
     required this.selectedSunSign,
     required this.selectedLivingWith,
     required this.selectedSmoke,
+    required this.selectedDrink,
     required this.selectedHobby,
     required this.selectedInterest,
     required this.selectedMusic,
@@ -76,6 +79,7 @@ class Step3LifestyleHobbiesTab extends StatelessWidget {
     required this.onSelectSunSign,
     required this.onSelectLivingWith,
     required this.onSelectSmoke,
+    required this.onSelectDrink,
     required this.onSelectHobby,
     required this.onSelectInterest,
     required this.onSelectMusic,
@@ -256,6 +260,29 @@ class Step3LifestyleHobbiesTab extends StatelessWidget {
               ],
               selectedValue: selectedSmoke,
               onSelected: onSelectSmoke,
+            ),
+            _buildChoiceChips(
+              title: isAr ? 'ماذا تفضل من المشروبات؟ 🥤' : 'Drink Preference 🥤',
+              icon: Icons.local_drink_rounded,
+              options: [
+                isAr ? 'لا أتناولها' : 'None',
+                isAr ? 'أحياناً' : 'Occasionally',
+                isAr ? 'نعم' : 'Yes',
+              ],
+              selectedValue: selectedDrink == 'no'
+                  ? (isAr ? 'لا أتناولها' : 'None')
+                  : selectedDrink == 'occasionally'
+                      ? (isAr ? 'أحياناً' : 'Occasionally')
+                      : selectedDrink == 'yes'
+                          ? (isAr ? 'نعم' : 'Yes')
+                          : null,
+              onSelected: (value) => onSelectDrink(
+                value == (isAr ? 'لا أتناولها' : 'None')
+                    ? 'no'
+                    : value == (isAr ? 'أحياناً' : 'Occasionally')
+                        ? 'occasionally'
+                        : 'yes',
+              ),
             ),
             _buildChoiceChips(
               title: isAr ? 'كيف تحب قضاء وقت فراغك؟ 🎨' : 'Hobbies 🎨',

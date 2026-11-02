@@ -25,6 +25,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
   final String currentPhotoUrl;
   final File? pickedImageFile;
   final String? selectedMaritalStatusId;
+  final bool showChildrenCount;
   final String? selectedEducationDegree;
   final String? selectedHeight;
   final String? selectedWeight;
@@ -61,6 +62,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
     required this.currentPhotoUrl,
     required this.pickedImageFile,
     required this.selectedMaritalStatusId,
+    required this.showChildrenCount,
     required this.selectedEducationDegree,
     required this.selectedHeight,
     required this.selectedWeight,
@@ -411,6 +413,27 @@ class Step1BasicPhysicalTab extends StatelessWidget {
             ),
             const SizedBox(height: 14),
 
+            if (showChildrenCount) ...[
+              const SizedBox(height: 4),
+              TextFormField(
+                controller: childrenCtrl,
+                keyboardType: TextInputType.number,
+                textDirection: TextDirection.ltr,
+                decoration: _buildInput(
+                  isAr ? 'عدد الأطفال 👶' : 'Number of Children 👶',
+                  Icons.child_care_rounded,
+                ),
+                validator: (value) {
+                  if (!showChildrenCount) return null;
+                  final count = int.tryParse((value ?? '').trim());
+                  if (count == null || count < 0) {
+                    return isAr ? 'أدخل عدداً صحيحاً (0 أو أكثر)' : 'Enter a whole number (0 or more)';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 14),
+            ],
             GestureDetector(
               onTap: onSelectDateOfBirth,
               child: AbsorbPointer(

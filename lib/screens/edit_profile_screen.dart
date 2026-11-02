@@ -38,6 +38,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
   bool _isSaving = false;
 
   bool get _isArabic => widget.currentLanguage == 'ar';
+  bool get _requiresChildrenCount => const {'2', '3', '4'}.contains(_selectedMaritalStatusId);
 
   final _firstNameCtrl = TextEditingController();
   final _lastNameCtrl = TextEditingController();
@@ -97,7 +98,6 @@ class _EditProfileScreenState extends State<EditProfileScreen>
   String? _selectedBodyType;
   String? _selectedBodyArt;
 
-  String? _selectedDiet;
   String? _selectedLivingWith;
   String? _selectedSmoke;
   String? _selectedDrink;
@@ -1428,7 +1428,6 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     }
 
     if (lifestyle != null) {
-      _selectedDiet = _fieldString(lifestyle['diet']);
       _selectedLivingWith = _matchStringOption(
           lifestyle['living_with'], _livingWithOptions);
       _selectedSmoke = _mapSmokeFromBackend(
@@ -1727,7 +1726,6 @@ class _EditProfileScreenState extends State<EditProfileScreen>
             lifestylePayload[key] = value ?? '';
           }
         }
-        addLifestyle('diet', _selectedDiet);
         addLifestyle('living_with', _sanitizeForApi(_selectedLivingWith));
         addLifestyle('smoke', _selectedSmoke == null ? null : _mapSmokeToBackend(_selectedSmoke));
         addLifestyle('drink', _selectedDrink);
@@ -2055,6 +2053,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                                 pickedImageFile: _pickedImageFile,
                                 selectedMaritalStatusId:
                                     _selectedMaritalStatusId,
+                                showChildrenCount: _requiresChildrenCount,
                                 selectedEducationDegree:
                                     _selectedEducationDegree,
                                 selectedHeight: _selectedHeight,
@@ -2128,8 +2127,10 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                                       items: items,
                                       currentValue: _selectedMaritalStatusId,
                                       isAr: _isArabic,
-                                      onSelected: (val) => setState(() =>
-                                          _selectedMaritalStatusId = val));
+                                      onSelected: (val) => setState(() {
+                                        _selectedMaritalStatusId = val;
+                                        if (val == '1') _childrenCtrl.clear();
+                                      }));
                                 },
                                 onSelectEducationDegree: () {
                                   final items = _educationDegreeOptions
@@ -2336,6 +2337,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                                 selectedSunSign: _selectedSunSign,
                                 selectedLivingWith: _selectedLivingWith,
                                 selectedSmoke: _selectedSmoke,
+                                selectedDrink: _selectedDrink,
                                 selectedHobby: _selectedHobby,
                                 selectedInterest: _selectedInterest,
                                 selectedMusic: _selectedMusic,
@@ -2362,6 +2364,8 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                                     setState(() => _selectedLivingWith = val),
                                 onSelectSmoke: (val) =>
                                     setState(() => _selectedSmoke = val),
+                                onSelectDrink: (val) =>
+                                    setState(() => _selectedDrink = val),
                                 onSelectHobby: (val) =>
                                     setState(() => _selectedHobby = val),
                                 onSelectInterest: (val) =>
