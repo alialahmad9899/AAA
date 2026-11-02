@@ -127,10 +127,10 @@ class _SignupScreenState extends State<SignupScreen> {
   void initState() {
     super.initState();
     _initializeFieldsFromGoogle();
-    _loadPartnerLanguages();
   }
 
   Future<void> _loadPartnerLanguages() async {
+    if (mounted) setState(() => _isLoadingPartnerLanguages = true);
     try {
       final dropdowns = await ApiService.getProfileDropdowns(
         lang: widget.currentLanguage,
@@ -574,6 +574,10 @@ class _SignupScreenState extends State<SignupScreen> {
           ),
           isAr ? 'تعذر حفظ البيانات الدينية' : 'Failed to save religious details',
         );
+
+        // Profile-dropdown endpoints require an authenticated member account.
+        // Load the mandatory partner language options only after signup/login.
+        await _loadPartnerLanguages();
 
         if (!mounted) return;
         _goToNextPage();
