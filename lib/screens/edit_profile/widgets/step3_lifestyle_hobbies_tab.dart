@@ -262,26 +262,16 @@ class Step3LifestyleHobbiesTab extends StatelessWidget {
               onSelected: onSelectSmoke,
             ),
             _buildChoiceChips(
-              title: isAr ? 'ماذا تفضل من المشروبات؟ 🥤' : 'Drink Preference 🥤',
+              title: isAr ? 'هل تتناول المشروبات؟ 🥤' : 'Do you drink? 🥤',
               icon: Icons.local_drink_rounded,
-              options: [
-                isAr ? 'لا أتناولها' : 'None',
-                isAr ? 'أحياناً' : 'Occasionally',
-                isAr ? 'نعم' : 'Yes',
-              ],
+              options: [isAr ? 'لا' : 'No', isAr ? 'نعم' : 'Yes'],
               selectedValue: selectedDrink == 'no'
-                  ? (isAr ? 'لا أتناولها' : 'None')
-                  : selectedDrink == 'occasionally'
-                      ? (isAr ? 'أحياناً' : 'Occasionally')
-                      : selectedDrink == 'yes'
-                          ? (isAr ? 'نعم' : 'Yes')
-                          : null,
+                  ? (isAr ? 'لا' : 'No')
+                  : selectedDrink == 'yes'
+                      ? (isAr ? 'نعم' : 'Yes')
+                      : selectedDrink,
               onSelected: (value) => onSelectDrink(
-                value == (isAr ? 'لا أتناولها' : 'None')
-                    ? 'no'
-                    : value == (isAr ? 'أحياناً' : 'Occasionally')
-                        ? 'occasionally'
-                        : 'yes',
+                value == (isAr ? 'لا' : 'No') ? 'no' : 'yes',
               ),
             ),
             _buildChoiceChips(

@@ -537,14 +537,21 @@ class Step2PersonalDetails extends StatelessWidget {
                   }).toList(),
                 ),
                 const SizedBox(height: 18),
-                _buildQuestionTitle(_isAr ? '6. ما تفضيلاتك من المشروبات؟ 🥤' : '6. Your drink preference 🥤'),
+                _buildQuestionTitle(_isAr ? '6. هل تتناول المشروبات؟ 🥤' : '6. Do you drink? 🥤'),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    _buildCustomChip(label: _isAr ? 'لا أتناولها' : 'None', isSelected: drink == 'no', onTap: () => onDrinkChanged('no')),
-                    _buildCustomChip(label: _isAr ? 'أحياناً' : 'Occasionally', isSelected: drink == 'occasionally', onTap: () => onDrinkChanged('occasionally')),
-                    _buildCustomChip(label: _isAr ? 'نعم' : 'Yes', isSelected: drink == 'yes', onTap: () => onDrinkChanged('yes')),
+                    _buildCustomChip(
+                      label: _isAr ? 'لا' : 'No',
+                      isSelected: drink == 'no',
+                      onTap: () => onDrinkChanged('no'),
+                    ),
+                    _buildCustomChip(
+                      label: _isAr ? 'نعم' : 'Yes',
+                      isSelected: drink == 'yes',
+                      onTap: () => onDrinkChanged('yes'),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 18),
@@ -552,38 +559,45 @@ class Step2PersonalDetails extends StatelessWidget {
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: [
-                    for (final option in const ['الحمل','الثور','الجوزاء','السرطان','الأسد','العذراء','الميزان','العقرب','القوس','الجدي','الدلو','الحوت'])
-                      _buildCustomChip(
-                        label: _isAr ? option : const {'الحمل':'Aries','الثور':'Taurus','الجوزاء':'Gemini','السرطان':'Cancer','الأسد':'Leo','العذراء':'Virgo','الميزان':'Libra','العقرب':'Scorpio','القوس':'Sagittarius','الجدي':'Capricorn','الدلو':'Aquarius','الحوت':'Pisces'}[option]!,
-                        isSelected: sunSign == option,
-                        onTap: () => onSunSignChanged(option),
-                      ),
-                  ],
+                  children: (_isAr
+                      ? const ['الحمل ♈', 'الثور ♉', 'الجوزاء ♊', 'السرطان ♋', 'الأسد ♌', 'العذراء ♍', 'الميزان ♎', 'العقرب ♏', 'القوس ♐', 'الجدي ♑', 'الدلو ♒', 'الحوت ♓']
+                      : const ['Aries ♈', 'Taurus ♉', 'Gemini ♊', 'Cancer ♋', 'Leo ♌', 'Virgo ♍', 'Libra ♎', 'Scorpio ♏', 'Sagittarius ♐', 'Capricorn ♑', 'Aquarius ♒', 'Pisces ♓'])
+                      .map((option) => _buildCustomChip(
+                            label: option,
+                            isSelected: sunSign == option,
+                            onTap: () => onSunSignChanged(option),
+                          ))
+                      .toList(),
                 ),
                 const SizedBox(height: 18),
                 _buildQuestionTitle(_isAr ? '8. كيف تعبّر عادةً عن مشاعرك؟ 💖' : '8. How do you express affection? 💖'),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: [
-                    _buildCustomChip(label: _isAr ? 'بالكلام' : 'Words', isSelected: affection == 'الكلام', onTap: () => onAffectionChanged('الكلام')),
-                    _buildCustomChip(label: _isAr ? 'بالاهتمام والأفعال' : 'Actions', isSelected: affection == 'الأفعال', onTap: () => onAffectionChanged('الأفعال')),
-                    _buildCustomChip(label: _isAr ? 'بالوقت والاهتمام' : 'Quality Time', isSelected: affection == 'الوقت', onTap: () => onAffectionChanged('الوقت')),
-                    _buildCustomChip(label: _isAr ? 'بالهدايا' : 'Gifts', isSelected: affection == 'الهدايا', onTap: () => onAffectionChanged('الهدايا')),
-                  ],
+                  children: (_isAr
+                      ? const ['عاطفي جداً وأعبر بدفء 💖', 'متوازن وأعبر في الأوقات المناسبة ✨', 'هادئ وحذر في إظهار المشاعر 🌿']
+                      : const ['Very affectionate & warm 💖', 'Balanced & express at right times ✨', 'Quiet & reserved with feelings 🌿'])
+                      .map((option) => _buildCustomChip(
+                            label: option,
+                            isSelected: affection == option,
+                            onTap: () => onAffectionChanged(option),
+                          ))
+                      .toList(),
                 ),
                 const SizedBox(height: 18),
                 _buildQuestionTitle(_isAr ? '9. كيف تصف حس الفكاهة لديك؟ 😄' : '9. Describe your sense of humor 😄'),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: [
-                    _buildCustomChip(label: _isAr ? 'مرح وأحب المزاح' : 'Playful', isSelected: humor == 'مرح', onTap: () => onHumorChanged('مرح')),
-                    _buildCustomChip(label: _isAr ? 'هادئ وبسيط' : 'Calm', isSelected: humor == 'هادئ', onTap: () => onHumorChanged('هادئ')),
-                    _buildCustomChip(label: _isAr ? 'ذكي وساخر' : 'Witty', isSelected: humor == 'ساخر', onTap: () => onHumorChanged('ساخر')),
-                    _buildCustomChip(label: _isAr ? 'لا يهم' : 'Does not matter', isSelected: humor == 'لا يهم', onTap: () => onHumorChanged('لا يهم')),
-                  ],
+                  children: (_isAr
+                      ? const ['مرح جداً ومحب للضحك والبهجة 😄', 'متوازن ومرح في الأوقات اللطيفة 😊', 'جاد معظم الوقت وقليل المزاح 😐']
+                      : const ['Very cheerful & loves laughter 😄', 'Balanced & fun in nice moments 😊', 'Serious most of the time 😐'])
+                      .map((option) => _buildCustomChip(
+                            label: option,
+                            isSelected: humor == option,
+                            onTap: () => onHumorChanged(option),
+                          ))
+                      .toList(),
                 ),
 
               ],
