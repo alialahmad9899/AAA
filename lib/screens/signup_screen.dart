@@ -153,8 +153,7 @@ class _SignupScreenState extends State<SignupScreen> {
       final dropdownRaw = results[1];
       final languageResponse = languageRaw is Map ? languageRaw : null;
       final dropdowns = dropdownRaw is Map ? dropdownRaw : null;
-      final nestedLanguageData =
-          languageResponse is Map ? languageResponse['data'] : null;
+      final nestedLanguageData = languageResponse?['data'];
       final rawLanguages =
           languageResponse?['languages'] ?? nestedLanguageData?['languages'];
       final loadedLanguages = rawLanguages is List
