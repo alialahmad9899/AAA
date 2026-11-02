@@ -33,6 +33,7 @@ class Step4PartnerExpectations extends StatelessWidget {
   final ValueChanged<String?> onEyeColorChanged;
   final ValueChanged<String?> onHairColorChanged;
   final ValueChanged<String?> onLanguageChanged;
+  final VoidCallback onRetryLanguages;
   final ValueChanged<String> onChildrenChanged;
   final ValueChanged<String> onSmokingChanged;
   final ValueChanged<String> onDrinkingChanged;
@@ -64,6 +65,7 @@ class Step4PartnerExpectations extends StatelessWidget {
     required this.onEyeColorChanged,
     required this.onHairColorChanged,
     required this.onLanguageChanged,
+    required this.onRetryLanguages,
     required this.onChildrenChanged,
     required this.onSmokingChanged,
     required this.onDrinkingChanged,
@@ -523,6 +525,20 @@ class Step4PartnerExpectations extends StatelessWidget {
                 if (isLoadingLanguages)
                   const Center(
                     child: CircularProgressIndicator(color: Colors.amberAccent),
+                  )
+                else if (languageItems.isEmpty)
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: TextButton.icon(
+                      onPressed: onRetryLanguages,
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: Text(
+                        _isAr
+                            ? 'تعذر تحميل اللغات. اضغط لإعادة المحاولة'
+                            : 'Could not load languages. Tap to retry',
+                        style: const TextStyle(fontFamily: 'Cairo'),
+                      ),
+                    ),
                   )
                 else
                   DropdownButtonFormField<String>(
