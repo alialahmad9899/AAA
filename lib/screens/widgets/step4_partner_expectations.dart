@@ -19,6 +19,12 @@ class Step4PartnerExpectations extends StatelessWidget {
   final String? eyeColor;
   final String? hairColor;
   final List<dynamic> languages;
+  final List<dynamic> religions;
+  final List<dynamic> countries;
+  final List<dynamic> states;
+  final String? preferredReligionId;
+  final String? preferredCountryId;
+  final String? preferredStateId;
   final bool isLoadingLanguages;
   final String? languageId;
   final String childrenAcceptable;
@@ -33,6 +39,9 @@ class Step4PartnerExpectations extends StatelessWidget {
   final ValueChanged<String?> onEyeColorChanged;
   final ValueChanged<String?> onHairColorChanged;
   final ValueChanged<String?> onLanguageChanged;
+  final ValueChanged<String?> onPreferredReligionChanged;
+  final ValueChanged<String?> onPreferredCountryChanged;
+  final ValueChanged<String?> onPreferredStateChanged;
   final VoidCallback onRetryLanguages;
   final ValueChanged<String> onChildrenChanged;
   final ValueChanged<String> onSmokingChanged;
@@ -52,6 +61,12 @@ class Step4PartnerExpectations extends StatelessWidget {
     required this.eyeColor,
     required this.hairColor,
     required this.languages,
+    required this.religions,
+    required this.countries,
+    required this.states,
+    required this.preferredReligionId,
+    required this.preferredCountryId,
+    required this.preferredStateId,
     required this.isLoadingLanguages,
     required this.languageId,
     required this.childrenAcceptable,
@@ -65,6 +80,9 @@ class Step4PartnerExpectations extends StatelessWidget {
     required this.onEyeColorChanged,
     required this.onHairColorChanged,
     required this.onLanguageChanged,
+    required this.onPreferredReligionChanged,
+    required this.onPreferredCountryChanged,
+    required this.onPreferredStateChanged,
     required this.onRetryLanguages,
     required this.onChildrenChanged,
     required this.onSmokingChanged,
@@ -308,6 +326,19 @@ class Step4PartnerExpectations extends StatelessWidget {
     }).whereType<DropdownMenuItem<String>>().toList();
     final safeLanguageId =
         languageItems.any((item) => item.value == languageId) ? languageId : null;
+    List<DropdownMenuItem<String>> makeItems(List<dynamic> values) =>
+        values.whereType<Map>().map((item) {
+          final id = (item['id'] ?? '').toString();
+          final name = (item['name_ar'] ?? item['name'] ?? item['name_en'] ?? '').toString();
+          if (id.isEmpty || name.trim().isEmpty) return null;
+          return DropdownMenuItem<String>(
+            value: id,
+            child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
+          );
+        }).whereType<DropdownMenuItem<String>>().toList();
+    final religionItems = makeItems(religions);
+    final countryItems = makeItems(countries);
+    final stateItems = makeItems(states);
 
     return Directionality(
       textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
@@ -656,7 +687,40 @@ class Step4PartnerExpectations extends StatelessWidget {
                   ),
                 const SizedBox(height: 18),
 
-                // 9. مهنة الشريك
+                                if (religionItems.isNotEmpty) ...[
+                  _buildSectionTitle(_isAr ? 'الديانة المفضلة للشريك' : 'Preferred Partner Religion'),
+                  DropdownButtonFormField<String>(
+                    value: religionItems.any((e) => e.value == preferredReligionId) ? preferredReligionId : null,
+                    isExpanded: true,
+                    decoration: _buildInputDecoration(hintText: _isAr ? 'اختر الديانة' : 'Select religion', icon: Icons.auto_awesome_rounded),
+                    items: religionItems,
+                    onChanged: onPreferredReligionChanged,
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                if (countryItems.isNotEmpty) ...[
+                  _buildSectionTitle(_isAr ? 'بلد الشريك المفضل' : 'Preferred Partner Country'),
+                  DropdownButtonFormField<String>(
+                    value: countryItems.any((e) => e.value == preferredCountryId) ? preferredCountryId : null,
+                    isExpanded: true,
+                    decoration: _buildInputDecoration(hintText: _isAr ? 'اختر البلد' : 'Select country', icon: Icons.public_rounded),
+                    items: countryItems,
+                    onChanged: onPreferredCountryChanged,
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                if (stateItems.isNotEmpty) ...[
+                  _buildSectionTitle(_isAr ? 'المحافظة المفضلة للشريك' : 'Preferred Partner Governorate'),
+                  DropdownButtonFormField<String>(
+                    value: stateItems.any((e) => e.value == preferredStateId) ? preferredStateId : null,
+                    isExpanded: true,
+                    decoration: _buildInputDecoration(hintText: _isAr ? 'اختر المحافظة' : 'Select governorate', icon: Icons.location_city_rounded),
+                    items: stateItems,
+                    onChanged: onPreferredStateChanged,
+                  ),
+                  const SizedBox(height: 16),
+                ],
+// 9. مهنة الشريك
                 _buildSectionTitle(_isAr
                     ? '6. مجال العمل أو المهنة المفضلة 💼'
                     : '6. Preferred Career 💼'),
