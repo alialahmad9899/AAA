@@ -82,6 +82,10 @@ class _SignupScreenState extends State<SignupScreen> {
   final _institutionController = TextEditingController();
   final _designationController = TextEditingController();
   final _companyController = TextEditingController();
+  String? _personalDrink;
+  String? _personalSunSign;
+  String? _personalAffection;
+  String? _personalHumor;
   double _height = 140.0;
   double _weight = 40.0;
   bool _heightWasSelected = false;
@@ -104,6 +108,8 @@ class _SignupScreenState extends State<SignupScreen> {
   String? _cityId;
   String? _religionId;
   String? _maritalStatusId;
+  final _childrenCountController = TextEditingController();
+  bool get _requiresChildrenCount => const {'2', '3', '4'}.contains(_maritalStatusId);
 
   // 4️⃣ متغيّرات الخطوة الرابعة (توقعات الشريك)
   final _partnerGeneralController = TextEditingController();
@@ -117,6 +123,12 @@ class _SignupScreenState extends State<SignupScreen> {
   String? _partnerEyeColor;
   String? _partnerHairColor;
   String? _partnerLanguageId;
+  String? _partnerReligionId;
+  String? _partnerCountryId;
+  String? _partnerStateId;
+  List<dynamic> _partnerReligions = [];
+  List<dynamic> _partnerCountries = [];
+  List<dynamic> _partnerStates = [];
   String _partnerChildrenAcceptable = '';
   String _partnerSmokingAcceptable = '';
   String _partnerDrinkingAcceptable = '';
@@ -129,47 +141,52 @@ class _SignupScreenState extends State<SignupScreen> {
     _initializeFieldsFromGoogle();
   }
 
-  Future<void> _loadPartnerLanguages() async {
+  Future<void> _loadPartnerOptions() async {
     if (mounted) setState(() => _isLoadingPartnerLanguages = true);
     try {
-      // PartnerExpectation.language_id references member_languages.id.
-      // profile-dropdown does not expose this table; profile-settings does.
-      // Fetch it after signup authentication, using a non-cached generic GET.
-      final profileSettings = await ApiService.get(
-        '/member/profile-settings',
-        lang: widget.currentLanguage,
-      );
+      final results = await Future.wait([
+        ApiService.get('/member/partner-languages', lang: widget.currentLanguage),
+        ApiService.getProfileDropdowns(lang: widget.currentLanguage),
+      ]);
       if (!mounted) return;
-
-      final rawLanguages = profileSettings?['languages'];
+      final languageResponse = results[0];
+      final dropdowns = results[1];
+      final rawLanguages = languageResponse?['languages'] ??
+          (languageResponse?['data'] is Map ? languageResponse?['data']['languages'] : null);
       final loadedLanguages = rawLanguages is List
-          ? rawLanguages
-              .whereType<Map>()
+          ? rawLanguages.whereType<Map>()
               .map((item) => Map<String, dynamic>.from(item))
-              .where((item) =>
-                  item['id'] != null &&
-                  item['name'] != null &&
-                  item['name'].toString().trim().isNotEmpty)
+              .where((item) => item['id'] != null &&
+                  (item['name'] ?? '').toString().trim().isNotEmpty)
               .toList()
           : <Map<String, dynamic>>[];
-
       setState(() {
         _partnerLanguages = loadedLanguages;
+        _partnerReligions = dropdowns?['religions'] is List ? dropdowns!['religions'] : [];
+        _partnerCountries = dropdowns?['countries'] is List ? dropdowns!['countries'] :
+            (dropdowns?['country'] is List ? dropdowns!['country'] : []);
         _isLoadingPartnerLanguages = false;
       });
-      if (loadedLanguages.isEmpty) {
-        debugPrint(
-          '⚠️ [Signup] /member/profile-settings returned no member languages: '
-          '${profileSettings?['message'] ?? 'empty languages list'}',
-        );
-      } else {
-        debugPrint(
-          '✅ [Signup] Loaded ${loadedLanguages.length} real member language options',
-        );
-      }
+      if (loadedLanguages.isEmpty) debugPrint('⚠️ [Signup] partner-languages endpoint returned an empty list');
     } catch (e) {
-      debugPrint('Partner language options could not be loaded: $e');
+      debugPrint('Partner options could not be loaded: $e');
       if (mounted) setState(() => _isLoadingPartnerLanguages = false);
+    }
+  }
+
+  Future<void> _loadPartnerStates(String? countryId) async {
+    final id = int.tryParse(countryId ?? '');
+    if (id == null || id <= 0) {
+      if (mounted) setState(() { _partnerStates = []; _partnerStateId = null; });
+      return;
+    }
+    try {
+      final states = await ApiService.getStatesByCountry(id, lang: widget.currentLanguage);
+      if (!mounted) return;
+      setState(() { _partnerStates = states; _partnerStateId = null; });
+    } catch (e) {
+      debugPrint('Partner governorates could not be loaded: $e');
+      if (mounted) setState(() => _partnerStates = []);
     }
   }
 
@@ -204,6 +221,7 @@ class _SignupScreenState extends State<SignupScreen> {
     _institutionController.dispose();
     _designationController.dispose();
     _companyController.dispose();
+    _childrenCountController.dispose();
     _partnerGeneralController.dispose();
     _partnerProfessionController.dispose();
     super.dispose();
@@ -511,6 +529,28 @@ class _SignupScreenState extends State<SignupScreen> {
           _careerSavedFingerprint = careerFingerprint;
         }
 
+        if (_personalDrink != null && _personalDrink!.isNotEmpty) {
+          await _requireSignupSave(
+            ApiService.updateLifeStyle({'drink': _personalDrink}, lang: widget.currentLanguage),
+            isAr ? 'تعذر حفظ تفضيل المشروبات' : 'Failed saving drink preference',
+          );
+        }
+        final attitudePayload = <String, dynamic>{
+          if (_personalAffection != null && _personalAffection!.isNotEmpty) 'affection': _personalAffection,
+          if (_personalHumor != null && _personalHumor!.isNotEmpty) 'humor': _personalHumor,
+        };
+        if (attitudePayload.isNotEmpty) {
+          await _requireSignupSave(
+            ApiService.updateAttitudeBehavior(attitudePayload, lang: widget.currentLanguage),
+            isAr ? 'تعذر حفظ طريقة التعبير وحس الفكاهة' : 'Failed saving attitude preferences',
+          );
+        }
+        if (_personalSunSign != null && _personalSunSign!.isNotEmpty) {
+          await _requireSignupSave(
+            ApiService.updateAstronomicInfo({'sun_sign': _personalSunSign}, lang: widget.currentLanguage),
+            isAr ? 'تعذر حفظ البرج الشمسي' : 'Failed saving zodiac sign',
+          );
+        }
         if (!mounted) return;
         _goToNextPage();
       } catch (e) {
@@ -576,6 +616,11 @@ class _SignupScreenState extends State<SignupScreen> {
         return;
       }
 
+      if (_requiresChildrenCount && _childrenCountController.text.trim().isEmpty) {
+        _showNotification(isAr ? 'يرجى إدخال عدد الأطفال (اكتب 0 إذا لم يكن لديك أطفال)' : 'Enter the number of children (use 0 if none)', NotificationType.warning);
+        return;
+      }
+
       setState(() => _isLoading = true);
       try {
         await _requireSignupSave(
@@ -600,9 +645,20 @@ class _SignupScreenState extends State<SignupScreen> {
           isAr ? 'تعذر حفظ البيانات الدينية' : 'Failed to save religious details',
         );
 
+        if (_requiresChildrenCount) {
+          final childCount = int.tryParse(_childrenCountController.text.trim());
+          if (childCount == null || childCount < 0) {
+            throw const _SignupStepSaveException('عدد الأطفال يجب أن يكون رقماً صحيحاً غير سالب.');
+          }
+          await _requireSignupSave(
+            ApiService.updateChildrenCount(childCount, lang: widget.currentLanguage),
+            isAr ? 'تعذر حفظ عدد الأطفال' : 'Failed to save children count',
+          );
+        }
+
         // Profile-dropdown endpoints require an authenticated member account.
         // Load the mandatory partner language options only after signup/login.
-        await _loadPartnerLanguages();
+        await _loadPartnerOptions();
 
         if (!mounted) return;
         _goToNextPage();
@@ -682,6 +738,9 @@ class _SignupScreenState extends State<SignupScreen> {
           'partner_eye_color': _partnerEyeColor,
           'partner_hair_color': _partnerHairColor,
           'language_id': _partnerLanguageId,
+          if (_partnerReligionId != null) 'partner_religion_id': _partnerReligionId,
+          if (_partnerCountryId != null) 'partner_country_id': _partnerCountryId,
+          if (_partnerStateId != null) 'partner_state_id': _partnerStateId,
         };
         if (partnerPayload.isEmpty) {
           throw const _SignupStepSaveException(
@@ -996,6 +1055,14 @@ class _SignupScreenState extends State<SignupScreen> {
                           complexion: _complexion,
                           bodyType: _bodyType,
                           bodyArt: _bodyArt,
+                          drink: _personalDrink,
+                          sunSign: _personalSunSign,
+                          affection: _personalAffection,
+                          humor: _personalHumor,
+                          onDrinkChanged: (v) => setState(() => _personalDrink = v),
+                          onSunSignChanged: (v) => setState(() => _personalSunSign = v),
+                          onAffectionChanged: (v) => setState(() => _personalAffection = v),
+                          onHumorChanged: (v) => setState(() => _personalHumor = v),
                           lang: widget.currentLanguage,
                           onEducationChanged: (v) =>
                               setState(() => _educationDegree = v),
@@ -1036,6 +1103,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           cityId: _cityId,
                           religionId: _religionId,
                           maritalStatusId: _maritalStatusId,
+                          childrenCountController: _childrenCountController,
                           lang: widget.currentLanguage,
                           onBirthCountryChanged: (v) =>
                               setState(() => _birthCountryId = v),
@@ -1052,7 +1120,10 @@ class _SignupScreenState extends State<SignupScreen> {
                           }),
                           onCityChanged: (v) => setState(() => _cityId = v),
                           onReligionChanged: (v) => setState(() => _religionId = v),
-                          onMaritalStatusChanged: (v) => setState(() => _maritalStatusId = v),
+                          onMaritalStatusChanged: (v) => setState(() {
+                            _maritalStatusId = v;
+                            if (v == '1') _childrenCountController.clear();
+                          }),
                         ),
                         Step4PartnerExpectations(
                           formKey: _step4Key,
@@ -1067,6 +1138,12 @@ class _SignupScreenState extends State<SignupScreen> {
                           eyeColor: _partnerEyeColor,
                           hairColor: _partnerHairColor,
                           languages: _partnerLanguages,
+                          religions: _partnerReligions,
+                          countries: _partnerCountries,
+                          states: _partnerStates,
+                          preferredReligionId: _partnerReligionId,
+                          preferredCountryId: _partnerCountryId,
+                          preferredStateId: _partnerStateId,
                           isLoadingLanguages: _isLoadingPartnerLanguages,
                           languageId: _partnerLanguageId,
                           childrenAcceptable: _partnerChildrenAcceptable,
@@ -1091,7 +1168,13 @@ class _SignupScreenState extends State<SignupScreen> {
                               setState(() => _partnerHairColor = v),
                           onLanguageChanged: (v) =>
                               setState(() => _partnerLanguageId = v),
-                          onRetryLanguages: _loadPartnerLanguages,
+                          onRetryLanguages: _loadPartnerOptions,
+                          onPreferredReligionChanged: (v) => setState(() => _partnerReligionId = v),
+                          onPreferredCountryChanged: (v) {
+                            setState(() => _partnerCountryId = v);
+                            _loadPartnerStates(v);
+                          },
+                          onPreferredStateChanged: (v) => setState(() => _partnerStateId = v),
                           onChildrenChanged: (v) =>
                               setState(() => _partnerChildrenAcceptable = v),
                           onSmokingChanged: (v) =>
