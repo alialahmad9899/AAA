@@ -737,6 +737,21 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
   }
 
   bool _hasPhysicalData() {
+  bool _shouldShowChildrenCount(BasicInfoModel info) {
+    if (info.noOfChildren.trim().isEmpty) return false;
+    final status = info.maritalStatus.trim().toLowerCase();
+    if (const {'2', '3', '4'}.contains(status)) return true;
+    final localized = info.getLocalizedMaritalStatus(isArabic: _isArabic).toLowerCase();
+    return localized.contains('متزوج') ||
+        localized.contains('مطلق') ||
+        localized.contains('أرمل') ||
+        localized.contains('ارمل') ||
+        localized.contains('married') ||
+        localized.contains('divorced') ||
+        localized.contains('widowed');
+  }
+
+
     if (_profile?.physicalAttributes == null) return false;
     final phys = _profile!.physicalAttributes!;
     return phys.height.isNotEmpty ||
@@ -750,18 +765,12 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
 
   bool _hasResidenceAndFamilyData() {
     final res = _profile?.residenceInfo;
-    final fam = _profile?.familyInfo;
-    final hasRes = res != null &&
+    return res != null &&
         (res.birthCountry.isNotEmpty ||
             res.residencyCountry.isNotEmpty ||
             res.residencyState.isNotEmpty ||
             res.residencyCity.isNotEmpty ||
             res.immigrationStatus.isNotEmpty);
-    final hasFam = fam != null &&
-        (fam.father.isNotEmpty ||
-            fam.mother.isNotEmpty ||
-            fam.sibling.isNotEmpty);
-    return hasRes || hasFam;
   }
 
   bool _hasSpiritualData() {
@@ -773,26 +782,17 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
         ? sp.getLocalizedReligion(isArabic: _isArabic)
         : info.getLocalizedReligion(isArabic: _isArabic);
 
-    final casteText = (sp != null && sp.caste.isNotEmpty)
-        ? sp.getLocalizedCaste(isArabic: _isArabic)
-        : info.getLocalizedCaste(isArabic: _isArabic);
-
     final familyValueText =
         sp?.getLocalizedFamilyValue(isArabic: _isArabic) ?? '';
-    final ethnicityText = sp?.getLocalizedEthnicity(isArabic: _isArabic) ?? '';
 
-    return religionText.isNotEmpty ||
-        casteText.isNotEmpty ||
-        familyValueText.isNotEmpty ||
-        ethnicityText.isNotEmpty;
+    return religionText.isNotEmpty || familyValueText.isNotEmpty;
   }
 
   bool _hasLifestyleAndHobbiesData() {
     final ls = _profile?.lifestyle;
     final hb = _profile?.hobbies;
     final hasLs = ls != null &&
-        (ls.diet.isNotEmpty ||
-            ls.smoke.isNotEmpty ||
+        (ls.smoke.isNotEmpty ||
             ls.drink.isNotEmpty ||
             ls.livingWith.isNotEmpty);
     final hasHb = hb != null &&
@@ -803,24 +803,33 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
             hb.movies.isNotEmpty ||
             hb.sports.isNotEmpty ||
             hb.dressStyles.isNotEmpty);
-    return hasLs || hasHb;
+    final attitude = _profile?.attitudeBehavior;
+    final astro = _profile?.astronomicInformation;
+    final hasAttitude = attitude != null &&
+        (attitude.affection.isNotEmpty || attitude.humor.isNotEmpty);
+    final hasAstro = astro != null && astro.sunSign.isNotEmpty;
+    return hasLs || hasHb || hasAttitude || hasAstro;
   }
 
   bool _hasPartnerExpectationsData() {
     if (_profile?.partnerExpectation == null) return false;
     final pe = _profile!.partnerExpectation!;
     return pe.general.isNotEmpty ||
-        pe.getFormattedAge(isArabic: _isArabic).isNotEmpty ||
         pe.getFormattedHeight(isArabic: _isArabic).isNotEmpty ||
         pe.getFormattedWeight(isArabic: _isArabic).isNotEmpty ||
         pe.maritalStatus.isNotEmpty ||
         pe.education.isNotEmpty ||
         pe.profession.isNotEmpty ||
+        pe.religion.isNotEmpty ||
+        pe.language.isNotEmpty ||
+        pe.preferredCountry.isNotEmpty ||
+        pe.preferredState.isNotEmpty ||
+        pe.eyeColor.isNotEmpty ||
+        pe.hairColor.isNotEmpty ||
         pe.complexion.isNotEmpty ||
         pe.childrenAcceptable.isNotEmpty ||
         pe.smokingAcceptable.isNotEmpty ||
-        pe.drinkingAcceptable.isNotEmpty ||
-        pe.residenceCountry.isNotEmpty;
+        pe.drinkingAcceptable.isNotEmpty;
   }
 
   @override
@@ -1297,12 +1306,11 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
               info.getGenderText(isArabic: _isArabic)),
           _buildInfoChip(Icons.cake_rounded,
               _isArabic ? 'تاريخ الميلاد' : 'DOB', info.dateOfBirth),
-          _buildInfoChip(
-              Icons.family_restroom_rounded,
-              _isArabic ? 'الأطفال' : 'Children',
-              info.noOfChildren.isNotEmpty
-                  ? info.noOfChildren
-                  : (_isArabic ? 'لا يوجد' : 'None')),
+          if (_shouldShowChildrenCount(info))
+            _buildInfoChip(
+                Icons.family_restroom_rounded,
+                _isArabic ? 'عدد الأطفال' : 'Number of Children',
+                info.noOfChildren),
           _buildInfoChip(
               Icons.volunteer_activism_rounded,
               _isArabic ? 'الحالة الاجتماعية' : 'Marital Status',
@@ -1396,14 +1404,8 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
         ? sp.getLocalizedReligion(isArabic: _isArabic)
         : info.getLocalizedReligion(isArabic: _isArabic);
 
-    final String casteText = (sp != null && sp.caste.isNotEmpty)
-        ? sp.getLocalizedCaste(isArabic: _isArabic)
-        : info.getLocalizedCaste(isArabic: _isArabic);
-
     final String familyValueText =
         sp?.getLocalizedFamilyValue(isArabic: _isArabic) ?? '';
-    final String ethnicityText =
-        sp?.getLocalizedEthnicity(isArabic: _isArabic) ?? '';
 
     return _buildSectionCard(
       title: _isArabic ? 'الخلفية الدينية والاجتماعية' : 'Spiritual & Social',
@@ -1415,11 +1417,6 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
         children: [
           _buildInfoChip(Icons.auto_awesome_rounded,
               _isArabic ? 'الديانة' : 'Religion', religionText),
-          _buildInfoChip(
-              Icons.groups_rounded, _isArabic ? 'الطائفة' : 'Caste', casteText),
-          if (ethnicityText.isNotEmpty)
-            _buildInfoChip(Icons.diversity_3_rounded,
-                _isArabic ? 'القومية / العرق' : 'Ethnicity', ethnicityText),
           if (familyValueText.isNotEmpty)
             _buildInfoChip(
                 Icons.star_outline_rounded,
@@ -1447,10 +1444,6 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
               runSpacing: 10,
               children: [
                 _buildInfoChip(
-                    Icons.restaurant_rounded,
-                    _isArabic ? 'النظام الغذائي' : 'Diet',
-                    ls.getLocalizedDiet(isArabic: _isArabic)),
-                _buildInfoChip(
                     Icons.smoking_rooms_rounded,
                     _isArabic ? 'التدخين' : 'Smoke',
                     ls.getLocalizedSmoke(isArabic: _isArabic)),
@@ -1462,6 +1455,18 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                     Icons.home_rounded,
                     _isArabic ? 'السكن الحالي' : 'Living With',
                     ls.getLocalizedLivingWith(isArabic: _isArabic)),
+                if (_profile!.attitudeBehavior?.getLocalizedAffection(isArabic: _isArabic).isNotEmpty == true)
+                  _buildInfoChip(Icons.favorite_border_rounded,
+                      _isArabic ? 'طريقة التعبير عن المشاعر' : 'Affection Style',
+                      _profile!.attitudeBehavior!.getLocalizedAffection(isArabic: _isArabic)),
+                if (_profile!.attitudeBehavior?.getLocalizedHumor(isArabic: _isArabic).isNotEmpty == true)
+                  _buildInfoChip(Icons.sentiment_satisfied_alt_rounded,
+                      _isArabic ? 'حس الفكاهة' : 'Sense of Humor',
+                      _profile!.attitudeBehavior!.getLocalizedHumor(isArabic: _isArabic)),
+                if (_profile!.astronomicInformation?.getLocalizedSunSign(isArabic: _isArabic).isNotEmpty == true)
+                  _buildInfoChip(Icons.stars_rounded,
+                      _isArabic ? 'البرج الشمسي' : 'Zodiac Sign',
+                      _profile!.astronomicInformation!.getLocalizedSunSign(isArabic: _isArabic)),
               ],
             ),
           if (hb != null) ...[
@@ -1507,19 +1512,17 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
   }
 
   Widget _buildResidenceAndFamilySection() {
-    final res = _profile!.residenceInfo;
-    final fam = _profile!.familyInfo;
+    final res = _profile!.residenceInfo!;
 
     return _buildSectionCard(
-      title: _isArabic ? 'الإقامة والنسب' : 'Residence & Family',
+      title: _isArabic ? 'الإقامة' : 'Residence',
       icon: Icons.location_on_rounded,
       accentColor: const Color(0xFFEC4899),
       content: Wrap(
         spacing: 10,
         runSpacing: 10,
         children: [
-          if (res != null) ...[
-            _buildInfoChip(
+          _buildInfoChip(
                 Icons.flag_rounded,
                 _isArabic ? 'بلد الميلاد' : 'Birth Country',
                 res.getLocalizedBirthCountry(isArabic: _isArabic)),
@@ -1535,19 +1538,10 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                 Icons.holiday_village_rounded,
                 _isArabic ? 'المدينة' : 'City',
                 res.getLocalizedResidencyCity(isArabic: _isArabic)),
-            _buildInfoChip(
-                Icons.card_membership_rounded,
-                _isArabic ? 'حالة الإقامة' : 'Immigration Status',
-                res.getLocalizedImmigrationStatus(isArabic: _isArabic)),
-          ],
-          if (fam != null) ...[
-            _buildInfoChip(Icons.person_rounded, _isArabic ? 'الأب' : 'Father',
-                fam.getLocalizedFather(isArabic: _isArabic)),
-            _buildInfoChip(
-                Icons.person_outline_rounded,
-                _isArabic ? 'الأم' : 'Mother',
-                fam.getLocalizedMother(isArabic: _isArabic)),
-          ],
+          _buildInfoChip(
+              Icons.card_membership_rounded,
+              _isArabic ? 'حالة الإقامة' : 'Immigration Status',
+              res.getLocalizedImmigrationStatus(isArabic: _isArabic)),
         ],
       ),
     );
@@ -1576,11 +1570,6 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
             spacing: 10,
             runSpacing: 10,
             children: [
-              if (pe.getFormattedAge(isArabic: _isArabic).isNotEmpty)
-                _buildInfoChip(
-                    Icons.cake_rounded,
-                    _isArabic ? 'العمر المطلوب' : 'Age Range',
-                    pe.getFormattedAge(isArabic: _isArabic)),
               if (pe.getFormattedHeight(isArabic: _isArabic).isNotEmpty)
                 _buildInfoChip(
                     Icons.height_rounded,
@@ -1601,6 +1590,30 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
               _buildInfoChip(
                   Icons.school_rounded,
                   _isArabic ? 'التعليم' : 'Education',
+              if (pe.getLocalizedReligion(isArabic: _isArabic).isNotEmpty)
+                _buildInfoChip(Icons.auto_awesome_rounded,
+                    _isArabic ? 'ديانة الشريك' : 'Partner Religion',
+                    pe.getLocalizedReligion(isArabic: _isArabic)),
+              if (pe.getLocalizedLanguage(isArabic: _isArabic).isNotEmpty)
+                _buildInfoChip(Icons.translate_rounded,
+                    _isArabic ? 'لغة الشريك المفضلة' : 'Preferred Partner Language',
+                    pe.getLocalizedLanguage(isArabic: _isArabic)),
+              if (pe.getLocalizedPreferredCountry(isArabic: _isArabic).isNotEmpty)
+                _buildInfoChip(Icons.public_rounded,
+                    _isArabic ? 'بلد الشريك المفضل' : 'Preferred Partner Country',
+                    pe.getLocalizedPreferredCountry(isArabic: _isArabic)),
+              if (pe.getLocalizedPreferredState(isArabic: _isArabic).isNotEmpty)
+                _buildInfoChip(Icons.location_city_rounded,
+                    _isArabic ? 'محافظة الشريك المفضلة' : 'Preferred Partner Governorate',
+                    pe.getLocalizedPreferredState(isArabic: _isArabic)),
+              if (pe.getLocalizedEyeColor(isArabic: _isArabic).isNotEmpty)
+                _buildInfoChip(Icons.remove_red_eye_rounded,
+                    _isArabic ? 'لون عيون الشريك' : 'Partner Eye Color',
+                    pe.getLocalizedEyeColor(isArabic: _isArabic)),
+              if (pe.getLocalizedHairColor(isArabic: _isArabic).isNotEmpty)
+                _buildInfoChip(Icons.face_rounded,
+                    _isArabic ? 'لون شعر الشريك' : 'Partner Hair Color',
+                    pe.getLocalizedHairColor(isArabic: _isArabic)),
                   pe.getLocalizedEducation(isArabic: _isArabic)),
               _buildInfoChip(
                   Icons.work_rounded,
