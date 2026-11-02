@@ -167,10 +167,20 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
             dropdowns['country_list'] ??
             []) as List<dynamic>;
         _religions = (dropdowns['religions'] ?? []) as List<dynamic>;
-        final rawLanguages = languageResponse?['languages'] ??
-            (languageResponse?['data'] is Map ? languageResponse?['data']['languages'] : null);
-        _languages = rawLanguages is List ? rawLanguages.whereType<Map>().toList() : <dynamic>[];
       }
+
+      final Map<String, dynamic>? languageMap = languageResponse is Map
+          ? Map<String, dynamic>.from(languageResponse)
+          : null;
+      final nestedLanguageData = languageMap?['data'];
+      final Map<String, dynamic>? nestedLanguageMap = nestedLanguageData is Map
+          ? Map<String, dynamic>.from(nestedLanguageData)
+          : null;
+      final rawLanguages =
+          languageMap?['languages'] ?? nestedLanguageMap?['languages'];
+      _languages = rawLanguages is List
+          ? rawLanguages.whereType<Map>().toList()
+          : <dynamic>[];
 
       if (expectations != null) {
         _generalWasLoaded = expectations.containsKey('general');
