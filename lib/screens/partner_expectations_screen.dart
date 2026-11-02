@@ -169,15 +169,10 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
         _religions = (dropdowns['religions'] ?? []) as List<dynamic>;
       }
 
-      final Map<String, dynamic>? languageMap = languageResponse is Map
-          ? languageResponse.cast<String, dynamic>()
-          : null;
+      final languageMap = languageResponse is Map ? languageResponse : null;
       final nestedLanguageData = languageMap?['data'];
-      final Map<String, dynamic>? nestedLanguageMap = nestedLanguageData is Map
-          ? nestedLanguageData.cast<String, dynamic>()
-          : null;
       final rawLanguages =
-          languageMap?['languages'] ?? nestedLanguageMap?['languages'];
+          languageMap?['languages'] ?? nestedLanguageData?['languages'];
       _languages = rawLanguages is List
           ? rawLanguages.whereType<Map>().toList()
           : <dynamic>[];
