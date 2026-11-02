@@ -1,0 +1,45 @@
+name: Package signup screen repair
+on:
+  push:
+    branches:
+      - fix/package-signup-screen-repair-2026-11-02
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare matching Flutter files
+        run: |
+          set -euo pipefail
+          mkdir -p "اصلاحات 6/lib/screens/widgets"
+          cp "Flutter/lib/screens/signup_screen.dart" "اصلاحات 6/lib/screens/signup_screen.dart"
+          cp "Flutter/lib/screens/widgets/step2_personal_details.dart" "اصلاحات 6/lib/screens/widgets/step2_personal_details.dart"
+          cp "Flutter/lib/screens/widgets/step4_partner_expectations.dart" "اصلاحات 6/lib/screens/widgets/step4_partner_expectations.dart"
+          cat > "اصلاحات 6/README.md" <<'EOF'
+          # إصلاح استدعاءات شاشة التسجيل
+          
+          هذه الحزمة تحتوي على ثلاث ملفات Flutter متوافقة مع بعضها:
+          - lib/screens/signup_screen.dart
+          - lib/screens/widgets/step2_personal_details.dart
+          - lib/screens/widgets/step4_partner_expectations.dart
+          
+          استبدل الملفات في مشروع Flutter بنفس المسارات. تم توحيد required parameters الخاصة بخيارات الطول والوزن والألوان واللغة، وربط تحميل اللغات بعد حفظ خطوة الإقامة.
+          
+          لا تستبدل ملفات Laravel بهذه الحزمة.
+          EOF
+          cat > "اصلاحات 6/manifest.txt" <<'EOF'
+          lib/screens/signup_screen.dart
+          lib/screens/widgets/step2_personal_details.dart
+          lib/screens/widgets/step4_partner_expectations.dart
+          EOF
+          zip -qr "اصلاحات 6.zip" "اصلاحات 6"
+          unzip -tq "اصلاحات 6.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: signup-screen-repair-6
+          path: "اصلاحات 6.zip"
+          if-no-files-found: error
+          compression-level: 9
+          retention-days: 90
