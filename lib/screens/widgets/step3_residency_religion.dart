@@ -16,6 +16,7 @@ class Step3ResidencyReligion extends StatefulWidget {
   final String? cityId;
   final String? religionId;
   final String? maritalStatusId;
+  final TextEditingController childrenCountController;
   final String lang;
 
   final ValueChanged<String> onBirthCountryChanged;
@@ -34,6 +35,7 @@ class Step3ResidencyReligion extends StatefulWidget {
     required this.cityId,
     required this.religionId,
     required this.maritalStatusId,
+    required this.childrenCountController,
     this.lang = 'ar',
     required this.onBirthCountryChanged,
     required this.onResidenceCountryChanged,
@@ -63,6 +65,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
   int _citiesRequestToken = 0;
 
   bool get _isAr => widget.lang == 'ar';
+  bool get _requiresChildrenCount => const {'2', '3', '4'}.contains(widget.maritalStatusId);
 
   @override
   void initState() {
@@ -781,6 +784,32 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                   )
                 else
                   const CircularProgressIndicator(color: Colors.amberAccent),
+                const SizedBox(height: 16),
+
+                                const SizedBox(height: 16),
+                if (_requiresChildrenCount) ...[
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: widget.childrenCountController,
+                    keyboardType: TextInputType.number,
+                    textDirection: TextDirection.ltr,
+                    decoration: InputDecoration(
+                      labelText: _isAr ? 'كم عدد أطفالك؟ 👶' : 'How many children do you have? 👶',
+                      hintText: _isAr ? 'اكتب العدد، واكتب 0 إذا لم يكن لديك أطفال' : 'Enter a number, or 0 if none',
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    validator: (value) {
+                      if (!_requiresChildrenCount) return null;
+                      final count = int.tryParse((value ?? '').trim());
+                      if (count == null || count < 0) {
+                        return _isAr ? 'يرجى إدخال عدد صحيح (0 أو أكثر)' : 'Enter a whole number (0 or more)';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
                 const SizedBox(height: 16),
 
                 // 4. الديانة
