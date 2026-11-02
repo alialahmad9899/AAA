@@ -1,0 +1,44 @@
+name: Wesal signup, profile and member-card validation
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'lib/screens/signup_screen.dart'
+      - 'lib/screens/widgets/step2_personal_details.dart'
+      - 'lib/screens/widgets/step3_residency_religion.dart'
+      - 'lib/screens/widgets/step4_partner_expectations.dart'
+      - 'lib/screens/edit_profile_screen.dart'
+      - 'lib/screens/edit_profile/widgets/step1_basic_physical_tab.dart'
+      - 'lib/screens/edit_profile/widgets/step3_lifestyle_hobbies_tab.dart'
+      - 'lib/screens/partner_expectations_screen.dart'
+      - 'lib/screens/member_profile_screen.dart'
+      - 'lib/models/member_profile_model.dart'
+      - 'lib/services/api_service.dart'
+  workflow_dispatch:
+jobs:
+  flutter:
+    name: Analyze changed flows and run tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyze signup, edit profile, partner expectations and member card
+        run: >
+          flutter analyze --no-pub
+          lib/screens/signup_screen.dart
+          lib/screens/widgets/step2_personal_details.dart
+          lib/screens/widgets/step3_residency_religion.dart
+          lib/screens/widgets/step4_partner_expectations.dart
+          lib/screens/edit_profile_screen.dart
+          lib/screens/edit_profile/widgets/step1_basic_physical_tab.dart
+          lib/screens/edit_profile/widgets/step3_lifestyle_hobbies_tab.dart
+          lib/screens/partner_expectations_screen.dart
+          lib/screens/member_profile_screen.dart
+          lib/models/member_profile_model.dart
+          lib/services/api_service.dart
+      - name: Run Flutter tests
+        run: flutter test --no-pub
