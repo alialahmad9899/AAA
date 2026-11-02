@@ -447,6 +447,8 @@ class MemberProfileModel {
   final ResidenceInfoModel? residenceInfo;
   final SpiritualBackgroundModel? spiritualBackground;
   final LifestyleModel? lifestyle;
+  final AttitudeBehaviorModel? attitudeBehavior;
+  final AstronomicInformationModel? astronomicInformation;
   final HobbiesModel? hobbies;
   final FamilyInfoModel? familyInfo;
   final PartnerExpectationModel? partnerExpectation;
@@ -471,6 +473,8 @@ class MemberProfileModel {
     this.residenceInfo,
     this.spiritualBackground,
     this.lifestyle,
+    this.attitudeBehavior,
+    this.astronomicInformation,
     this.hobbies,
     this.familyInfo,
     this.partnerExpectation,
@@ -668,6 +672,8 @@ class MemberProfileModel {
         safeMapOrNull(json['permanent_address']);
     final lifeMap =
         safeMapOrNull(json['lifestyles']) ?? safeMapOrNull(json['lifestyle']);
+    final attitudeMap = safeMapOrNull(json['attitude_behavior']);
+    final astroMap = safeMapOrNull(json['astrologies']) ?? safeMapOrNull(json['astronomic_information']);
     final hobMap = safeMapOrNull(json['hobbies_interest']) ??
         safeMapOrNull(json['hobbies']);
     final famMap = safeMapOrNull(json['families_information']) ??
@@ -685,6 +691,8 @@ class MemberProfileModel {
       spiritualBackground:
           spirMap != null ? SpiritualBackgroundModel.fromJson(spirMap) : null,
       lifestyle: lifeMap != null ? LifestyleModel.fromJson(lifeMap) : null,
+      attitudeBehavior: attitudeMap != null ? AttitudeBehaviorModel.fromJson(attitudeMap) : null,
+      astronomicInformation: astroMap != null ? AstronomicInformationModel.fromJson(astroMap) : null,
       hobbies: hobMap != null ? HobbiesModel.fromJson(hobMap) : null,
       familyInfo: famMap != null ? FamilyInfoModel.fromJson(famMap) : null,
       partnerExpectation: partnerMap != null
@@ -1125,6 +1133,41 @@ class HobbiesModel {
   }
 }
 
+class AttitudeBehaviorModel {
+  final String affection;
+  final String humor;
+
+  const AttitudeBehaviorModel({this.affection = '', this.humor = ''});
+
+  String getLocalizedAffection({bool isArabic = true}) =>
+      AttributeTranslator.translate(affection, isArabic: isArabic);
+
+  String getLocalizedHumor({bool isArabic = true}) =>
+      AttributeTranslator.translate(humor, isArabic: isArabic);
+
+  factory AttitudeBehaviorModel.fromJson(Map<String, dynamic> json) {
+    return AttitudeBehaviorModel(
+      affection: MemberProfileModel._safeString(json['affection']),
+      humor: MemberProfileModel._safeString(json['humor']),
+    );
+  }
+}
+
+class AstronomicInformationModel {
+  final String sunSign;
+
+  const AstronomicInformationModel({this.sunSign = ''});
+
+  String getLocalizedSunSign({bool isArabic = true}) =>
+      AttributeTranslator.translate(sunSign, isArabic: isArabic);
+
+  factory AstronomicInformationModel.fromJson(Map<String, dynamic> json) {
+    return AstronomicInformationModel(
+      sunSign: MemberProfileModel._safeString(json['sun_sign']),
+    );
+  }
+}
+
 class EducationModel {
   final String degree;
   final String institution;
@@ -1215,6 +1258,12 @@ class PartnerExpectationModel {
   final String religion;
   final String education;
   final String profession;
+  final String religion;
+  final String language;
+  final String preferredCountry;
+  final String preferredState;
+  final String eyeColor;
+  final String hairColor;
   final String complexion;
   final String childrenAcceptable;
   final String smokingAcceptable;
@@ -1235,6 +1284,12 @@ class PartnerExpectationModel {
     this.religion = '',
     this.education = '',
     this.profession = '',
+    this.religion = '',
+    this.language = '',
+    this.preferredCountry = '',
+    this.preferredState = '',
+    this.eyeColor = '',
+    this.hairColor = '',
     this.complexion = '',
     this.childrenAcceptable = '',
     this.smokingAcceptable = '',
@@ -1249,6 +1304,23 @@ class PartnerExpectationModel {
 
   String getLocalizedProfession({bool isArabic = true}) =>
       AttributeTranslator.translate(profession, isArabic: isArabic);
+  String getLocalizedReligion({bool isArabic = true}) =>
+      AttributeTranslator.translateReligion(religion, isArabic: isArabic);
+
+  String getLocalizedLanguage({bool isArabic = true}) =>
+      AttributeTranslator.translate(language, isArabic: isArabic);
+
+  String getLocalizedPreferredCountry({bool isArabic = true}) =>
+      AttributeTranslator.translate(preferredCountry, isArabic: isArabic);
+
+  String getLocalizedPreferredState({bool isArabic = true}) =>
+      AttributeTranslator.translate(preferredState, isArabic: isArabic);
+
+  String getLocalizedEyeColor({bool isArabic = true}) =>
+      AttributeTranslator.translate(eyeColor, isArabic: isArabic);
+
+  String getLocalizedHairColor({bool isArabic = true}) =>
+      AttributeTranslator.translate(hairColor, isArabic: isArabic);
 
   String getLocalizedComplexion({bool isArabic = true}) =>
       AttributeTranslator.translate(complexion, isArabic: isArabic);
@@ -1364,6 +1436,16 @@ class PartnerExpectationModel {
           json, ['education', 'partner_education']),
       profession: MemberProfileModel._firstValidString(
           json, ['profession', 'partner_profession']),
+      religion: MemberProfileModel._firstValidString(
+          json, ['religion', 'religion_name', 'partner_religion_id', 'religion_id']),
+      language: MemberProfileModel._firstValidString(
+          json, ['language', 'language_name', 'language_id']),
+      preferredCountry: MemberProfileModel._firstValidString(json,
+          ['preferred_country_name', 'preferred_country', 'partner_country_name', 'partner_country_id']),
+      preferredState: MemberProfileModel._firstValidString(json,
+          ['preferred_state_name', 'preferred_state', 'partner_state_name', 'preferred_state_id', 'partner_state_id']),
+      eyeColor: MemberProfileModel._safeString(json['eye_color']),
+      hairColor: MemberProfileModel._safeString(json['hair_color']),
       complexion: MemberProfileModel._safeString(json['complexion']),
       childrenAcceptable:
           MemberProfileModel._safeString(json['children_acceptable']),
