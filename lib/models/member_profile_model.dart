@@ -1258,7 +1258,6 @@ class PartnerExpectationModel {
   final String religion;
   final String education;
   final String profession;
-  final String religion;
   final String language;
   final String preferredCountry;
   final String preferredState;
@@ -1284,7 +1283,6 @@ class PartnerExpectationModel {
     this.religion = '',
     this.education = '',
     this.profession = '',
-    this.religion = '',
     this.language = '',
     this.preferredCountry = '',
     this.preferredState = '',

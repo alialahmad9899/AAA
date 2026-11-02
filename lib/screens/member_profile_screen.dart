@@ -736,12 +736,12 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
     }
   }
 
-  bool _hasPhysicalData() {
   bool _shouldShowChildrenCount(BasicInfoModel info) {
     if (info.noOfChildren.trim().isEmpty) return false;
     final status = info.maritalStatus.trim().toLowerCase();
     if (const {'2', '3', '4'}.contains(status)) return true;
-    final localized = info.getLocalizedMaritalStatus(isArabic: _isArabic).toLowerCase();
+    final localized =
+        info.getLocalizedMaritalStatus(isArabic: _isArabic).toLowerCase();
     return localized.contains('متزوج') ||
         localized.contains('مطلق') ||
         localized.contains('أرمل') ||
@@ -751,7 +751,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
         localized.contains('widowed');
   }
 
-
+  bool _hasPhysicalData() {
     if (_profile?.physicalAttributes == null) return false;
     final phys = _profile!.physicalAttributes!;
     return phys.height.isNotEmpty ||
@@ -1430,6 +1430,8 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
   Widget _buildLifestyleAndHobbiesSection() {
     final ls = _profile!.lifestyle;
     final hb = _profile!.hobbies;
+    final attitude = _profile!.attitudeBehavior;
+    final astro = _profile!.astronomicInformation;
 
     return _buildSectionCard(
       title: _isArabic ? 'أسلوب الحياة والاهتمامات' : 'Lifestyle & Interests',
@@ -1443,64 +1445,85 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
               spacing: 10,
               runSpacing: 10,
               children: [
-                _buildInfoChip(
+                if (ls.smoke.isNotEmpty)
+                  _buildInfoChip(
                     Icons.smoking_rooms_rounded,
-                    _isArabic ? 'التدخين' : 'Smoke',
-                    ls.getLocalizedSmoke(isArabic: _isArabic)),
-                _buildInfoChip(
+                    _isArabic ? 'التدخين' : 'Smoking',
+                    ls.getLocalizedSmoke(isArabic: _isArabic),
+                  ),
+                if (ls.drink.isNotEmpty)
+                  _buildInfoChip(
                     Icons.local_bar_rounded,
-                    _isArabic ? 'الشرب' : 'Drink',
-                    ls.getLocalizedDrink(isArabic: _isArabic)),
-                _buildInfoChip(
+                    _isArabic ? 'المشروبات' : 'Drinks',
+                    ls.getLocalizedDrink(isArabic: _isArabic),
+                  ),
+                if (ls.livingWith.isNotEmpty)
+                  _buildInfoChip(
                     Icons.home_rounded,
                     _isArabic ? 'السكن الحالي' : 'Living With',
-                    ls.getLocalizedLivingWith(isArabic: _isArabic)),
-                if (_profile!.attitudeBehavior?.getLocalizedAffection(isArabic: _isArabic).isNotEmpty == true)
-                  _buildInfoChip(Icons.favorite_border_rounded,
-                      _isArabic ? 'طريقة التعبير عن المشاعر' : 'Affection Style',
-                      _profile!.attitudeBehavior!.getLocalizedAffection(isArabic: _isArabic)),
-                if (_profile!.attitudeBehavior?.getLocalizedHumor(isArabic: _isArabic).isNotEmpty == true)
-                  _buildInfoChip(Icons.sentiment_satisfied_alt_rounded,
-                      _isArabic ? 'حس الفكاهة' : 'Sense of Humor',
-                      _profile!.attitudeBehavior!.getLocalizedHumor(isArabic: _isArabic)),
-                if (_profile!.astronomicInformation?.getLocalizedSunSign(isArabic: _isArabic).isNotEmpty == true)
-                  _buildInfoChip(Icons.stars_rounded,
-                      _isArabic ? 'البرج الشمسي' : 'Zodiac Sign',
-                      _profile!.astronomicInformation!.getLocalizedSunSign(isArabic: _isArabic)),
+                    ls.getLocalizedLivingWith(isArabic: _isArabic),
+                  ),
               ],
             ),
+          if (attitude != null || astro != null) ...[
+            if (ls != null) const SizedBox(height: 12),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                if (attitude?.affection.isNotEmpty == true)
+                  _buildInfoChip(
+                    Icons.favorite_border_rounded,
+                    _isArabic ? 'طريقة التعبير عن المشاعر' : 'Affection Style',
+                    attitude!.getLocalizedAffection(isArabic: _isArabic),
+                  ),
+                if (attitude?.humor.isNotEmpty == true)
+                  _buildInfoChip(
+                    Icons.sentiment_satisfied_alt_rounded,
+                    _isArabic ? 'حس الفكاهة' : 'Sense of Humor',
+                    attitude!.getLocalizedHumor(isArabic: _isArabic),
+                  ),
+                if (astro?.sunSign.isNotEmpty == true)
+                  _buildInfoChip(
+                    Icons.stars_rounded,
+                    _isArabic ? 'البرج الشمسي' : 'Zodiac Sign',
+                    astro!.getLocalizedSunSign(isArabic: _isArabic),
+                  ),
+              ],
+            ),
+          ],
           if (hb != null) ...[
             const SizedBox(height: 12),
             Wrap(
               spacing: 10,
               runSpacing: 10,
               children: [
-                _buildInfoChip(
-                    Icons.sports_esports_rounded,
+                if (hb.hobbies.isNotEmpty)
+                  _buildInfoChip(Icons.sports_esports_rounded,
                     _isArabic ? 'الهوايات' : 'Hobbies',
                     hb.getLocalizedHobbies(isArabic: _isArabic)),
-                _buildInfoChip(
-                    Icons.stars_rounded,
+                if (hb.interests.isNotEmpty)
+                  _buildInfoChip(Icons.stars_rounded,
                     _isArabic ? 'الاهتمامات' : 'Interests',
                     hb.getLocalizedInterests(isArabic: _isArabic)),
-                _buildInfoChip(
-                    Icons.menu_book_rounded,
+                if (hb.books.isNotEmpty)
+                  _buildInfoChip(Icons.menu_book_rounded,
                     _isArabic ? 'الكتب' : 'Books',
                     hb.getLocalizedBooks(isArabic: _isArabic)),
-                _buildInfoChip(
-                    Icons.music_note_rounded,
+                if (hb.music.isNotEmpty)
+                  _buildInfoChip(Icons.music_note_rounded,
                     _isArabic ? 'الموسيقى' : 'Music',
                     hb.getLocalizedMusic(isArabic: _isArabic)),
-                _buildInfoChip(
-                    Icons.movie_rounded,
+                if (hb.movies.isNotEmpty)
+                  _buildInfoChip(Icons.movie_rounded,
                     _isArabic ? 'الأفلام' : 'Movies',
                     hb.getLocalizedMovies(isArabic: _isArabic)),
-                _buildInfoChip(
-                    Icons.fitness_center_rounded,
+                if (hb.sports.isNotEmpty)
+                  _buildInfoChip(Icons.fitness_center_rounded,
                     _isArabic ? 'الرياضة' : 'Sports',
                     hb.getLocalizedSports(isArabic: _isArabic)),
-                _buildInfoChip(
-                    Icons.checkroom_rounded,
+                if (hb.dressStyles.isNotEmpty)
+                  _buildInfoChip(Icons.checkroom_rounded,
                     _isArabic ? 'أسلوب اللباس' : 'Dress Style',
                     hb.getLocalizedDressStyles(isArabic: _isArabic)),
               ],
@@ -1513,7 +1536,6 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
 
   Widget _buildResidenceAndFamilySection() {
     final res = _profile!.residenceInfo!;
-
     return _buildSectionCard(
       title: _isArabic ? 'الإقامة' : 'Residence',
       icon: Icons.location_on_rounded,
@@ -1523,25 +1545,30 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
         runSpacing: 10,
         children: [
           _buildInfoChip(
-                Icons.flag_rounded,
-                _isArabic ? 'بلد الميلاد' : 'Birth Country',
-                res.getLocalizedBirthCountry(isArabic: _isArabic)),
-            _buildInfoChip(
-                Icons.public_rounded,
-                _isArabic ? 'بلد الإقامة' : 'Residency',
-                res.getLocalizedResidencyCountry(isArabic: _isArabic)),
-            _buildInfoChip(
-                Icons.location_city_rounded,
-                _isArabic ? 'المحافظة' : 'State',
-                res.getLocalizedResidencyState(isArabic: _isArabic)),
-            _buildInfoChip(
-                Icons.holiday_village_rounded,
-                _isArabic ? 'المدينة' : 'City',
-                res.getLocalizedResidencyCity(isArabic: _isArabic)),
+            Icons.flag_rounded,
+            _isArabic ? 'بلد الميلاد' : 'Birth Country',
+            res.getLocalizedBirthCountry(isArabic: _isArabic),
+          ),
           _buildInfoChip(
-              Icons.card_membership_rounded,
-              _isArabic ? 'حالة الإقامة' : 'Immigration Status',
-              res.getLocalizedImmigrationStatus(isArabic: _isArabic)),
+            Icons.public_rounded,
+            _isArabic ? 'بلد الإقامة' : 'Residency',
+            res.getLocalizedResidencyCountry(isArabic: _isArabic),
+          ),
+          _buildInfoChip(
+            Icons.location_city_rounded,
+            _isArabic ? 'المحافظة' : 'State',
+            res.getLocalizedResidencyState(isArabic: _isArabic),
+          ),
+          _buildInfoChip(
+            Icons.holiday_village_rounded,
+            _isArabic ? 'المدينة' : 'City',
+            res.getLocalizedResidencyCity(isArabic: _isArabic),
+          ),
+          _buildInfoChip(
+            Icons.card_membership_rounded,
+            _isArabic ? 'حالة الإقامة' : 'Immigration Status',
+            res.getLocalizedImmigrationStatus(isArabic: _isArabic),
+          ),
         ],
       ),
     );
@@ -1549,21 +1576,31 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
 
   Widget _buildPartnerExpectationsSection() {
     final pe = _profile!.partnerExpectation!;
+    final religion = pe.getLocalizedReligion(isArabic: _isArabic);
+    final language = pe.getLocalizedLanguage(isArabic: _isArabic);
+    final preferredCountry =
+        pe.getLocalizedPreferredCountry(isArabic: _isArabic);
+    final preferredState = pe.getLocalizedPreferredState(isArabic: _isArabic);
+    final eyeColor = pe.getLocalizedEyeColor(isArabic: _isArabic);
+    final hairColor = pe.getLocalizedHairColor(isArabic: _isArabic);
 
     return _buildSectionCard(
-      title: _isArabic ? 'شريك الحياة المطلوب' : 'Partner Expectations',
+      title: _isArabic ? 'توقعات شريك الحياة' : 'Partner Expectations',
       icon: Icons.favorite_rounded,
       accentColor: const Color(0xFFA855F7),
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (pe.getLocalizedGeneral(isArabic: _isArabic).isNotEmpty) ...[
-            Text(pe.getLocalizedGeneral(isArabic: _isArabic),
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 13.5,
-                    height: 1.5,
-                    fontFamily: 'Cairo')),
+            Text(
+              pe.getLocalizedGeneral(isArabic: _isArabic),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13.5,
+                height: 1.5,
+                fontFamily: 'Cairo',
+              ),
+            ),
             const SizedBox(height: 12),
           ],
           Wrap(
@@ -1572,73 +1609,94 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
             children: [
               if (pe.getFormattedHeight(isArabic: _isArabic).isNotEmpty)
                 _buildInfoChip(
-                    Icons.height_rounded,
-                    _isArabic ? 'طول الشريك' : 'Height',
-                    pe.getFormattedHeight(isArabic: _isArabic)),
+                  Icons.height_rounded,
+                  _isArabic ? 'طول الشريك' : 'Preferred Height',
+                  pe.getFormattedHeight(isArabic: _isArabic),
+                ),
               if (pe.getFormattedWeight(isArabic: _isArabic).isNotEmpty)
                 _buildInfoChip(
-                    Icons.monitor_weight_outlined,
-                    _isArabic ? 'وزن الشريك' : 'Weight',
-                    pe.getFormattedWeight(isArabic: _isArabic)),
+                  Icons.monitor_weight_outlined,
+                  _isArabic ? 'وزن الشريك' : 'Preferred Weight',
+                  pe.getFormattedWeight(isArabic: _isArabic),
+                ),
               if (pe.getLocalizedMaritalStatus(isArabic: _isArabic).isNotEmpty)
                 _buildInfoChip(
-                    Icons.volunteer_activism_rounded,
-                    _isArabic
-                        ? 'الحالة الاجتماعية للشريك'
-                        : 'Partner Marital Status',
-                    pe.getLocalizedMaritalStatus(isArabic: _isArabic)),
-              _buildInfoChip(
+                  Icons.volunteer_activism_rounded,
+                  _isArabic ? 'الحالة الاجتماعية للشريك' : 'Partner Marital Status',
+                  pe.getLocalizedMaritalStatus(isArabic: _isArabic),
+                ),
+              if (pe.getLocalizedEducation(isArabic: _isArabic).isNotEmpty)
+                _buildInfoChip(
                   Icons.school_rounded,
-                  _isArabic ? 'التعليم' : 'Education',
-              if (pe.getLocalizedReligion(isArabic: _isArabic).isNotEmpty)
-                _buildInfoChip(Icons.auto_awesome_rounded,
-                    _isArabic ? 'ديانة الشريك' : 'Partner Religion',
-                    pe.getLocalizedReligion(isArabic: _isArabic)),
-              if (pe.getLocalizedLanguage(isArabic: _isArabic).isNotEmpty)
-                _buildInfoChip(Icons.translate_rounded,
-                    _isArabic ? 'لغة الشريك المفضلة' : 'Preferred Partner Language',
-                    pe.getLocalizedLanguage(isArabic: _isArabic)),
-              if (pe.getLocalizedPreferredCountry(isArabic: _isArabic).isNotEmpty)
-                _buildInfoChip(Icons.public_rounded,
-                    _isArabic ? 'بلد الشريك المفضل' : 'Preferred Partner Country',
-                    pe.getLocalizedPreferredCountry(isArabic: _isArabic)),
-              if (pe.getLocalizedPreferredState(isArabic: _isArabic).isNotEmpty)
-                _buildInfoChip(Icons.location_city_rounded,
-                    _isArabic ? 'محافظة الشريك المفضلة' : 'Preferred Partner Governorate',
-                    pe.getLocalizedPreferredState(isArabic: _isArabic)),
-              if (pe.getLocalizedEyeColor(isArabic: _isArabic).isNotEmpty)
-                _buildInfoChip(Icons.remove_red_eye_rounded,
-                    _isArabic ? 'لون عيون الشريك' : 'Partner Eye Color',
-                    pe.getLocalizedEyeColor(isArabic: _isArabic)),
-              if (pe.getLocalizedHairColor(isArabic: _isArabic).isNotEmpty)
-                _buildInfoChip(Icons.face_rounded,
-                    _isArabic ? 'لون شعر الشريك' : 'Partner Hair Color',
-                    pe.getLocalizedHairColor(isArabic: _isArabic)),
-                  pe.getLocalizedEducation(isArabic: _isArabic)),
-              _buildInfoChip(
+                  _isArabic ? 'التعليم المفضل' : 'Preferred Education',
+                  pe.getLocalizedEducation(isArabic: _isArabic),
+                ),
+              if (pe.getLocalizedProfession(isArabic: _isArabic).isNotEmpty)
+                _buildInfoChip(
                   Icons.work_rounded,
-                  _isArabic ? 'المهنة' : 'Profession',
-                  pe.getLocalizedProfession(isArabic: _isArabic)),
-              _buildVisualColorChip(
+                  _isArabic ? 'المهنة المفضلة' : 'Preferred Profession',
+                  pe.getLocalizedProfession(isArabic: _isArabic),
+                ),
+              if (religion.isNotEmpty)
+                _buildInfoChip(
+                  Icons.auto_awesome_rounded,
+                  _isArabic ? 'ديانة الشريك' : 'Partner Religion',
+                  religion,
+                ),
+              if (language.isNotEmpty)
+                _buildInfoChip(
+                  Icons.translate_rounded,
+                  _isArabic ? 'لغة الشريك المفضلة' : 'Preferred Partner Language',
+                  language,
+                ),
+              if (preferredCountry.isNotEmpty)
+                _buildInfoChip(
+                  Icons.public_rounded,
+                  _isArabic ? 'بلد الشريك المفضل' : 'Preferred Partner Country',
+                  preferredCountry,
+                ),
+              if (preferredState.isNotEmpty)
+                _buildInfoChip(
+                  Icons.location_city_rounded,
+                  _isArabic ? 'محافظة الشريك المفضلة' : 'Preferred Partner Governorate',
+                  preferredState,
+                ),
+              if (eyeColor.isNotEmpty)
+                _buildInfoChip(
+                  Icons.remove_red_eye_rounded,
+                  _isArabic ? 'لون عيون الشريك' : 'Partner Eye Color',
+                  eyeColor,
+                ),
+              if (hairColor.isNotEmpty)
+                _buildInfoChip(
+                  Icons.face_rounded,
+                  _isArabic ? 'لون شعر الشريك' : 'Partner Hair Color',
+                  hairColor,
+                ),
+              if (pe.getLocalizedComplexion(isArabic: _isArabic).isNotEmpty)
+                _buildVisualColorChip(
                   Icons.color_lens_outlined,
-                  _isArabic ? 'لون البشرة' : 'Complexion',
-                  pe.getLocalizedComplexion(isArabic: _isArabic)),
-              _buildInfoChip(
+                  _isArabic ? 'لون البشرة المفضل' : 'Preferred Complexion',
+                  pe.getLocalizedComplexion(isArabic: _isArabic),
+                ),
+              if (pe.getLocalizedChildrenAcceptable(isArabic: _isArabic).isNotEmpty)
+                _buildInfoChip(
                   Icons.child_care_rounded,
                   _isArabic ? 'قبول الأطفال' : 'Children Acceptance',
-                  pe.getLocalizedChildrenAcceptable(isArabic: _isArabic)),
-              _buildInfoChip(
+                  pe.getLocalizedChildrenAcceptable(isArabic: _isArabic),
+                ),
+              if (pe.getLocalizedSmokingAcceptable(isArabic: _isArabic).isNotEmpty)
+                _buildInfoChip(
                   Icons.smoking_rooms_rounded,
                   _isArabic ? 'موقف التدخين' : 'Smoking Acceptance',
-                  pe.getLocalizedSmokingAcceptable(isArabic: _isArabic)),
-              _buildInfoChip(
+                  pe.getLocalizedSmokingAcceptable(isArabic: _isArabic),
+                ),
+              if (pe.getLocalizedDrinkingAcceptable(isArabic: _isArabic).isNotEmpty)
+                _buildInfoChip(
                   Icons.local_bar_rounded,
                   _isArabic ? 'موقف المشروبات' : 'Drinking Acceptance',
-                  pe.getLocalizedDrinkingAcceptable(isArabic: _isArabic)),
-              _buildInfoChip(
-                  Icons.public_rounded,
-                  _isArabic ? 'إقامة الشريك' : 'Residence',
-                  pe.getLocalizedResidenceCountry(isArabic: _isArabic)),
+                  pe.getLocalizedDrinkingAcceptable(isArabic: _isArabic),
+                ),
             ],
           ),
         ],
