@@ -70,6 +70,8 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
   String _selectedSmokingAcceptable = 'dose_not_matter';
   String _selectedDrinkingAcceptable = 'dose_not_matter';
   String? _selectedComplexion;
+  String? _selectedEyeColor;
+  String? _selectedHairColor;
   String? _selectedResidenceCountryId;
   String? _selectedStateId;
 
@@ -91,6 +93,9 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
   ];
 
   final List<String> _complexionOptions = [
+  final List<String> _eyeColorOptions = ['بني', 'أسود', 'أزرق', 'أخضر', 'عسلي', 'رمادي'];
+  final List<String> _hairColorOptions = ['أسود', 'بني داكن', 'بني فاتح', 'أشقر', 'أحمر', 'رمادي / شيب'];
+
     'أبيض',
     'حنطي فاتح',
     'حنطي',
@@ -131,10 +136,12 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
       final results = await Future.wait([
         ApiService.getProfileDropdowns(lang: lang),
         ApiService.getPartnerExpectations(lang: lang),
+        ApiService.get('/member/partner-languages', lang: lang),
       ]);
 
       final dropdowns = results[0];
       final expectations = results[1];
+      final languageResponse = results[2];
 
       if (!mounted) return;
 
@@ -147,7 +154,9 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
             dropdowns['country_list'] ??
             []) as List<dynamic>;
         _religions = (dropdowns['religions'] ?? []) as List<dynamic>;
-        _languages = (dropdowns['languages'] ?? []) as List<dynamic>;
+        final rawLanguages = languageResponse?['languages'] ??
+            (languageResponse?['data'] is Map ? languageResponse?['data']['languages'] : null);
+        _languages = rawLanguages is List ? rawLanguages.whereType<Map>().toList() : <dynamic>[];
       }
 
       if (expectations != null) {
@@ -171,6 +180,10 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
         if (compVal != null && compVal.toString().isNotEmpty) {
           _selectedComplexion = compVal.toString().trim();
         }
+        final eyeVal = expectations['eye_color'] ?? expectations['partner_eye_color'];
+        final hairVal = expectations['hair_color'] ?? expectations['partner_hair_color'];
+        _selectedEyeColor = eyeVal?.toString().trim();
+        _selectedHairColor = hairVal?.toString().trim();
 
         // معالجة الطول
         if (expectations['height'] != null ||
@@ -389,6 +402,12 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
       if (_selectedComplexion != null && _selectedComplexion!.isNotEmpty) {
         payload['partner_complexion'] = _selectedComplexion;
         payload['pertner_complexion'] = _selectedComplexion;
+      }
+      if (_selectedEyeColor != null && _selectedEyeColor!.isNotEmpty) {
+        payload['partner_eye_color'] = _selectedEyeColor;
+      }
+      if (_selectedHairColor != null && _selectedHairColor!.isNotEmpty) {
+        payload['partner_hair_color'] = _selectedHairColor;
       }
 
       payload['partner_children_acceptable'] = _selectedChildrenAcceptable;
@@ -1298,7 +1317,37 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                 );
                                               },
                                             ),
-                                            _buildSectionHeader(
+                                                                                        _buildSheetPickerTile(
+                                              label: isAr ? 'لون العين المفضل' : 'Preferred Eye Color',
+                                              displayValue: _selectedEyeColor,
+                                              icon: Icons.remove_red_eye_rounded,
+                                              onTap: () {
+                                                _showCustomBottomSheet(
+                                                  title: isAr ? 'اختر لون العين' : 'Select Eye Color',
+                                                  items: _eyeColorOptions.map((v) => {'id': v, 'name': v}).toList(),
+                                                  currentValue: _selectedEyeColor,
+                                                  isAr: isAr,
+                                                  onSelected: (v) => setState(() => _selectedEyeColor = v),
+                                                );
+                                              },
+                                            ),
+                                            const SizedBox(height: 10),
+                                            _buildSheetPickerTile(
+                                              label: isAr ? 'لون الشعر المفضل' : 'Preferred Hair Color',
+                                              displayValue: _selectedHairColor,
+                                              icon: Icons.face_rounded,
+                                              onTap: () {
+                                                _showCustomBottomSheet(
+                                                  title: isAr ? 'اختر لون الشعر' : 'Select Hair Color',
+                                                  items: _hairColorOptions.map((v) => {'id': v, 'name': v}).toList(),
+                                                  currentValue: _selectedHairColor,
+                                                  isAr: isAr,
+                                                  onSelected: (v) => setState(() => _selectedHairColor = v),
+                                                );
+                                              },
+                                            ),
+                                            const SizedBox(height: 12),
+_buildSectionHeader(
                                                 isAr
                                                     ? 'الحالة الاجتماعية والدين 💍'
                                                     : 'Marital & Religion 💍',
