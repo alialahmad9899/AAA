@@ -15,6 +15,8 @@ class Step2PersonalDetails extends StatelessWidget {
   final String? educationDegree;
   final double height;
   final double weight;
+  final bool heightWasSelected;
+  final bool weightWasSelected;
   final String eyeColor;
   final String hairColor;
   final String complexion;
@@ -40,6 +42,8 @@ class Step2PersonalDetails extends StatelessWidget {
     required this.educationDegree,
     required this.height,
     required this.weight,
+    required this.heightWasSelected,
+    required this.weightWasSelected,
     required this.eyeColor,
     required this.hairColor,
     required this.complexion,
@@ -286,8 +290,8 @@ class Step2PersonalDetails extends StatelessWidget {
                 // 1. المستوى التعليمي
                 _buildQuestionTitle(
                   _isAr
-                      ? '1. ما هو مستواك التعليمي الحالي؟'
-                      : '1. What is your education degree?',
+                      ? '1. ما هو مستواك التعليمي الحالي؟ *'
+                      : '1. What is your education degree? *',
                 ),
                 Wrap(
                   spacing: 8,
@@ -388,7 +392,9 @@ class Step2PersonalDetails extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            '${height.round()} ${_isAr ? 'سم' : 'cm'}',
+                            heightWasSelected
+                                ? '${height.round()} ${_isAr ? 'سم' : 'cm'}'
+                                : (_isAr ? 'لم يتم التحديد بعد' : 'Not selected yet'),
                             style: const TextStyle(
                               color: Colors.amberAccent,
                               fontSize: 16,
@@ -403,7 +409,8 @@ class Step2PersonalDetails extends StatelessWidget {
                         min: 140,
                         max: 210,
                         divisions: 70,
-                        activeColor: Colors.amberAccent,
+                        activeColor:
+                            heightWasSelected ? Colors.amberAccent : Colors.white24,
                         inactiveColor: Colors.white24,
                         onChanged: onHeightChanged,
                       ),
@@ -420,7 +427,9 @@ class Step2PersonalDetails extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            '${weight.round()} ${_isAr ? 'كغ' : 'kg'}',
+                            weightWasSelected
+                                ? '${weight.round()} ${_isAr ? 'كغ' : 'kg'}'
+                                : (_isAr ? 'لم يتم التحديد بعد' : 'Not selected yet'),
                             style: const TextStyle(
                               color: Colors.amberAccent,
                               fontSize: 16,
@@ -435,7 +444,8 @@ class Step2PersonalDetails extends StatelessWidget {
                         min: 40,
                         max: 150,
                         divisions: 110,
-                        activeColor: Colors.amberAccent,
+                        activeColor:
+                            weightWasSelected ? Colors.amberAccent : Colors.white24,
                         inactiveColor: Colors.white24,
                         onChanged: onWeightChanged,
                       ),
@@ -447,11 +457,11 @@ class Step2PersonalDetails extends StatelessWidget {
                 // 4. خيارات الألوان
                 _buildQuestionTitle(
                   _isAr
-                      ? '4. اختيارات الألوان المميزة لك'
-                      : '4. Select your personal features',
+                      ? '4. اختيارات الألوان المميزة لك *'
+                      : '4. Select your personal features *',
                 ),
                 _buildVisualColorSelector(
-                  _isAr ? 'لون العينين' : 'Eye Color',
+                  _isAr ? 'لون العينين *' : 'Eye Color *',
                   Icons.remove_red_eye_rounded,
                   _eyeColors,
                   eyeColor,
@@ -459,7 +469,7 @@ class Step2PersonalDetails extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 _buildVisualColorSelector(
-                  _isAr ? 'لون الشعر' : 'Hair Color',
+                  _isAr ? 'لون الشعر *' : 'Hair Color *',
                   Icons.face_rounded,
                   _hairColors,
                   hairColor,
@@ -467,7 +477,7 @@ class Step2PersonalDetails extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 _buildVisualColorSelector(
-                  _isAr ? 'لون البشرة' : 'Skin Complexion',
+                  _isAr ? 'لون البشرة *' : 'Skin Complexion *',
                   Icons.color_lens_rounded,
                   _complexions,
                   complexion,
@@ -480,7 +490,7 @@ class Step2PersonalDetails extends StatelessWidget {
                   _isAr ? '5. بنية الجسد والوشم' : '5. Body Structure & Art',
                 ),
 
-                _buildSubTitle(_isAr ? '• بنية الجسد:' : '• Body Type:'),
+                _buildSubTitle(_isAr ? '• بنية الجسد *:' : '• Body Type *:'),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -496,8 +506,8 @@ class Step2PersonalDetails extends StatelessWidget {
                 const SizedBox(height: 12),
 
                 _buildSubTitle(_isAr
-                    ? '• الوشم والرسومات على الجسد:'
-                    : '• Body Art / Tattoo:'),
+                    ? '• الوشم والرسومات على الجسد *:'
+                    : '• Body Art / Tattoo *:'),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
