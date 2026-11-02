@@ -156,10 +156,7 @@ class _SignupScreenState extends State<SignupScreen> {
       final nestedLanguageData =
           languageResponse is Map ? languageResponse['data'] : null;
       final rawLanguages =
-          (languageResponse is Map ? languageResponse['languages'] : null) ??
-          (nestedLanguageData is Map
-              ? nestedLanguageData['languages']
-              : null);
+          languageResponse?['languages'] ?? nestedLanguageData?['languages'];
       final loadedLanguages = rawLanguages is List
           ? rawLanguages.whereType<Map>()
               .map((item) => Map<String, dynamic>.from(item))
