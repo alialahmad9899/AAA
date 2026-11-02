@@ -1625,6 +1625,22 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> updateChildrenCount(int count, {String? lang}) async {
+    if (count < 0) {
+      return {'success': false, 'message': 'Children count must be zero or greater.'};
+    }
+    final response = await post('/member/basic-info/update', {'children': count}, lang: lang);
+    final success = response != null &&
+        (response['result'] == true || response['success'] == true ||
+         response['status'] == 200 || response['status'] == 'success');
+    return {
+      'success': success,
+      'message': response?['message'] ??
+          (success ? 'Children count saved successfully' : 'Failed to save children count'),
+      'data': response,
+    };
+  }
+
   static Future<Map<String, dynamic>?> getEducation({String? lang}) async {
     try {
       final headers = await _getHeaders(lang: lang);
