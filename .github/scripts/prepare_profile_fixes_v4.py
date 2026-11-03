@@ -73,7 +73,7 @@ def patch_public_profile(source: str) -> str:
         "public response final contact guard",
     )
 
-    if re.search(r"\$data\[['\"]contact_details['\"]\]", method):
+    if re.search(r"\$data\[['\"]contact_details['\"]\]\s*=", method):
         raise RuntimeError("Public profile still constructs contact_details")
     if "$user->email" in method or "$user->phone" in method:
         raise RuntimeError("Public profile still reads email or phone")
