@@ -223,7 +223,7 @@ jobs:
           (cd "$out" && find . -type f -print | sort)
           zip -qr "wesal-modified-files-only.zip" "$out"
           unzip -tq "wesal-modified-files-only.zip"
-          test "$(unzip -Z1 "wesal-modified-files-only.zip" | grep -c '\.php$')" -eq 16
+          test "$(unzip -Z1 "wesal-modified-files-only.zip" | grep -c '\.php$')" -eq 17
 
       - uses: actions/upload-artifact@v4
         with:
