@@ -64,6 +64,128 @@ def patch_private_profile(source: str) -> str:
     return source[:start] + method + source[end:]
 
 
+def patch_legacy_fields(source: str) -> str:
+    old_life_style = """    public function life_style()
+    {
+        if (auth()->user()->lifestyles) {
+            return (new LifeStyleResource(auth()->user()->lifestyles))->additional([
+                'result' => true
+            ]);
+        } else {
+            return $this->failure_message('No Data Found!!');
+        }
+    }"""
+    new_life_style = """    public function life_style()
+    {
+        $lifestyle = auth()->user()->lifestyles;
+        if (!$lifestyle) {
+            return $this->failure_message('No Data Found!!');
+        }
+
+        $data = (new LifeStyleResource($lifestyle))->toArray(request());
+        unset($data['diet']);
+        return response()->json(['result' => true, 'data' => $data]);
+    }"""
+    source = replace_once(source, old_life_style, new_life_style, "legacy lifestyle response")
+
+    old_life_update = """    public function life_style_update(Request $request)
+    {
+        $lifestyle = Lifestyle::where('user_id', auth()->id())->first();
+        if (empty($lifestyle)) {
+            $lifestyle              = new Lifestyle;
+            $lifestyle->user_id    = auth()->id();
+        }
+        $lifestyle->diet          = $request->diet;
+        $lifestyle->drink         = $request->drink;
+        $lifestyle->smoke         = $request->smoke;
+        $lifestyle->living_with   = $request->living_with;
+        $lifestyle->save();
+        return $this->success_message('Lifestyle info has been updated successfully');
+    }"""
+    new_life_update = """    public function life_style_update(Request $request)
+    {
+        $lifestyle = Lifestyle::where('user_id', auth()->id())->first();
+        if (empty($lifestyle)) {
+            $lifestyle = new Lifestyle;
+            $lifestyle->user_id = auth()->id();
+        }
+
+        // Diet has been retired from the app. Ignore legacy diet input and
+        // preserve any old database value without exposing or updating it.
+        foreach (['drink', 'smoke', 'living_with'] as $field) {
+            if ($request->exists($field)) {
+                $lifestyle->{$field} = $request->input($field);
+            }
+        }
+
+        $lifestyle->save();
+        return $this->success_message('Lifestyle info has been updated successfully');
+    }"""
+    source = replace_once(source, old_life_update, new_life_update, "legacy lifestyle update")
+
+    old_family = """    public function family_info()
+    {
+        if (auth()->user()->families) {
+            return (new FamilyInformation(auth()->user()->families))->additional([
+                'result' => true
+            ]);
+        } else {
+            return $this->failure_message('No Data Found!!');
+        }
+    }"""
+    new_family = """    public function family_info()
+    {
+        $family = auth()->user()->families;
+        if (!$family) {
+            return $this->failure_message('No Data Found!!');
+        }
+
+        $data = (new FamilyInformation($family))->toArray(request());
+        unset($data['father'], $data['mother']);
+        return response()->json(['result' => true, 'data' => $data]);
+    }"""
+    source = replace_once(source, old_family, new_family, "legacy family response")
+
+    old_family_update = """    public function family_info_update(Request $request)
+    {
+        $family = Family::where('user_id', auth()->id())->first();
+        if (empty($family)) {
+            $family           = new Family;
+            $family->user_id  = auth()->id();
+        }
+        $family->father    = $request->father;
+        $family->mother    = $request->mother;
+        $family->sibling   = $request->sibling;
+        $family->save();
+        return $this->success_message('Family Info has been updated successfully');
+    }"""
+    new_family_update = """    public function family_info_update(Request $request)
+    {
+        $family = Family::where('user_id', auth()->id())->first();
+        if (empty($family)) {
+            $family = new Family;
+            $family->user_id = auth()->id();
+        }
+
+        // Father and mother names are retired and are no longer accepted.
+        if ($request->exists('sibling')) {
+            $family->sibling = $request->input('sibling');
+        }
+
+        $family->save();
+        return $this->success_message('Family Info has been updated successfully');
+    }"""
+    source = replace_once(source, old_family_update, new_family_update, "legacy family update")
+
+    if "$lifestyle->diet" in source or "$family->father" in source or "$family->mother" in source:
+        raise RuntimeError("Retired diet/father/mother writes remain in ProfileController")
+    if "unset($data['diet'])" not in source:
+        raise RuntimeError("Legacy lifestyle endpoint still returns diet")
+    if "unset($data['father'], $data['mother'])" not in source:
+        raise RuntimeError("Legacy family endpoint still returns parent names")
+    return source
+
+
 def patch_public_profile(source: str) -> str:
     start = source.find("    public function public_profile($id)")
     end = source.find("    public static function sendFirebaseNotification", start)
@@ -228,6 +350,7 @@ def main() -> None:
     resource_path = LARAVEL / "app/Http/Resources/PublicProfile/PartnerExpectationResource.php"
 
     controller = controller_path.read_text(encoding="utf-8")
+    controller = patch_legacy_fields(controller)
     controller = patch_private_profile(controller)
     controller = patch_public_profile(controller)
     controller = patch_partner_update(controller)
@@ -259,7 +382,7 @@ def main() -> None:
 ## ما الذي تصلحه؟
 - تمنع إرسال البريد الإلكتروني ورقم الهاتف في استجابة بطاقة العضو العامة، بما في ذلك basic_info وcontact_details.
 - تُبقي بيانات الاتصال في مسار الملف الشخصي الخاص full-my-profile حتى يستطيع صاحب الحساب تعديل بياناته.
-- تمنع إظهار بيانات الأب والأم من families_information والنظام الغذائي من lifestyles في استجابة الملف المجمّع والبطاقة العامة، مع الاحتفاظ بباقي بيانات نمط الحياة. تبقى بيانات الاتصال في الملف المجمّع الخاص بصاحب الحساب فقط.
+- تحجب أسماء الأب والأم من استجابة الملف المجمّع والبطاقة العامة وواجهات family_info القديمة، وتوقف حفظ الاسمين من واجهة API القديمة. تحجب النظام الغذائي من استجابة الملف الخاص والعام وواجهة life_style القديمة، وتتجاهل أي محاولة قديمة لحفظه. تبقى بقية بيانات نمط الحياة (المشروبات وغيرها) تعمل. تبقى بيانات الاتصال في الملف المجمّع الخاص بصاحب الحساب فقط. لا تُحذف السجلات القديمة من قاعدة البيانات.
 - تربط حفظ لون عيني ولون شعر الشريك مع التحقق من القيم وإرجاعهما ضمن توقعات الشريك.
 - تُرجع أسماء البلد والمحافظة المفضّلين إضافة إلى المعرّفات حتى تعرض البطاقة أسماء مفهومة بدلاً من أرقام قاعدة البيانات.
 - تضيف migration آمنة تضيف eye_color وhair_color إلى partner_expectations عند غيابهما فقط. لا تحذف أعمدة أو بيانات عند rollback.
