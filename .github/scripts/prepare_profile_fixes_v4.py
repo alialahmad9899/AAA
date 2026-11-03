@@ -52,10 +52,9 @@ def patch_private_profile(source: str) -> str:
         "            'lifestyles'           => $ownerLifestyle,",
         "private lifestyle resource",
     )
-    method = method.replace(
-        "            'families_information' => $user->families ? new FamilyInformation($user->families) : null,\\n",
-        "",
-    )
+    method, removed = re.subn(r"(?m)^[ \t]*'families_information'\s*=>.*(?:\n|$)", "", method, count=1)
+    if removed != 1:
+        raise RuntimeError("Expected exactly one private families_information field")
     if "families_information" in method:
         raise RuntimeError("Private full profile still returns family names")
     if "unset($ownerLifestyle['diet'])" not in method:
