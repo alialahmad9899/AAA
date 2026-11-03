@@ -42,3 +42,48 @@ jobs:
           lib/services/api_service.dart
       - name: Run Flutter tests
         run: flutter test --no-pub
+
+  package-flutter-patch:
+    name: Build downloadable Flutter patch
+    needs: [flutter]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble only changed Flutter files
+        run: |
+          set -euo pipefail
+          out="wesal-profile-card-flutter-patch"
+          mkdir -p "$out"
+          files=(
+            lib/screens/signup_screen.dart
+            lib/screens/widgets/step2_personal_details.dart
+            lib/screens/widgets/step3_residency_religion.dart
+            lib/screens/widgets/step4_partner_expectations.dart
+            lib/screens/edit_profile_screen.dart
+            lib/screens/edit_profile/widgets/step1_basic_physical_tab.dart
+            lib/screens/edit_profile/widgets/step3_lifestyle_hobbies_tab.dart
+            lib/screens/partner_expectations_screen.dart
+            lib/screens/member_profile_screen.dart
+            lib/models/member_profile_model.dart
+            lib/services/api_service.dart
+          )
+          for file in "${files[@]}"; do
+            mkdir -p "$out/$(dirname "$file")"
+            cp "$file" "$out/$file"
+          done
+          cat > "$out/README.md" <<'EOF'
+          # وصال — Flutter profile alignment patch
+
+          Copy the included files into the Flutter project, preserving their relative paths.
+          This archive contains Flutter application files only. Laravel API replacements are delivered separately.
+          No changes are made to main or production hosting by this patch.
+          EOF
+          zip -qr "wesal-profile-card-flutter-patch.zip" "$out"
+          unzip -tq "wesal-profile-card-flutter-patch.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wesal-profile-card-flutter-patch
+          path: wesal-profile-card-flutter-patch.zip
+          if-no-files-found: error
+          compression-level: 9
+          retention-days: 90
