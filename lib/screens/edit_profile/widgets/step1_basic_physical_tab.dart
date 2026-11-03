@@ -32,6 +32,8 @@ class Step1BasicPhysicalTab extends StatelessWidget {
   final String? selectedEyeColor;
   final String? selectedHairColor;
   final String? selectedComplexion;
+  final String? selectedBodyType;
+  final String? selectedBodyArt;
   final Map<String, Color> eyeColorMap;
   final Map<String, Color> hairColorMap;
   final Map<String, Color> complexionMap;
@@ -45,6 +47,8 @@ class Step1BasicPhysicalTab extends StatelessWidget {
   final VoidCallback onSelectEyeColor;
   final VoidCallback onSelectHairColor;
   final VoidCallback onSelectComplexion;
+  final VoidCallback onSelectBodyType;
+  final VoidCallback onSelectBodyArt;
 
   const Step1BasicPhysicalTab({
     super.key,
@@ -69,6 +73,8 @@ class Step1BasicPhysicalTab extends StatelessWidget {
     required this.selectedEyeColor,
     required this.selectedHairColor,
     required this.selectedComplexion,
+    required this.selectedBodyType,
+    required this.selectedBodyArt,
     required this.eyeColorMap,
     required this.hairColorMap,
     required this.complexionMap,
@@ -81,6 +87,8 @@ class Step1BasicPhysicalTab extends StatelessWidget {
     required this.onSelectEyeColor,
     required this.onSelectHairColor,
     required this.onSelectComplexion,
+    required this.onSelectBodyType,
+    required this.onSelectBodyArt,
   });
 
   InputDecoration _buildInput(String label, IconData icon) {
@@ -717,6 +725,18 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                 colorMap: complexionMap,
                 icon: Icons.color_lens_rounded,
                 onTap: onSelectComplexion),
+            const SizedBox(height: 14),
+            _buildSheetPickerTile(
+                label: isAr ? 'بنية الجسم 🧍' : 'Body Type 🧍',
+                displayValue: selectedBodyType,
+                icon: Icons.accessibility_new_rounded,
+                onTap: onSelectBodyType),
+            const SizedBox(height: 14),
+            _buildSheetPickerTile(
+                label: isAr ? 'الوشم / الرسومات 🎨' : 'Body Art / Tattoo 🎨',
+                displayValue: selectedBodyArt,
+                icon: Icons.palette_outlined,
+                onTap: onSelectBodyArt),
           ],
         ),
       ),
