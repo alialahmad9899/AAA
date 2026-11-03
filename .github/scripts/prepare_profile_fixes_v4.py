@@ -25,6 +25,46 @@ def replace_once(source: str, old: str, new: str, label: str) -> str:
     return source.replace(old, new, 1)
 
 
+def patch_private_profile(source: str) -> str:
+    start = source.find("    public function get_full_my_profile()")
+    end = source.find("    public function profile_settings()", start)
+    if start < 0 or end < 0:
+        raise RuntimeError("Could not isolate get_full_my_profile")
+    method = source[start:end]
+
+    method = replace_once(
+        method,
+        "        $data = [",
+        """        // Do not return retired family names or dietary preference fields.
+        // Contact fields remain private and available to the account owner.
+        $ownerLifestyle = null;
+        if ($user->lifestyles) {
+            $ownerLifestyle = (new LifeStyleResource($user->lifestyles))->toArray(request());
+            unset($ownerLifestyle['diet']);
+        }
+
+        $data = [""",
+        "private profile sanitized lifestyle",
+    )
+    method = replace_once(
+        method,
+        "            'lifestyles'           => $user->lifestyles ? new LifeStyleResource($user->lifestyles) : null,",
+        "            'lifestyles'           => $ownerLifestyle,",
+        "private lifestyle resource",
+    )
+    method = method.replace(
+        "            'families_information' => $user->families ? new FamilyInformation($user->families) : null,\\n",
+        "",
+    )
+    if "families_information" in method:
+        raise RuntimeError("Private full profile still returns family names")
+    if "unset($ownerLifestyle['diet'])" not in method:
+        raise RuntimeError("Private full profile still returns diet")
+    if "'contact_details'" not in method or "$user->email" not in method or "$user->phone" not in method:
+        raise RuntimeError("Private owner contact details must remain available")
+    return source[:start] + method + source[end:]
+
+
 def patch_public_profile(source: str) -> str:
     start = source.find("    public function public_profile($id)")
     end = source.find("    public static function sendFirebaseNotification", start)
@@ -189,6 +229,7 @@ def main() -> None:
     resource_path = LARAVEL / "app/Http/Resources/PublicProfile/PartnerExpectationResource.php"
 
     controller = controller_path.read_text(encoding="utf-8")
+    controller = patch_private_profile(controller)
     controller = patch_public_profile(controller)
     controller = patch_partner_update(controller)
     controller_path.write_text(controller, encoding="utf-8")
@@ -219,7 +260,7 @@ def main() -> None:
 ## ما الذي تصلحه؟
 - تمنع إرسال البريد الإلكتروني ورقم الهاتف في استجابة بطاقة العضو العامة، بما في ذلك basic_info وcontact_details.
 - تُبقي بيانات الاتصال في مسار الملف الشخصي الخاص full-my-profile حتى يستطيع صاحب الحساب تعديل بياناته.
-- تمنع إظهار بيانات الأب والأم من families_information والنظام الغذائي من lifestyles في البطاقة العامة، مع الاحتفاظ بباقي بيانات نمط الحياة.
+- تمنع إظهار بيانات الأب والأم من families_information والنظام الغذائي من lifestyles في استجابة الملف المجمّع والبطاقة العامة، مع الاحتفاظ بباقي بيانات نمط الحياة. تبقى بيانات الاتصال في الملف المجمّع الخاص بصاحب الحساب فقط.
 - تربط حفظ لون عيني ولون شعر الشريك مع التحقق من القيم وإرجاعهما ضمن توقعات الشريك.
 - تُرجع أسماء البلد والمحافظة المفضّلين إضافة إلى المعرّفات حتى تعرض البطاقة أسماء مفهومة بدلاً من أرقام قاعدة البيانات.
 - تضيف migration آمنة تضيف eye_color وhair_color إلى partner_expectations عند غيابهما فقط. لا تحذف أعمدة أو بيانات عند rollback.
