@@ -143,3 +143,92 @@ jobs:
           if-no-files-found: error
           compression-level: 9
           retention-days: 90
+
+  package-modified-files-only:
+    name: Package only changed project files with original paths
+    needs: [flutter, package-laravel-api-patch]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+      - name: Build exact modified-file set
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile .github/scripts/patch_hosting_archive.py .github/scripts/prepare_profile_fixes_v3.py .github/scripts/prepare_profile_fixes_v4.py
+          python3 .github/scripts/patch_hosting_archive.py
+          python3 .github/scripts/prepare_profile_fixes_v3.py
+          python3 .github/scripts/prepare_profile_fixes_v4.py
+
+          out="wesal-modified-files-only"
+          mkdir -p "$out/Flutter" "$out/Laravel" "$out/Repository"
+
+          flutter_files=(
+            lib/models/member_profile_model.dart
+            lib/services/api_service.dart
+            lib/screens/partner_expectations_screen.dart
+            lib/screens/signup_screen.dart
+            lib/screens/edit_profile/widgets/step1_basic_physical_tab.dart
+            lib/screens/edit_profile/widgets/step3_lifestyle_hobbies_tab.dart
+            lib/screens/widgets/step3_residency_spiritual_tab.dart
+            lib/screens/widgets/step4_partner_expectations.dart
+            lib/screens/widgets/step2_personal_details.dart
+            lib/screens/edit_profile_screen.dart
+            lib/screens/member_profile_screen.dart
+            test/profile_edit_unit_test.dart
+          )
+          for file in "${flutter_files[@]}"; do
+            test -f "$file"
+            mkdir -p "$out/Flutter/$(dirname "$file")"
+            cp "$file" "$out/Flutter/$file"
+          done
+
+          laravel_files=(
+            app/Http/Controllers/Api/AuthController.php
+            app/Http/Controllers/Api/ProfileController.php
+            app/Http/Controllers/Api/EducationController.php
+            app/Http/Controllers/Api/CareerController.php
+            app/Http/Requests/AuthRequest.php
+            app/Http/Requests/ProfileRequest.php
+            app/Http/Requests/CareerRequest.php
+            app/Http/Requests/PartnerExpectationRequest.php
+            app/Http/Resources/EducationResource.php
+            app/Http/Resources/CareerResource.php
+            app/Http/Resources/PublicProfile/BasicInformation.php
+            app/Http/Resources/PublicProfile/SpiritualSocialBackground.php
+            app/Http/Resources/PublicProfile/PartnerExpectationResource.php
+            app/Http/Resources/PublicProfile/PhysicalAttributes.php
+            routes/api.php
+            database/migrations/2026_11_01_000000_make_profile_start_years_nullable.php
+            database/migrations/2026_11_03_000000_add_partner_appearance_preferences.php
+          )
+          for file in "${laravel_files[@]}"; do
+            test -f "اصلاحات 4/Laravel/$file"
+            mkdir -p "$out/Laravel/$(dirname "$file")"
+            cp "اصلاحات 4/Laravel/$file" "$out/Laravel/$file"
+          done
+
+          mkdir -p "$out/Repository/.github/scripts" "$out/Repository/.github/workflows"
+          cp .github/scripts/prepare_profile_fixes_v4.py "$out/Repository/.github/scripts/"
+          cp .github/workflows/member-card-alignment.yml "$out/Repository/.github/workflows/"
+
+          count="$(find "$out" -type f | wc -l | tr -d ' ')"
+          test "$count" = "31"
+          if find "$out" -type f \( -name 'README.md' -o -name 'manifest.json' \) | grep -q .; then
+            echo "Package contains non-modified documentation/manifest files" >&2
+            exit 1
+          fi
+          (cd "$out" && find . -type f -print | sort)
+          zip -qr "wesal-modified-files-only.zip" "$out"
+          unzip -tq "wesal-modified-files-only.zip"
+          test "$(unzip -Z1 "wesal-modified-files-only.zip" | grep -c '\.php$')" -eq 16
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wesal-modified-files-only
+          path: wesal-modified-files-only.zip
+          if-no-files-found: error
+          compression-level: 9
+          retention-days: 90
