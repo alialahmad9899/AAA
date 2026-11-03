@@ -176,6 +176,19 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     },
   ];
 
+  static const List<Map<String, dynamic>> _bodyTypeOptions = [
+    {'key': 'عادي', 'ar': 'عادي / متوسط 🚶‍♂️', 'en': 'Average / Medium 🚶‍♂️'},
+    {'key': 'رياضي', 'ar': 'رياضي / متناسق 🏋️‍♂️', 'en': 'Athletic / Fit 🏋️‍♂️'},
+    {'key': 'رشيق', 'ar': 'رشيق / نحيف 🏃‍♂️', 'en': 'Slim / Lean 🏃‍♂️'},
+    {'key': 'ممتلئ', 'ar': 'ممتلئ / قوام عريض 🧍‍♂️', 'en': 'Plus Size / Heavy 🧍‍♂️'},
+  ];
+
+  static const List<Map<String, dynamic>> _bodyArtOptions = [
+    {'key': 'لا يوجد', 'ar': 'لا يوجد ❌', 'en': 'None ❌'},
+    {'key': 'وشم بسيط', 'ar': 'وشم بسيط 🎨', 'en': 'Simple Tattoo 🎨'},
+    {'key': 'أكثر من وشم', 'ar': 'أكثر من وشم ✨', 'en': 'Multiple Tattoos ✨'},
+  ];
+
   static const List<Map<String, dynamic>> _complexions = [
     {
       'key': 'أبيض',
@@ -1409,10 +1422,12 @@ class _EditProfileScreenState extends State<EditProfileScreen>
         _selectedBloodGroup = _fieldString(physical['blood_group']);
       }
       if (physical.containsKey('body_type')) {
-        _selectedBodyType = _fieldString(physical['body_type']);
+        _selectedBodyType =
+            _matchListedOption(_fieldString(physical['body_type']), _bodyTypeOptions);
       }
       if (physical.containsKey('body_art')) {
-        _selectedBodyArt = _fieldString(physical['body_art']);
+        _selectedBodyArt =
+            _matchListedOption(_fieldString(physical['body_art']), _bodyArtOptions);
       }
     } else if (fullProfile.physicalAttributes != null) {
       final phys = fullProfile.physicalAttributes!;
@@ -1423,8 +1438,12 @@ class _EditProfileScreenState extends State<EditProfileScreen>
       _selectedComplexion =
           _matchListedOption(phys.complexion, _complexions);
       if (phys.bloodGroup.isNotEmpty) _selectedBloodGroup = phys.bloodGroup;
-      if (phys.bodyType.isNotEmpty) _selectedBodyType = phys.bodyType;
-      if (phys.bodyArt.isNotEmpty) _selectedBodyArt = phys.bodyArt;
+      if (phys.bodyType.isNotEmpty) {
+        _selectedBodyType = _matchListedOption(phys.bodyType, _bodyTypeOptions);
+      }
+      if (phys.bodyArt.isNotEmpty) {
+        _selectedBodyArt = _matchListedOption(phys.bodyArt, _bodyArtOptions);
+      }
     }
 
     if (lifestyle != null) {
@@ -2064,6 +2083,10 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                                     _selectedHairColor, _hairColors),
                                 selectedComplexion: _localizedOption(
                                     _selectedComplexion, _complexions),
+                                selectedBodyType: _localizedOption(
+                                    _selectedBodyType, _bodyTypeOptions),
+                                selectedBodyArt: _localizedOption(
+                                    _selectedBodyArt, _bodyArtOptions),
                                 eyeColorMap: _eyeColorMap,
                                 hairColorMap: _hairColorMap,
                                 complexionMap: _complexionMap,
@@ -2206,6 +2229,38 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                                       isAr: _isArabic,
                                       onSelected: (val) => setState(
                                           () => _selectedComplexion = val));
+                                },
+                                onSelectBodyType: () {
+                                  final items = _bodyTypeOptions
+                                      .map((e) => {
+                                            'id': e['key'],
+                                            'name': _isArabic ? e['ar'] : e['en'],
+                                          })
+                                      .toList();
+                                  _showCustomBottomSheetPicker(
+                                      title: _isArabic ? 'بنية الجسم 🧍' : 'Body Type 🧍',
+                                      items: items,
+                                      currentValue: _selectedBodyType,
+                                      isAr: _isArabic,
+                                      onSelected: (val) => setState(
+                                          () => _selectedBodyType = val));
+                                },
+                                onSelectBodyArt: () {
+                                  final items = _bodyArtOptions
+                                      .map((e) => {
+                                            'id': e['key'],
+                                            'name': _isArabic ? e['ar'] : e['en'],
+                                          })
+                                      .toList();
+                                  _showCustomBottomSheetPicker(
+                                      title: _isArabic
+                                          ? 'الوشم والرسومات 🎨'
+                                          : 'Body Art / Tattoo 🎨',
+                                      items: items,
+                                      currentValue: _selectedBodyArt,
+                                      isAr: _isArabic,
+                                      onSelected: (val) => setState(
+                                          () => _selectedBodyArt = val));
                                 },
                               ),
                               Step2ResidencySpiritualTab(
