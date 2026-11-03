@@ -121,11 +121,11 @@ jobs:
           grep -Fq "'partner_hair_color'" "اصلاحات 4/Laravel/app/Http/Requests/PartnerExpectationRequest.php"
           grep -Fq "unset(\$data['diet']);" "اصلاحات 4/Laravel/app/Http/Controllers/Api/ProfileController.php"
           grep -Fq "unset(\$data['father'], \$data['mother']);" "اصلاحات 4/Laravel/app/Http/Controllers/Api/ProfileController.php"
-          if grep -Fq '\$lifestyle->diet' "اصلاحات 4/Laravel/app/Http/Controllers/Api/ProfileController.php"; then
+          if grep -Fq '$lifestyle->diet' "اصلاحات 4/Laravel/app/Http/Controllers/Api/ProfileController.php"; then
             echo "Legacy API still writes retired diet field" >&2
             exit 1
           fi
-          if grep -Fq '\$family->father' "اصلاحات 4/Laravel/app/Http/Controllers/Api/ProfileController.php" || grep -Fq '\$family->mother' "اصلاحات 4/Laravel/app/Http/Controllers/Api/ProfileController.php"; then
+          if grep -Fq '$family->father' "اصلاحات 4/Laravel/app/Http/Controllers/Api/ProfileController.php" || grep -Fq '$family->mother' "اصلاحات 4/Laravel/app/Http/Controllers/Api/ProfileController.php"; then
             echo "Legacy API still writes retired parent-name fields" >&2
             exit 1
           fi
