@@ -112,9 +112,10 @@ def patch_legacy_fields(source: str) -> str:
 
         // Diet has been retired from the app. Ignore legacy diet input and
         // preserve any old database value without exposing or updating it.
+        $input = $request->all();
         foreach (['drink', 'smoke', 'living_with'] as $field) {
-            if ($request->exists($field)) {
-                $lifestyle->{$field} = $request->input($field);
+            if (array_key_exists($field, $input)) {
+                $lifestyle->{$field} = $input[$field];
             }
         }
 
@@ -168,8 +169,9 @@ def patch_legacy_fields(source: str) -> str:
         }
 
         // Father and mother names are retired and are no longer accepted.
-        if ($request->exists('sibling')) {
-            $family->sibling = $request->input('sibling');
+        $input = $request->all();
+        if (array_key_exists('sibling', $input)) {
+            $family->sibling = $input['sibling'];
         }
 
         $family->save();
