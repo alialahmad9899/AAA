@@ -257,10 +257,41 @@ class Step4PartnerExpectations extends StatelessWidget {
     );
   }
 
+  Color _colorForOption(String value) {
+    final normalized = value.toLowerCase();
+    if (normalized.contains('أبيض') || normalized.contains('white') || normalized.contains('fair')) return const Color(0xFFF3D5C0);
+    if (normalized.contains('حنطي فاتح') || normalized.contains('light tan')) return const Color(0xFFE5B98F);
+    if (normalized.contains('حنطي') || normalized.contains('wheat') || normalized.contains('tan')) return const Color(0xFFC68A5B);
+    if (normalized.contains('أسمر داكن') || normalized.contains('dark')) return const Color(0xFF70452F);
+    if (normalized.contains('أسمر') || normalized.contains('olive')) return const Color(0xFF9A6344);
+    if (normalized.contains('أزرق') || normalized.contains('blue')) return const Color(0xFF3B82F6);
+    if (normalized.contains('أخضر') || normalized.contains('green')) return const Color(0xFF16A34A);
+    if (normalized.contains('عسلي') || normalized.contains('hazel')) return const Color(0xFFB77936);
+    if (normalized.contains('بني') || normalized.contains('brown')) return const Color(0xFF75452B);
+    if (normalized.contains('أسود') || normalized.contains('black')) return const Color(0xFF18181B);
+    if (normalized.contains('أشقر') || normalized.contains('blonde')) return const Color(0xFFE7C66B);
+    if (normalized.contains('أحمر') || normalized.contains('red')) return const Color(0xFFB7473A);
+    if (normalized.contains('رمادي') || normalized.contains('grey') || normalized.contains('gray') || normalized.contains('شيب')) return const Color(0xFF9CA3AF);
+    return const Color(0xFF38BDF8);
+  }
+
+  Widget _buildColorDot(String value) {
+    return Container(
+      width: 13,
+      height: 13,
+      decoration: BoxDecoration(
+        color: _colorForOption(value),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1),
+      ),
+    );
+  }
+
   Widget _buildCustomChip({
     required String label,
     required bool isSelected,
     required VoidCallback onTap,
+    Widget? leading,
   }) {
     return InkWell(
       onTap: onTap,
@@ -285,6 +316,10 @@ class Step4PartnerExpectations extends StatelessWidget {
               const Icon(Icons.check_circle_rounded,
                   size: 15, color: Color(0xFF01579B)),
               const SizedBox(width: 5),
+            ],
+            if (leading != null) ...[
+              leading,
+              const SizedBox(width: 6),
             ],
             Text(
               label,
@@ -605,6 +640,7 @@ class Step4PartnerExpectations extends StatelessWidget {
                     return _buildCustomChip(
                       label: label,
                       isSelected: isSelected,
+                      leading: key == 'لا يهم' ? null : _buildColorDot(key),
                       onTap: () => onComplexionChanged(key),
                     );
                   }).toList(),
@@ -624,6 +660,7 @@ class Step4PartnerExpectations extends StatelessWidget {
                     return _buildCustomChip(
                       label: label,
                       isSelected: eyeColor == key,
+                      leading: key == 'لا يهم' ? null : _buildColorDot(key),
                       onTap: () => onEyeColorChanged(key),
                     );
                   }).toList(),
@@ -643,6 +680,7 @@ class Step4PartnerExpectations extends StatelessWidget {
                     return _buildCustomChip(
                       label: label,
                       isSelected: hairColor == key,
+                      leading: key == 'لا يهم' ? null : _buildColorDot(key),
                       onTap: () => onHairColorChanged(key),
                     );
                   }).toList(),

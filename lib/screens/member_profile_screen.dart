@@ -1662,13 +1662,13 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                   preferredState,
                 ),
               if (eyeColor.isNotEmpty)
-                _buildInfoChip(
+                _buildVisualColorChip(
                   Icons.remove_red_eye_rounded,
                   _isArabic ? 'لون عيون الشريك' : 'Partner Eye Color',
                   eyeColor,
                 ),
               if (hairColor.isNotEmpty)
-                _buildInfoChip(
+                _buildVisualColorChip(
                   Icons.face_rounded,
                   _isArabic ? 'لون شعر الشريك' : 'Partner Hair Color',
                   hairColor,
