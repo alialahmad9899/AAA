@@ -54,6 +54,8 @@ void main() {
           'weight': '75',
           'eye_color': 'بني',
           'hair_color': 'أسود',
+          'body_type': 'رياضي',
+          'body_art': 'وشم بسيط',
         }
       };
 
@@ -67,6 +69,8 @@ void main() {
       expect(profile.basicInfo.isFemale, false);
       expect(profile.physicalAttributes?.height, '1.80');
       expect(profile.physicalAttributes?.weight, '75');
+      expect(profile.physicalAttributes?.bodyType, 'رياضي');
+      expect(profile.physicalAttributes?.bodyArt, 'وشم بسيط');
     });
   });
   group('Laravel API resource envelope parsing', () {
