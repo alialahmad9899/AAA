@@ -14,6 +14,10 @@ on:
       - 'lib/screens/member_profile_screen.dart'
       - 'lib/models/member_profile_model.dart'
       - 'lib/services/api_service.dart'
+      - '.github/workflows/member-card-alignment.yml'
+      - '.github/scripts/patch_hosting_archive.py'
+      - '.github/scripts/prepare_profile_fixes_v3.py'
+      - '.github/scripts/prepare_profile_fixes_v4.py'
   workflow_dispatch:
 jobs:
   flutter:
@@ -84,6 +88,48 @@ jobs:
         with:
           name: wesal-profile-card-flutter-patch
           path: wesal-profile-card-flutter-patch.zip
+          if-no-files-found: error
+          compression-level: 9
+          retention-days: 90
+
+  package-laravel-api-patch:
+    name: Build and lint Laravel API replacement patch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+      - name: Prepare the validated Laravel baseline and apply v4 privacy/linkage fixes
+        run: |
+          set -euo pipefail
+          python3 -m py_compile .github/scripts/patch_hosting_archive.py .github/scripts/prepare_profile_fixes_v3.py .github/scripts/prepare_profile_fixes_v4.py
+          python3 .github/scripts/patch_hosting_archive.py
+          python3 .github/scripts/prepare_profile_fixes_v3.py
+          python3 .github/scripts/prepare_profile_fixes_v4.py
+      - name: Lint and verify API replacements
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -d "اصلاحات 4/Laravel"
+          while IFS= read -r -d '' file; do php -l "$file"; done < <(find "اصلاحات 4/Laravel" -type f -name '*.php' -print0)
+          grep -Fq "unset(\$publicBasicInfo['phone'], \$publicBasicInfo['email']);" "اصلاحات 4/Laravel/app/Http/Controllers/Api/ProfileController.php"
+          grep -Fq "unset(\$publicLifestyle['diet']);" "اصلاحات 4/Laravel/app/Http/Controllers/Api/ProfileController.php"
+          grep -Fq "'eye_color' => ['partner_eye_color']" "اصلاحات 4/Laravel/app/Http/Controllers/Api/ProfileController.php"
+          grep -Fq "'hair_color' => ['partner_hair_color']" "اصلاحات 4/Laravel/app/Http/Controllers/Api/ProfileController.php"
+          grep -Fq "'partner_eye_color'" "اصلاحات 4/Laravel/app/Http/Requests/PartnerExpectationRequest.php"
+          grep -Fq "'partner_hair_color'" "اصلاحات 4/Laravel/app/Http/Requests/PartnerExpectationRequest.php"
+          out="wesal-profile-api-patch"
+          mkdir -p "$out"
+          cp -a "اصلاحات 4/Laravel/." "$out/"
+          cp "اصلاحات 4/README.md" "$out/README.md"
+          cp "اصلاحات 4/manifest.json" "$out/manifest.json"
+          zip -qr "wesal-profile-api-patch.zip" "$out"
+          unzip -tq "wesal-profile-api-patch.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wesal-profile-api-patch
+          path: wesal-profile-api-patch.zip
           if-no-files-found: error
           compression-level: 9
           retention-days: 90
