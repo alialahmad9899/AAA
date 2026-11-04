@@ -6,10 +6,12 @@
 // ============================================================================
 
 import 'dart:io';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../utils/arabic_number_formatter.dart';
 
 class Step1BasicInfo extends StatefulWidget {
@@ -59,6 +61,12 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
+  late final TapGestureRecognizer _termsToggleRecognizer;
+  late final TapGestureRecognizer _termsLinkRecognizer;
+
+  static final Uri _termsUri =
+      Uri.parse('https://www.wesalsyria.com/terms-conditions');
+
   String? _selectedDay;
   String? _selectedMonth;
   String? _selectedYear;
@@ -72,12 +80,56 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
   @override
   void initState() {
     super.initState();
+    _termsToggleRecognizer = TapGestureRecognizer()
+      ..onTap = () => widget.onTermsChanged(!widget.agreedToTerms);
+    _termsLinkRecognizer = TapGestureRecognizer()
+      ..onTap = _openTermsAndConditions;
     _days = List.generate(31, (i) => (i + 1).toString());
     _months = List.generate(12, (i) => (i + 1).toString());
     final currentYear = DateTime.now().year;
     _years = List.generate(68, (i) => (currentYear - 18 - i).toString());
 
     _parseDobFromController();
+  }
+
+  Future<void> _openTermsAndConditions() async {
+    try {
+      final opened = await launchUrl(
+        _termsUri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!opened && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _isAr
+                  ? 'تعذر فتح صفحة الخصوصية وشروط التسجيل'
+                  : 'Could not open the privacy policy and registration terms',
+            ),
+          ),
+        );
+      }
+    } catch (error) {
+      debugPrint('Failed to open Wesal terms and conditions: $error');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _isAr
+                  ? 'تعذر فتح صفحة الخصوصية وشروط التسجيل'
+                  : 'Could not open the privacy policy and registration terms',
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _termsToggleRecognizer.dispose();
+    _termsLinkRecognizer.dispose();
+    super.dispose();
   }
 
   void _parseDobFromController() {
@@ -767,19 +819,36 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                       ),
                     ),
                     Expanded(
-                      child: GestureDetector(
-                        onTap: () =>
-                            widget.onTermsChanged(!widget.agreedToTerms),
-                        child: Text(
-                          _isAr
-                              ? 'أوافق على الشروط والأحكام وسياسة الخصوصية الخاصة بتطبيق وصال *'
-                              : 'I agree to the Terms, Conditions, and Privacy Policy of Wesal *',
+                      child: Text.rich(
+                        TextSpan(
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12.5,
                             fontFamily: 'Cairo',
                             fontWeight: FontWeight.w600,
                           ),
+                          children: [
+                            TextSpan(
+                              text: _isAr ? 'أوافق على ' : 'I agree to ',
+                              recognizer: _termsToggleRecognizer,
+                            ),
+                            TextSpan(
+                              text: _isAr
+                                  ? 'الخصوصية وشروط التسجيل'
+                                  : 'Privacy Policy & Registration Terms',
+                              style: const TextStyle(
+                                color: Color(0xFF38BDF8),
+                                decoration: TextDecoration.underline,
+                                decorationColor: Color(0xFF38BDF8),
+                                fontWeight: FontWeight.bold,
+                              ),
+                              recognizer: _termsLinkRecognizer,
+                            ),
+                            TextSpan(
+                              text: ' *',
+                              recognizer: _termsToggleRecognizer,
+                            ),
+                          ],
                         ),
                       ),
                     ),
