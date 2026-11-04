@@ -1,0 +1,228 @@
+// ============================================================================
+// اسم الملف: lib/utils/profile_update_manager.dart
+// المشروع: تطبيق وصال (Wesal) - Modern Premium UI 2026
+// الوصف: مدير تحديث البيانات الموازي لمعالجة جميع طلبات الملف الشخصي
+//        بدون أي تأخير في الواجهة، مع نافذة تحميل حديثة راقية.
+// ============================================================================
+
+import 'dart:ui';
+import 'package:flutter/material.dart';
+import '../services/api_service.dart';
+
+/// كلاس مخصص لإدارة عمليات تحديث بيانات الملف الشخصي بالتوازي لسرعة فائقة
+class ProfileUpdateManager {
+  /// دالة تنفيذيّة لتحديث كافة الأجزاء المعدّلة في وقت واحد بدون تأخير
+  static Future<bool> saveAllProfileData({
+    required BuildContext context,
+    required Map<String, dynamic>? basicInfoData,
+    required Map<String, dynamic>? physicalData,
+    required Map<String, dynamic>? educationData,
+    required Map<String, dynamic>? careerData,
+  }) async {
+    // 1. تجميع قائمة بالمهام البرمجية التي سيتم إرسالها إلى السيرفر
+    final List<Future<Map<String, dynamic>>> updateTasks = [];
+
+    // إذا تم تعديل البيانات الأساسية، أضف المهمة للقائمة مع معالجة حقول null الآمنة
+    if (basicInfoData != null) {
+      updateTasks.add(ApiService.updateBasicInfo(
+        firstName: (basicInfoData['first_name'] ?? '').toString(),
+        lastName: (basicInfoData['last_name'] ?? '').toString(),
+        phone: (basicInfoData['phone'] ?? '').toString(),
+        gender: (basicInfoData['gender'] ?? '').toString(),
+        dateOfBirth: (basicInfoData['date_of_birth'] ?? '').toString(),
+        maritalStatus: (basicInfoData['marital_status'] ?? '').toString(),
+        onBehalf: (basicInfoData['on_behalf'] ?? '1').toString(),
+        children: (basicInfoData['children'] ?? '0').toString(),
+        introduction: basicInfoData['introduction']?.toString(),
+      ));
+    }
+
+    // إذا تم تعديل البيانات الجسدية، أضف المهمة للقائمة
+    if (physicalData != null) {
+      updateTasks.add(ApiService.updatePhysicalAttributes(physicalData));
+    }
+
+    // إذا تم تعديل البيانات التعليمية، أضف المهمة للقائمة
+    if (educationData != null) {
+      updateTasks.add(ApiService.updateEducation(educationData));
+    }
+
+    // إذا تم تعديل البيانات المهنية، أضف المهمة للقائمة
+    if (careerData != null) {
+      updateTasks.add(ApiService.updateCareer(careerData));
+    }
+
+    // إذا لم تكن هناك أي تعديلات للحفظ، نكتفي بالتنبيه والإنهاء دون فتح نافذة تحميل
+    if (updateTasks.isEmpty) {
+      if (context.mounted) {
+        _showModernSnackBar(
+          context: context,
+          message: 'لم يتم إجراء أي تغييرات للحفظ',
+          isSuccess: true,
+        );
+      }
+      return true;
+    }
+
+    // 2. عرض مؤشر التحميل العصري فوراً لتوفير تغذية راجعة بصرية للمستخدم
+    _showPremiumLoadingDialog(context);
+
+    try {
+      // 3. التنفيذ الموازي لجميع الطلبات في وقت واحد لتقليل وقت الانتظار
+      final List<Map<String, dynamic>> results = await Future.wait(updateTasks);
+
+      // 4. إغلاق نافذة التحميل بأمان فور اكتمال معالجة الطلبات
+      if (context.mounted) {
+        final navigator = Navigator.of(context, rootNavigator: true);
+        if (navigator.canPop()) {
+          navigator.pop();
+        }
+      }
+
+      // 5. التحقق من نجاح كافة العمليات
+      final bool allSuccessful =
+          results.isNotEmpty && results.every((res) => res['success'] == true);
+
+      // 6. إظهار إشعار عصري بنتيجة العملية
+      if (context.mounted) {
+        _showModernSnackBar(
+          context: context,
+          message: allSuccessful
+              ? 'تم حفظ جميع التعديلات بنجاح'
+              : 'تم حفظ معظم البيانات، يرجى المراجعة',
+          isSuccess: allSuccessful,
+        );
+      }
+
+      return allSuccessful;
+    } catch (e) {
+      // إغلاق نافذة التحميل عند حدوث أي خطأ في الاتصال
+      if (context.mounted) {
+        final navigator = Navigator.of(context, rootNavigator: true);
+        if (navigator.canPop()) {
+          navigator.pop();
+        }
+        _showModernSnackBar(
+          context: context,
+          message: 'حدث خطأ غير متوقع أثناء الحفظ: $e',
+          isSuccess: false,
+        );
+      }
+      return false;
+    }
+  }
+
+  /// دالة لبناء نافذة تحميل عصرية بمظهر Modern Premium UI 2026 مع بلور خلفي
+  static void _showPremiumLoadingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // منع الإغلاق بالنقر الخارجي أثناء التحميل
+      builder: (BuildContext ctx) {
+        return PopScope(
+          canPop: false, // منع زر الرجوع أثناء معالجة البيانات
+          child: BackdropFilter(
+            filter:
+                ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0), // تأثير ضبابي راقي
+            child: Dialog(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1A1A2E).withValues(alpha: 0.85),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 20,
+                      spreadRadius: 5,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // مؤشر تحميل دائري بتصميم عصري
+                    const SizedBox(
+                      width: 45,
+                      height: 45,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 3.5,
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(Color(0xFFE91E63)),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    // نص التوضيح
+                    const Text(
+                      'جاري حفظ التغييرات...',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Tajawal',
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'جاري الاتصال بسيرفر وصال الآمن',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.7),
+                        fontSize: 12,
+                        fontFamily: 'Tajawal',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// دالة لعرض شريط تنبيه عصري بتصميم 2026
+  static void _showModernSnackBar({
+    required BuildContext context,
+    required String message,
+    required bool isSuccess,
+  }) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        elevation: 10,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        backgroundColor:
+            isSuccess ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+        content: Row(
+          children: [
+            Icon(
+              isSuccess ? Icons.check_circle_rounded : Icons.error_rounded,
+              color: Colors.white,
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Tajawal',
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
