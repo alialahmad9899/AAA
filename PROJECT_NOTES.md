@@ -59,3 +59,14 @@
 - اختبارات لم تُنفّذ: `flutter analyze`، PHPUnit، `php artisan route:list`، والاختبار على الاستضافة وقاعدة البيانات الحية؛ أدوات التشغيل وبيئة الاستضافة غير متاحة ضمن جلسة التنفيذ.
 - متبقٍ: ربط iOS Universal Links يتطلب Associated Domains وملف AASA وإعداد Apple Developer، وملف Firebase iOS غير موجود في المستودع. الدالة `toggleBlockUser` غير مستخدمة ولا يوجد مسار Backend موثق لها، لذلك لم يُنشأ سلوك حظر جديد بالتخمين.
 - حزمة الدفعة: `اصلاحات 4.zip` في جذر الفرع.
+
+
+## 2026-11-05 — دفعة إضافية للروابط العميقة
+- الفرع: `fix/wesal-profile-api-sync-2026-11-05`.
+- إصلاح تحليل `wesal://profile?id=...` في Flutter باستخدام host scheme، وتسجيل مخطط `wesal` في إعدادات URL Types على iOS.
+- الملفات المعدلة:
+  - `فلاتر/lib/main.dart`
+  - `فلاتر/ios/Runner/Info.plist`
+- تحققات ساكنة: وجود معالجة URI مخصصة في Dart ومخطط URL في Info.plist.
+- متبقٍ: Universal Links على iOS تحتاج Associated Domains وملف AASA على الدومين، مع إعداد Apple Developer. كما أن ملف `GoogleService-Info.plist` غير موجود بالمستودع؛ لم يتم إنشاء بيانات Firebase تخمينية.
+- حزمة الدفعة: `اصلاحات 5.zip` في جذر الفرع.
