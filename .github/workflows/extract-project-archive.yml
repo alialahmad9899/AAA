@@ -1,0 +1,104 @@
+name: One-time extraction of project archive
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/extract-project-archive.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  extract-and-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Extract project files without embedded credentials
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path, PurePosixPath
+          from zipfile import ZipFile, ZIP_DEFLATED
+          import shutil
+
+          archive = Path("المشروع/امشورع.zip")
+          destination = Path("المشروع")
+          workflow = Path(".github/workflows/extract-project-archive.yml")
+          secret_paths = {
+              "مجلد جديد (3)/app/service-account.json",
+              "مجلد جديد (3)/app/Providers/service-account.json",
+          }
+
+          if not archive.is_file():
+              raise SystemExit("Source archive not found")
+          if (destination / "مجلد جديد (3)").exists():
+              raise SystemExit("Target folder already exists; refusing to overwrite existing repository content")
+
+          def is_secret(name):
+              p = PurePosixPath(name)
+              return p.name == ".env" or name in secret_paths
+
+          with ZipFile(archive, "r") as src:
+              names = [i.filename for i in src.infolist()]
+              if len(names) != len(set(names)):
+                  raise SystemExit("Archive contains duplicate paths; refusing extraction")
+              for item in src.infolist():
+                  rel = PurePosixPath(item.filename)
+                  if rel.is_absolute() or ".." in rel.parts:
+                      raise SystemExit(f"Unsafe archive path: {item.filename}")
+                  if is_secret(item.filename):
+                      continue
+                  out = destination.joinpath(*rel.parts)
+                  out.resolve().relative_to(destination.resolve())
+                  if item.is_dir():
+                      out.mkdir(parents=True, exist_ok=True)
+                  else:
+                      out.parent.mkdir(parents=True, exist_ok=True)
+                      with src.open(item, "r") as r, out.open("wb") as w:
+                          shutil.copyfileobj(r, w)
+
+          # Rewrite the currently published ZIP without .env or Firebase private-key files.
+          cleaned = archive.with_name(archive.name + ".cleaned")
+          with ZipFile(archive, "r") as src, ZipFile(cleaned, "w", ZIP_DEFLATED) as dst:
+              for item in src.infolist():
+                  if is_secret(item.filename):
+                      continue
+                  dst.writestr(item, src.read(item.filename))
+          cleaned.replace(archive)
+
+          # Keep these private credential files out of future commits too.
+          ignore_file = destination / "مجلد جديد (3)" / ".gitignore"
+          ignore_lines = [
+              "",
+              "# Private Firebase service-account credentials",
+              "/app/service-account.json",
+              "/app/Providers/service-account.json",
+          ]
+          current = ignore_file.read_text(encoding="utf-8")
+          if "/app/service-account.json" not in current:
+              ignore_file.write_text(current.rstrip() + "\n" + "\n".join(ignore_lines) + "\n", encoding="utf-8")
+
+          # Remove this temporary workflow in the same commit; it is a one-time operation.
+          workflow.unlink(missing_ok=True)
+          print("Extraction completed. Secret files excluded and source ZIP sanitized.")
+          PY
+
+      - name: Commit extracted project and sanitized archive
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Extract project source files into repository"
+            git push origin HEAD:main
+          fi
