@@ -13,6 +13,8 @@ on:
       - 'lib/screens/edit_profile/widgets/step3_lifestyle_hobbies_tab.dart'
       - 'lib/screens/partner_expectations_screen.dart'
       - 'lib/screens/member_profile_screen.dart'
+      - 'lib/screens/home/tabs/account_tab.dart'
+      - 'lib/widgets/package_badge_widget.dart'
       - 'lib/models/member_profile_model.dart'
       - 'lib/services/api_service.dart'
       - '.github/workflows/member-card-alignment.yml'
@@ -44,6 +46,8 @@ jobs:
           lib/screens/edit_profile/widgets/step3_lifestyle_hobbies_tab.dart
           lib/screens/partner_expectations_screen.dart
           lib/screens/member_profile_screen.dart
+          lib/screens/home/tabs/account_tab.dart
+          lib/widgets/package_badge_widget.dart
           lib/models/member_profile_model.dart
           lib/services/api_service.dart
       - name: Run Flutter tests
@@ -71,6 +75,8 @@ jobs:
             lib/screens/edit_profile/widgets/step3_lifestyle_hobbies_tab.dart
             lib/screens/partner_expectations_screen.dart
             lib/screens/member_profile_screen.dart
+            lib/screens/home/tabs/account_tab.dart
+            lib/widgets/package_badge_widget.dart
             lib/models/member_profile_model.dart
             lib/services/api_service.dart
           )
@@ -181,6 +187,8 @@ jobs:
             lib/screens/widgets/step2_personal_details.dart
             lib/screens/edit_profile_screen.dart
             lib/screens/member_profile_screen.dart
+            lib/screens/home/tabs/account_tab.dart
+            lib/widgets/package_badge_widget.dart
             test/profile_edit_unit_test.dart
           )
           for file in "${flutter_files[@]}"; do
@@ -219,7 +227,7 @@ jobs:
           cp .github/workflows/member-card-alignment.yml "$out/Repository/.github/workflows/"
 
           count="$(find "$out" -type f | wc -l | tr -d ' ')"
-          test "$count" = "32"
+          test "$count" = "34"
           if find "$out" -type f \( -name 'README.md' -o -name 'manifest.json' \) | grep -q .; then
             echo "Package contains non-modified documentation/manifest files" >&2
             exit 1
