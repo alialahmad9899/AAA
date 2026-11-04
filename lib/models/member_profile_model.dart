@@ -493,9 +493,11 @@ class MemberProfileModel {
     // Female accounts remain free, according to the existing membership policy.
     if (isFemale) return true;
 
-    // API contract: package_name and package_validity are populated only for a
-    // currently active paid package. Do not classify plans by names such as
-    // "monthly", "basic", or legacy package IDs.
+    // The server is the source of truth for whether the current package is a
+    // paid, active subscription. Names and validity dates alone are insufficient
+    // because free and legacy packages may also have a future validity date.
+    if (!basicInfo.isPremium) return false;
+
     final String planName = basicInfo.packageName.trim();
     final String validity = basicInfo.packageValidity.trim();
     if (planName.isEmpty || validity.isEmpty) return false;
@@ -727,6 +729,7 @@ class BasicInfoModel {
   final String photo;
   final String packageValidity;
   final String packageName;
+  final bool isPremium;
   final int remainingProfileViewers;
 
   BasicInfoModel({
@@ -745,6 +748,7 @@ class BasicInfoModel {
     required this.photo,
     required this.packageValidity,
     required this.packageName,
+    this.isPremium = false,
     required this.remainingProfileViewers,
   });
 
@@ -854,6 +858,11 @@ class BasicInfoModel {
 
     final parsedPackage = MemberProfileModel._firstValidString(
         json, ['package_name', 'current_package_name', 'package']);
+    final dynamic rawPremium = json['is_premium'];
+    final bool parsedIsPremium = rawPremium == true ||
+        rawPremium == 1 ||
+        rawPremium?.toString().trim().toLowerCase() == 'true' ||
+        rawPremium?.toString().trim() == '1';
 
     // 🟢 استخراج رقم الجنس كـ 2 للأنثى أو 1 للذكر
     String rawGender = MemberProfileModel._safeString(json['gender']);
@@ -886,6 +895,7 @@ class BasicInfoModel {
       photo: parsedPhoto,
       packageValidity: parsedValidity,
       packageName: parsedPackage,
+      isPremium: parsedIsPremium,
       remainingProfileViewers: int.tryParse(
               json['remaining_profile_viewer_view']?.toString() ??
                   json['remaining_profile_viewers']?.toString() ??
