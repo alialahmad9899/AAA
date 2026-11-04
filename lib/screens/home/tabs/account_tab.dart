@@ -785,23 +785,15 @@ class AccountTabState extends State<AccountTab> {
                             Expanded(
                               child: SingleChildScrollView(
                                 scrollDirection: Axis.horizontal,
-                                child: isFemale
+                                child: (_userProfile!.basicInfo.packageName
+                                            .isNotEmpty &&
+                                        _userProfile!.isSubscribedActive)
                                     ? PackageBadgeWidget(
-                                        packageName: 'ملكي',
-                                        customTitle: _isAr
-                                            ? 'اشتراك ملكي 👑'
-                                            : 'Royal Sub 👑',
+                                        packageName: _userProfile!
+                                            .basicInfo.packageName,
                                         isArabic: _isAr,
                                       )
-                                    : (_userProfile!.basicInfo.packageName
-                                                .isNotEmpty &&
-                                            _userProfile!.isSubscribedActive)
-                                        ? PackageBadgeWidget(
-                                            packageName: _userProfile!
-                                                .basicInfo.packageName,
-                                            isArabic: _isAr,
-                                          )
-                                        : Container(
+                                    : Container(
                                             padding: const EdgeInsets.symmetric(
                                                 horizontal: 8, vertical: 3),
                                             decoration: BoxDecoration(
