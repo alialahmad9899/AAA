@@ -1,18 +1,17 @@
 // ============================================================================
 // اسم الملف: lib/widgets/package_badge_widget.dart
-// المشروع: تطبيق وصال (Wesal) - Modern Premium UI 2026
-// الوصف: ودجت موحد وعصري لعرض شارات الباقات والاشتراكات (الملكية، الذهبية، الفضية)
-//        مع دعم التدويل اللحظي وإخفاء الشارة تلقائياً للحسابات المجانية.
+// المشروع: تطبيق وصال (Wesal)
+// الوصف: يعرض اسم الباقة الفعلي من API دون استنتاج تسمية من المدة أو المعرّف.
 // ============================================================================
 
 import 'package:flutter/material.dart';
 
 class PackageBadgeWidget extends StatelessWidget {
   final String packageName;
-  final bool compact; // خيار لإظهار الشارة بحجم مصغر داخل كروت القوائم والشات
-  final bool isArabic; // دعم التدويل اللحظي للغة
-  final String? customTitle; // إمكانية تمرير عنوان مخصص للشارة
-  final VoidCallback? onTap; // دالة النقر الاختيارية عند التفاعل مع الشارة
+  final bool compact;
+  final bool isArabic;
+  final String? customTitle;
+  final VoidCallback? onTap;
 
   const PackageBadgeWidget({
     super.key,
@@ -25,61 +24,26 @@ class PackageBadgeWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String cleanName = packageName.trim().toLowerCase();
+    final String canonicalName = packageName.trim();
+    final String normalizedName = canonicalName.toLowerCase();
 
-    // 🟢 1. استبعاد الحسابات المجانية، الفارغة، أو النيم الكلاسيكي وإخفاء الشارة تماماً
-    if (cleanName.isEmpty ||
-        cleanName == '0' ||
-        cleanName == 'null' ||
-        cleanName == 'none' ||
-        cleanName.contains('مجاني') ||
-        cleanName.contains('free') ||
-        cleanName.contains('basic') ||
-        cleanName.contains('عادي') ||
-        cleanName.contains('بدون')) {
+    // The API returns a name only for a current, paid and active subscription.
+    // Do not infer premium status from plan wording, duration, or numeric IDs.
+    if (canonicalName.isEmpty ||
+        normalizedName == '0' ||
+        normalizedName == 'null' ||
+        normalizedName == 'none') {
       return const SizedBox.shrink();
     }
 
-    Color primaryColor;
-    List<Color> gradientColors;
-    IconData badgeIcon;
-    String badgeTitle;
-
-    // 🟢 2. تصنيف الباقة وتحديد الألوان والأيقونات بناءً على الكلمات المفتاحية
-    if (cleanName.contains('ملكي') ||
-        cleanName.contains('royal') ||
-        cleanName.contains('vip') ||
-        cleanName == '3') {
-      // الباقة الملكية 👑
-      primaryColor = const Color(0xFFAB47BC);
-      gradientColors = const [Color(0xFF8E24AA), Color(0xFF4A148C)];
-      badgeIcon = Icons.workspace_premium_rounded;
-      badgeTitle = customTitle ?? (isArabic ? 'ملكية 👑' : 'Royal 👑');
-    } else if (cleanName.contains('ذهبي') ||
-        cleanName.contains('gold') ||
-        cleanName.contains('شهر') ||
-        cleanName.contains('month') ||
-        cleanName == '1' ||
-        cleanName == '2') {
-      // الباقة الذهبية 🥇
-      primaryColor = const Color(0xFFFFB300);
-      gradientColors = const [Color(0xFFFFB300), Color(0xFFF57C00)];
-      badgeIcon = Icons.stars_rounded;
-      badgeTitle = customTitle ?? (isArabic ? 'ذهبية 🥇' : 'Gold 🥇');
-    } else if (cleanName.contains('مميز') ||
-        cleanName.contains('silver') ||
-        cleanName.contains('فضية') ||
-        cleanName.contains('أسبوع') ||
-        cleanName.contains('week')) {
-      // الباقة المميزة / الفضية 🥈
-      primaryColor = const Color(0xFF38BDF8);
-      gradientColors = const [Color(0xFF0288D1), Color(0xFF005691)];
-      badgeIcon = Icons.verified_rounded;
-      badgeTitle = customTitle ?? (isArabic ? 'مميزة 🥈' : 'Silver 🥈');
-    } else {
-      // 🟢 3. في حال كان اسم الباقة لا ينتمي لأي باقة مدفوعة معروفة، لا يتم عرض شارة
-      return const SizedBox.shrink();
-    }
+    const Color primaryColor = Color(0xFFFFB300);
+    const List<Color> gradientColors = [
+      Color(0xFFFFB300),
+      Color(0xFFF57C00),
+    ];
+    final String badgeTitle = (customTitle?.trim().isNotEmpty ?? false)
+        ? customTitle!.trim()
+        : canonicalName;
 
     Widget content = Container(
       padding: EdgeInsets.symmetric(
@@ -87,7 +51,7 @@ class PackageBadgeWidget extends StatelessWidget {
         vertical: compact ? 3 : 5,
       ),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: gradientColors,
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -110,7 +74,7 @@ class PackageBadgeWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Icon(
-            badgeIcon,
+            Icons.workspace_premium_rounded,
             color: Colors.white,
             size: compact ? 11 : 14,
           ),
