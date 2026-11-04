@@ -72,7 +72,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
   String? _selectedComplexion;
   String? _selectedEyeColor;
   String? _selectedHairColor;
-  String? _selectedResidenceCountryId;
+  String? _selectedPartnerCountryId;
   String? _selectedStateId;
 
   // القوائم القادمة من السيرفر
@@ -295,10 +295,12 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
         }
 
         // مطابقة الدولة والمحافظة
-        final rawCountry = expectations['residence_country_id'] ??
-            expectations['partner_country_id'];
+        // This screen edits the preferred partner country, not the user's
+        // or partner's separate residence-country field.
+        final rawCountry =
+            ApiService.preferredPartnerCountryId(expectations);
         if (rawCountry != null && _countries.isNotEmpty) {
-          final strVal = rawCountry.toString().trim();
+          final strVal = rawCountry;
           final match = _countries.firstWhere(
             (c) =>
                 c['id'].toString() == strVal ||
@@ -306,10 +308,10 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
             orElse: () => null,
           );
           if (match != null) {
-            _selectedResidenceCountryId = match['id'].toString();
+            _selectedPartnerCountryId = match['id'].toString();
             final rawStateVal = expectations['preferred_state_id'] ??
                 expectations['partner_state_id'];
-            _loadStatesForCountry(_selectedResidenceCountryId!,
+            _loadStatesForCountry(_selectedPartnerCountryId!,
                 rawStateTarget: rawStateVal);
           }
         }
@@ -393,14 +395,12 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
         payload['partner_profession'] = _professionCtrl.text.trim();
       }
 
-      if (_selectedResidenceCountryId != null &&
-          _selectedResidenceCountryId!.isNotEmpty) {
-        payload['residence_country_id'] = _selectedResidenceCountryId;
-        payload['partner_country_id'] = _selectedResidenceCountryId;
-        if (_selectedStateId != null && _selectedStateId!.isNotEmpty) {
-          payload['partner_state_id'] = _selectedStateId;
-        }
-      }
+      // Persist the preferred partner location only. Never overwrite the
+      // independent residence_country_id field from this screen.
+      payload.addAll(ApiService.buildPreferredPartnerLocationPayload(
+        countryId: _selectedPartnerCountryId,
+        stateId: _selectedStateId,
+      ));
       if (_heightRangeEdited) payload['partner_height'] = formattedHeight;
       if (_weightRangeEdited) payload['partner_weight'] = formattedWeight;
       if (_selectedMaritalStatusId != null &&
@@ -875,9 +875,9 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
     }
 
     String? countryName;
-    if (_selectedResidenceCountryId != null && _countries.isNotEmpty) {
+    if (_selectedPartnerCountryId != null && _countries.isNotEmpty) {
       final match = _countries.firstWhere(
-        (c) => c['id'].toString() == _selectedResidenceCountryId,
+        (c) => c['id'].toString() == _selectedPartnerCountryId,
         orElse: () => null,
       );
       if (match != null) countryName = match['name']?.toString();
@@ -1015,7 +1015,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                 Icons.map_rounded),
                                             _buildSheetPickerTile(
                                               label: isAr
-                                                  ? 'بلد الإقامة المفضل للشريك'
+                                                  ? 'بلد الشريك المفضل المفضل للشريك'
                                                   : 'Preferred Country',
                                               displayValue: countryName,
                                               icon: Icons.public_rounded,
@@ -1031,16 +1031,16 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                     .toList();
                                                 _showCustomBottomSheet(
                                                   title: isAr
-                                                      ? 'اختر بلد الإقامة'
-                                                      : 'Select Country',
+                                                      ? 'اختر بلد الشريك المفضل'
+                                                      : 'Preferred Partner Country',
                                                   items: items,
                                                   currentValue:
-                                                      _selectedResidenceCountryId,
+                                                      _selectedPartnerCountryId,
                                                   isAr: isAr,
                                                   enableSearch: true,
                                                   onSelected: (v) {
                                                     setState(() {
-                                                      _selectedResidenceCountryId =
+                                                      _selectedPartnerCountryId =
                                                           v;
                                                       _selectedStateId = null;
                                                     });
@@ -1093,7 +1093,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                 ),
                                               ),
                                               const SizedBox(height: 12),
-                                            ] else if (_selectedResidenceCountryId !=
+                                            ] else if (_selectedPartnerCountryId !=
                                                 null) ...[
                                               _buildSheetPickerTile(
                                                 label: isAr
