@@ -84,6 +84,71 @@ void main() {
     expect(profile.basicInfo.maritalStatus, '2');
   });
 
+  group('Managed member account disclosure', () {
+    test('shows child disclosure based on the member gender', () {
+      final son = MemberProfileModel.fromJson({
+        'basic_info': {'gender': 'ذكر', 'on_behalf_id': 2},
+      });
+      final daughter = MemberProfileModel.fromJson({
+        'basic_info': {'gender': 'أنثى', 'on_behalf_id': 2},
+      });
+
+      expect(
+        son.basicInfo.getManagedAccountLabel(),
+        'حساب يُدار نيابةً عن ابني',
+      );
+      expect(
+        daughter.basicInfo.getManagedAccountLabel(),
+        'حساب يُدار نيابةً عن ابنتي',
+      );
+    });
+
+    test('shows sibling disclosure based on the member gender', () {
+      final brother = MemberProfileModel.fromJson({
+        'basic_info': {'gender': 'ذكر', 'on_behalf_id': 3},
+      });
+      final sister = MemberProfileModel.fromJson({
+        'basic_info': {'gender': 'أنثى', 'on_behalf_id': 3},
+      });
+
+      expect(
+        brother.basicInfo.getManagedAccountLabel(),
+        'حساب يُدار نيابةً عن أخي',
+      );
+      expect(
+        sister.basicInfo.getManagedAccountLabel(),
+        'حساب يُدار نيابةً عن أختي',
+      );
+    });
+
+    test('hides personal and unknown account types', () {
+      final personal = MemberProfileModel.fromJson({
+        'basic_info': {'gender': 'ذكر', 'on_behalf_id': 1},
+      });
+      final unknown = MemberProfileModel.fromJson({
+        'basic_info': {'gender': 'أنثى', 'on_behalf_id': 99},
+      });
+
+      expect(personal.basicInfo.getManagedAccountLabel(), isNull);
+      expect(unknown.basicInfo.getManagedAccountLabel(), isNull);
+    });
+
+    test('accepts the nested onbehalf resource and localizes English labels', () {
+      final profile = MemberProfileModel.fromJson({
+        'basic_info': {
+          'gender': 'Female',
+          'onbehalf': {'id': 3, 'name': 'For My Sister'},
+        },
+      });
+
+      expect(profile.basicInfo.onBehalfId, '3');
+      expect(
+        profile.basicInfo.getManagedAccountLabel(isArabic: false),
+        'Managed on behalf of my sister',
+      );
+    });
+  });
+
   group('Laravel API resource envelope parsing', () {
     test('unwraps a single model wrapped in data', () {
       expect(
