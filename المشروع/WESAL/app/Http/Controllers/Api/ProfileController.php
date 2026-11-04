@@ -236,7 +236,10 @@ class ProfileController extends Controller
 
                     $storedPhotoPath = $upload->file_name;
                     $user->photo = $upload->id;
-                    $user->avatar_original = $upload->id;
+                    // Keep profile photo updates compatible with installations that only have "photo".
+                    if (\Schema::hasColumn('users', 'avatar_original')) {
+                        $user->avatar_original = $upload->id;
+                    }
                     $user->avatar = $upload->file_name;
 
                     $approvalRequired = Setting::where('type', 'profile_picture_approval_by_admin')

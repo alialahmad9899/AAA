@@ -94,7 +94,10 @@ class AuthController extends Controller
                     $upload->file_size = $photoFile->getSize();
                     $upload->save();
 
-                    $user->avatar_original = $upload->id;
+                    // Some deployed databases use "photo" as the canonical upload ID and do not have avatar_original.
+                    if (\Schema::hasColumn('users', 'avatar_original')) {
+                        $user->avatar_original = $upload->id;
+                    }
                     $user->avatar = $storedPhotoPath;
                     if (\Schema::hasColumn('users', 'photo')) {
                         $user->photo = $upload->id;
@@ -418,7 +421,7 @@ class AuthController extends Controller
                 'height' => $user->physical_attributes ? $user->physical_attributes->height : 0,
                 'marital_status_id' => $maritial_status ? new MaritialStatusResource($maritial_status) :  new MaritialStatusResource($maritial_status),
                 'avatar' => $user->avatar ?? '',
-                'avatar_original' => uploaded_asset($user->avatar_original) ?? '',
+                'avatar_original' => uploaded_asset($user->avatar_original ?: $user->photo) ?? '',
                 'phone' => $user->phone ?? '',
             ],
         ]);
@@ -556,7 +559,7 @@ class AuthController extends Controller
                 'height' => $user->physical_attributes ? $user->physical_attributes->height : 0,
                 'marital_status_id' => $maritial_status ? new MaritialStatusResource($maritial_status) :  new MaritialStatusResource($maritial_status),
                 'avatar' => $user->avatar ?? '',
-                'avatar_original' => uploaded_asset($user->avatar_original) ?? '',
+                'avatar_original' => uploaded_asset($user->avatar_original ?: $user->photo) ?? '',
                 'phone' => $user->phone ?? '',
             ]
         );
