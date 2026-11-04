@@ -244,3 +244,67 @@ jobs:
           if-no-files-found: error
           compression-level: 9
           retention-days: 90
+
+  export-website-source:
+    name: Export website source archive for focused inspection
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract Laravel views, controllers and frontend assets from hosting backup
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib, zipfile
+          archive = pathlib.Path("ملفات الاتسضافة.zip")
+          if not archive.is_file():
+              raise SystemExit(f"Missing hosting archive: {archive}")
+          out = pathlib.Path("wesal-site-source-inspection")
+          out.mkdir(exist_ok=True)
+          selected = []
+          with zipfile.ZipFile(archive) as z:
+              bad = z.testzip()
+              if bad:
+                  raise RuntimeError(f"Archive integrity failed: {bad}")
+              names = z.namelist()
+              for n in names:
+                  low = n.lower()
+                  suffix = pathlib.PurePosixPath(n).suffix.lower()
+                  is_view = "/resources/views/" in low or low.startswith("resources/views/")
+                  is_controller = "/app/http/controllers/" in low or low.startswith("app/http/controllers/")
+                  is_route = "/routes/" in low or low.startswith("routes/")
+                  is_front_asset = ("/public/" in low or low.startswith("public/") or
+                                    "/public_html/" in low or low.startswith("public_html/")) and suffix in {
+                                        ".css", ".js", ".json", ".html", ".htm", ".svg"
+                                    }
+                  if not (is_view or is_controller or is_route or is_front_asset):
+                      continue
+                  if suffix not in {".php", ".css", ".js", ".json", ".html", ".htm", ".svg"}:
+                      continue
+                  info = z.getinfo(n)
+                  if info.file_size > 8 * 1024 * 1024:
+                      continue
+                  dest = out / "source" / n
+                  dest.parent.mkdir(parents=True, exist_ok=True)
+                  dest.write_bytes(z.read(n))
+                  selected.append(n)
+              (out / "source-index.txt").write_text("\\n".join(sorted(selected)), encoding="utf-8")
+              (out / "archive-index.txt").write_text("\\n".join(names), encoding="utf-8")
+          print(f"Archive entries: {len(names)}")
+          print(f"Exported website source/assets: {len(selected)}")
+          for path in selected:
+              print("EXPORTED " + path)
+          if not selected:
+              raise RuntimeError("No website source files were selected from hosting archive")
+          PY
+          cd wesal-site-source-inspection
+          zip -qr ../wesal-site-source-inspection.zip .
+          cd ..
+          unzip -tq wesal-site-source-inspection.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wesal-site-source-inspection
+          path: wesal-site-source-inspection.zip
+          if-no-files-found: error
+          compression-level: 6
+          retention-days: 30
