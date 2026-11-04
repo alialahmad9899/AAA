@@ -84,6 +84,63 @@ void main() {
     expect(profile.basicInfo.maritalStatus, '2');
   });
 
+  group('Premium subscription status', () {
+    String dateOnly(DateTime date) =>
+        '${date.year.toString().padLeft(4, '0')}-'
+        '${date.month.toString().padLeft(2, '0')}-'
+        '${date.day.toString().padLeft(2, '0')}';
+
+    test('requires the server premium flag for a paid current package', () {
+      final profile = MemberProfileModel.fromJson({
+        'basic_info': {
+          'gender': 'ذكر',
+          'package_name': 'الباقة الشهرية',
+          'package_validity': dateOnly(DateTime.now().add(const Duration(days: 7))),
+          'is_premium': true,
+        },
+      });
+      expect(profile.isSubscribedActive, isTrue);
+    });
+
+    test('rejects future validity when the server says the package is not premium', () {
+      final profile = MemberProfileModel.fromJson({
+        'basic_info': {
+          'gender': 'ذكر',
+          'package_name': 'باقة مجانية',
+          'package_validity': dateOnly(DateTime.now().add(const Duration(days: 30))),
+          'is_premium': false,
+        },
+      });
+      expect(profile.isSubscribedActive, isFalse);
+    });
+
+    test('rejects an expired package even when the premium flag is true', () {
+      final profile = MemberProfileModel.fromJson({
+        'basic_info': {
+          'gender': 'ذكر',
+          'package_name': 'الباقة الشهرية',
+          'package_validity': dateOnly(DateTime.now().subtract(const Duration(days: 1))),
+          'is_premium': true,
+        },
+      });
+      expect(profile.isSubscribedActive, isFalse);
+    });
+
+    test('accepts supported boolean representations from the API', () {
+      for (final value in [1, '1', 'true']) {
+        final profile = MemberProfileModel.fromJson({
+          'basic_info': {
+            'gender': 'ذكر',
+            'package_name': 'اسم الباقة من الخادم',
+            'package_validity': dateOnly(DateTime.now().add(const Duration(days: 2))),
+            'is_premium': value,
+          },
+        });
+        expect(profile.isSubscribedActive, isTrue);
+      }
+    });
+  });
+
   group('Managed member account disclosure', () {
     test('shows child disclosure based on the member gender', () {
       final son = MemberProfileModel.fromJson({
