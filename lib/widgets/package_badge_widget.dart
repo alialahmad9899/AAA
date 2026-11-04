@@ -1,7 +1,7 @@
 // ============================================================================
 // اسم الملف: lib/widgets/package_badge_widget.dart
 // المشروع: تطبيق وصال (Wesal)
-// الوصف: يعرض اسم الباقة الفعلي من API دون استنتاج تسمية من المدة أو المعرّف.
+// الوصف: يعرض اسم الباقة الفعلي القادم من API دون استنتاج اسم بديل من المدة.
 // ============================================================================
 
 import 'package:flutter/material.dart';
@@ -10,7 +10,6 @@ class PackageBadgeWidget extends StatelessWidget {
   final String packageName;
   final bool compact;
   final bool isArabic;
-  final String? customTitle;
   final VoidCallback? onTap;
 
   const PackageBadgeWidget({
@@ -18,7 +17,6 @@ class PackageBadgeWidget extends StatelessWidget {
     required this.packageName,
     this.compact = false,
     this.isArabic = true,
-    this.customTitle,
     this.onTap,
   });
 
@@ -27,8 +25,8 @@ class PackageBadgeWidget extends StatelessWidget {
     final String canonicalName = packageName.trim();
     final String normalizedName = canonicalName.toLowerCase();
 
-    // The API returns a name only for a current, paid and active subscription.
-    // Do not infer premium status from plan wording, duration, or numeric IDs.
+    // The API only sends a package name for a current, paid and active plan.
+    // Do not infer premium status from a duration, numeric ID, or plan wording.
     if (canonicalName.isEmpty ||
         normalizedName == '0' ||
         normalizedName == 'null' ||
@@ -41,9 +39,7 @@ class PackageBadgeWidget extends StatelessWidget {
       Color(0xFFFFB300),
       Color(0xFFF57C00),
     ];
-    final String badgeTitle = (customTitle?.trim().isNotEmpty ?? false)
-        ? customTitle!.trim()
-        : canonicalName;
+    final String badgeTitle = canonicalName;
 
     Widget content = Container(
       padding: EdgeInsets.symmetric(
