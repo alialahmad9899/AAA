@@ -797,11 +797,11 @@ class BasicInfoModel {
         ['religion', 'religion_id', 'member_religion_id', 'religion_name']);
 
     final parsedMarital = MemberProfileModel._firstValidString(json, [
-      'maritial_status',
-      'marital_status',
       'marital_status_id',
       'maritial_status_id',
-      'member_marital_status_id'
+      'member_marital_status_id',
+      'maritial_status',
+      'marital_status'
     ]);
 
     final parsedCaste = MemberProfileModel._firstValidString(
