@@ -725,6 +725,7 @@ class BasicInfoModel {
   final String gender;
   final String phone;
   final String maritalStatus;
+  final String onBehalfId;
   final String photo;
   final String packageValidity;
   final String packageName;
@@ -742,6 +743,7 @@ class BasicInfoModel {
     required this.gender,
     required this.phone,
     required this.maritalStatus,
+    this.onBehalfId = '',
     required this.photo,
     required this.packageValidity,
     required this.packageName,
@@ -771,6 +773,34 @@ class BasicInfoModel {
 
   String getLocalizedReligion({bool isArabic = true}) {
     return AttributeTranslator.translateReligion(religion, isArabic: isArabic);
+  }
+
+  /// Returns an explicit disclosure only for profiles created on behalf of
+  /// a child or sibling. Personal accounts and unknown legacy values remain
+  /// undisclosed.
+  String? getManagedAccountLabel({bool isArabic = true}) {
+    switch (onBehalfId.trim()) {
+      case '2':
+        if (isArabic) {
+          return isFemale
+              ? 'حساب يُدار نيابةً عن ابنتي'
+              : 'حساب يُدار نيابةً عن ابني';
+        }
+        return isFemale
+            ? 'Managed on behalf of my daughter'
+            : 'Managed on behalf of my son';
+      case '3':
+        if (isArabic) {
+          return isFemale
+              ? 'حساب يُدار نيابةً عن أختي'
+              : 'حساب يُدار نيابةً عن أخي';
+        }
+        return isFemale
+            ? 'Managed on behalf of my sister'
+            : 'Managed on behalf of my brother';
+      default:
+        return null;
+    }
   }
 
   String getLocalizedCaste({bool isArabic = true}) {
@@ -806,6 +836,17 @@ class BasicInfoModel {
 
     final parsedCaste = MemberProfileModel._firstValidString(
         json, ['caste', 'caste_id', 'caste_name']);
+
+    final rawOnBehalf = json['on_behalf_id'] ??
+        json['on_behalves_id'] ??
+        json['onbehalf_id'] ??
+        json['onbehalf'] ??
+        json['on_behalf'];
+    final resolvedOnBehalf = rawOnBehalf is Map
+        ? (rawOnBehalf['id'] ?? rawOnBehalf['value'])
+        : rawOnBehalf;
+    final parsedOnBehalfId =
+        MemberProfileModel._safeString(resolvedOnBehalf);
 
     final parsedPhoto = MemberProfileModel._firstValidString(
         json, ['photo', 'avatar', 'image']);
@@ -843,6 +884,7 @@ class BasicInfoModel {
       gender: finalGender,
       phone: MemberProfileModel._safeString(json['phone']),
       maritalStatus: parsedMarital,
+      onBehalfId: parsedOnBehalfId,
       photo: parsedPhoto,
       packageValidity: parsedValidity,
       packageName: parsedPackage,
