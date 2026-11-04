@@ -1015,8 +1015,8 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                 Icons.map_rounded),
                                             _buildSheetPickerTile(
                                               label: isAr
-                                                  ? 'بلد الشريك المفضل المفضل للشريك'
-                                                  : 'Preferred Country',
+                                                  ? 'بلد الشريك المفضل'
+                                                  : 'Preferred Partner Country',
                                               displayValue: countryName,
                                               icon: Icons.public_rounded,
                                               onTap: () {
