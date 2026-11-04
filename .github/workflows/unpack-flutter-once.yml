@@ -1,0 +1,77 @@
+name: Unpack Flutter archive once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/unpack-flutter-once.yml"
+      - "فلاتر/فلاتر.zip"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Safely extract archive into the same folder
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path, PurePosixPath
+          from zipfile import ZipFile
+
+          archive_path = Path("فلاتر/فلاتر.zip")
+          destination = Path("فلاتر")
+          if not archive_path.is_file():
+              raise SystemExit("Archive not found: " + str(archive_path))
+
+          with ZipFile(archive_path) as archive:
+              members = archive.infolist()
+              print(f"Archive entries: {len(members)}")
+              print(f"Uncompressed size: {sum(x.file_size for x in members):,} bytes")
+              print("Top-level entries:")
+              roots = sorted({PurePosixPath(x.filename).parts[0] for x in members if PurePosixPath(x.filename).parts})
+              for root in roots:
+                  print(" - " + root)
+
+              safe_members = []
+              for member in members:
+                  name = member.filename
+                  path = PurePosixPath(name)
+                  if path.is_absolute() or ".." in path.parts:
+                      raise SystemExit(f"Unsafe archive path rejected: {name}")
+                  if not path.parts or path.parts[0] == ".git":
+                      print(f"Skipping protected path: {name}")
+                      continue
+                  # Keep the repository's existing folder guidance files intact.
+                  if len(path.parts) == 1 and path.name in {"README.md", "تعليمات العمل.md"}:
+                      print(f"Preserving existing repository file: {name}")
+                      continue
+                  safe_members.append(member)
+
+              for member in safe_members:
+                  archive.extract(member, destination)
+
+          print(f"Extracted {len(safe_members)} archive entries into {destination}/")
+          PY
+
+      - name: Commit extracted files and remove the one-time workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -f .github/workflows/unpack-flutter-once.yml
+          git add -A -- "فلاتر" ".github/workflows/unpack-flutter-once.yml"
+          if git diff --cached --quiet; then
+            echo "No extracted changes to commit."
+            exit 1
+          fi
+          git commit -m "Extract Flutter project into فلاتر folder"
+          git push origin HEAD:main
