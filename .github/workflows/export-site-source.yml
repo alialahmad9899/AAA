@@ -1,0 +1,87 @@
+name: Export Wesal website source for review
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/export-site-source.yml'
+      - 'ملفات الاتسضافة.zip'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export-site-source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect hosting archive and export website source only
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib, zipfile, fnmatch, os
+          archive = pathlib.Path("ملفات الاتسضافة.zip")
+          if not archive.is_file():
+              raise SystemExit(f"Missing archive: {archive}")
+          out = pathlib.Path("wesal-site-source-inspection")
+          out.mkdir(exist_ok=True)
+          candidates = []
+          with zipfile.ZipFile(archive) as z:
+              bad = z.testzip()
+              if bad:
+                  raise RuntimeError(f"Corrupt source archive at {bad}")
+              names = z.namelist()
+              relevant = []
+              for n in names:
+                  lower = n.lower()
+                  if ("/resources/views/" in lower or lower.startswith("resources/views/")
+                      or "/app/http/controllers/" in lower or lower.startswith("app/http/controllers/")
+                      or "/routes/" in lower or lower.startswith("routes/")
+                      or "/public/" in lower or lower.startswith("public/")
+                      or "/resources/" in lower or lower.startswith("resources/")):
+                      relevant.append(n)
+              (out / "archive-path-index.txt").write_text("\n".join(sorted(relevant)), encoding="utf-8")
+              total = 0
+              for n in relevant:
+                  lower = n.lower()
+                  suffix = pathlib.PurePosixPath(n).suffix.lower()
+                  if suffix not in {".php", ".css", ".js", ".json", ".html", ".htm", ".svg"}:
+                      continue
+                  if not ("/resources/views/" in lower or lower.startswith("resources/views/")
+                          or "/app/http/controllers/" in lower or lower.startswith("app/http/controllers/")
+                          or "/routes/" in lower or lower.startswith("routes/")
+                          or (("/public/" in lower or lower.startswith("public/")) and suffix in {".css", ".js", ".json", ".html", ".htm", ".svg"})):
+                      continue
+                  info = z.getinfo(n)
+                  if info.file_size > 8 * 1024 * 1024:
+                      continue
+                  total += info.file_size
+                  if total > 70 * 1024 * 1024:
+                      break
+                  dest = out / "source" / n
+                  dest.parent.mkdir(parents=True, exist_ok=True)
+                  dest.write_bytes(z.read(n))
+                  candidates.append(n)
+          (out / "exported-source-files.txt").write_text("\n".join(candidates), encoding="utf-8")
+          print(f"Archive entries: {len(names)}")
+          print(f"Relevant source paths: {len(relevant)}")
+          print(f"Exported source files: {len(candidates)}")
+          print(f"Export size: {total} bytes")
+          for n in relevant:
+              print("SOURCE_PATH " + n)
+          if not candidates:
+              raise RuntimeError("No website source files found in hosting archive")
+          PY
+          cd wesal-site-source-inspection
+          zip -qr ../wesal-site-source-inspection.zip .
+          cd ..
+          unzip -tq wesal-site-source-inspection.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wesal-site-source-inspection
+          path: wesal-site-source-inspection.zip
+          if-no-files-found: error
+          compression-level: 6
+          retention-days: 30
