@@ -1292,6 +1292,23 @@ class _EditProfileScreenState extends State<EditProfileScreen>
       _setControllerIfPresent(
           _childrenCtrl, basic, const ['children', 'no_of_children']);
 
+      // Restore the member's own marital status. Prefer stable database IDs
+      // over translated labels so the picker and children-count visibility
+      // are correct after reopening the editor.
+      final rawMaritalStatus = basic['marital_status_id'] ??
+          basic['maritial_status_id'] ??
+          basic['member_marital_status_id'] ??
+          basic['marital_status'] ??
+          basic['maritial_status'] ??
+          fullData['marital_status_id'] ??
+          fullData['maritial_status_id'] ??
+          fullProfile.basicInfo.maritalStatus;
+      final resolvedMaritalStatusId =
+          _resolveDropdownId(rawMaritalStatus, _maritalStatuses);
+      if (resolvedMaritalStatusId != null) {
+        _selectedMaritalStatusId = resolvedMaritalStatusId;
+      }
+
       if (basic.containsKey('photo') || basic.containsKey('avatar')) {
         _currentPhotoUrl =
             _fieldString(basic['photo'] ?? basic['avatar']) ?? '';
