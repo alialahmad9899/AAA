@@ -273,11 +273,13 @@ jobs:
                   is_view = "/resources/views/" in low or low.startswith("resources/views/")
                   is_controller = "/app/http/controllers/" in low or low.startswith("app/http/controllers/")
                   is_route = "/routes/" in low or low.startswith("routes/")
+                  is_model_or_migration = ("/app/models/" in low or low.startswith("app/models/") or
+                                           "/database/migrations/" in low or low.startswith("database/migrations/"))
                   is_front_asset = ("/public/" in low or low.startswith("public/") or
                                     "/public_html/" in low or low.startswith("public_html/")) and suffix in {
                                         ".css", ".js", ".json", ".html", ".htm", ".svg"
                                     }
-                  if not (is_view or is_controller or is_route or is_front_asset):
+                  if not (is_view or is_controller or is_route or is_model_or_migration or is_front_asset):
                       continue
                   if suffix not in {".php", ".css", ".js", ".json", ".html", ".htm", ".svg"}:
                       continue
