@@ -490,25 +490,23 @@ class MemberProfileModel {
   });
 
   bool get isSubscribedActive {
+    // Female accounts remain free, according to the existing membership policy.
     if (isFemale) return true;
-    if (basicInfo.packageValidity.isEmpty) return false;
 
-    final DateTime? expiry = DateTime.tryParse(basicInfo.packageValidity);
+    // API contract: package_name and package_validity are populated only for a
+    // currently active paid package. Do not classify plans by names such as
+    // "monthly", "basic", or legacy package IDs.
+    final String planName = basicInfo.packageName.trim();
+    final String validity = basicInfo.packageValidity.trim();
+    if (planName.isEmpty || validity.isEmpty) return false;
+
+    final DateTime? expiry = DateTime.tryParse(validity);
     if (expiry == null) return false;
 
-    final bool isNotExpired =
-        expiry.isAfter(DateTime.now().subtract(const Duration(days: 1)));
-
-    final String pkgName = basicInfo.packageName.trim().toLowerCase();
-    final bool isFreePackage = pkgName.contains('الاساسية') ||
-        pkgName.contains('أساسية') ||
-        pkgName.contains('اساسية') ||
-        pkgName.contains('مجانية') ||
-        pkgName.contains('مجاني') ||
-        pkgName.contains('basic') ||
-        pkgName.contains('free');
-
-    return isNotExpired && !isFreePackage;
+    final DateTime today = DateTime.now();
+    final DateTime todayDate = DateTime(today.year, today.month, today.day);
+    final DateTime expiryDate = DateTime(expiry.year, expiry.month, expiry.day);
+    return !expiryDate.isBefore(todayDate);
   }
 
   static String _safeString(dynamic value) {
