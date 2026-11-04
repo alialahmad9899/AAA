@@ -1056,6 +1056,8 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
         info.getLocalizedMaritalStatus(isArabic: _isArabic).trim();
     final String localizedReligion =
         info.getLocalizedReligion(isArabic: _isArabic).trim();
+    final String? managedAccountLabel =
+        info.getManagedAccountLabel(isArabic: _isArabic);
 
     final List<String> subtitleParts = [];
     if (localizedMarital.isNotEmpty &&
@@ -1246,6 +1248,47 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                                 color: Colors.white.withValues(alpha: 0.75),
                                 fontSize: 13,
                                 fontFamily: 'Cairo'),
+                          ),
+                        ],
+                        if (managedAccountLabel != null) ...[
+                          const SizedBox(height: 8),
+                          Container(
+                            constraints: const BoxConstraints(maxWidth: 280),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF59E0B)
+                                  .withValues(alpha: 0.16),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: const Color(0xFFFBBF24)
+                                    .withValues(alpha: 0.65),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.admin_panel_settings_rounded,
+                                  color: Color(0xFFFBBF24),
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 6),
+                                Flexible(
+                                  child: Text(
+                                    managedAccountLabel,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: Color(0xFFFFE7A3),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      fontFamily: 'Cairo',
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ],
