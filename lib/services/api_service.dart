@@ -2465,6 +2465,45 @@ class ApiService {
     }
   }
 
+  /// Returns only the preferred partner country ID.
+  ///
+  /// [residence_country_id] is deliberately excluded: it is a separate field
+  /// and must not be used as a fallback for this preference picker.
+  static String? preferredPartnerCountryId(
+      Map<String, dynamic> expectations) {
+    dynamic raw =
+        expectations['preferred_country_id'] ?? expectations['partner_country_id'];
+    if (raw is Map) {
+      raw = raw['id'] ?? raw['value'];
+    }
+
+    final value = raw?.toString().trim();
+    if (value == null ||
+        value.isEmpty ||
+        value == 'null' ||
+        value == 'undefined') {
+      return null;
+    }
+    return value;
+  }
+
+  /// Builds the API payload for the preferred partner country/governorate.
+  /// It never writes the unrelated residence_country_id column.
+  static Map<String, dynamic> buildPreferredPartnerLocationPayload({
+    String? countryId,
+    String? stateId,
+  }) {
+    final country = countryId?.trim();
+    if (country == null || country.isEmpty) return <String, dynamic>{};
+
+    final payload = <String, dynamic>{'partner_country_id': country};
+    final state = stateId?.trim();
+    if (state != null && state.isNotEmpty) {
+      payload['partner_state_id'] = state;
+    }
+    return payload;
+  }
+
   static Future<Map<String, dynamic>> updatePartnerExpectations(
       Map<String, dynamic> payload,
       {String? lang}) async {
