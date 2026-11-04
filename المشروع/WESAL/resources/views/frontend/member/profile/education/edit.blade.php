@@ -28,7 +28,6 @@
             </div>
         </div>
 
-        <input type="hidden" name="education_start" value="{{ $education->start }}">
         <input type="hidden" name="education_end" value="{{ $education->end }}">
         <input type="hidden" name="present" value="{{ $education->present }}">
     </div>

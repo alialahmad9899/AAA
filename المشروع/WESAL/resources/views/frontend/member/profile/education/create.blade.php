@@ -24,7 +24,6 @@
         </div>
 
         <input type="hidden" name="institution" value="---">
-        <input type="hidden" name="education_start" value="{{ date('Y') }}">
         <input type="hidden" name="education_end" value="{{ date('Y') }}">
         <input type="hidden" name="present" value="0">
     </div>

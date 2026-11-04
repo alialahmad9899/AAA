@@ -149,7 +149,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
       final results = await Future.wait([
         ApiService.getProfileDropdowns(lang: lang),
         ApiService.getPartnerExpectations(lang: lang),
-        ApiService.get('/member/partner-languages', lang: lang),
+        ApiService.get('/member/languages', lang: lang),
       ]);
 
       final dropdowns = results[0];
@@ -203,14 +203,26 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
         _selectedEyeColor = eyeVal?.toString().trim();
         _selectedHairColor = hairVal?.toString().trim();
 
-        // معالجة الطول
-        if (expectations['height'] != null ||
-            expectations['partner_height'] != null) {
-          final rawVal =
-              expectations['partner_height'] ?? expectations['height'];
-          final rawH = double.tryParse(rawVal.toString());
+        // Restore exact partner height range when it is available.
+        final rawMinHeight = double.tryParse(
+            expectations['min_height']?.toString() ?? '');
+        final rawMaxHeight = double.tryParse(
+            expectations['max_height']?.toString() ?? '');
+        if (rawMinHeight != null && rawMaxHeight != null) {
+          final minCm = (rawMinHeight > 0 && rawMinHeight < 10)
+              ? rawMinHeight * 100
+              : rawMinHeight;
+          final maxCm = (rawMaxHeight > 0 && rawMaxHeight < 10)
+              ? rawMaxHeight * 100
+              : rawMaxHeight;
+          if (minCm >= 140 && maxCm <= 210 && minCm <= maxCm) {
+            _partnerHeightRange = RangeValues(minCm, maxCm);
+          }
+        } else {
+          final rawVal = expectations['partner_height'] ?? expectations['height'];
+          final rawH = double.tryParse(rawVal?.toString() ?? '');
           if (rawH != null) {
-            double parsedCm = (rawH > 0 && rawH < 10) ? (rawH * 100) : rawH;
+            final parsedCm = (rawH > 0 && rawH < 10) ? rawH * 100 : rawH;
             if (parsedCm >= 140 && parsedCm <= 210) {
               _partnerHeightRange = RangeValues(
                 (parsedCm - 10).clamp(140.0, 210.0),
@@ -220,12 +232,18 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
           }
         }
 
-        // معالجة الوزن
-        if (expectations['weight'] != null ||
-            expectations['partner_weight'] != null) {
-          final rawVal =
-              expectations['partner_weight'] ?? expectations['weight'];
-          final rawW = double.tryParse(rawVal.toString());
+        // Restore exact partner weight range when it is available.
+        final rawMinWeight = double.tryParse(
+            expectations['min_weight']?.toString() ?? '');
+        final rawMaxWeight = double.tryParse(
+            expectations['max_weight']?.toString() ?? '');
+        if (rawMinWeight != null && rawMaxWeight != null &&
+            rawMinWeight >= 40 && rawMaxWeight <= 140 &&
+            rawMinWeight <= rawMaxWeight) {
+          _partnerWeightRange = RangeValues(rawMinWeight, rawMaxWeight);
+        } else {
+          final rawVal = expectations['partner_weight'] ?? expectations['weight'];
+          final rawW = double.tryParse(rawVal?.toString() ?? '');
           if (rawW != null && rawW >= 40 && rawW <= 140) {
             _partnerWeightRange = RangeValues(
               (rawW - 15).clamp(40.0, 140.0),
@@ -401,8 +419,18 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
         countryId: _selectedPartnerCountryId,
         stateId: _selectedStateId,
       ));
-      if (_heightRangeEdited) payload['partner_height'] = formattedHeight;
-      if (_weightRangeEdited) payload['partner_weight'] = formattedWeight;
+      if (_heightRangeEdited) {
+        payload['min_height'] =
+            (_partnerHeightRange.start / 100).toStringAsFixed(2);
+        payload['max_height'] =
+            (_partnerHeightRange.end / 100).toStringAsFixed(2);
+        payload['partner_height'] = formattedHeight;
+      }
+      if (_weightRangeEdited) {
+        payload['min_weight'] = _partnerWeightRange.start.toStringAsFixed(2);
+        payload['max_weight'] = _partnerWeightRange.end.toStringAsFixed(2);
+        payload['partner_weight'] = formattedWeight;
+      }
       if (_selectedMaritalStatusId != null &&
           _selectedMaritalStatusId!.isNotEmpty) {
         payload['partner_marital_status'] = _selectedMaritalStatusId;

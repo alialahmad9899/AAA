@@ -56,6 +56,34 @@ Map<String, dynamic>? _parseGenericMapIsolate(String responseBody) {
   }
 }
 
+Map<String, dynamic>? _parseResourceCollectionMapIsolate(String responseBody) {
+  try {
+    final dynamic decoded = jsonDecode(responseBody);
+    if (decoded is Map) {
+      final Map<String, dynamic> parsed = Map<String, dynamic>.from(decoded);
+      final dynamic records = parsed['data'];
+      dynamic firstRecord;
+      if (records is List && records.isNotEmpty) {
+        firstRecord = records.first;
+      } else if (records is Map) {
+        firstRecord = records;
+      }
+      if (firstRecord is Map) {
+        for (final entry in firstRecord.entries) {
+          if (entry.key != 'data' && entry.key != 'result') {
+            parsed.putIfAbsent(entry.key.toString(), () => entry.value);
+          }
+        }
+      }
+      return parsed;
+    }
+    if (decoded is List) {
+      return <String, dynamic>{'result': true, 'data': decoded};
+    }
+  } catch (_) {}
+  return null;
+}
+
 List<dynamic> _parseStatesIsolate(String responseBody) {
   try {
     final data = jsonDecode(responseBody);
@@ -1149,7 +1177,7 @@ class ApiService {
   }) async {
     try {
       final headers = await _getHeaders(lang: lang);
-      final Uri url = Uri.parse('$baseUrl/member/introduction/update');
+      final Uri url = Uri.parse('$baseUrl/member/introduction-update');
       final String cleanIntro = introduction.trim();
       final Map<String, dynamic> payload = {
         'introduction': cleanIntro,
@@ -1658,7 +1686,7 @@ class ApiService {
       }
 
       if (response.statusCode == 200) {
-        return await compute(_parseGenericMapIsolate, response.body);
+        return await compute(_parseResourceCollectionMapIsolate, response.body);
       }
       return null;
     } catch (e) {
@@ -1768,7 +1796,7 @@ class ApiService {
       }
 
       if (response.statusCode == 200) {
-        return await compute(_parseGenericMapIsolate, response.body);
+        return await compute(_parseResourceCollectionMapIsolate, response.body);
       }
       return null;
     } catch (e) {
@@ -2337,16 +2365,28 @@ class ApiService {
             '🌐 [API POST] UpdateAstronomicInfo -> $url | Payload: $payload');
       }
 
+      const allowedFields = {
+        'sun_sign',
+        'moon_sign',
+        'time_of_birth',
+        'city_of_birth',
+      };
+      final Map<String, dynamic> bodyData = {
+        for (final entry in payload.entries)
+          if (allowedFields.contains(entry.key)) entry.key: entry.value,
+      };
+      if (bodyData.isEmpty) {
+        return {
+          'success': false,
+          'message': 'لا توجد معلومات فلكية لتحديثها',
+        };
+      }
+
       final response = await http
           .post(
             url,
             headers: headers,
-            body: jsonEncode({
-              'sun_sign': payload['sun_sign'] ?? '',
-              'moon_sign': '',
-              'time_of_birth': '',
-              'city_of_birth': '',
-            }),
+            body: jsonEncode(bodyData),
           )
           .timeout(_timeoutDuration);
       if (kDebugMode) {

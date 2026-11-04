@@ -8,50 +8,75 @@ use Illuminate\Http\Request;
 
 class EmailVerifiedApi
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
-     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
-     */
-    public function handle(Request $request, Closure $next)
+    private const PROFILE_SETUP_READ_PATHS = [
+        'api/member/education',
+        'api/member/career',
+        'api/member/languages',
+        'api/member/partner-languages',
+        'api/member/profile-dropdown',
+        'api/member/countries',
+        'api/member/states/*',
+    ];
+
+    private const PROFILE_SETUP_WRITE_PATHS = [
+        'api/member/basic-info/update',
+        'api/member/physical-attributes/update',
+        'api/member/residency-info/update',
+        'api/member/spiritual-background/update',
+        'api/member/partner-expectation/update',
+        'api/member/life-style/update',
+        'api/member/attitude-behavior/update',
+        'api/member/astronomic/update',
+        'api/member/education',
+        'api/member/education/*',
+        'api/member/career',
+        'api/member/career/*',
+    ];
+
+    private function isProfileSetupRequest(Request $request): bool
     {
-        $user = auth()->user();
+        $method = strtoupper($request->method());
+        if ($method === 'GET') {
+            $paths = self::PROFILE_SETUP_READ_PATHS;
+        } elseif (in_array($method, ['POST', 'PUT', 'PATCH'], true)) {
+            $paths = self::PROFILE_SETUP_WRITE_PATHS;
+        } else {
+            $paths = [];
+        }
 
-        // السماح بكتابات إكمال الملف الشخصي للمستخدم الموثق حسابياً،
-        // حتى يستطيع إتمام التسجيل قبل تأكيد البريد. لا يشمل ذلك أي طلبات قراءة أو محادثات.
-        $profileSetupWritePaths = [
-            'api/member/basic-info/update',
-            'api/member/physical-attributes/update',
-            'api/member/residency-info/update',
-            'api/member/spiritual-background/update',
-            'api/member/partner-expectation/update',
-            'api/member/education',
-            'api/member/education/*',
-            'api/member/career',
-            'api/member/career/*',
-        ];
-
-        if ($user && in_array(strtoupper($request->method()), ['POST', 'PUT', 'PATCH'], true)) {
-            foreach ($profileSetupWritePaths as $allowedPath) {
-                if ($request->is($allowedPath)) {
-                    return $next($request);
-                }
+        foreach ($paths as $path) {
+            if ($request->is($path)) {
+                return true;
             }
         }
 
+        return false;
+    }
+
+    public function handle(Request $request, Closure $next)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'result' => false,
+                'status' => 'unauthenticated',
+                'message' => translate('Unauthenticated.'),
+            ], 401);
+        }
+
         if (
-            !$request->user() ||
-            ($request->user() instanceof MustVerifyEmail &&
-                !$request->user()->hasVerifiedEmail())
+            $user instanceof MustVerifyEmail &&
+            !$user->hasVerifiedEmail() &&
+            !$this->isProfileSetupRequest($request)
         ) {
             return response()->json([
                 'result' => false,
                 'status' => 'un_verified',
-                'message' => translate('Email is not verified!')
+                'message' => translate('Email is not verified!'),
             ], 403);
         }
+
         return $next($request);
     }
 }

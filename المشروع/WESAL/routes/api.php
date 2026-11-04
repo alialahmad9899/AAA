@@ -235,6 +235,8 @@ Route::group(['namespace' => 'Api', 'middleware' => ['app_language']], function 
             Route::get('/countries/{id}/cities', [CityController::class, 'get_cities_by_state']);
 
             Route::get('/languages', 'ProfileDropdownController@language_list');
+            // Backward-compatible alias for older app releases.
+            Route::get('/partner-languages', 'ProfileDropdownController@language_list');
             Route::get('/religions', 'ProfileDropdownController@religion_list');
             Route::get('/casts/{id}', 'ProfileDropdownController@caste_list');
             Route::get('/sub-casts/{id}', 'ProfileDropdownController@sub_caste_list');

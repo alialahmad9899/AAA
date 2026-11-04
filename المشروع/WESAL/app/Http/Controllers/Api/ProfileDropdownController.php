@@ -557,14 +557,16 @@ class ProfileDropdownController extends Controller
         try {
             $lang = $this->getAppLanguage();
 
-            $data = DB::table('languages')
+            $data = DB::table('member_languages')
                 ->whereNotNull('id')
+                ->whereNull('deleted_at')
+                ->orderBy('name')
                 ->get()
                 ->map(function ($item) use ($lang) {
                     if (!$item) return null;
                     return [
                         'id'   => $item->id,
-                        'name' => $this->getItemName($item, $lang, 'languages')
+                        'name' => $this->getItemName($item, $lang, 'member_languages')
                     ];
                 })
                 ->filter()

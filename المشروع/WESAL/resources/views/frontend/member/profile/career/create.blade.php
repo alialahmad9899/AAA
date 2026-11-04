@@ -15,7 +15,6 @@
         </div>
 
         <input type="hidden" name="company" value="---">
-        <input type="hidden" name="career_start" value="{{ date('Y') }}">
         <input type="hidden" name="career_end" value="{{ date('Y') }}">
         <input type="hidden" name="present" value="0">
     </div>

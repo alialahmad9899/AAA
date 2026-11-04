@@ -14,7 +14,6 @@ class CareerController extends Controller
         $this->rules = [
             'designation'  => [ 'nullable','max:255'],
             'company'      => [ 'nullable','max:255'],
-            'career_start' => [ 'nullable','numeric'],
             'career_end'   => [ 'nullable','numeric'],
         ];
     }
@@ -43,7 +42,6 @@ class CareerController extends Controller
             $career->company     = !empty($request->company) ? $request->company : 'غير محدد';
             
             // تحويل السنة إلى رقم صحيح (int) لتجنب أخطاء الـ MySQL الصارمة
-            $career->start       = !empty($request->career_start) ? (int)$request->career_start : (int)date('Y');
             $career->end         = !empty($request->career_end) ? (int)$request->career_end : (int)date('Y');
             
             $career->present     = 1;
@@ -88,7 +86,6 @@ class CareerController extends Controller
         
         if($request->has('designation')) { $career->designation = $request->designation; }
         if($request->has('company')) { $career->company = $request->company; }
-        if($request->has('career_start')) { $career->start = $request->career_start; }
         if($request->has('career_end')) { $career->end = $request->career_end; }
 
         if($career->save()){

@@ -439,22 +439,26 @@ class ProfileController extends Controller
 
     public function hobbies_interest_update(Request $request)
     {
-        $hobbies = Hobby::where('user_id', auth()->id())->first();
-        if (empty($hobbies)) {
-            $hobbies = new Hobby;
-            $hobbies->user_id = auth()->id();
+        $fields = [
+            'hobbies', 'interests', 'music', 'books', 'movies',
+            'tv_shows', 'sports', 'fitness_activities', 'cuisines', 'dress_styles',
+        ];
+        $input = $request->all();
+        $providedFields = array_intersect($fields, array_keys($input));
+
+        if (empty($providedFields)) {
+            return response()->json([
+                'result' => false,
+                'message' => translate('No hobby or interest fields were provided.'),
+            ], 422);
         }
-        $hobbies->hobbies               = $request->hobbies;
-        $hobbies->interests             = $request->interests;
-        $hobbies->music                 = $request->music;
-        $hobbies->books                 = $request->books;
-        $hobbies->movies                = $request->movies;
-        $hobbies->tv_shows              = $request->tv_shows;
-        $hobbies->sports                = $request->sports;
-        $hobbies->fitness_activities    = $request->fitness_activities;
-        $hobbies->cuisines              = $request->cuisines;
-        $hobbies->dress_styles          = $request->dress_styles;
+
+        $hobbies = Hobby::firstOrNew(['user_id' => auth()->id()]);
+        foreach ($providedFields as $field) {
+            $hobbies->{$field} = $input[$field];
+        }
         $hobbies->save();
+
         return $this->success_message('Hobby and Interests info has been updated successfully');
     }
 
@@ -471,16 +475,23 @@ class ProfileController extends Controller
 
     public function attitude_behavior_update(Request $request)
     {
-        $attitude = Attitude::where('user_id', auth()->id())->first();
-        if (empty($attitude)) {
-            $attitude = new Attitude;
-            $attitude->user_id = auth()->id();
+        $fields = ['affection', 'humor', 'political_views', 'religious_service'];
+        $input = $request->all();
+        $providedFields = array_intersect($fields, array_keys($input));
+
+        if (empty($providedFields)) {
+            return response()->json([
+                'result' => false,
+                'message' => translate('No attitude or behavior fields were provided.'),
+            ], 422);
         }
-        $attitude->affection            = $request->affection;
-        $attitude->humor                = $request->humor;
-        $attitude->political_views      = $request->political_views;
-        $attitude->religious_service    = $request->religious_service;
+
+        $attitude = Attitude::firstOrNew(['user_id' => auth()->id()]);
+        foreach ($providedFields as $field) {
+            $attitude->{$field} = $input[$field];
+        }
         $attitude->save();
+
         return $this->success_message('Personal Attitude and Behavior Info has been updated successfully');
     }
 
@@ -790,15 +801,20 @@ class ProfileController extends Controller
 
     public function astronomic_info_update(AstrologyRequest $request)
     {
-        $astrologies = Astrology::where('user_id', auth()->id())->first();
-        if (empty($astrologies)) {
-            $astrologies           = new Astrology;
-            $astrologies->user_id  = auth()->id();
+        $input = $request->validated();
+        if (empty($input)) {
+            return response()->json([
+                'result' => false,
+                'message' => translate('No astronomic fields were provided for update.'),
+            ], 422);
         }
-        $astrologies->sun_sign         = $request->sun_sign;
-        $astrologies->moon_sign        = $request->moon_sign;
-        $astrologies->time_of_birth    = $request->time_of_birth;
-        $astrologies->city_of_birth    = $request->city_of_birth;
+
+        $astrologies = Astrology::firstOrNew(['user_id' => auth()->id()]);
+        foreach (['sun_sign', 'moon_sign', 'time_of_birth', 'city_of_birth'] as $field) {
+            if (array_key_exists($field, $input)) {
+                $astrologies->{$field} = $input[$field];
+            }
+        }
 
         $astrologies->save();
         return $this->success_message('Astronomic Info has been updated successfully');
@@ -855,10 +871,35 @@ class ProfileController extends Controller
         $partner = PartnerExpectation::where('user_id', auth()->id())->first();
         $oldPreferredCountry = $partner ? $partner->preferred_country_id : null;
 
+        foreach ([
+            ['min_height', 'max_height', 'height'],
+            ['min_weight', 'max_weight', 'weight'],
+        ] as [$minField, $maxField, $label]) {
+            $minimum = array_key_exists($minField, $input)
+                ? $input[$minField]
+                : ($partner ? $partner->{$minField} : null);
+            $maximum = array_key_exists($maxField, $input)
+                ? $input[$maxField]
+                : ($partner ? $partner->{$maxField} : null);
+
+            if ($minimum !== null && $maximum !== null &&
+                is_numeric($minimum) && is_numeric($maximum) &&
+                (float) $minimum > (float) $maximum) {
+                return response()->json([
+                    'result' => false,
+                    'message' => translate('The minimum partner ' . $label . ' cannot exceed the maximum.'),
+                ], 422);
+            }
+        }
+
         $fields = [
             'general' => ['general'],
             'height' => ['partner_height'],
             'weight' => ['partner_weight'],
+            'min_height' => ['min_height'],
+            'max_height' => ['max_height'],
+            'min_weight' => ['min_weight'],
+            'max_weight' => ['max_weight'],
             'marital_status_id' => ['partner_marital_status'],
             'children_acceptable' => ['partner_children_acceptable'],
             'residence_country_id' => ['residence_country_id'],
@@ -877,6 +918,8 @@ class ProfileController extends Controller
             'family_value_id' => ['family_value_id'],
             'preferred_country_id' => ['partner_country_id'],
             'complexion' => ['partner_complexion', 'pertner_complexion', 'complexion'],
+            'eye_color' => ['partner_eye_color', 'eye_color'],
+            'hair_color' => ['partner_hair_color', 'hair_color'],
         ];
 
         $hasUpdates = false;
@@ -929,7 +972,8 @@ class ProfileController extends Controller
                     if (array_key_exists($key, $input)) {
                         $value = $input[$key];
 
-                        if ($column === 'height' && $value !== null && is_numeric($value)) {
+                        if (in_array($column, ['height', 'min_height', 'max_height'], true) &&
+                            $value !== null && is_numeric($value)) {
                             $value = (float) $value;
                             if ($value > 10) $value = $value / 100;
                         }

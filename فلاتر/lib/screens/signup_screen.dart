@@ -145,7 +145,7 @@ class _SignupScreenState extends State<SignupScreen> {
     if (mounted) setState(() => _isLoadingPartnerLanguages = true);
     try {
       final results = await Future.wait([
-        ApiService.get('/member/partner-languages', lang: widget.currentLanguage),
+        ApiService.get('/member/languages', lang: widget.currentLanguage),
         ApiService.getProfileDropdowns(lang: widget.currentLanguage),
       ]);
       if (!mounted) return;

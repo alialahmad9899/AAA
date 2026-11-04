@@ -25,3 +25,37 @@
 - الاختبارات والتحققات ونتائجها الفعلية.
 - الأمور غير المختبرة أو المتبقية.
 - رابط حزمة ZIP الخاصة بالدفعة إن أُنشئت.
+
+
+## 2026-11-05 — دفعة إصلاح ترابط Flutter وLaravel
+- الفرع: `fix/wesal-profile-api-sync-2026-11-05`.
+- الهدف: تصحيح تدفق التسجيل والملف الشخصي، وإزالة سنوات البدء غير المطلوبة من نماذج الموقع.
+- الأسباب التي عولجت:
+  - فقدان غلاف Laravel ResourceCollection عند عدم وجود سجلات تعليم/عمل.
+  - استخدام جدول لغات مختلف عن جدول `member_languages` الذي يتحقق منه حقل اللغة المفضلة.
+  - منع قراءات التسجيل الضرورية قبل تأكيد البريد، وعدم فرض اعتماد الإدارة بشكل صحيح على المسارات المحمية.
+  - عدم حفظ نطاقات الطول والوزن ولوني عين وشعر الشريك.
+  - استبدال خصائص غير مرسلة بقيم فارغة عند تعديل الهوايات والطباع والفلك.
+  - عدم تطابق مسار تحديث النبذة التعريفية مع Laravel.
+  - نماذج الموقع كانت ترسل سنوات بدء التعليم والعمل كحقول مخفية، وكانت Controllers تولّد سنة حالية تلقائياً.
+- الملفات المعدلة:
+- `المشروع/WESAL/routes/api.php`
+- `المشروع/WESAL/app/Http/Controllers/Api/ProfileDropdownController.php`
+- `المشروع/WESAL/app/Http/Controllers/Api/ProfileController.php`
+- `المشروع/WESAL/app/Http/Requests/PartnerExpectationRequest.php`
+- `المشروع/WESAL/app/Http/Middleware/EmailVerifiedApi.php`
+- `المشروع/WESAL/app/Http/Middleware/IsApiMember.php`
+- `المشروع/WESAL/app/Http/Controllers/EducationController.php`
+- `المشروع/WESAL/app/Http/Controllers/CareerController.php`
+- `المشروع/WESAL/resources/views/frontend/member/profile/education/create.blade.php`
+- `المشروع/WESAL/resources/views/frontend/member/profile/education/edit.blade.php`
+- `المشروع/WESAL/resources/views/frontend/member/profile/career/create.blade.php`
+- `المشروع/WESAL/resources/views/frontend/member/profile/career/edit.blade.php`
+- `فلاتر/lib/services/api_service.dart`
+- `فلاتر/lib/screens/signup_screen.dart`
+- `فلاتر/lib/screens/partner_expectations_screen.dart`
+- الإصلاحات: دعم الاستجابة الفارغة الناجحة، توحيد مصدر اللغات، استثناء ضيق لمسارات إعداد الحساب، فرض صلاحيات الاعتماد، حفظ جزئي، حفظ واسترجاع نطاقات الشريك والألوان، إزالة حقول سنوات البدء من النماذج والـControllers.
+- التحققات المنفذة: فحوص مصدرية ساكنة لوجود مسارات السماح، وتطابق مفاتيح النطاقات والألوان، واستخدام parser القوائم في التعليم والعمل، وإزالة أسماء حقول البدء من النماذج وControllers.
+- اختبارات لم تُنفّذ: `flutter analyze`، PHPUnit، `php artisan route:list`، والاختبار على الاستضافة وقاعدة البيانات الحية؛ أدوات التشغيل وبيئة الاستضافة غير متاحة ضمن جلسة التنفيذ.
+- متبقٍ: ربط iOS Universal Links يتطلب Associated Domains وملف AASA وإعداد Apple Developer، وملف Firebase iOS غير موجود في المستودع. الدالة `toggleBlockUser` غير مستخدمة ولا يوجد مسار Backend موثق لها، لذلك لم يُنشأ سلوك حظر جديد بالتخمين.
+- حزمة الدفعة: `اصلاحات 4.zip` في جذر الفرع.
