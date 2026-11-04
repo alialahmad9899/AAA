@@ -73,6 +73,17 @@ void main() {
       expect(profile.physicalAttributes?.bodyArt, 'وشم بسيط');
     });
   });
+  test('parses the canonical marital status ID before translated labels', () {
+    final profile = MemberProfileModel.fromJson({
+      'basic_info': {
+        'maritial_status': 'متزوج / متزوجة',
+        'marital_status': 'Married',
+        'marital_status_id': 2,
+      },
+    });
+    expect(profile.basicInfo.maritalStatus, '2');
+  });
+
   group('Laravel API resource envelope parsing', () {
     test('unwraps a single model wrapped in data', () {
       expect(
@@ -114,6 +125,60 @@ void main() {
         isNull,
       );
       expect(ApiService.extractFirstResourceMap(null), isNull);
+    });
+  });
+
+  group('Preferred partner location mapping', () {
+    test('prefers preferred_country_id over the independent residence country', () {
+      expect(
+        ApiService.preferredPartnerCountryId({
+          'residence_country_id': 10,
+          'partner_country_id': 20,
+          'preferred_country_id': 30,
+        }),
+        '30',
+      );
+    });
+
+    test('supports the partner_country_id compatibility alias only', () {
+      expect(
+        ApiService.preferredPartnerCountryId({
+          'residence_country_id': 10,
+          'partner_country_id': 20,
+        }),
+        '20',
+      );
+    });
+
+    test('does not mistake residence country for preferred partner country', () {
+      expect(
+        ApiService.preferredPartnerCountryId({
+          'residence_country_id': 10,
+        }),
+        isNull,
+      );
+    });
+
+    test('sends preferred country and state without residence_country_id', () {
+      final payload = ApiService.buildPreferredPartnerLocationPayload(
+        countryId: '30',
+        stateId: '301',
+      );
+      expect(payload, {
+        'partner_country_id': '30',
+        'partner_state_id': '301',
+      });
+      expect(payload.containsKey('residence_country_id'), isFalse);
+    });
+
+    test('does not send a state without a preferred country', () {
+      expect(
+        ApiService.buildPreferredPartnerLocationPayload(
+          countryId: null,
+          stateId: '301',
+        ),
+        isEmpty,
+      );
     });
   });
 
