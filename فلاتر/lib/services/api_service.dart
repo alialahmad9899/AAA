@@ -1111,6 +1111,7 @@ class ApiService {
         getAttitudeBehavior(lang: lang),
         getAstronomicInfo(lang: lang),
         getIntroduction(lang: lang),
+        getPartnerExpectations(lang: lang),
       ]);
 
       return {
@@ -1119,13 +1120,16 @@ class ApiService {
         'career': results[2],
         'physical_attributes': results[3],
         'spiritual_background': results[4],
+        'residence_info': results[5],
         'residency_information': results[5],
+        'lifestyles': results[6],
         'lifestyle': results[6],
         'hobbies_interest': results[7],
         'attitude_behavior': results[8],
         'astronomic_information': results[9],
         'intoduction': results[10],
         'introduction': results[10],
+        'partner_expectation': results[11],
       };
     } catch (e) {
       if (kDebugMode) debugPrint('❌ [API ERROR getFullProfile]: $e');
@@ -1369,10 +1373,30 @@ class ApiService {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final int currentUserId = prefs.getInt('user_id') ?? 0;
-      if (currentUserId == 0) return null;
 
-      return await getPublicProfile(currentUserId, lang: lang);
+      // Read the authenticated owner's profile first. This endpoint derives the
+      // account ID from Sanctum and does not depend on a possibly missing/stale
+      // SharedPreferences user_id or public-profile visibility rules.
+      final fullProfile = await getFullProfile(lang: lang);
+      if (fullProfile != null) {
+        final basicInfo = MemberProfileModel.safeMapOrNull(
+          fullProfile['basic_info'],
+        );
+        if (basicInfo != null &&
+            ((basicInfo['firs_name'] ?? basicInfo['first_name'] ?? '').toString().trim().isNotEmpty ||
+              (basicInfo['last_name'] ?? '').toString().trim().isNotEmpty)) {
+          return MemberProfileModel.fromJson(fullProfile, currentUserId);
+        }
+      }
+
+      // Compatibility fallback for hosting versions without the consolidated
+      // owner endpoint. It is used only when a real local user ID is available.
+      if (currentUserId > 0) {
+        return await getPublicProfile(currentUserId, lang: lang);
+      }
+      return null;
     } catch (e) {
+      if (kDebugMode) debugPrint('❌ [API ERROR getCurrentUserProfile]: $e');
       return null;
     }
   }
