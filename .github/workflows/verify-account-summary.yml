@@ -1,0 +1,42 @@
+name: Verify account summary repair
+
+on:
+  push:
+    branches:
+      - fix/public-profile-resource-subscription-model
+    paths:
+      - '.github/workflows/verify-account-summary.yml'
+      - 'المشروع/WESAL/app/Http/Controllers/Api/ProfileController.php'
+      - 'المشروع/WESAL/routes/api.php'
+      - 'فلاتر/lib/services/api_service.dart'
+      - 'فلاتر/lib/models/member_profile_model.dart'
+      - 'فلاتر/lib/screens/home/tabs/account_tab.dart'
+      - 'فلاتر/test/profile_edit_unit_test.dart'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check PHP syntax
+        run: |
+          php -l 'المشروع/WESAL/app/Http/Controllers/Api/ProfileController.php'
+          php -l 'المشروع/WESAL/routes/api.php'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve Flutter dependencies
+        working-directory: فلاتر
+        run: flutter pub get
+
+      - name: Run profile regression tests
+        working-directory: فلاتر
+        run: flutter test test/profile_edit_unit_test.dart
