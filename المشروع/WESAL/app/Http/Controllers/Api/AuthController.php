@@ -42,8 +42,9 @@ class AuthController extends Controller
         $storedPhotoPath = null;
 
         try {
-            $autoVerify = (get_setting('email_verification') != 1 && !addon_activation('otp_system'))
-                || get_setting('registration_verification') === '1';
+            // The mobile API does not require email verification. Optional phone OTP
+            // remains governed by its separate OTP add-on flow.
+            $autoVerify = true;
 
             $user = DB::transaction(function () use ($request, &$storedPhotoPath, $autoVerify) {
                 $package = Package::where('id', 1)->first();
@@ -60,6 +61,9 @@ class AuthController extends Controller
                 // safe() omits this server-prepared value because it is not a client input rule.
                 $userData['membership'] = 1;
                 $user = $user_service->store($userData);
+                // App accounts do not wait for manual admin approval.
+                $user->approved = 1;
+                $user->save();
 
                 $member_service = new MemberService();
                 // Normalize the field names sent by the Flutter signup form.
@@ -113,7 +117,7 @@ class AuthController extends Controller
                     $user->save();
                 }
 
-                if ($autoVerify && ($user->email != null || $user->phone != null)) {
+                if ($autoVerify && $user->email != null) {
                     $user->email_verified_at = date('Y-m-d H:i:s');
                     $user->save();
                 }
@@ -222,6 +226,12 @@ class AuthController extends Controller
 
         if ($user != null) {
             if (Hash::check($request->password, $user->password)) {
+                // Normalize legacy pending accounts; admin approval is not required.
+                if ((int) $user->approved !== 1) {
+                    $user->approved = 1;
+                    $user->save();
+                }
+
                 $fcmToken = $request->fcm_token ?? $request->device_token;
                 if ($fcmToken) {
                     $user->fcm_token = $fcmToken;
@@ -275,13 +285,9 @@ class AuthController extends Controller
             }
             $user->save();
 
-            if ($user->approved == 0) {
-                return response()->json([
-                    'result' => false,
-                    'message' => translate('Please wait for admin approval'),
-                    'user' => null,
-                ], 401);
-            }
+            // Admin approval is not a prerequisite for mobile-app sign-in.
+            $user->approved = 1;
+            $user->save();
 
             return $this->authResponse($user);
         } else {
@@ -334,16 +340,15 @@ class AuthController extends Controller
         $existingUserByProviderId = User::where('provider_id', $request->provider)->first();
 
         if ($existingUserByProviderId) {
-            if ($existingUserByProviderId->approved == 0) {
-                return response()->json(['result' => false, 'message' => translate('Please wait for admin approval'), 'user' => null], 401);
-            } else {
-                $fcmToken = $request->fcm_token ?? $request->device_token;
-                if ($fcmToken) {
-                    $existingUserByProviderId->fcm_token = $fcmToken;
-                    $existingUserByProviderId->save();
-                }
-                return $this->authResponse($existingUserByProviderId);
+            $fcmToken = $request->fcm_token ?? $request->device_token;
+            if ($fcmToken) {
+                $existingUserByProviderId->fcm_token = $fcmToken;
             }
+            // Admin approval is not a prerequisite for mobile-app sign-in.
+            $existingUserByProviderId->approved = 1;
+            $existingUserByProviderId->save();
+
+            return $this->authResponse($existingUserByProviderId);
         } else {
             $newUser                     = new User;
             $newUser->first_name         = $request->name;
@@ -352,7 +357,7 @@ class AuthController extends Controller
             $newUser->provider_id        = $request->provider;
             $newUser->code               = unique_code();
             $newUser->membership         = 1;
-            $newUser->approved           = get_setting('member_verification') == 1 ? 0 : 1;
+            $newUser->approved           = 1;
             
             $fcmToken = $request->fcm_token ?? $request->device_token;
             if ($fcmToken) {
@@ -379,11 +384,7 @@ class AuthController extends Controller
             $member->package_validity           = Date('Y-m-d', strtotime($package->validity . " days"));
             $member->save();
 
-            if ($newUser->approved == 0) {
-                return response()->json(['result' => false, 'message' => translate('Please wait for admin approval'), 'user' => null], 401);
-            } else {
-                return $this->authResponse($newUser);
-            }
+            return $this->authResponse($newUser);
         }
     }
 
