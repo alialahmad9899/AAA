@@ -451,8 +451,6 @@ class _SignupScreenState extends State<SignupScreen> {
         );
 
         // Confirm the body-type and body-art values were actually persisted.
-        // The old endpoint acknowledged writes even when these two fields
-        // came back empty, which made the signup appear complete while losing data.
         final savedPhysicalResponse =
             await ApiService.getPhysicalAttributes(lang: widget.currentLanguage);
         final savedPhysical =
@@ -465,7 +463,7 @@ class _SignupScreenState extends State<SignupScreen> {
             !_hasPersistedValue(savedBodyArt)) {
           throw _SignupStepSaveException(
             isAr
-                ? 'أكد الخادم حفظ بقية المواصفات، لكنه لم يؤكد حفظ بنية الجسم والوشم. لم نتابع التسجيل حتى لا تضيع هذه البيانات.'
+                ? 'لم يؤكد الخادم حفظ بنية الجسم والوشم. أوقفنا التسجيل حتى لا تضيع هذه البيانات.'
                 : 'The server did not confirm saving body type and body art. Signup was paused to avoid losing these details.',
           );
         }
@@ -675,9 +673,7 @@ class _SignupScreenState extends State<SignupScreen> {
           isAr ? 'تعذر حفظ البيانات الدينية' : 'Failed to save religious details',
         );
 
-        // Verify the date of birth created with the account and the marital
-        // status saved in this step using the same BasicInfo API consumed by
-        // the edit-profile screen.
+        // Verify DOB from account creation and marital status saved in this step.
         final savedBasicResponse =
             await ApiService.getBasicInfo(lang: widget.currentLanguage);
         final savedBasic =
