@@ -462,6 +462,8 @@ class MemberProfileModel {
   final bool canExpressInterest;
   final bool isInterested;
   final int remainingInterests;
+  final int sentInterestsCount;
+  final int profileVisitorsCount;
 
   bool get isInterestSent => isInterested;
 
@@ -487,6 +489,8 @@ class MemberProfileModel {
     this.canExpressInterest = true,
     this.isInterested = false,
     this.remainingInterests = 0,
+    this.sentInterestsCount = 0,
+    this.profileVisitorsCount = 0,
   });
 
   bool get isSubscribedActive {
@@ -665,6 +669,18 @@ class MemberProfileModel {
                 '0') ??
         0;
 
+    int parseNonNegativeCount(dynamic value) {
+      final parsed = int.tryParse(value?.toString() ?? '');
+      return parsed != null && parsed >= 0 ? parsed : 0;
+    }
+
+    final sentInterestsCount = parseNonNegativeCount(
+      json['sent_interests_count'] ?? basicMap['sent_interests_count'],
+    );
+    final profileVisitorsCount = parseNonNegativeCount(
+      json['profile_visitors_count'] ?? basicMap['profile_visitors_count'],
+    );
+
     final physMap = safeMapOrNull(json['physical_attributes']);
     final resMap = safeMapOrNull(json['residence_info']) ??
         safeMapOrNull(json['present_address']) ??
@@ -708,6 +724,8 @@ class MemberProfileModel {
       canExpressInterest: parsedCanExpressInterest,
       isInterested: parsedIsInterested,
       remainingInterests: parsedRemainingInterests,
+      sentInterestsCount: sentInterestsCount,
+      profileVisitorsCount: profileVisitorsCount,
     );
   }
 }
