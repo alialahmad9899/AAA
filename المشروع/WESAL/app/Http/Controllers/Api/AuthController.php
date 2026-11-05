@@ -330,6 +330,8 @@ class AuthController extends Controller
             if ($fcmToken) {
                 $existingUserByProviderId->fcm_token = $fcmToken;
             }
+            $existingUserByProviderId->save();
+
             return $this->authResponse($existingUserByProviderId);
         } else {
             $newUser                     = new User;
