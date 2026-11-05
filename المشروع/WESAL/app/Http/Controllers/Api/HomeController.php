@@ -484,7 +484,12 @@ class HomeController extends Controller
         foreach ($features as $feature) {
             $new_array[$feature->type] = $feature->value;
         }
-        // dd($temp_array);
+
+        // The mobile app does not require email verification or admin approval.
+        // Keep the underlying website/admin settings untouched.
+        $new_array['email_verification'] = 0;
+        $new_array['member_verification'] = 0;
+
         return $this->response_data($new_array);
     }
 
