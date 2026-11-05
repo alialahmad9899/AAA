@@ -62,6 +62,10 @@ class BasicInformation extends JsonResource
         }
 
         // 3. الترجمة الآمنة فقط عند وجود نص حقيقي لتفادي الرموز التالفة
+        $onBehalfModel = ($memberModel && !empty($memberModel->on_behalves_id))
+            ? OnBehalf::find($memberModel->on_behalves_id)
+            : null;
+
         if (function_exists('translate')) {
             if (!empty($religionName) && !in_array($religionName, ['_', '___', '-'])) {
                 $transRel = translate($religionName, $lang);
@@ -93,7 +97,7 @@ class BasicInformation extends JsonResource
             'religion' => $religionName,
             'caste' => ($spiritual && $spiritual->caste) ? ($spiritual->caste->name ?? '') : '',
             'date_of_birth' => ($memberModel && !empty($memberModel->birthday)) ? Carbon::parse($memberModel->birthday)->format('Y-m-d') : '',
-            'onbehalf' => new OnBehalfResource(OnBehalf::find($memberModel->on_behalves_id ?? 0)),
+            'onbehalf' => $onBehalfModel ? new OnBehalfResource($onBehalfModel) : null,
             'on_behalf_id' => $memberModel->on_behalves_id ?? null,
             'no_of_children' => $memberModel->children ?? '',
             'gender' => $genderText,
