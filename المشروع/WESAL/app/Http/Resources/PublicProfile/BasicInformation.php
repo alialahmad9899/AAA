@@ -26,7 +26,7 @@ class BasicInformation extends JsonResource
             ? Carbon::parse($this->member->birthday)->age 
             : 0;
 
-        $activePaidPackage = SubscriptionUtility::currentActivePaidPackage($this);
+        $activePaidPackage = SubscriptionUtility::currentActivePaidPackage($this->resource);
         $packageName = '';
         if ($activePaidPackage && !empty($activePaidPackage->name)) {
             // Use the package's official localized name; never synthesize a name from its validity.
