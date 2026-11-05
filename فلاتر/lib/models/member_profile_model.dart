@@ -979,8 +979,8 @@ class PhysicalAttributesModel {
       hairColor: MemberProfileModel._safeString(json['hair_color']),
       complexion: MemberProfileModel._safeString(json['complexion']),
       bloodGroup: MemberProfileModel._safeString(json['blood_group']),
-      bodyType: MemberProfileModel._safeString(json['body_type']),
-      bodyArt: MemberProfileModel._safeString(json['body_art']),
+      bodyType: MemberProfileModel._safeString(json['raw_body_type'] ?? json['body_type']),
+      bodyArt: MemberProfileModel._safeString(json['raw_body_art'] ?? json['body_art']),
     );
   }
 }
