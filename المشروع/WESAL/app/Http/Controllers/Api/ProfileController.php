@@ -1249,10 +1249,7 @@ class ProfileController extends Controller
                 }
             }
 
-            return $this->response_data($data);
-        } else {
-            return $this->failure_message("User Not Found");
-        }
+        return $this->response_data($data);
     }
 
     public static function sendFirebaseNotification($fcmTokens = null, $notify_user, $notify_type, $message, $notify_by = null)
