@@ -817,9 +817,8 @@ class BasicInfoModel {
     String parsedChildren = '';
     if (rawChildren != null) {
       final strVal = rawChildren.toString().trim();
-      if (strVal != '0' &&
-          strVal != 'null' &&
-          AttributeTranslator.isValidValue(strVal)) {
+      if (AttributeTranslator.isValidValue(strVal)) {
+        // Zero is a valid child count and must remain visible in the editor.
         parsedChildren = strVal;
       }
     }
@@ -885,7 +884,7 @@ class BasicInfoModel {
       age: int.tryParse(json['age']?.toString() ?? '0') ?? 0,
       religion: parsedReligion,
       caste: parsedCaste,
-      dateOfBirth: MemberProfileModel._safeString(json['date_of_birth']),
+      dateOfBirth: MemberProfileModel._firstValidString(json, ['date_of_birth', 'birthday']),
       noOfChildren: parsedChildren,
       gender: finalGender,
       phone: MemberProfileModel._safeString(json['phone']),
@@ -948,8 +947,8 @@ class PhysicalAttributesModel {
       hairColor: MemberProfileModel._safeString(json['hair_color']),
       complexion: MemberProfileModel._safeString(json['complexion']),
       bloodGroup: MemberProfileModel._safeString(json['blood_group']),
-      bodyType: MemberProfileModel._safeString(json['body_type']),
-      bodyArt: MemberProfileModel._safeString(json['body_art']),
+      bodyType: MemberProfileModel._safeString(json['raw_body_type'] ?? json['body_type']),
+      bodyArt: MemberProfileModel._safeString(json['raw_body_art'] ?? json['body_art']),
     );
   }
 }
