@@ -16,7 +16,7 @@ class OnBehalfResource extends JsonResource
     {
         // A stale or missing on_behalves_id must not break the whole profile response.
         if (!$this->resource) {
-            return null;
+            return [];
         }
 
         return [
