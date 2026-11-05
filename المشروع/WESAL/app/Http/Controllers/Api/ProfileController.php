@@ -82,6 +82,44 @@ use App\Utility\MemberUtility;
 class ProfileController extends Controller
 {
     /**
+     * Build owner-visible basic information without applying public photo privacy
+     * rules. This endpoint is authenticated as the profile owner via Sanctum.
+     */
+    private function owner_basic_information(User $user): array
+    {
+        $data = [];
+        try {
+            $data = (new BasicInformation($user))->toArray(request());
+        } catch (\\Throwable $e) {
+            \\Log::warning('Owner basic profile resource fallback used: ' . $e->getMessage());
+        }
+
+        $photoUrl = !empty($user->photo) ? uploaded_asset($user->photo) : null;
+        if (!$photoUrl && !empty($user->avatar_original)) {
+            $photoUrl = uploaded_asset($user->avatar_original);
+        }
+        if (!$photoUrl && !empty($user->avatar)) {
+            $avatarPath = trim((string) $user->avatar);
+            $photoUrl = filter_var($avatarPath, FILTER_VALIDATE_URL)
+                ? $avatarPath
+                : static_asset(ltrim($avatarPath, '/'));
+        }
+        if (!$photoUrl) {
+            $photoUrl = static_asset('assets/img/avatar-place.png');
+        }
+
+        // Keep both spellings consumed by current and older Flutter builds.
+        $data['firs_name'] = $user->first_name ?? '';
+        $data['first_name'] = $user->first_name ?? '';
+        $data['last_name'] = $user->last_name ?? '';
+        $data['name'] = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
+        $data['photo'] = $photoUrl;
+        $data['photo_id'] = $user->photo ?? null;
+
+        return $data;
+    }
+
+    /**
      * دالة جلب كافة بيانات الملف الشخصي للمستخدم الحالي دفعة واحدة لسرعة فائقة
      */
     public function get_full_my_profile()
@@ -133,7 +171,7 @@ class ProfileController extends Controller
             // Return the authenticated owner ID so Flutter can recover its local session metadata.
             'user_id'              => $user->id,
             'intoduction'          => new AboutUser($user),
-            'basic_info'           => new BasicInformation($user),
+            'basic_info'           => $this->owner_basic_information($user),
             'contact_details'      => [
                 'email' => $user->email,
                 'phone' => $user->phone
@@ -201,9 +239,12 @@ class ProfileController extends Controller
 
     public function get_basic_info()
     {
-        SubscriptionUtility::deactivateIfInvalid(auth()->user());
-        return (new BasicInformation(auth()->user()->fresh()))->additional([
-            'result' => true
+        $user = auth()->user()->fresh();
+        SubscriptionUtility::deactivateIfInvalid($user);
+
+        return response()->json([
+            'result' => true,
+            'data' => $this->owner_basic_information($user),
         ]);
     }
 
