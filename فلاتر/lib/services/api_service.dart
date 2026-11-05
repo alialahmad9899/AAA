@@ -1331,6 +1331,13 @@ class ApiService {
 
   static Future<MemberProfileModel?> getPublicProfile(int userId,
       {String? lang}) async {
+    if (userId <= 0) {
+      if (kDebugMode) {
+        debugPrint('[PublicProfile] Invalid target user ID: $userId');
+      }
+      return null;
+    }
+
     try {
       final headers = await _getHeaders(lang: lang);
       final int ts = DateTime.now().millisecondsSinceEpoch;
@@ -1340,32 +1347,112 @@ class ApiService {
 
       final response =
           await http.get(url, headers: headers).timeout(_timeoutDuration);
+
+      if (response.statusCode != 200) {
+        if (kDebugMode) {
+          debugPrint(
+            '[PublicProfile] HTTP ${response.statusCode} for user $userId. '
+            'Response: ${_safeApiErrorSummary(response.body)}',
+          );
+        }
+        return null;
+      }
+
+      dynamic decoded;
+      try {
+        decoded = jsonDecode(response.body);
+      } on FormatException catch (error, stackTrace) {
+        if (kDebugMode) {
+          debugPrint('[PublicProfile] Invalid JSON: $error');
+          debugPrintStack(stackTrace: stackTrace);
+        }
+        return null;
+      }
+
+      if (decoded is! Map) {
+        if (kDebugMode) {
+          debugPrint(
+            '[PublicProfile] Expected JSON object, got ${decoded.runtimeType}.',
+          );
+        }
+        return null;
+      }
+
+      final body = Map<String, dynamic>.from(decoded);
+      final result = body['result'];
+      final explicitlyFailed = result == false ||
+          result == 0 ||
+          result?.toString().trim().toLowerCase() == 'false' ||
+          result?.toString().trim() == '0' ||
+          body['success'] == false;
+
+      if (explicitlyFailed) {
+        if (kDebugMode) {
+          debugPrint(
+            '[PublicProfile] API rejected user $userId: '
+            '${_safeApiErrorSummary(jsonEncode(body))}',
+          );
+        }
+        return null;
+      }
+
+      if (result != true && result?.toString() != '1' && body['data'] == null) {
+        if (kDebugMode) {
+          debugPrint(
+            '[PublicProfile] Response has no profile payload for user $userId: '
+            '${_safeApiErrorSummary(response.body)}',
+          );
+        }
+        return null;
+      }
+
+      final profileData = _extractMapData(body) ?? body;
+      if (profileData.isEmpty) {
+        if (kDebugMode) {
+          debugPrint('[PublicProfile] Empty profile payload for user $userId.');
+        }
+        return null;
+      }
+
+      try {
+        return MemberProfileModel.fromJson(profileData, userId);
+      } catch (error, stackTrace) {
+        if (kDebugMode) {
+          debugPrint(
+            '[PublicProfile] JSON-to-model failure for user $userId: $error',
+          );
+          debugPrintStack(stackTrace: stackTrace);
+        }
+        return null;
+      }
+    } catch (error, stackTrace) {
       if (kDebugMode) {
-        debugPrint(
-            '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
+        debugPrint('[API ERROR PublicProfile] user=$userId error=$error');
+        debugPrintStack(stackTrace: stackTrace);
       }
-
-      if (response.statusCode == 200) {
-        dynamic decoded;
-        try {
-          decoded = jsonDecode(response.body);
-        } catch (_) {
-          decoded = null;
-        }
-
-        if (decoded is Map) {
-          final Map<String, dynamic> body = Map<String, dynamic>.from(decoded);
-          if (body['result'] == true || body['data'] != null) {
-            final profileData = _extractMapData(body) ?? body;
-            return MemberProfileModel.fromJson(profileData, userId);
-          }
-        }
-      }
-      return null;
-    } catch (e) {
-      if (kDebugMode) debugPrint('❌ [API ERROR PublicProfile]: $e');
       return null;
     }
+  }
+
+  /// Returns a short, privacy-conscious summary of an API error body.
+  static String _safeApiErrorSummary(String body) {
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is Map) {
+        final message = decoded['message'];
+        if (message is String && message.trim().isNotEmpty) {
+          return message.trim();
+        }
+        final errors = decoded['errors'];
+        if (errors is Map && errors.isNotEmpty) {
+          return errors.keys.map((key) => key.toString()).join(', ');
+        }
+      }
+    } catch (_) {
+      // Do not print arbitrary server HTML or raw response bodies.
+    }
+
+    return 'No structured error message';
   }
 
   /// Lightweight authenticated identity endpoint used by the account header.
