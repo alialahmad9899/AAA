@@ -98,7 +98,10 @@ class AuthController extends Controller
                     if (\Schema::hasColumn('users', 'avatar_original')) {
                         $user->avatar_original = $upload->id;
                     }
-                    $user->avatar = $storedPhotoPath;
+                    // The deployed users table may not include the legacy avatar path column.
+                    if (\Schema::hasColumn('users', 'avatar')) {
+                        $user->avatar = $storedPhotoPath;
+                    }
                     if (\Schema::hasColumn('users', 'photo')) {
                         $user->photo = $upload->id;
                     }
