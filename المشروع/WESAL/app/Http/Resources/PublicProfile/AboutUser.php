@@ -16,7 +16,7 @@ class AboutUser extends JsonResource
     {
         return [
             
-            'introduction' => $this->member->introduction,
+            'introduction' => $this->member->introduction ?? '',
         ];
     }
 }
