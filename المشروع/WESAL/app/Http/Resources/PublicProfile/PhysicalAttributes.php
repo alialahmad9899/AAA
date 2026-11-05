@@ -38,8 +38,11 @@ class PhysicalAttributes extends JsonResource
             'hair_color' => $cleanPhysicalAttribute($this->hair_color),
             'complexion' => $cleanPhysicalAttribute($this->complexion),
             'blood_group' => $this->blood_group,
+            // Keep stable stored values for Flutter pickers alongside localized labels.
             'body_type'   => function_exists('translate') ? translate($cleanBodyType, $lang) : $cleanBodyType,
+            'raw_body_type' => $cleanBodyType,
             'body_art'    => function_exists('translate') ? translate($this->body_art, $lang) : $this->body_art,
+            'raw_body_art' => $cleanPhysicalAttribute($this->body_art),
             'disability'  => function_exists('translate') ? translate($this->disability, $lang) : $this->disability,
         ];
     }
