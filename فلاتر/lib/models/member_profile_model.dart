@@ -544,34 +544,47 @@ class MemberProfileModel {
 
   static Map<String, dynamic>? safeMapOrNull(dynamic data) {
     if (data == null) return null;
-    if (data is Map<String, dynamic>) {
-      return data.isEmpty ? null : data;
-    }
+
     if (data is Map) {
-      final m = Map<String, dynamic>.from(data);
-      return m.isEmpty ? null : m;
+      final map = Map<String, dynamic>.from(data);
+      if (map.isEmpty) return null;
+
+      // Laravel JsonResource / ResourceCollection values can be nested as
+      // {data: {...}} or {data: [...], meta: ..., links: ...}. Unwrap only
+      // recognized response envelopes so model fields are read from the row.
+      final nestedData = map['data'];
+      final isResourceEnvelope = map.containsKey('result') ||
+          map.containsKey('meta') ||
+          map.containsKey('links') ||
+          map.length == 1;
+      if (isResourceEnvelope && (nestedData is Map || nestedData is List)) {
+        return safeMapOrNull(nestedData);
+      }
+
+      return map;
     }
+
     if (data is List) {
-      if (data.isEmpty) return null;
-      if (data.first is Map) {
-        return Map<String, dynamic>.from(data.first as Map);
+      for (final item in data) {
+        final record = safeMapOrNull(item);
+        if (record != null) return record;
       }
     }
+
     return null;
   }
 
   factory MemberProfileModel.fromJson(Map<String, dynamic> json, [int id = 0]) {
     String intro = '';
-    if (json['intoduction'] != null && json['intoduction'] is Map) {
+    final dynamic rawIntroduction =
+        json['intoduction'] ?? json['introduction'];
+    final introMap = safeMapOrNull(rawIntroduction);
+    if (introMap != null) {
       intro = _safeString(
-          json['intoduction']['introduction'] ?? json['intoduction']['about']);
-    } else if (json['introduction'] != null) {
-      if (json['introduction'] is Map) {
-        intro = _safeString(json['introduction']['introduction'] ??
-            json['introduction']['about']);
-      } else {
-        intro = _safeString(json['introduction']);
-      }
+        introMap['introduction'] ?? introMap['about'],
+      );
+    } else if (rawIntroduction is String) {
+      intro = _safeString(rawIntroduction);
     }
 
     int? matchPct;
@@ -667,6 +680,8 @@ class MemberProfileModel {
 
     final physMap = safeMapOrNull(json['physical_attributes']);
     final resMap = safeMapOrNull(json['residence_info']) ??
+        safeMapOrNull(json['residency_information']) ??
+        safeMapOrNull(json['residency_info']) ??
         safeMapOrNull(json['present_address']) ??
         safeMapOrNull(json['permanent_address']);
     final lifeMap =
