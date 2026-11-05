@@ -112,6 +112,42 @@ void main() {
     expect(profile.physicalAttributes?.bodyArt, 'لا يوجد');
   });
 
+  test('parses actual account counts separately from remaining quotas', () {
+    final profile = MemberProfileModel.fromJson({
+      'user_id': 1435,
+      'sent_interests_count': 12,
+      'profile_visitors_count': 27,
+      'basic_info': {
+        'first_name': 'أحمد',
+        'remaining_interests': 3,
+        'remaining_profile_viewer_view': 1,
+      },
+      'residence_info': {
+        'residency_country': 'سوريا',
+      },
+    });
+
+    expect(profile.sentInterestsCount, 12);
+    expect(profile.profileVisitorsCount, 27);
+    expect(profile.remainingInterests, 3);
+    expect(profile.basicInfo.remainingProfileViewers, 1);
+    expect(profile.residenceInfo?.residencyCountry, 'سوريا');
+  });
+
+  test('defaults missing or invalid account counts to zero', () {
+    final profile = MemberProfileModel.fromJson({
+      'basic_info': {
+        'remaining_interests': -1,
+        'remaining_profile_viewer_view': -1,
+      },
+      'sent_interests_count': -4,
+      'profile_visitors_count': 'invalid',
+    });
+
+    expect(profile.sentInterestsCount, 0);
+    expect(profile.profileVisitorsCount, 0);
+  });
+
   group('Premium subscription status', () {
     String dateOnly(DateTime date) =>
         '${date.year.toString().padLeft(4, '0')}-'
