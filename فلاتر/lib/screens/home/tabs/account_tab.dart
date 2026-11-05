@@ -631,15 +631,11 @@ class AccountTabState extends State<AccountTab> {
   Widget _buildModernProfileHeader(String displayName, bool isFemale) {
     final int age = _userProfile?.basicInfo.age ?? 0;
 
-    // 🟢 معالجة قيم الإحصائيات الحقيقية بدلاً من قراءة حصة الباقات العشوائية
-    final int rawRemainingInterests = _userProfile?.remainingInterests ?? 0;
-    final int sentInterestsDisplay =
-        (rawRemainingInterests < 0 || rawRemainingInterests > 1000)
-            ? 0
-            : rawRemainingInterests;
-
-    final int rawViewers = _userProfile?.basicInfo.remainingProfileViewers ?? 0;
-    final int interestedInMeDisplay = (rawViewers > 1000) ? 0 : rawViewers;
+    // Real database counts are independent from subscription quotas.
+    final int sentInterestsDisplay = _userProfile?.sentInterestsCount ?? 0;
+    final int profileVisitorsDisplay = _userProfile?.profileVisitorsCount ?? 0;
+    final String residencyCountry =
+        _userProfile?.residenceInfo?.residencyCountry.trim() ?? '';
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 12.0),
@@ -819,6 +815,54 @@ class AccountTabState extends State<AccountTab> {
                             ),
                         ],
                       ),
+                      if (residencyCountry.isNotEmpty) ...[
+                        const SizedBox(height: 7),
+                        Align(
+                          alignment: _isAr
+                              ? Alignment.centerRight
+                              : Alignment.centerLeft,
+                          child: Container(
+                            constraints: const BoxConstraints(maxWidth: 210),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 9,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF38BDF8)
+                                  .withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: const Color(0xFF38BDF8)
+                                    .withValues(alpha: 0.25),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.location_on_outlined,
+                                  color: Color(0xFF80DEEA),
+                                  size: 13,
+                                ),
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: Text(
+                                    residencyCountry,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: Color(0xE6FFFFFF),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: 'Cairo',
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -893,7 +937,7 @@ class AccountTabState extends State<AccountTab> {
               ),
               const SizedBox(width: 10),
 
-              // 🟢 المهتمين بي
+              // 🟢 عدد زوار الملف الشخصي
               Expanded(
                 child: InkWell(
                   onTap: widget.onProfileViewersPressed,
@@ -920,7 +964,7 @@ class AccountTabState extends State<AccountTab> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                _isAr ? 'المهتمين بي' : 'Interested in Me',
+                                _isAr ? 'زوار ملفي' : 'Profile Visitors',
                                 style: const TextStyle(
                                   color: Colors.white70,
                                   fontSize: 10.5,
@@ -929,7 +973,7 @@ class AccountTabState extends State<AccountTab> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                               Text(
-                                '$interestedInMeDisplay',
+                                '$profileVisitorsDisplay',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 14,
