@@ -44,7 +44,7 @@ class BasicInformation extends JsonResource
             ? OnBehalf::find($memberModel->on_behalves_id)
             : null;
 
-        $activePaidPackage = SubscriptionUtility::currentActivePaidPackage($this);
+        $activePaidPackage = SubscriptionUtility::currentActivePaidPackageForMember($memberModel);
         $packageName = '';
         if ($activePaidPackage && !empty($activePaidPackage->name)) {
             // Use the package's official localized name; never synthesize a name from its validity.
