@@ -274,3 +274,31 @@
 - لم يُنفّذ: `flutter analyze` أو `dart format` أو PHPUnit أو `php artisan route:list` أو طلب HTTP حي على الاستضافة/قاعدة البيانات. لا يوجد تشغيل Flutter/Dart في بيئة الجلسة، ولا توجد اتصالات تشغيلية بقاعدة الإنتاج. لم تظهر GitHub Actions أو status checks مرتبطة بآخر commit.
 - لم يتم دمج PR أو تعديل `main` أو النشر على الاستضافة.
 - حزمة الدفعة: `اصلاحات 13.zip`، وتحتوي الملفات البرمجية السبعة أعلاه فقط مع مساراتها الأصلية؛ استُبعد `PROJECT_NOTES.md` من الأرشيف حسب قاعدة التسليم.
+
+
+## 2026-11-05 — توسيع إصلاح إلغاء التحقق والاعتماد ليشمل تدفق التطبيق كاملاً
+- متابعة للدفعة نفسها بعد مسح بقية API التطبيق؛ تم العثور على شروط اعتماد إضافية خارج Middleware.
+- الإضافة إلى الإصلاحات:
+  - `AuthController`: إلغاء رفض تسجيل الدخول عبر Google وSocial عند `approved=0`، مع إبقاء قيمة الاعتماد المسجلة كما هي وعدم تحويلها تلقائياً إلى معتمد.
+  - `AuthController::signup`: لا ينتظر تأكيد البريد؛ أصبح مسار التسجيل لا يرسل المستخدم إلى تدفق تأكيد البريد. تبقى آلية OTP الهاتف الاختيارية منفصلة إذا كانت مفعلة.
+  - `HomeController`: إزالة تصفية الأعضاء حسب الاعتماد من قوائم الرئيسية والأعضاء الجدد والمميزين، وإرجاع `email_verification=0` و`member_verification=0` في إعدادات API الخاصة بالتطبيق، دون تعديل الإعداد الأصلي في قاعدة البيانات.
+  - `MemberController`: إزالة شرط `member_verification` الذي كان يستبعد الأعضاء غير المعتمدين من البحث والمطابقة.
+  - `ProfileViewerController`: عدم إخفاء زوار الملف لمجرد أن حساب الزائر غير معتمد إدارياً.
+  - إصلاح حفظ FCM token في مسار Social Login بعد توسيع منطق الدخول.
+- تأكيد النطاق: لا تُغيّر هذه الدفعة قيمة `users.approved` المخزنة تلقائياً، ولا تغيّر إعدادات الموقع أو لوحة الإدارة. شرط الحظر `blocked` وشرط تعطيل الحساب `deactivated` بقيا منفصلين. كما بقيت موافقة قصص النجاح وموافقة صور الحساب مستقلة عن اعتماد العضوية.
+- الملفات البرمجية النهائية المتغيرة في الدفعة الحالية:
+  - `المشروع/WESAL/routes/api.php`
+  - `المشروع/WESAL/app/Http/Middleware/IsApiMember.php`
+  - `المشروع/WESAL/app/Http/Controllers/Api/AuthController.php`
+  - `المشروع/WESAL/app/Http/Controllers/Api/HomeController.php`
+  - `المشروع/WESAL/app/Http/Controllers/Api/MemberController.php`
+  - `المشروع/WESAL/app/Http/Controllers/Api/ProfileController.php`
+  - `المشروع/WESAL/app/Http/Controllers/Api/ProfileViewerController.php`
+  - `المشروع/WESAL/app/Http/Resources/PublicProfile/BasicInformation.php`
+  - `المشروع/WESAL/app/Http/Resources/PublicProfile/AboutUser.php`
+  - `فلاتر/lib/services/api_service.dart`
+  - `فلاتر/lib/screens/member_profile_screen.dart`
+- التحققات الساكنة الإضافية: مسح جميع ملفات `app/Http/Controllers/Api`؛ لا توجد شروط `approved` على قوائم الأعضاء المتبقية بعد الإزالة. المتبقي في API هو موافقة قصص النجاح، وإرجاع حالة العضو كبيان معلوماتي، وحقول `photo_approved`؛ لم تُستخدم كشرط لفتح بطاقة العضو. فحص ملفات Flutter لم يجد شرطاً محلياً ل`member_verification` أو `email_verification`؛ ومع ذلك عُدّلت أعلام `feature_check` الخاصة بالتطبيق لتكون معطلة صراحة.
+- اختبارات التشغيل غير المنفذة: لا `flutter analyze` أو `dart format` أو PHPUnit أو `php artisan route:list` أو طلبات HTTP حية على الاستضافة وقاعدة البيانات. لا تتوفر بيئة تشغيل المشروع أو قاعدة بيانات الإنتاج في هذه الجلسة. كما لا توجد GitHub Actions أو status checks مرتبطة بفرع العمل عند آخر مراجعة.
+- لا دمج ولا نشر؛ `main` لم يُعدّل.
+- اسم أرشيف الدفعة النهائية: `اصلاحات 13.zip`، ويحتوي الملفات البرمجية الـ11 أعلاه فقط دون `PROJECT_NOTES.md`.
