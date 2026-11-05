@@ -1598,7 +1598,7 @@ class ApiService {
       final summary = await getCurrentUserSummary(lang: lang);
       if (summary != null &&
           (summary['name']?.toString().trim().isNotEmpty ?? false)) {
-        final parts = summary['name'].toString().trim().split(RegExp(r'\\s+'));
+        final parts = summary['name'].toString().trim().split(RegExp(r'\s+'));
         final basicInfo = <String, dynamic>{
           'firs_name': parts.first,
           'first_name': parts.first,
