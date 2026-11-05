@@ -1339,12 +1339,23 @@ class ApiService {
   static Future<MemberProfileModel?> getCurrentUserProfile(
       {String? lang}) async {
     try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      final int currentUserId = prefs.getInt('user_id') ?? 0;
-      if (currentUserId == 0) return null;
+      // This authenticated endpoint returns private owner-only profile summary
+      // plus actual statistics. Package quotas remain separate fields.
+      final response = await get('/member/account-summary', lang: lang);
+      if (response == null || response['result'] == false) return null;
 
-      return await getPublicProfile(currentUserId, lang: lang);
+      final profileData = _extractMapData(response);
+      if (profileData == null) return null;
+
+      final rawUserId = profileData['user_id'] ?? profileData['id'];
+      final userId = rawUserId is int
+          ? rawUserId
+          : int.tryParse(rawUserId?.toString() ?? '') ?? 0;
+      return MemberProfileModel.fromJson(profileData, userId);
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ [API ERROR AccountSummary]: $e');
+      }
       return null;
     }
   }
