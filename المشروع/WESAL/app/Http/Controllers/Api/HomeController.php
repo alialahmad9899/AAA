@@ -156,8 +156,7 @@ class HomeController extends Controller
         }
         // new members & premium members
         $members = User::where('user_type', 'member')
-            ->where('approved', 1)
-            ->where('blocked', 0)
+                        ->where('blocked', 0)
             ->where('deactivated', 0);
 
         if ($token && $user->user_type == 'member') {
@@ -193,8 +192,7 @@ class HomeController extends Controller
         }
         // new members & premium members
         $members = User::where('user_type', 'member')
-            ->where('approved', 1)
-            ->where('blocked', 0)
+                        ->where('blocked', 0)
             ->where('deactivated', 0);
 
         if ($user && $user->user_type == 'member') {
@@ -238,8 +236,7 @@ class HomeController extends Controller
 
         // new members & premium members
         $members = User::where('user_type', 'member')
-            ->where('approved', 1)
-            ->where('blocked', 0)
+                        ->where('blocked', 0)
             ->where('deactivated', 0);
             
         if (auth()->user() && auth()->user()->user_type == 'member') {
@@ -356,8 +353,7 @@ class HomeController extends Controller
     {
         $members = User::query();
         $members->where('user_type', 'member')
-            ->where('approved', 1)
-            ->where('blocked', 0)
+                        ->where('blocked', 0)
             ->where('deactivated', 0);
 
         if (auth()->user() && auth()->user()->user_type == 'member') {
