@@ -337,7 +337,9 @@ class AccountTabState extends State<AccountTab> {
 
     try {
       final MemberProfileModel? profile =
-          await ApiService.getCurrentUserProfile();
+          await ApiService.getCurrentUserProfile(
+        lang: widget.currentLanguage,
+      );
 
       if (mounted) {
         setState(() {
