@@ -54,7 +54,6 @@ class ProfileViewerController extends Controller
             ->whereIn("viewed_by", function ($query) {
                 $query->select('id')
                     ->from('users')
-                    ->where('approved', '1')
                     ->where('blocked', 0)
                     ->where('deactivated', 0)
                     ->where('permanently_delete', 0);
