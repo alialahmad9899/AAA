@@ -1093,13 +1093,47 @@ class ProfileController extends Controller
 
     public function public_profile($id)
     {
-        $user = User::where('id', $id)->first();
+        // Load the profile aggregates used below in one predictable query.
+        // The public endpoint must not assume every account has every relation.
+        $user = User::with([
+            'member',
+            'education',
+            'career',
+            'physical_attributes',
+            'hobbies',
+            'attitude',
+            'recidency',
+            'spiritual_backgrounds',
+            'lifestyles',
+            'astrologies',
+            'partner_expectations',
+        ])->where('id', $id)->first();
         $auth_user = auth()->user();
-        if ($user) {
-            $member_known_languages = null;
-            $member_mother_tongue = null;
-            $known_languages = json_decode($user->member->known_languages);
-            $mother_tongue = json_decode($user->member->mothere_tongue);
+
+        if (!$auth_user) {
+            return response()->json([
+                'result' => false,
+                'message' => translate('Unauthenticated'),
+            ], 401);
+        }
+
+        if (!$user) {
+            return $this->failure_message('User Not Found');
+        }
+
+        // Accounts without a member row are not viewable as member profiles.
+        $targetMember = $user->member;
+        if (!$targetMember) {
+            return response()->json([
+                'result' => false,
+                'message' => translate('Member profile is not available.'),
+            ], 404);
+        }
+
+        $member_known_languages = null;
+        $member_mother_tongue = null;
+        $known_languages = json_decode($targetMember->known_languages ?? null);
+        $mother_tongue = json_decode($targetMember->mothere_tongue ?? null);
             if ($known_languages != null) {
                 $member_known_languages = LanguageResource::collection(MemberLanguage::whereIn('id', $known_languages)->get());
             }
