@@ -7,67 +7,11 @@ use Illuminate\Http\Request;
 
 class IsApiMember
 {
-    private const PROFILE_SETUP_READ_PATHS = [
-        'api/member/full-my-profile',
-        'api/member/basic-info',
-        'api/member/introduction',
-        'api/member/get-email',
-        'api/member/present/address',
-        'api/member/permanent/address',
-        'api/member/physical-attributes',
-        'api/member/language',
-        'api/member/hobbies-interests',
-        'api/member/attitude-behavior',
-        'api/member/residency-info',
-        'api/member/spiritual-background',
-        'api/member/life-style',
-        'api/member/astronomic',
-        'api/member/family-info',
-        'api/member/partner-expectation',
-        'api/member/education',
-        'api/member/career',
-        'api/member/languages',
-        'api/member/partner-languages',
-        'api/member/profile-dropdown',
-        'api/member/countries',
-        'api/member/states/*',
-    ];
-
-    private const PROFILE_SETUP_WRITE_PATHS = [
-        'api/member/basic-info/update',
-        'api/member/physical-attributes/update',
-        'api/member/residency-info/update',
-        'api/member/spiritual-background/update',
-        'api/member/partner-expectation/update',
-        'api/member/life-style/update',
-        'api/member/attitude-behavior/update',
-        'api/member/astronomic/update',
-        'api/member/education',
-        'api/member/education/*',
-        'api/member/career',
-        'api/member/career/*',
-    ];
-
-    private function isProfileSetupRequest(Request $request): bool
-    {
-        $method = strtoupper($request->method());
-        if ($method === 'GET') {
-            $paths = self::PROFILE_SETUP_READ_PATHS;
-        } elseif (in_array($method, ['POST', 'PUT', 'PATCH'], true)) {
-            $paths = self::PROFILE_SETUP_WRITE_PATHS;
-        } else {
-            $paths = [];
-        }
-
-        foreach ($paths as $path) {
-            if ($request->is($path)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
+    /**
+     * The mobile application does not require email verification or admin approval.
+     * Keep the security checks that matter here: an authenticated account and
+     * an explicit block status. Authentication is also enforced by auth:sanctum.
+     */
     public function handle(Request $request, Closure $next)
     {
         $user = $request->user();
@@ -85,15 +29,6 @@ class IsApiMember
                 'result' => false,
                 'status' => 'blocked',
                 'message' => translate('User is banned.'),
-            ], 403);
-        }
-
-        // Pending admin approval may finish profile setup only.
-        if ((int) $user->approved === 0 && !$this->isProfileSetupRequest($request)) {
-            return response()->json([
-                'result' => false,
-                'status' => 'non_verified',
-                'message' => translate('User is not verified.'),
             ], 403);
         }
 
