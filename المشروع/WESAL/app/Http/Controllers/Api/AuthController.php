@@ -61,10 +61,6 @@ class AuthController extends Controller
                 // safe() omits this server-prepared value because it is not a client input rule.
                 $userData['membership'] = 1;
                 $user = $user_service->store($userData);
-                // App accounts do not wait for manual admin approval.
-                $user->approved = 1;
-                $user->save();
-
                 $member_service = new MemberService();
                 // Normalize the field names sent by the Flutter signup form.
                 // The app sends date_of_birth and on_behalf; MemberService expects
@@ -226,12 +222,6 @@ class AuthController extends Controller
 
         if ($user != null) {
             if (Hash::check($request->password, $user->password)) {
-                // Normalize legacy pending accounts; admin approval is not required.
-                if ((int) $user->approved !== 1) {
-                    $user->approved = 1;
-                    $user->save();
-                }
-
                 $fcmToken = $request->fcm_token ?? $request->device_token;
                 if ($fcmToken) {
                     $user->fcm_token = $fcmToken;
@@ -283,10 +273,6 @@ class AuthController extends Controller
             if ($fcmToken) {
                 $user->fcm_token = $fcmToken;
             }
-            $user->save();
-
-            // Admin approval is not a prerequisite for mobile-app sign-in.
-            $user->approved = 1;
             $user->save();
 
             return $this->authResponse($user);
@@ -344,10 +330,6 @@ class AuthController extends Controller
             if ($fcmToken) {
                 $existingUserByProviderId->fcm_token = $fcmToken;
             }
-            // Admin approval is not a prerequisite for mobile-app sign-in.
-            $existingUserByProviderId->approved = 1;
-            $existingUserByProviderId->save();
-
             return $this->authResponse($existingUserByProviderId);
         } else {
             $newUser                     = new User;
@@ -357,7 +339,7 @@ class AuthController extends Controller
             $newUser->provider_id        = $request->provider;
             $newUser->code               = unique_code();
             $newUser->membership         = 1;
-            $newUser->approved           = 1;
+            $newUser->approved           = get_setting('member_verification') == 1 ? 0 : 1;
             
             $fcmToken = $request->fcm_token ?? $request->device_token;
             if ($fcmToken) {
