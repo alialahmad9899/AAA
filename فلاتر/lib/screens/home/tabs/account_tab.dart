@@ -336,22 +336,35 @@ class AccountTabState extends State<AccountTab> {
     }
 
     try {
-      final MemberProfileModel? profile =
-          await ApiService.getCurrentUserProfile(
-        lang: widget.currentLanguage,
-      );
+      // Load the authenticated identity independently from the full profile.
+      // A missing education/physical/preferences row must never hide the name
+      // and photo from the account header.
+      final results = await Future.wait<Object?>([
+        ApiService.getCurrentUserSummary(lang: widget.currentLanguage),
+        ApiService.getCurrentUserProfile(lang: widget.currentLanguage),
+      ]);
+      final summary = results[0] is Map
+          ? Map<String, dynamic>.from(results[0] as Map)
+          : null;
+      final MemberProfileModel? profile = results[1] is MemberProfileModel
+          ? results[1] as MemberProfileModel
+          : null;
+
+      final summaryName = (summary?['name'] ?? '').toString().trim();
+      final summaryPhoto = (summary?['photo'] ?? '').toString().trim();
+      final profileName = profile?.basicInfo.fullName.trim() ?? '';
+      final profilePhoto = profile?.basicInfo.photo.trim() ?? '';
 
       if (mounted) {
         setState(() {
           _userProfile = profile;
-          if (profile != null) {
-            _userName = profile.basicInfo.fullName;
-            _userPhoto = profile.basicInfo.photo;
-          }
+          _userName = summaryName.isNotEmpty ? summaryName : profileName;
+          _userPhoto = summaryPhoto.isNotEmpty ? summaryPhoto : profilePhoto;
           _isLoadingUser = false;
         });
       }
     } catch (e) {
+      if (kDebugMode) debugPrint('❌ [AccountTab] Failed to load account identity: $e');
       if (mounted) {
         setState(() {
           _isLoadingUser = false;
