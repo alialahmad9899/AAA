@@ -776,7 +776,7 @@ class Step4PartnerExpectations extends StatelessWidget {
 // 9. مهنة الشريك
                 _buildSectionTitle(_isAr
                     ? '12. ما المجال المهني الذي تفضّله في شريك حياتك؟ 💼'
-                    : '6. Preferred Career 💼'),
+                    : '12. Preferred Career 💼'),
                 TextFormField(
                   controller: professionController,
                   style: const TextStyle(
@@ -797,7 +797,7 @@ class Step4PartnerExpectations extends StatelessWidget {
                 // 7. قبول وجود أطفال
                 _buildSectionTitle(_isAr
                     ? '13. هل يناسبك شريك لديه أطفال من زواج سابق؟ 👶 *'
-                    : '10. Accept Children? 👶 *'),
+                    : '13. Accept Children? 👶 *'),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -823,7 +823,7 @@ class Step4PartnerExpectations extends StatelessWidget {
 
                 // 8. موقف التدخين
                 _buildSectionTitle(
-                    _isAr ? '14. ما موقفك من التدخين لدى الشريك؟ 🚬 *' : '11. Accept Smoking? 🚬 *'),
+                    _isAr ? '14. ما موقفك من التدخين لدى الشريك؟ 🚬 *' : '14. Accept Smoking? 🚬 *'),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -850,7 +850,7 @@ class Step4PartnerExpectations extends StatelessWidget {
                 // 9. موقف الكحول / المشروبات
                 _buildSectionTitle(_isAr
                     ? '15. ما موقفك من تناول الكحول لدى الشريك؟ 🍷 *'
-                    : '12. Accept Alcohol? 🍷 *'),
+                    : '15. Accept Alcohol? 🍷 *'),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
