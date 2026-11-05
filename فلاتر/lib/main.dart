@@ -72,7 +72,12 @@ void _handleDeepLinkUri(Uri uri) {
   debugPrint('🔗 [Deep Link Received]: $uri');
 
   // التحقق من أن الرابط يستهدف صفحة العضو: https://wesal.app/profile?id=123
-  if (uri.path.contains('/profile')) {
+  final bool isProfileLink = uri.pathSegments.any(
+        (segment) => segment.toLowerCase() == 'profile') ||
+      (uri.scheme.toLowerCase() == 'wesal' &&
+          uri.host.toLowerCase() == 'profile');
+
+  if (isProfileLink) {
     final String? idParam = uri.queryParameters['id'];
     if (idParam != null) {
       final int? userId = int.tryParse(idParam);
