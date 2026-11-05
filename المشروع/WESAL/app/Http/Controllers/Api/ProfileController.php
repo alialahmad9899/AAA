@@ -173,20 +173,52 @@ class ProfileController extends Controller
             ? (new ResidenceInformation($user->recidency))->resolve(request())
             : [];
 
+        // Use the same language-aware country name strategy as the country dropdown.
+        $language = strtolower((string) (
+            request()->header('Accept-Language')
+            ?? request()->header('app_language')
+            ?? request()->get('lang')
+            ?? app()->getLocale()
+        ));
+        $isEnglish = str_contains($language, 'en');
+
+        $localizedCountryName = static function ($countryId) use ($isEnglish): string {
+            if (empty($countryId)) {
+                return '';
+            }
+
+            $country = DB::table('countries')->where('id', $countryId)->first();
+            if (!$country) {
+                return '';
+            }
+
+            $preferredName = $isEnglish
+                ? ($country->name ?? '')
+                : ($country->name_ar ?? '');
+
+            $fallbackName = $isEnglish
+                ? ($country->name_ar ?? '')
+                : ($country->name ?? '');
+
+            return trim((string) ($preferredName ?: $fallbackName));
+        };
+
+        $residencyCountryId = $user->recidency->recidency_country_id ?? null;
+        $residencyCountry = $localizedCountryName($residencyCountryId);
+
         // Compatibility for older accounts that have a present Address but
         // do not have a Recidency row yet.
-        if (empty($residenceInfo['residency_country'])) {
-            $presentAddress = Address::with('country')
-                ->where('user_id', $user->id)
+        if ($residencyCountry === '') {
+            $presentAddress = Address::where('user_id', $user->id)
                 ->where('type', 'present')
                 ->first();
+            $residencyCountry = $localizedCountryName($presentAddress->country_id ?? null);
+        }
 
-            $presentCountry = trim((string) ($presentAddress->country->name ?? ''));
-            if ($presentCountry !== '') {
-                $residenceInfo['residency_country'] = $presentCountry;
-                $residenceInfo['recidency_country'] = $presentCountry;
-                $residenceInfo['country'] = $presentCountry;
-            }
+        if ($residencyCountry !== '') {
+            $residenceInfo['residency_country'] = $residencyCountry;
+            $residenceInfo['recidency_country'] = $residencyCountry;
+            $residenceInfo['country'] = $residencyCountry;
         }
 
         // One row per expressed-interest request; count unique recipients
