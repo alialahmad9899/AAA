@@ -1383,9 +1383,19 @@ class ApiService {
           fullProfile['basic_info'],
         );
         if (basicInfo != null &&
-            ((basicInfo['firs_name'] ?? basicInfo['first_name'] ?? '').toString().trim().isNotEmpty ||
-              (basicInfo['last_name'] ?? '').toString().trim().isNotEmpty)) {
-          return MemberProfileModel.fromJson(fullProfile, currentUserId);
+            ((basicInfo['firs_name'] ?? basicInfo['first_name'] ?? '')
+                    .toString()
+                    .trim()
+                    .isNotEmpty ||
+                (basicInfo['last_name'] ?? '').toString().trim().isNotEmpty)) {
+          final resolvedUserId = int.tryParse(
+                fullProfile['user_id']?.toString() ?? '',
+              ) ??
+              currentUserId;
+          if (resolvedUserId > 0 && resolvedUserId != currentUserId) {
+            await prefs.setInt('user_id', resolvedUserId);
+          }
+          return MemberProfileModel.fromJson(fullProfile, resolvedUserId);
         }
       }
 
