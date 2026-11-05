@@ -65,11 +65,6 @@ class MemberController extends Controller
                 ->where('ignored_by', $user->id)->orWhere('user_id', $user->id);
         });
 
-        // 4. التحقق من شرط تفعيل الموافقة على الحسابات
-        if (get_setting('member_verification') == 1) {
-            $users_query->where('approved', 1);
-        }
-
         // 5. تطبيق شروط المطابقة حسب توقعات الشريك والبلد فقط عند تفعيل زر المطابقة (match_enabled = true)
         if ($match_enabled) {
             $expectation = PartnerExpectation::where('user_id', $user->id)->first();
@@ -169,11 +164,6 @@ class MemberController extends Controller
         // Membership Check
         if ($member_type == 1 || $member_type == 2) {
             $users_query->where('membership', $member_type);
-        }
-
-        // Member Approved Check
-        if (get_setting('member_verification') == 1) {
-            $users_query->where('approved', 1);
         }
 
         // Sort By age
