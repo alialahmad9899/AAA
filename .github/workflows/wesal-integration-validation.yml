@@ -1,0 +1,48 @@
+name: Validate Wesal integration
+
+on:
+  push:
+    branches:
+      - integration/wesal-final-consolidated-2026-11-06
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  backend-php-syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+      - name: Validate Laravel PHP syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          find "المشروع/WESAL/app" -type f -name '*.php' -print0 | while IFS= read -r -d '' file; do
+            php -l "$file"
+          done
+          php -l "المشروع/WESAL/routes/api.php"
+          php -l "المشروع/WESAL/database/migrations/2026_11_05_000001_convert_attitudes_table_to_utf8mb4.php"
+
+  flutter-regression-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Resolve Flutter dependencies
+        working-directory: فلاتر
+        run: flutter pub get
+      - name: Run profile, signup and account model regression tests
+        working-directory: فلاتر
+        run: flutter test test/profile_edit_unit_test.dart
