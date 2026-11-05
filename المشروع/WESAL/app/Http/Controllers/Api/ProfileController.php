@@ -1132,14 +1132,50 @@ class ProfileController extends Controller
 
         $member_known_languages = null;
         $member_mother_tongue = null;
-        $known_languages = json_decode($targetMember->known_languages ?? null);
-        $mother_tongue = json_decode($targetMember->mothere_tongue ?? null);
-            if ($known_languages != null) {
-                $member_known_languages = LanguageResource::collection(MemberLanguage::whereIn('id', $known_languages)->get());
+
+        // Legacy profiles may contain an empty, scalar, malformed or partially
+        // deleted language selection. Normalize it before passing values to whereIn.
+        $knownLanguageValues = json_decode($targetMember->known_languages ?? '[]', true);
+        if (!is_array($knownLanguageValues)) {
+            $knownLanguageValues = is_numeric($knownLanguageValues)
+                ? [$knownLanguageValues]
+                : [];
+        }
+
+        $knownLanguageIds = array_values(array_unique(array_filter(
+            array_map(static function ($value): int {
+                if (is_array($value)) {
+                    $value = $value['id'] ?? null;
+                } elseif (is_object($value)) {
+                    $value = $value->id ?? null;
+                }
+
+                return is_numeric($value) ? (int) $value : 0;
+            }, $knownLanguageValues),
+            static function (int $id): bool {
+                return $id > 0;
             }
-            if ($mother_tongue != null) {
-                $member_mother_tongue = new LanguageResource(MemberLanguage::where('id', $mother_tongue)->first());
+        )));
+
+        if ($knownLanguageIds !== []) {
+            $knownLanguageRecords = MemberLanguage::whereIn('id', $knownLanguageIds)->get();
+            if ($knownLanguageRecords->isNotEmpty()) {
+                $member_known_languages = LanguageResource::collection($knownLanguageRecords);
             }
+        }
+
+        $motherTongueValue = json_decode($targetMember->mothere_tongue ?? 'null', true);
+        if (is_array($motherTongueValue)) {
+            $motherTongueValue = $motherTongueValue['id'] ?? $motherTongueValue[0] ?? null;
+        }
+        $motherTongueId = is_numeric($motherTongueValue) ? (int) $motherTongueValue : 0;
+
+        if ($motherTongueId > 0) {
+            $motherTongueRecord = MemberLanguage::where('id', $motherTongueId)->first();
+            if ($motherTongueRecord) {
+                $member_mother_tongue = new LanguageResource($motherTongueRecord);
+            }
+        }
             $data['intoduction'] = new AboutUser($user);
             $data['basic_info'] = new PublicBasicInformation($user);
 
