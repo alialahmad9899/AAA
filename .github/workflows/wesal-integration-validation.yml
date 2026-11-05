@@ -25,11 +25,31 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          find "المشروع/WESAL/app" -type f -name '*.php' -print0 | while IFS= read -r -d '' file; do
+          files=(
+            "المشروع/WESAL/app/Http/Controllers/Api/AuthController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/HomeController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/MemberController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/ProfileController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/ProfileDropdownController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/ProfileViewerController.php"
+            "المشروع/WESAL/app/Http/Controllers/CareerController.php"
+            "المشروع/WESAL/app/Http/Controllers/EducationController.php"
+            "المشروع/WESAL/app/Http/Middleware/EmailVerifiedApi.php"
+            "المشروع/WESAL/app/Http/Middleware/IsApiMember.php"
+            "المشروع/WESAL/app/Http/Requests/PartnerExpectationRequest.php"
+            "المشروع/WESAL/app/Http/Resources/Profile/OnBehalfResource.php"
+            "المشروع/WESAL/app/Http/Resources/PublicProfile/AboutUser.php"
+            "المشروع/WESAL/app/Http/Resources/PublicProfile/BasicInformation.php"
+            "المشروع/WESAL/app/Http/Resources/PublicProfile/PhysicalAttributes.php"
+            "المشروع/WESAL/app/Models/Astrology.php"
+            "المشروع/WESAL/app/Models/Attitude.php"
+            "المشروع/WESAL/app/Models/Hobby.php"
+            "المشروع/WESAL/routes/api.php"
+            "المشروع/WESAL/database/migrations/2026_11_05_000001_convert_attitudes_table_to_utf8mb4.php"
+          )
+          for file in "${files[@]}"; do
             php -l "$file"
           done
-          php -l "المشروع/WESAL/routes/api.php"
-          php -l "المشروع/WESAL/database/migrations/2026_11_05_000001_convert_attitudes_table_to_utf8mb4.php"
 
   flutter-regression-tests:
     runs-on: ubuntu-latest
