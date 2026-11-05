@@ -14,6 +14,11 @@ class OnBehalfResource extends JsonResource
      */
     public function toArray($request)
     {
+        // A stale or missing on_behalves_id must not break the whole profile response.
+        if (!$this->resource) {
+            return null;
+        }
+
         return [
             'id' => $this->id,
             'name' => $this->name,
