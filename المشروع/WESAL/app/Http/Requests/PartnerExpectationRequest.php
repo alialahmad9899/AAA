@@ -27,6 +27,10 @@ class PartnerExpectationRequest extends FormRequest
             'general' => ['sometimes', 'nullable', 'string', 'max:5000'],
             'partner_height' => ['sometimes', 'nullable', 'numeric', 'between:0.4,2.5'],
             'partner_weight' => ['sometimes', 'nullable', 'numeric', 'between:1,999.99'],
+            'min_height' => ['sometimes', 'nullable', 'numeric', 'between:0.4,2.5'],
+            'max_height' => ['sometimes', 'nullable', 'numeric', 'between:0.4,2.5'],
+            'min_weight' => ['sometimes', 'nullable', 'numeric', 'between:1,999.99'],
+            'max_weight' => ['sometimes', 'nullable', 'numeric', 'between:1,999.99'],
             'partner_marital_status' => ['sometimes', 'nullable', 'integer', 'exists:marital_statuses,id'],
             'partner_children_acceptable' => ['sometimes', 'nullable', 'in:yes,no,dose_not_matter,does_not_matter'],
             'residence_country_id' => ['sometimes', 'nullable', 'integer', 'exists:countries,id'],
@@ -49,6 +53,8 @@ class PartnerExpectationRequest extends FormRequest
             'partner_profession' => ['sometimes', 'nullable', 'string', 'max:255'],
             'partner_eye_color' => ['sometimes', 'nullable', 'string', 'max:50'],
             'partner_hair_color' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'eye_color' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'hair_color' => ['sometimes', 'nullable', 'string', 'max:50'],
         ];
     }
 

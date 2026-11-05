@@ -56,6 +56,34 @@ Map<String, dynamic>? _parseGenericMapIsolate(String responseBody) {
   }
 }
 
+Map<String, dynamic>? _parseResourceCollectionMapIsolate(String responseBody) {
+  try {
+    final dynamic decoded = jsonDecode(responseBody);
+    if (decoded is Map) {
+      final Map<String, dynamic> parsed = Map<String, dynamic>.from(decoded);
+      final dynamic records = parsed['data'];
+      dynamic firstRecord;
+      if (records is List && records.isNotEmpty) {
+        firstRecord = records.first;
+      } else if (records is Map) {
+        firstRecord = records;
+      }
+      if (firstRecord is Map) {
+        for (final entry in firstRecord.entries) {
+          if (entry.key != 'data' && entry.key != 'result') {
+            parsed.putIfAbsent(entry.key.toString(), () => entry.value);
+          }
+        }
+      }
+      return parsed;
+    }
+    if (decoded is List) {
+      return <String, dynamic>{'result': true, 'data': decoded};
+    }
+  } catch (_) {}
+  return null;
+}
+
 List<dynamic> _parseStatesIsolate(String responseBody) {
   try {
     final data = jsonDecode(responseBody);
@@ -1083,6 +1111,7 @@ class ApiService {
         getAttitudeBehavior(lang: lang),
         getAstronomicInfo(lang: lang),
         getIntroduction(lang: lang),
+        getPartnerExpectations(lang: lang),
       ]);
 
       return {
@@ -1091,13 +1120,16 @@ class ApiService {
         'career': results[2],
         'physical_attributes': results[3],
         'spiritual_background': results[4],
+        'residence_info': results[5],
         'residency_information': results[5],
+        'lifestyles': results[6],
         'lifestyle': results[6],
         'hobbies_interest': results[7],
         'attitude_behavior': results[8],
         'astronomic_information': results[9],
         'intoduction': results[10],
         'introduction': results[10],
+        'partner_expectation': results[11],
       };
     } catch (e) {
       if (kDebugMode) debugPrint('❌ [API ERROR getFullProfile]: $e');
@@ -1149,7 +1181,7 @@ class ApiService {
   }) async {
     try {
       final headers = await _getHeaders(lang: lang);
-      final Uri url = Uri.parse('$baseUrl/member/introduction/update');
+      final Uri url = Uri.parse('$baseUrl/member/introduction-update');
       final String cleanIntro = introduction.trim();
       final Map<String, dynamic> payload = {
         'introduction': cleanIntro,
@@ -1299,6 +1331,13 @@ class ApiService {
 
   static Future<MemberProfileModel?> getPublicProfile(int userId,
       {String? lang}) async {
+    if (userId <= 0) {
+      if (kDebugMode) {
+        debugPrint('[PublicProfile] Invalid target user ID: $userId');
+      }
+      return null;
+    }
+
     try {
       final headers = await _getHeaders(lang: lang);
       final int ts = DateTime.now().millisecondsSinceEpoch;
@@ -1308,30 +1347,176 @@ class ApiService {
 
       final response =
           await http.get(url, headers: headers).timeout(_timeoutDuration);
-      if (kDebugMode) {
-        debugPrint(
-            '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
+
+      if (response.statusCode != 200) {
+        if (kDebugMode) {
+          debugPrint(
+            '[PublicProfile] HTTP ${response.statusCode} for user $userId. '
+            'Response: ${_safeApiErrorSummary(response.body)}',
+          );
+        }
+        return null;
       }
 
-      if (response.statusCode == 200) {
-        dynamic decoded;
-        try {
-          decoded = jsonDecode(response.body);
-        } catch (_) {
-          decoded = null;
+      dynamic decoded;
+      try {
+        decoded = jsonDecode(response.body);
+      } on FormatException catch (error, stackTrace) {
+        if (kDebugMode) {
+          debugPrint('[PublicProfile] Invalid JSON: $error');
+          debugPrintStack(stackTrace: stackTrace);
         }
+        return null;
+      }
 
-        if (decoded is Map) {
-          final Map<String, dynamic> body = Map<String, dynamic>.from(decoded);
-          if (body['result'] == true || body['data'] != null) {
-            final profileData = _extractMapData(body) ?? body;
-            return MemberProfileModel.fromJson(profileData, userId);
-          }
+      if (decoded is! Map) {
+        if (kDebugMode) {
+          debugPrint(
+            '[PublicProfile] Expected JSON object, got ${decoded.runtimeType}.',
+          );
         }
+        return null;
+      }
+
+      final body = Map<String, dynamic>.from(decoded);
+      final result = body['result'];
+      final explicitlyFailed = result == false ||
+          result == 0 ||
+          result?.toString().trim().toLowerCase() == 'false' ||
+          result?.toString().trim() == '0' ||
+          body['success'] == false;
+
+      if (explicitlyFailed) {
+        if (kDebugMode) {
+          debugPrint(
+            '[PublicProfile] API rejected user $userId: '
+            '${_safeApiErrorSummary(jsonEncode(body))}',
+          );
+        }
+        return null;
+      }
+
+      if (result != true && result?.toString() != '1' && body['data'] == null) {
+        if (kDebugMode) {
+          debugPrint(
+            '[PublicProfile] Response has no profile payload for user $userId: '
+            '${_safeApiErrorSummary(response.body)}',
+          );
+        }
+        return null;
+      }
+
+      final profileData = _extractMapData(body) ?? body;
+      if (profileData.isEmpty) {
+        if (kDebugMode) {
+          debugPrint('[PublicProfile] Empty profile payload for user $userId.');
+        }
+        return null;
+      }
+
+      try {
+        return MemberProfileModel.fromJson(profileData, userId);
+      } catch (error, stackTrace) {
+        if (kDebugMode) {
+          debugPrint(
+            '[PublicProfile] JSON-to-model failure for user $userId: $error',
+          );
+          debugPrintStack(stackTrace: stackTrace);
+        }
+        return null;
+      }
+    } catch (error, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('[API ERROR PublicProfile] user=$userId error=$error');
+        debugPrintStack(stackTrace: stackTrace);
       }
       return null;
+    }
+  }
+
+  /// Returns a short, privacy-conscious summary of an API error body.
+  static String _safeApiErrorSummary(String body) {
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is Map) {
+        final message = decoded['message'];
+        if (message is String && message.trim().isNotEmpty) {
+          return message.trim();
+        }
+        final errors = decoded['errors'];
+        if (errors is Map && errors.isNotEmpty) {
+          return errors.keys.map((key) => key.toString()).join(', ');
+        }
+      }
+    } catch (_) {
+      // Do not print arbitrary server HTML or raw response bodies.
+    }
+
+    return 'No structured error message';
+  }
+
+  /// Lightweight authenticated identity endpoint used by the account header.
+  /// It does not depend on profile aggregates or public photo-privacy rules.
+  static Future<Map<String, dynamic>?> getCurrentUserSummary(
+      {String? lang}) async {
+    try {
+      final response = await get('/user-by-token', lang: lang);
+      if (response == null || response['result'] == false) return null;
+
+      final record = _extractMapData(response) ?? response;
+      final nestedUser = record['user'];
+      final user = nestedUser is Map
+          ? Map<String, dynamic>.from(nestedUser)
+          : record;
+
+      final int userId = int.tryParse(
+            (user['id'] ?? user['user_id'] ?? '').toString(),
+          ) ??
+          0;
+      final firstName =
+          (user['first_name'] ?? user['firs_name'] ?? '').toString().trim();
+      final lastName = (user['last_name'] ?? '').toString().trim();
+      final responseName = (user['name'] ?? '').toString().trim();
+      final name = [firstName, lastName]
+          .where((part) => part.isNotEmpty)
+          .join(' ')
+          .trim();
+      final resolvedName = name.isNotEmpty ? name : responseName;
+
+      dynamic rawPhoto =
+          user['photo'] ?? user['avatar_original'] ?? user['avatar'] ?? '';
+      if (rawPhoto is Map) {
+        rawPhoto = rawPhoto['url'] ?? rawPhoto['path'] ?? rawPhoto['value'] ?? '';
+      }
+      final photo = rawPhoto?.toString().trim() ?? '';
+
+      if (userId > 0) {
+        final prefs = await SharedPreferences.getInstance();
+        if (prefs.getInt('user_id') != userId) {
+          await prefs.setInt('user_id', userId);
+        }
+      }
+
+      return {
+        'user_id': userId,
+        'name': resolvedName,
+        'photo': photo,
+      };
     } catch (e) {
-      if (kDebugMode) debugPrint('❌ [API ERROR PublicProfile]: $e');
+      if (kDebugMode) debugPrint('❌ [API ERROR getCurrentUserSummary]: $e');
+      return null;
+    }
+  }
+
+  /// Reads private account counts and residency for the authenticated owner.
+  /// This is separate from subscription quota fields and public profile resources.
+  static Future<Map<String, dynamic>?> getAccountSummary({String? lang}) async {
+    try {
+      final response = await get('/member/account-summary', lang: lang);
+      if (response == null || response['result'] == false) return null;
+      return _extractMapData(response);
+    } catch (e) {
+      if (kDebugMode) debugPrint('❌ [API ERROR getAccountSummary]: $e');
       return null;
     }
   }
@@ -1341,10 +1526,99 @@ class ApiService {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final int currentUserId = prefs.getInt('user_id') ?? 0;
-      if (currentUserId == 0) return null;
 
-      return await getPublicProfile(currentUserId, lang: lang);
+      // Start the full owner profile and the private statistics summary together.
+      // The summary endpoint is authoritative for real counts, while full profile
+      // supplies all of the sections needed by the account screen.
+      final fullProfileFuture = getFullProfile(lang: lang);
+      final accountSummaryFuture = getAccountSummary(lang: lang);
+      final fullProfile = await fullProfileFuture;
+      final accountSummary = await accountSummaryFuture;
+
+      Map<String, dynamic>? mergedProfile;
+      if (fullProfile != null) {
+        mergedProfile = Map<String, dynamic>.from(fullProfile);
+      } else if (accountSummary != null) {
+        mergedProfile = <String, dynamic>{};
+      }
+
+      if (mergedProfile != null && accountSummary != null) {
+        final fullBasic = MemberProfileModel.safeMapOrNull(
+              mergedProfile['basic_info'],
+            ) ??
+            <String, dynamic>{};
+        final summaryBasic = MemberProfileModel.safeMapOrNull(
+              accountSummary['basic_info'],
+            ) ??
+            <String, dynamic>{};
+        mergedProfile['basic_info'] = <String, dynamic>{
+          ...fullBasic,
+          ...summaryBasic,
+        };
+
+        final summaryResidence = MemberProfileModel.safeMapOrNull(
+          accountSummary['residence_info'],
+        );
+        if (summaryResidence != null) {
+          mergedProfile['residence_info'] = summaryResidence;
+        }
+        mergedProfile['sent_interests_count'] =
+            accountSummary['sent_interests_count'] ?? 0;
+        mergedProfile['profile_visitors_count'] =
+            accountSummary['profile_visitors_count'] ?? 0;
+        mergedProfile['user_id'] ??=
+            accountSummary['user_id'] ?? accountSummary['id'];
+      }
+
+      if (mergedProfile != null) {
+        final basicInfo = MemberProfileModel.safeMapOrNull(
+          mergedProfile['basic_info'],
+        );
+        final hasIdentity = basicInfo != null &&
+            ((basicInfo['firs_name'] ?? basicInfo['first_name'] ?? '')
+                    .toString()
+                    .trim()
+                    .isNotEmpty ||
+                (basicInfo['last_name'] ?? '').toString().trim().isNotEmpty);
+        if (hasIdentity) {
+          final resolvedUserId = int.tryParse(
+                (mergedProfile['user_id'] ?? mergedProfile['id'] ?? '')
+                    .toString(),
+              ) ??
+              currentUserId;
+          if (resolvedUserId > 0 && resolvedUserId != currentUserId) {
+            await prefs.setInt('user_id', resolvedUserId);
+          }
+          return MemberProfileModel.fromJson(mergedProfile, resolvedUserId);
+        }
+      }
+
+      // The dedicated identity endpoint still provides the account header when
+      // an unrelated profile section fails to load.
+      final summary = await getCurrentUserSummary(lang: lang);
+      if (summary != null &&
+          (summary['name']?.toString().trim().isNotEmpty ?? false)) {
+        final parts = summary['name'].toString().trim().split(RegExp(r'\s+'));
+        final basicInfo = <String, dynamic>{
+          'firs_name': parts.first,
+          'first_name': parts.first,
+          'last_name': parts.length > 1 ? parts.skip(1).join(' ') : '',
+          'photo': summary['photo'] ?? '',
+          'gender': '',
+        };
+        return MemberProfileModel.fromJson({
+          'user_id': summary['user_id'],
+          'basic_info': basicInfo,
+        }, int.tryParse(summary['user_id'].toString()) ?? currentUserId);
+      }
+
+      // Compatibility fallback for hosting versions without the owner endpoints.
+      if (currentUserId > 0) {
+        return await getPublicProfile(currentUserId, lang: lang);
+      }
+      return null;
     } catch (e) {
+      if (kDebugMode) debugPrint('❌ [API ERROR getCurrentUserProfile]: $e');
       return null;
     }
   }
@@ -1658,7 +1932,7 @@ class ApiService {
       }
 
       if (response.statusCode == 200) {
-        return await compute(_parseGenericMapIsolate, response.body);
+        return await compute(_parseResourceCollectionMapIsolate, response.body);
       }
       return null;
     } catch (e) {
@@ -1768,7 +2042,7 @@ class ApiService {
       }
 
       if (response.statusCode == 200) {
-        return await compute(_parseGenericMapIsolate, response.body);
+        return await compute(_parseResourceCollectionMapIsolate, response.body);
       }
       return null;
     } catch (e) {
@@ -2337,16 +2611,28 @@ class ApiService {
             '🌐 [API POST] UpdateAstronomicInfo -> $url | Payload: $payload');
       }
 
+      const allowedFields = {
+        'sun_sign',
+        'moon_sign',
+        'time_of_birth',
+        'city_of_birth',
+      };
+      final Map<String, dynamic> bodyData = {
+        for (final entry in payload.entries)
+          if (allowedFields.contains(entry.key)) entry.key: entry.value,
+      };
+      if (bodyData.isEmpty) {
+        return {
+          'success': false,
+          'message': 'لا توجد معلومات فلكية لتحديثها',
+        };
+      }
+
       final response = await http
           .post(
             url,
             headers: headers,
-            body: jsonEncode({
-              'sun_sign': payload['sun_sign'] ?? '',
-              'moon_sign': '',
-              'time_of_birth': '',
-              'city_of_birth': '',
-            }),
+            body: jsonEncode(bodyData),
           )
           .timeout(_timeoutDuration);
       if (kDebugMode) {
@@ -2515,6 +2801,17 @@ class ApiService {
 
       final Map<String, dynamic> enrichedPayload = Map.from(payload);
       enrichedPayload.remove('_method');
+
+      // Keep signup and profile editing aligned with the canonical API value.
+      for (final key in const [
+        'partner_children_acceptable',
+        'smoking_acceptable',
+        'drinking_acceptable',
+      ]) {
+        if (enrichedPayload[key]?.toString() == 'dose_not_matter') {
+          enrichedPayload[key] = 'does_not_matter';
+        }
+      }
 
       if (enrichedPayload.containsKey('partner_education')) {
         enrichedPayload['pertner_education'] =

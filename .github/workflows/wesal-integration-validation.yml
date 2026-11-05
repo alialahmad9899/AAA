@@ -1,0 +1,68 @@
+name: Validate Wesal integration
+
+on:
+  push:
+    branches:
+      - integration/wesal-final-consolidated-2026-11-06
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  backend-php-syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+      - name: Validate Laravel PHP syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          files=(
+            "المشروع/WESAL/app/Http/Controllers/Api/AuthController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/HomeController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/MemberController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/ProfileController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/ProfileDropdownController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/ProfileViewerController.php"
+            "المشروع/WESAL/app/Http/Controllers/CareerController.php"
+            "المشروع/WESAL/app/Http/Controllers/EducationController.php"
+            "المشروع/WESAL/app/Http/Middleware/EmailVerifiedApi.php"
+            "المشروع/WESAL/app/Http/Middleware/IsApiMember.php"
+            "المشروع/WESAL/app/Http/Requests/PartnerExpectationRequest.php"
+            "المشروع/WESAL/app/Http/Resources/Profile/OnBehalfResource.php"
+            "المشروع/WESAL/app/Http/Resources/PublicProfile/AboutUser.php"
+            "المشروع/WESAL/app/Http/Resources/PublicProfile/BasicInformation.php"
+            "المشروع/WESAL/app/Http/Resources/PublicProfile/PhysicalAttributes.php"
+            "المشروع/WESAL/app/Models/Astrology.php"
+            "المشروع/WESAL/app/Models/Attitude.php"
+            "المشروع/WESAL/app/Models/Hobby.php"
+            "المشروع/WESAL/routes/api.php"
+            "المشروع/WESAL/database/migrations/2026_11_05_000001_convert_attitudes_table_to_utf8mb4.php"
+          )
+          for file in "${files[@]}"; do
+            php -l "$file"
+          done
+
+  flutter-regression-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Resolve Flutter dependencies
+        working-directory: فلاتر
+        run: flutter pub get
+      - name: Run profile, signup and account model regression tests
+        working-directory: فلاتر
+        run: flutter test test/profile_edit_unit_test.dart

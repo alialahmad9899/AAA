@@ -8,32 +8,30 @@ use Illuminate\Http\Request;
 class IsApiMember
 {
     /**
-     * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
-     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
+     * The mobile application does not require email verification or admin approval.
+     * Keep the security checks that matter here: an authenticated account and
+     * an explicit block status. Authentication is also enforced by auth:sanctum.
      */
     public function handle(Request $request, Closure $next)
     {
-        $user = auth()->user();
-        if ($request->is('api/*') && $user->blocked == 1) {
+        $user = $request->user();
 
-            if($user->approved == 0){
-                return response()->json([
-                    'result' => false,
-                    'status' => 'non_verified',
-                    'message' => translate('User is not verified')
-                ]);
-            }
-            elseif($user->blocked == 1){
-                return response()->json([
-                    'result' => false,
-                    'status' => 'blocked',
-                    'message' => translate('user is banned')
-                ]);
-            }
+        if (!$user) {
+            return response()->json([
+                'result' => false,
+                'status' => 'unauthenticated',
+                'message' => translate('Unauthenticated.'),
+            ], 401);
         }
+
+        if ((int) $user->blocked === 1) {
+            return response()->json([
+                'result' => false,
+                'status' => 'blocked',
+                'message' => translate('User is banned.'),
+            ], 403);
+        }
+
         return $next($request);
     }
 }

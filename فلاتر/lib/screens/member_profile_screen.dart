@@ -121,7 +121,12 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
           setState(() => _currentUserPermissionsReady = true);
         }
       }
-    } catch (e) {
+    } catch (error, stackTrace) {
+      debugPrint(
+        '[MemberProfileScreen] Failed to load profile user=${widget.userId}: $error',
+      );
+      debugPrintStack(stackTrace: stackTrace);
+
       if (mounted) {
         setState(() {
           _hasError = _profile == null;

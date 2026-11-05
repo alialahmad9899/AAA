@@ -1177,11 +1177,14 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     final Map<String, dynamic>? careerData =
         ApiService.extractFirstResourceMap(fullData['career']);
 
+    // residence_info is the Recidency record and contains birth/grow-up/
+    // residence country IDs. present_address is a separate Address record;
+    // prefer the actual residency resource so it cannot mask those fields.
     final residency = _unwrapSection(
-      fullData['residency_information'] ??
+      fullData['residence_info'] ??
+          fullData['residency_information'] ??
           fullData['residency'] ??
-          fullData['present_address'] ??
-          fullData['residence_info'],
+          fullData['present_address'],
       fieldHints: const [
         'birth_country_id',
         'residency_country_id',
@@ -1439,12 +1442,14 @@ class _EditProfileScreenState extends State<EditProfileScreen>
         _selectedBloodGroup = _fieldString(physical['blood_group']);
       }
       if (physical.containsKey('body_type')) {
-        _selectedBodyType =
-            _matchListedOption(_fieldString(physical['body_type']), _bodyTypeOptions);
+        _selectedBodyType = _matchListedOption(
+            _fieldString(physical['raw_body_type'] ?? physical['body_type']),
+            _bodyTypeOptions);
       }
       if (physical.containsKey('body_art')) {
-        _selectedBodyArt =
-            _matchListedOption(_fieldString(physical['body_art']), _bodyArtOptions);
+        _selectedBodyArt = _matchListedOption(
+            _fieldString(physical['raw_body_art'] ?? physical['body_art']),
+            _bodyArtOptions);
       }
     } else if (fullProfile.physicalAttributes != null) {
       final phys = fullProfile.physicalAttributes!;

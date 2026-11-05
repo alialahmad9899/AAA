@@ -64,11 +64,11 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
   // المتغيرات المحددة للخيارات
   String? _selectedEducation;
   String? _selectedMaritalStatusId;
-  String _selectedChildrenAcceptable = 'dose_not_matter';
+  String _selectedChildrenAcceptable = 'does_not_matter';
   String? _selectedReligionId;
   String? _selectedLanguageId;
-  String _selectedSmokingAcceptable = 'dose_not_matter';
-  String _selectedDrinkingAcceptable = 'dose_not_matter';
+  String _selectedSmokingAcceptable = 'does_not_matter';
+  String _selectedDrinkingAcceptable = 'does_not_matter';
   String? _selectedComplexion;
   String? _selectedEyeColor;
   String? _selectedHairColor;
@@ -140,6 +140,15 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
         .toLowerCase();
   }
 
+  /// توحيد القيمة القديمة مع القيمة المعتمدة التي يعيدها الـAPI.
+  String _normalizeAcceptability(dynamic raw) {
+    final value = (raw ?? '').toString().trim().toLowerCase();
+    if (value == 'dose_not_matter' || value == 'does_not_matter' || value.isEmpty) {
+      return 'does_not_matter';
+    }
+    return value == 'yes' || value == 'no' ? value : 'does_not_matter';
+  }
+
   /// 2️⃣ جلب البيانات والقوائم المنسدلة من السيرفر بشكل محسن
   Future<void> _loadDataOptimized() async {
     final lang = widget.currentLanguage;
@@ -149,7 +158,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
       final results = await Future.wait([
         ApiService.getProfileDropdowns(lang: lang),
         ApiService.getPartnerExpectations(lang: lang),
-        ApiService.get('/member/partner-languages', lang: lang),
+        ApiService.get('/member/languages', lang: lang),
       ]);
 
       final dropdowns = results[0];
@@ -203,14 +212,26 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
         _selectedEyeColor = eyeVal?.toString().trim();
         _selectedHairColor = hairVal?.toString().trim();
 
-        // معالجة الطول
-        if (expectations['height'] != null ||
-            expectations['partner_height'] != null) {
-          final rawVal =
-              expectations['partner_height'] ?? expectations['height'];
-          final rawH = double.tryParse(rawVal.toString());
+        // Restore exact partner height range when it is available.
+        final rawMinHeight = double.tryParse(
+            expectations['min_height']?.toString() ?? '');
+        final rawMaxHeight = double.tryParse(
+            expectations['max_height']?.toString() ?? '');
+        if (rawMinHeight != null && rawMaxHeight != null) {
+          final minCm = (rawMinHeight > 0 && rawMinHeight < 10)
+              ? rawMinHeight * 100
+              : rawMinHeight;
+          final maxCm = (rawMaxHeight > 0 && rawMaxHeight < 10)
+              ? rawMaxHeight * 100
+              : rawMaxHeight;
+          if (minCm >= 140 && maxCm <= 210 && minCm <= maxCm) {
+            _partnerHeightRange = RangeValues(minCm, maxCm);
+          }
+        } else {
+          final rawVal = expectations['partner_height'] ?? expectations['height'];
+          final rawH = double.tryParse(rawVal?.toString() ?? '');
           if (rawH != null) {
-            double parsedCm = (rawH > 0 && rawH < 10) ? (rawH * 100) : rawH;
+            final parsedCm = (rawH > 0 && rawH < 10) ? rawH * 100 : rawH;
             if (parsedCm >= 140 && parsedCm <= 210) {
               _partnerHeightRange = RangeValues(
                 (parsedCm - 10).clamp(140.0, 210.0),
@@ -220,12 +241,18 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
           }
         }
 
-        // معالجة الوزن
-        if (expectations['weight'] != null ||
-            expectations['partner_weight'] != null) {
-          final rawVal =
-              expectations['partner_weight'] ?? expectations['weight'];
-          final rawW = double.tryParse(rawVal.toString());
+        // Restore exact partner weight range when it is available.
+        final rawMinWeight = double.tryParse(
+            expectations['min_weight']?.toString() ?? '');
+        final rawMaxWeight = double.tryParse(
+            expectations['max_weight']?.toString() ?? '');
+        if (rawMinWeight != null && rawMaxWeight != null &&
+            rawMinWeight >= 40 && rawMaxWeight <= 140 &&
+            rawMinWeight <= rawMaxWeight) {
+          _partnerWeightRange = RangeValues(rawMinWeight, rawMaxWeight);
+        } else {
+          final rawVal = expectations['partner_weight'] ?? expectations['weight'];
+          final rawW = double.tryParse(rawVal?.toString() ?? '');
           if (rawW != null && rawW >= 40 && rawW <= 140) {
             _partnerWeightRange = RangeValues(
               (rawW - 15).clamp(40.0, 140.0),
@@ -236,15 +263,15 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
 
         if (expectations['children_acceptable'] != null) {
           _selectedChildrenAcceptable =
-              expectations['children_acceptable'].toString();
+              _normalizeAcceptability(expectations['children_acceptable']);
         }
         if (expectations['smoking_acceptable'] != null) {
           _selectedSmokingAcceptable =
-              expectations['smoking_acceptable'].toString();
+              _normalizeAcceptability(expectations['smoking_acceptable']);
         }
         if (expectations['drinking_acceptable'] != null) {
           _selectedDrinkingAcceptable =
-              expectations['drinking_acceptable'].toString();
+              _normalizeAcceptability(expectations['drinking_acceptable']);
         }
 
         // مطابقة الحالة الاجتماعية
@@ -401,8 +428,18 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
         countryId: _selectedPartnerCountryId,
         stateId: _selectedStateId,
       ));
-      if (_heightRangeEdited) payload['partner_height'] = formattedHeight;
-      if (_weightRangeEdited) payload['partner_weight'] = formattedWeight;
+      if (_heightRangeEdited) {
+        payload['min_height'] =
+            (_partnerHeightRange.start / 100).toStringAsFixed(2);
+        payload['max_height'] =
+            (_partnerHeightRange.end / 100).toStringAsFixed(2);
+        payload['partner_height'] = formattedHeight;
+      }
+      if (_weightRangeEdited) {
+        payload['min_weight'] = _partnerWeightRange.start.toStringAsFixed(2);
+        payload['max_weight'] = _partnerWeightRange.end.toStringAsFixed(2);
+        payload['partner_weight'] = formattedWeight;
+      }
       if (_selectedMaritalStatusId != null &&
           _selectedMaritalStatusId!.isNotEmpty) {
         payload['partner_marital_status'] = _selectedMaritalStatusId;
@@ -500,8 +537,10 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) {
         String searchQuery = '';
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setModalState) {
+        return Directionality(
+          textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
+          child: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setModalState) {
             final filteredItems = items.where((item) {
               final name = (item['name'] ?? '').toString().toLowerCase();
               return name.contains(searchQuery.toLowerCase());
@@ -551,6 +590,8 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                         const SizedBox(height: 14),
                         if (enableSearch && items.length > 5) ...[
                           TextFormField(
+                            textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
+                            textAlign: isAr ? TextAlign.right : TextAlign.left,
                             onChanged: (val) {
                               debouncer.run(() {
                                 setModalState(() {
@@ -641,6 +682,9 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                       textAlign: isAr
                                                           ? TextAlign.right
                                                           : TextAlign.left,
+                                                      textDirection: isAr
+                                                          ? TextDirection.rtl
+                                                          : TextDirection.ltr,
                                                       style: TextStyle(
                                                         color: Colors.white,
                                                         fontSize: 15,
@@ -678,7 +722,8 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                 ),
               ),
             );
-          },
+            },
+          ),
         );
       },
     ).whenComplete(() => debouncer.dispose());
@@ -789,6 +834,10 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                 displayValue != null && displayValue.isNotEmpty
                     ? displayValue
                     : label,
+                textAlign: TextAlign.start,
+                textDirection: widget.currentLanguage == 'ar'
+                    ? TextDirection.rtl
+                    : TextDirection.ltr,
                 style: TextStyle(
                   color: displayValue != null && displayValue.isNotEmpty
                       ? Colors.white
@@ -942,7 +991,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                               Expanded(
                                 child: Text(
                                   isAr
-                                      ? 'توقعات ومواصفات الشريك'
+                                      ? 'ما الذي تبحث عنه في شريك حياتك؟'
                                       : 'Partner Expectations',
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
@@ -992,7 +1041,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                           children: [
                                             _buildSectionHeader(
                                                 isAr
-                                                    ? 'مواصفات عامة تتمناها ✍️'
+                                                    ? 'الصفات التي تتمنى وجودها ✍️'
                                                     : 'General Expectations ✍',
                                                 Icons.description_rounded),
                                             TextFormField(
@@ -1439,12 +1488,12 @@ _buildSectionHeader(
                                             ],
                                             _buildChoiceChips(
                                               title: isAr
-                                                  ? 'هل تقبلون بوجود أطفال؟ 👶'
+                                                  ? 'هل يناسبك شريك لديه أطفال؟ 👶'
                                                   : 'Accept Children? 👶',
                                               icon: Icons.child_care_rounded,
                                               options: [
                                                 {
-                                                  'id': 'dose_not_matter',
+                                                  'id': 'does_not_matter',
                                                   'name': isAr
                                                       ? 'لا يهم'
                                                       : 'Does not matter'
@@ -1509,18 +1558,18 @@ _buildSectionHeader(
                                                   fontFamily: 'Cairo'),
                                               decoration: _buildInputDecoration(
                                                   isAr
-                                                      ? 'المهنة المفضلة (طبيب، مدرس...)'
+                                                      ? 'ما المجال المهني الذي تفضّله؟ مثال: طبيب أو معلّم...'
                                                       : 'Preferred Profession',
                                                   Icons.work_outline_rounded),
                                             ),
                                             _buildChoiceChips(
                                               title: isAr
-                                                  ? 'هل تقبلون شريكاً مدخناً؟ 🚬'
+                                                  ? 'ما موقفك من التدخين لدى الشريك؟ 🚬'
                                                   : 'Accept Smoking? 🚬',
                                               icon: Icons.smoking_rooms_rounded,
                                               options: [
                                                 {
-                                                  'id': 'dose_not_matter',
+                                                  'id': 'does_not_matter',
                                                   'name': isAr
                                                       ? 'لا يهم'
                                                       : 'Does not matter'
@@ -1547,7 +1596,7 @@ _buildSectionHeader(
                                             ),
                                             _buildChoiceChips(
                                               title: isAr
-                                                  ? 'رأيكم في تناول الشريك للكحول؟ 🍷'
+                                                  ? 'ما موقفك من تناول الكحول لدى الشريك؟ 🍷'
                                                   : 'Accept Alcohol? 🍷',
                                               icon: Icons.local_bar_rounded,
                                               options: [
@@ -1558,7 +1607,7 @@ _buildSectionHeader(
                                                       : 'No'
                                                 },
                                                 {
-                                                  'id': 'dose_not_matter',
+                                                  'id': 'does_not_matter',
                                                   'name': isAr
                                                       ? 'لا يهم'
                                                       : 'Does not matter'

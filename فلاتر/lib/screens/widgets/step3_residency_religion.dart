@@ -452,8 +452,11 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                         itemBuilder: (context, index) {
                           final item = items[index];
                           return ListTile(
-                            title: Text(item['name']!,
-                                style: const TextStyle(
+                            title: Text(
+                              item['name']!,
+                              textAlign: _isAr ? TextAlign.right : TextAlign.left,
+                              textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
+                              style: const TextStyle(
                                     color: Colors.white,
                                     fontFamily: 'Cairo',
                                     fontWeight: FontWeight.bold)),
@@ -558,6 +561,8 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
             Expanded(
               child: Text(
                 label,
+                textAlign: TextAlign.start,
+                textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
                 style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 13,
@@ -567,6 +572,8 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
             ),
             Text(
               value,
+              textAlign: TextAlign.start,
+              textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
               style: TextStyle(
                 color: isSelected ? Colors.amberAccent : Colors.white,
                 fontWeight: FontWeight.bold,
@@ -608,7 +615,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                 Center(
                   child: Text(
                     _isAr
-                        ? 'خطوة 3: المنشأ والوضع الحالي 🏠🌍'
+                        ? 'الخطوة الثالثة: من أين أنت وأين تعيش؟ 🏠🌍'
                         : 'Step 3: Residency & Background 🏠🌍',
                     style: const TextStyle(
                       fontSize: 19,
@@ -623,7 +630,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                 // 1. بلد المنشأ
                 _buildQuestionTitle(
                   _isAr
-                      ? '1. أين هو بلد نشأتك وولادتك؟'
+                      ? '1. في أي بلد وُلدت ونشأت؟'
                       : '1. What is your country of birth?',
                 ),
                 if (_isLoadingCountries)
@@ -632,7 +639,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                           CircularProgressIndicator(color: Colors.amberAccent))
                 else
                   _buildPickerTile(
-                    label: _isAr ? 'بلد المنشأ' : 'Birth Country',
+                    label: _isAr ? 'بلد الميلاد والمنشأ' : 'Birth Country',
                     value: _getCountryNameById(widget.birthCountryId),
                     icon: Icons.flag_rounded,
                     isSelected: widget.birthCountryId != null,
@@ -648,7 +655,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                 // 2. بلد الإقامة والمحافظة والمدينة
                 _buildQuestionTitle(
                   _isAr
-                      ? '2. أين تقيم في الوقت الحالي؟'
+                      ? '2. ما البلد الذي تقيم فيه حالياً؟'
                       : '2. Where do you currently live?',
                 ),
                 if (_isLoadingCountries)
@@ -763,7 +770,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                 // 3. الحالة الاجتماعية
                 _buildQuestionTitle(
                   _isAr
-                      ? '3. ما هي حالتك الاجتماعية الحالية؟'
+                      ? '3. كيف تصف حالتك الاجتماعية اليوم؟'
                       : '3. What is your marital status?',
                 ),
                 if (_maritalStatuses.isNotEmpty)
@@ -794,8 +801,8 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                     keyboardType: TextInputType.number,
                     textDirection: TextDirection.ltr,
                     decoration: InputDecoration(
-                      labelText: _isAr ? 'كم عدد أطفالك؟ 👶' : 'How many children do you have? 👶',
-                      hintText: _isAr ? 'اكتب العدد، واكتب 0 إذا لم يكن لديك أطفال' : 'Enter a number, or 0 if none',
+                      labelText: _isAr ? 'كم طفلاً لديك؟ 👶' : 'How many children do you have? 👶',
+                      hintText: _isAr ? 'اكتب العدد، أو 0 إن لم يكن لديك أطفال' : 'Enter a number, or 0 if none',
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
@@ -815,7 +822,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                 // 4. الديانة
                 _buildQuestionTitle(
                   _isAr
-                      ? '4. ما هي خلفيتك الدينية؟'
+                      ? '4. ما الديانة التي تود إضافتها إلى ملفك؟'
                       : '4. What is your religion?',
                 ),
                 if (_religions.isNotEmpty)

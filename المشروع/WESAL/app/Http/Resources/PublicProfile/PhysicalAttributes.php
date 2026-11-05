@@ -26,10 +26,8 @@ class PhysicalAttributes extends JsonResource
             return $value;
         };
 
-        $cleanBodyType = $this->body_type;
-        if (in_array(trim($cleanBodyType), ['ارسل رسالة الان', 'ارسل رسالة الآن', '_', '___', '-'])) {
-            $cleanBodyType = '';
-        }
+        $cleanBodyType = $cleanPhysicalAttribute($this->body_type);
+        $cleanBodyArt = $cleanPhysicalAttribute($this->body_art);
 
         return [
             'height'      => $this->height,
@@ -39,7 +37,9 @@ class PhysicalAttributes extends JsonResource
             'complexion' => $cleanPhysicalAttribute($this->complexion),
             'blood_group' => $this->blood_group,
             'body_type'   => function_exists('translate') ? translate($cleanBodyType, $lang) : $cleanBodyType,
-            'body_art'    => function_exists('translate') ? translate($this->body_art, $lang) : $this->body_art,
+            'raw_body_type' => $cleanBodyType,
+            'body_art'    => function_exists('translate') ? translate($cleanBodyArt, $lang) : $cleanBodyArt,
+            'raw_body_art' => $cleanBodyArt,
             'disability'  => function_exists('translate') ? translate($this->disability, $lang) : $this->disability,
         ];
     }

@@ -22,11 +22,29 @@ class BasicInformation extends JsonResource
         $lang = $request->header('Accept-Language') ?? $request->header('app_language') ?? $request->get('lang') ?? 'ar';
         $isEn = strtolower(substr($lang, 0, 2)) === 'en';
 
-        $age = (!empty($this->member) && !empty($this->member->birthday)) 
-            ? Carbon::parse($this->member->birthday)->age 
-            : 0;
+        $memberModel = $this->member;
+        $age = 0;
+        $dateOfBirth = '';
 
-        $activePaidPackage = SubscriptionUtility::currentActivePaidPackage($this);
+        if ($memberModel && !empty($memberModel->birthday)) {
+            try {
+                $birthday = Carbon::parse($memberModel->birthday);
+                $age = $birthday->age;
+                $dateOfBirth = $birthday->format('Y-m-d');
+            } catch (\Throwable $exception) {
+                // An invalid historical date must not make the entire public
+                // member profile unavailable.
+                \Log::warning('Invalid member birth date while serializing public profile.', [
+                    'user_id' => $this->id,
+                ]);
+            }
+        }
+
+        $onBehalfModel = $memberModel && !empty($memberModel->on_behalves_id)
+            ? OnBehalf::find($memberModel->on_behalves_id)
+            : null;
+
+        $activePaidPackage = SubscriptionUtility::currentActivePaidPackage($this->resource);
         $packageName = '';
         if ($activePaidPackage && !empty($activePaidPackage->name)) {
             // Use the package's official localized name; never synthesize a name from its validity.
@@ -53,7 +71,6 @@ class BasicInformation extends JsonResource
 
         // 2. جلب الحالة الاجتماعية الحقيقية المباشرة من جدول marital_statuses
         $maritalStatusName = '';
-        $memberModel = $this->member;
         if ($memberModel && !empty($memberModel->marital_status_id)) {
             $maritalModel = MaritalStatus::find($memberModel->marital_status_id);
             if ($maritalModel && !empty($maritalModel->name)) {
@@ -92,8 +109,8 @@ class BasicInformation extends JsonResource
             'age' => $age,
             'religion' => $religionName,
             'caste' => ($spiritual && $spiritual->caste) ? ($spiritual->caste->name ?? '') : '',
-            'date_of_birth' => ($memberModel && !empty($memberModel->birthday)) ? Carbon::parse($memberModel->birthday)->format('Y-m-d') : '',
-            'onbehalf' => new OnBehalfResource(OnBehalf::find($memberModel->on_behalves_id ?? 0)),
+            'date_of_birth' => $dateOfBirth,
+            'onbehalf' => $onBehalfModel ? new OnBehalfResource($onBehalfModel) : null,
             'on_behalf_id' => $memberModel->on_behalves_id ?? null,
             'no_of_children' => $memberModel->children ?? '',
             'gender' => $genderText,

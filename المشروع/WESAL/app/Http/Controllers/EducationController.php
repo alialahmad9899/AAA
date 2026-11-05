@@ -15,7 +15,6 @@ class EducationController extends Controller
         $this->rules = [
             'degree'          => [ 'nullable','max:255'],
             'institution'     => [ 'nullable','max:255'],
-            'education_start' => [ 'nullable','numeric'],
             'education_end'   => [ 'nullable','numeric'],
         ];
     }
@@ -45,7 +44,6 @@ class EducationController extends Controller
             $education->institution = 'غير محدد'; // تجاوزنا اسم الجامعة بنجاح
             
             // تعيين سنوات افتراضية 
-            $education->start       = date('Y');
             $education->end         = date('Y');
             
             $education->present     = 1;
@@ -105,7 +103,6 @@ class EducationController extends Controller
         
         if($request->has('degree')) { $education->degree = $request->degree; }
         if($request->has('institution')) { $education->institution = $request->institution; }
-        if($request->has('education_start')) { $education->start = $request->education_start; }
         if($request->has('education_end')) { $education->end = $request->education_end; }
 
         if($education->save()){

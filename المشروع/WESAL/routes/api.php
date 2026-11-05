@@ -116,7 +116,7 @@ Route::group(['namespace' => 'Api', 'middleware' => ['app_language']], function 
     Route::post('/logout', 'AuthController@logout')->name('logout')->middleware('auth:sanctum');
     Route::get('/member-validate', 'MemberController@member_validate');
 
-    Route::group(['middleware' => ['auth:sanctum', 'api_email_verified']], function () {
+    Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/member/dashboard', 'HomeController@member_dashboard');
         Route::get('/member/verification_form', 'MemberController@getVerifyForm');
         Route::get('/member/is-approved', 'MemberController@isApproved');
@@ -134,7 +134,7 @@ Route::group(['namespace' => 'Api', 'middleware' => ['app_language']], function 
         Route::post('/vip-services/submit-specifications/{id}', 'VipServiceApiController@submitSpecifications');
     });
 
-    Route::group(['middleware' => ['auth:sanctum', 'api_email_verified', 'api_member']], function () {
+    Route::group(['middleware' => ['auth:sanctum', 'api_member']], function () {
         Route::post('/update-device-token', 'AuthController@update_device_token');
         Route::get('/app-check', 'AuthController@checkedData');
         
@@ -163,6 +163,7 @@ Route::group(['namespace' => 'Api', 'middleware' => ['app_language']], function 
             Route::get('/get-email', 'ProfileController@get_email');
             Route::post('/introduction-update', 'ProfileController@introduction_update');
             Route::get('/full-my-profile', 'ProfileController@get_full_my_profile');
+            Route::get('/account-summary', 'ProfileController@account_summary');
             Route::get('/basic-info', 'ProfileController@get_basic_info');
             Route::post('/basic-info/update', 'ProfileController@basic_info_update');
             Route::get('present/address', 'ProfileController@present_address');
@@ -235,6 +236,8 @@ Route::group(['namespace' => 'Api', 'middleware' => ['app_language']], function 
             Route::get('/countries/{id}/cities', [CityController::class, 'get_cities_by_state']);
 
             Route::get('/languages', 'ProfileDropdownController@language_list');
+            // Backward-compatible alias for older app releases.
+            Route::get('/partner-languages', 'ProfileDropdownController@language_list');
             Route::get('/religions', 'ProfileDropdownController@religion_list');
             Route::get('/casts/{id}', 'ProfileDropdownController@caste_list');
             Route::get('/sub-casts/{id}', 'ProfileDropdownController@sub_caste_list');
