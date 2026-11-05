@@ -145,7 +145,7 @@ class _SignupScreenState extends State<SignupScreen> {
     if (mounted) setState(() => _isLoadingPartnerLanguages = true);
     try {
       final results = await Future.wait([
-        ApiService.get('/member/partner-languages', lang: widget.currentLanguage),
+        ApiService.get('/member/languages', lang: widget.currentLanguage),
         ApiService.getProfileDropdowns(lang: widget.currentLanguage),
       ]);
       if (!mounted) return;
@@ -442,6 +442,24 @@ class _SignupScreenState extends State<SignupScreen> {
           ),
           isAr ? 'تعذر حفظ المواصفات الجسدية' : 'Failed to save physical details',
         );
+
+        // Confirm the body-type and body-art values were actually persisted.
+        final savedPhysicalResponse =
+            await ApiService.getPhysicalAttributes(lang: widget.currentLanguage);
+        final savedPhysical =
+            ApiService.extractFirstResourceMap(savedPhysicalResponse);
+        final savedBodyType =
+            savedPhysical?['raw_body_type'] ?? savedPhysical?['body_type'];
+        final savedBodyArt =
+            savedPhysical?['raw_body_art'] ?? savedPhysical?['body_art'];
+        if (!_hasPersistedValue(savedBodyType) ||
+            !_hasPersistedValue(savedBodyArt)) {
+          throw _SignupStepSaveException(
+            isAr
+                ? 'لم يؤكد الخادم حفظ بنية الجسم والوشم. أوقفنا التسجيل حتى لا تضيع هذه البيانات.'
+                : 'The server did not confirm saving body type and body art. Signup was paused to avoid losing these details.',
+          );
+        }
 
         // Read the current user's rows first. This makes retries safe even after
         // the app is closed or the previous create response was interrupted.
