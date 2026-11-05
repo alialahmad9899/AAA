@@ -508,19 +508,12 @@ class ProfileController extends Controller
 
     public function member_language()
     {
-        $member_known_languages = null;
-        $member_mother_tongue = null;
-        $known_languages = json_decode(auth()->user()->member->known_languages);
-        $mother_tongue = auth()->user()->member->mothere_tongue;
-        if ($known_languages != null) {
-            $member_known_languages = LanguageResource::collection(MemberLanguage::whereIn('id', $known_languages)->get());
-        }
-        if ($mother_tongue != null) {
-            $member_mother_tongue =  new LanguageResource(MemberLanguage::where('id', $mother_tongue)->first());
-        }
-        $data['mother_tongue'] = $member_mother_tongue;
-        $data['known_languages'] = $member_known_languages;
-        return $this->response_data($data);
+        $languageResources = $this->member_language_resources(auth()->user()->member);
+
+        return $this->response_data([
+            'mother_tongue' => $languageResources['mother_tongue'],
+            'known_languages' => $languageResources['known_languages'],
+        ]);
     }
 
     public function member_language_update(Request $request)
