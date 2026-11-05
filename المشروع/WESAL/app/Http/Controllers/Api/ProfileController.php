@@ -240,7 +240,10 @@ class ProfileController extends Controller
                     if (\Schema::hasColumn('users', 'avatar_original')) {
                         $user->avatar_original = $upload->id;
                     }
-                    $user->avatar = $upload->file_name;
+                    // The deployed users table may not include the legacy avatar path column.
+                    if (\Schema::hasColumn('users', 'avatar')) {
+                        $user->avatar = $upload->file_name;
+                    }
 
                     $approvalRequired = Setting::where('type', 'profile_picture_approval_by_admin')
                         ->value('value');
