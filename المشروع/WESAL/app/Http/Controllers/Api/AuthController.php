@@ -56,6 +56,9 @@ class AuthController extends Controller
                     'gender', 'birthday', 'on_behalves_id', 'date_of_birth',
                     'on_behalf', 'photo', 'avatar', 'image',
                 ]);
+                // AuthRequest prepares new app accounts with the free membership tier.
+                // safe() omits this server-prepared value because it is not a client input rule.
+                $userData['membership'] = 1;
                 $user = $user_service->store($userData);
 
                 $member_service = new MemberService();
@@ -161,16 +164,21 @@ class AuthController extends Controller
         }
 
         try {
-            $notify_type = 'member_registration';
-            $id = unique_notify_id();
-            $notify_by = $user->id;
-            $info_id = $user->id;
-            $message = translate('A new member has been registered to your system. Name: ') . $user->first_name . ' ' . $user->last_name;
-            $route = route('members.index', $user->membership);
-            Notification::send(
-                User::where('user_type', 'admin')->first(),
-                new DbStoreNotification($notify_type, $id, $notify_by, $info_id, $message, $route)
-            );
+            $admin = User::where('user_type', 'admin')->first();
+            if ($admin) {
+                $notify_type = 'member_registration';
+                $id = unique_notify_id();
+                $notify_by = $user->id;
+                $info_id = $user->id;
+                $message = translate('A new member has been registered to your system. Name: ') . $user->first_name . ' ' . $user->last_name;
+                $membershipId = (int) ($user->membership ?: 1);
+                $route = route('members.index', ['id' => $membershipId]);
+
+                Notification::send(
+                    $admin,
+                    new DbStoreNotification($notify_type, $id, $notify_by, $info_id, $message, $route)
+                );
+            }
         } catch (\Throwable $e) {
             \Log::warning('Signup admin notification failed: ' . $e->getMessage());
         }
