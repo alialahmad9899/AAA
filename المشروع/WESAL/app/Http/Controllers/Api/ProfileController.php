@@ -82,6 +82,114 @@ use App\Utility\MemberUtility;
 class ProfileController extends Controller
 {
     /**
+     * Build owner-visible basic information without applying public photo privacy
+     * rules. This endpoint is authenticated as the profile owner via Sanctum.
+     */
+    private function owner_basic_information(User $user): array
+    {
+        $data = [];
+        try {
+            $data = (new BasicInformation($user))->toArray(request());
+        } catch (\Throwable $e) {
+            \Log::warning('Owner basic profile resource fallback used: ' . $e->getMessage());
+        }
+
+        $photoUrl = !empty($user->photo) ? uploaded_asset($user->photo) : null;
+        if (!$photoUrl && !empty($user->avatar_original)) {
+            $photoUrl = uploaded_asset($user->avatar_original);
+        }
+        if (!$photoUrl && !empty($user->avatar)) {
+            $avatarPath = trim((string) $user->avatar);
+            $photoUrl = filter_var($avatarPath, FILTER_VALIDATE_URL)
+                ? $avatarPath
+                : static_asset(ltrim($avatarPath, '/'));
+        }
+        if (!$photoUrl) {
+            $photoUrl = static_asset('assets/img/avatar-place.png');
+        }
+
+        // Keep both spellings consumed by current and older Flutter builds.
+        $data['firs_name'] = $user->first_name ?? '';
+        $data['first_name'] = $user->first_name ?? '';
+        $data['last_name'] = $user->last_name ?? '';
+        $data['name'] = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
+        $data['photo'] = $photoUrl;
+        $data['photo_id'] = $user->photo ?? null;
+
+        return $data;
+    }
+
+    /**
+     * Resolve optional language selections without allowing stale/deleted IDs
+     * or malformed legacy JSON to break profile serialization.
+     */
+    private function member_language_resources(?Member $member): array
+    {
+        $memberKnownLanguages = null;
+        $memberMotherTongue = null;
+
+        if (!$member) {
+            return [
+                'known_languages' => $memberKnownLanguages,
+                'mother_tongue' => $memberMotherTongue,
+            ];
+        }
+
+        $knownRaw = $member->known_languages;
+        $knownValues = is_array($knownRaw)
+            ? $knownRaw
+            : json_decode((string) ($knownRaw ?? '[]'), true);
+
+        if (!is_array($knownValues)) {
+            $knownValues = is_numeric($knownValues) ? [$knownValues] : [];
+        }
+
+        $knownIds = array_values(array_unique(array_filter(
+            array_map(static function ($value): int {
+                if (is_array($value)) {
+                    $value = $value['id'] ?? null;
+                } elseif (is_object($value)) {
+                    $value = $value->id ?? null;
+                }
+
+                return is_numeric($value) ? (int) $value : 0;
+            }, $knownValues),
+            static function (int $id): bool {
+                return $id > 0;
+            }
+        )));
+
+        if ($knownIds !== []) {
+            $knownRecords = MemberLanguage::whereIn('id', $knownIds)->get();
+            if ($knownRecords->isNotEmpty()) {
+                $memberKnownLanguages = LanguageResource::collection($knownRecords);
+            }
+        }
+
+        $motherRaw = $member->mothere_tongue;
+        $motherValue = is_numeric($motherRaw)
+            ? $motherRaw
+            : json_decode((string) ($motherRaw ?? 'null'), true);
+
+        if (is_array($motherValue)) {
+            $motherValue = $motherValue['id'] ?? $motherValue[0] ?? null;
+        }
+
+        $motherId = is_numeric($motherValue) ? (int) $motherValue : 0;
+        if ($motherId > 0) {
+            $motherRecord = MemberLanguage::where('id', $motherId)->first();
+            if ($motherRecord) {
+                $memberMotherTongue = new LanguageResource($motherRecord);
+            }
+        }
+
+        return [
+            'known_languages' => $memberKnownLanguages,
+            'mother_tongue' => $memberMotherTongue,
+        ];
+    }
+
+    /**
      * دالة جلب كافة بيانات الملف الشخصي للمستخدم الحالي دفعة واحدة لسرعة فائقة
      */
     public function get_full_my_profile()
@@ -109,18 +217,9 @@ class ProfileController extends Controller
             return $this->failure_message('User Not Found');
         }
 
-        $member_known_languages = null;
-        $member_mother_tongue = null;
-        if ($user->member) {
-            $known_languages = json_decode($user->member->known_languages);
-            $mother_tongue = json_decode($user->member->mothere_tongue);
-            if ($known_languages != null) {
-                $member_known_languages = LanguageResource::collection(MemberLanguage::whereIn('id', $known_languages)->get());
-            }
-            if ($mother_tongue != null) {
-                $member_mother_tongue = new LanguageResource(MemberLanguage::where('id', $mother_tongue)->first());
-            }
-        }
+        $languageResources = $this->member_language_resources($user->member);
+        $member_known_languages = $languageResources['known_languages'];
+        $member_mother_tongue = $languageResources['mother_tongue'];
 
         // Keep contact fields private to the owner; retired fields are not returned.
         $ownerLifestyle = null;
@@ -130,8 +229,10 @@ class ProfileController extends Controller
         }
 
         $data = [
+            // Return the authenticated owner ID so Flutter can recover its local session metadata.
+            'user_id'              => $user->id,
             'intoduction'          => new AboutUser($user),
-            'basic_info'           => new BasicInformation($user),
+            'basic_info'           => $this->owner_basic_information($user),
             'contact_details'      => [
                 'email' => $user->email,
                 'phone' => $user->phone
@@ -153,6 +254,99 @@ class ProfileController extends Controller
         ];
 
         return $this->response_data($data);
+    }
+
+    /**
+     * ملخص خاص بصاحب الحساب لبطاقة الحساب الشخصي في التطبيق.
+     * الإحصاءات هنا أعداد فعلية، وليست أرصدة الباقات المتبقية.
+     */
+    public function account_summary()
+    {
+        $user = auth()->user()->loadMissing([
+            'member',
+            'spiritual_backgrounds',
+            'recidency',
+        ]);
+
+        SubscriptionUtility::deactivateIfInvalid($user);
+
+        $residenceInfo = $user->recidency
+            ? (new ResidenceInformation($user->recidency))->resolve(request())
+            : [];
+
+        // Use the same language-aware country name strategy as the country dropdown.
+        $language = strtolower((string) (
+            request()->header('Accept-Language')
+            ?? request()->header('app_language')
+            ?? request()->get('lang')
+            ?? app()->getLocale()
+        ));
+        $isEnglish = str_contains($language, 'en');
+
+        $localizedCountryName = static function ($countryId) use ($isEnglish): string {
+            if (empty($countryId)) {
+                return '';
+            }
+
+            $country = DB::table('countries')->where('id', $countryId)->first();
+            if (!$country) {
+                return '';
+            }
+
+            $preferredName = $isEnglish
+                ? ($country->name ?? '')
+                : ($country->name_ar ?? '');
+
+            $fallbackName = $isEnglish
+                ? ($country->name_ar ?? '')
+                : ($country->name ?? '');
+
+            return trim((string) ($preferredName ?: $fallbackName));
+        };
+
+        $residencyCountryId = $user->recidency->recidency_country_id ?? null;
+        $residencyCountry = $localizedCountryName($residencyCountryId);
+
+        // Compatibility for older accounts that have a present Address but
+        // do not have a Recidency row yet.
+        if ($residencyCountry === '') {
+            $presentAddress = Address::where('user_id', $user->id)
+                ->where('type', 'present')
+                ->first();
+            $residencyCountry = $localizedCountryName($presentAddress->country_id ?? null);
+        }
+
+        if ($residencyCountry !== '') {
+            $residenceInfo['residency_country'] = $residencyCountry;
+            $residenceInfo['recidency_country'] = $residencyCountry;
+            $residenceInfo['country'] = $residencyCountry;
+        }
+
+        // One row per expressed-interest request; count unique recipients
+        // so historical duplicate rows cannot inflate the profile-card number.
+        $sentInterestsCount = ExpressInterest::where('interested_by', $user->id)
+            ->distinct()
+            ->count('user_id');
+
+        // Match the same active-viewer criteria used by the visitors screen.
+        $profileVisitorsCount = ProfileViewer::where('user_id', $user->id)
+            ->whereIn('viewed_by', function ($query) {
+                $query->select('id')
+                    ->from('users')
+                    ->where('blocked', 0)
+                    ->where('deactivated', 0)
+                    ->where('permanently_delete', 0);
+            })
+            ->distinct()
+            ->count('viewed_by');
+
+        return $this->response_data([
+            'user_id' => $user->id,
+            'basic_info' => $this->owner_basic_information($user),
+            'residence_info' => !empty($residenceInfo) ? $residenceInfo : null,
+            'sent_interests_count' => (int) $sentInterestsCount,
+            'profile_visitors_count' => (int) $profileVisitorsCount,
+        ]);
     }
 
     public function profile_settings()
@@ -199,9 +393,12 @@ class ProfileController extends Controller
 
     public function get_basic_info()
     {
-        SubscriptionUtility::deactivateIfInvalid(auth()->user());
-        return (new BasicInformation(auth()->user()->fresh()))->additional([
-            'result' => true
+        $user = auth()->user()->fresh();
+        SubscriptionUtility::deactivateIfInvalid($user);
+
+        return response()->json([
+            'result' => true,
+            'data' => $this->owner_basic_information($user),
         ]);
     }
 
@@ -236,8 +433,14 @@ class ProfileController extends Controller
 
                     $storedPhotoPath = $upload->file_name;
                     $user->photo = $upload->id;
-                    $user->avatar_original = $upload->id;
-                    $user->avatar = $upload->file_name;
+                    // Keep profile photo updates compatible with installations that only have "photo".
+                    if (\Schema::hasColumn('users', 'avatar_original')) {
+                        $user->avatar_original = $upload->id;
+                    }
+                    // The deployed users table may not include the legacy avatar path column.
+                    if (\Schema::hasColumn('users', 'avatar')) {
+                        $user->avatar = $upload->file_name;
+                    }
 
                     $approvalRequired = Setting::where('type', 'profile_picture_approval_by_admin')
                         ->value('value');
@@ -398,19 +601,12 @@ class ProfileController extends Controller
 
     public function member_language()
     {
-        $member_known_languages = null;
-        $member_mother_tongue = null;
-        $known_languages = json_decode(auth()->user()->member->known_languages);
-        $mother_tongue = auth()->user()->member->mothere_tongue;
-        if ($known_languages != null) {
-            $member_known_languages = LanguageResource::collection(MemberLanguage::whereIn('id', $known_languages)->get());
-        }
-        if ($mother_tongue != null) {
-            $member_mother_tongue =  new LanguageResource(MemberLanguage::where('id', $mother_tongue)->first());
-        }
-        $data['mother_tongue'] = $member_mother_tongue;
-        $data['known_languages'] = $member_known_languages;
-        return $this->response_data($data);
+        $languageResources = $this->member_language_resources(auth()->user()->member);
+
+        return $this->response_data([
+            'mother_tongue' => $languageResources['mother_tongue'],
+            'known_languages' => $languageResources['known_languages'],
+        ]);
     }
 
     public function member_language_update(Request $request)
@@ -439,22 +635,26 @@ class ProfileController extends Controller
 
     public function hobbies_interest_update(Request $request)
     {
-        $hobbies = Hobby::where('user_id', auth()->id())->first();
-        if (empty($hobbies)) {
-            $hobbies = new Hobby;
-            $hobbies->user_id = auth()->id();
+        $fields = [
+            'hobbies', 'interests', 'music', 'books', 'movies',
+            'tv_shows', 'sports', 'fitness_activities', 'cuisines', 'dress_styles',
+        ];
+        $input = $request->all();
+        $providedFields = array_intersect($fields, array_keys($input));
+
+        if (empty($providedFields)) {
+            return response()->json([
+                'result' => false,
+                'message' => translate('No hobby or interest fields were provided.'),
+            ], 422);
         }
-        $hobbies->hobbies               = $request->hobbies;
-        $hobbies->interests             = $request->interests;
-        $hobbies->music                 = $request->music;
-        $hobbies->books                 = $request->books;
-        $hobbies->movies                = $request->movies;
-        $hobbies->tv_shows              = $request->tv_shows;
-        $hobbies->sports                = $request->sports;
-        $hobbies->fitness_activities    = $request->fitness_activities;
-        $hobbies->cuisines              = $request->cuisines;
-        $hobbies->dress_styles          = $request->dress_styles;
+
+        $hobbies = Hobby::firstOrNew(['user_id' => auth()->id()]);
+        foreach ($providedFields as $field) {
+            $hobbies->{$field} = $input[$field];
+        }
         $hobbies->save();
+
         return $this->success_message('Hobby and Interests info has been updated successfully');
     }
 
@@ -471,16 +671,23 @@ class ProfileController extends Controller
 
     public function attitude_behavior_update(Request $request)
     {
-        $attitude = Attitude::where('user_id', auth()->id())->first();
-        if (empty($attitude)) {
-            $attitude = new Attitude;
-            $attitude->user_id = auth()->id();
+        $fields = ['affection', 'humor', 'political_views', 'religious_service'];
+        $input = $request->all();
+        $providedFields = array_intersect($fields, array_keys($input));
+
+        if (empty($providedFields)) {
+            return response()->json([
+                'result' => false,
+                'message' => translate('No attitude or behavior fields were provided.'),
+            ], 422);
         }
-        $attitude->affection            = $request->affection;
-        $attitude->humor                = $request->humor;
-        $attitude->political_views      = $request->political_views;
-        $attitude->religious_service    = $request->religious_service;
+
+        $attitude = Attitude::firstOrNew(['user_id' => auth()->id()]);
+        foreach ($providedFields as $field) {
+            $attitude->{$field} = $input[$field];
+        }
         $attitude->save();
+
         return $this->success_message('Personal Attitude and Behavior Info has been updated successfully');
     }
 
@@ -790,15 +997,20 @@ class ProfileController extends Controller
 
     public function astronomic_info_update(AstrologyRequest $request)
     {
-        $astrologies = Astrology::where('user_id', auth()->id())->first();
-        if (empty($astrologies)) {
-            $astrologies           = new Astrology;
-            $astrologies->user_id  = auth()->id();
+        $input = $request->validated();
+        if (empty($input)) {
+            return response()->json([
+                'result' => false,
+                'message' => translate('No astronomic fields were provided for update.'),
+            ], 422);
         }
-        $astrologies->sun_sign         = $request->sun_sign;
-        $astrologies->moon_sign        = $request->moon_sign;
-        $astrologies->time_of_birth    = $request->time_of_birth;
-        $astrologies->city_of_birth    = $request->city_of_birth;
+
+        $astrologies = Astrology::firstOrNew(['user_id' => auth()->id()]);
+        foreach (['sun_sign', 'moon_sign', 'time_of_birth', 'city_of_birth'] as $field) {
+            if (array_key_exists($field, $input)) {
+                $astrologies->{$field} = $input[$field];
+            }
+        }
 
         $astrologies->save();
         return $this->success_message('Astronomic Info has been updated successfully');
@@ -855,10 +1067,35 @@ class ProfileController extends Controller
         $partner = PartnerExpectation::where('user_id', auth()->id())->first();
         $oldPreferredCountry = $partner ? $partner->preferred_country_id : null;
 
+        foreach ([
+            ['min_height', 'max_height', 'height'],
+            ['min_weight', 'max_weight', 'weight'],
+        ] as [$minField, $maxField, $label]) {
+            $minimum = array_key_exists($minField, $input)
+                ? $input[$minField]
+                : ($partner ? $partner->{$minField} : null);
+            $maximum = array_key_exists($maxField, $input)
+                ? $input[$maxField]
+                : ($partner ? $partner->{$maxField} : null);
+
+            if ($minimum !== null && $maximum !== null &&
+                is_numeric($minimum) && is_numeric($maximum) &&
+                (float) $minimum > (float) $maximum) {
+                return response()->json([
+                    'result' => false,
+                    'message' => translate('The minimum partner ' . $label . ' cannot exceed the maximum.'),
+                ], 422);
+            }
+        }
+
         $fields = [
             'general' => ['general'],
             'height' => ['partner_height'],
             'weight' => ['partner_weight'],
+            'min_height' => ['min_height'],
+            'max_height' => ['max_height'],
+            'min_weight' => ['min_weight'],
+            'max_weight' => ['max_weight'],
             'marital_status_id' => ['partner_marital_status'],
             'children_acceptable' => ['partner_children_acceptable'],
             'residence_country_id' => ['residence_country_id'],
@@ -877,6 +1114,8 @@ class ProfileController extends Controller
             'family_value_id' => ['family_value_id'],
             'preferred_country_id' => ['partner_country_id'],
             'complexion' => ['partner_complexion', 'pertner_complexion', 'complexion'],
+            'eye_color' => ['partner_eye_color', 'eye_color'],
+            'hair_color' => ['partner_hair_color', 'hair_color'],
         ];
 
         $hasUpdates = false;
@@ -929,7 +1168,8 @@ class ProfileController extends Controller
                     if (array_key_exists($key, $input)) {
                         $value = $input[$key];
 
-                        if ($column === 'height' && $value !== null && is_numeric($value)) {
+                        if (in_array($column, ['height', 'min_height', 'max_height'], true) &&
+                            $value !== null && is_numeric($value)) {
                             $value = (float) $value;
                             if ($value > 10) $value = $value / 100;
                         }
@@ -1000,19 +1240,47 @@ class ProfileController extends Controller
 
     public function public_profile($id)
     {
-        $user = User::where('id', $id)->first();
+        // Load the profile aggregates used below in one predictable query.
+        // The public endpoint must not assume every account has every relation.
+        $user = User::with([
+            'member',
+            'education',
+            'career',
+            'physical_attributes',
+            'hobbies',
+            'attitude',
+            'recidency',
+            'spiritual_backgrounds',
+            'lifestyles',
+            'astrologies',
+            'partner_expectations',
+        ])->where('id', $id)->first();
         $auth_user = auth()->user();
-        if ($user) {
-            $member_known_languages = null;
-            $member_mother_tongue = null;
-            $known_languages = json_decode($user->member->known_languages);
-            $mother_tongue = json_decode($user->member->mothere_tongue);
-            if ($known_languages != null) {
-                $member_known_languages = LanguageResource::collection(MemberLanguage::whereIn('id', $known_languages)->get());
-            }
-            if ($mother_tongue != null) {
-                $member_mother_tongue = new LanguageResource(MemberLanguage::where('id', $mother_tongue)->first());
-            }
+
+        if (!$auth_user) {
+            return response()->json([
+                'result' => false,
+                'message' => translate('Unauthenticated'),
+            ], 401);
+        }
+
+        if (!$user) {
+            return $this->failure_message('User Not Found');
+        }
+
+        // Accounts without a member row are not viewable as member profiles.
+        $targetMember = $user->member;
+        if (!$targetMember) {
+            return response()->json([
+                'result' => false,
+                'message' => translate('Member profile is not available.'),
+            ], 404);
+        }
+
+        $languageResources = $this->member_language_resources($targetMember);
+        $member_known_languages = $languageResources['known_languages'];
+        $member_mother_tongue = $languageResources['mother_tongue'];
+
             $data['intoduction'] = new AboutUser($user);
             $data['basic_info'] = new PublicBasicInformation($user);
 
@@ -1122,10 +1390,7 @@ class ProfileController extends Controller
                 }
             }
 
-            return $this->response_data($data);
-        } else {
-            return $this->failure_message("User Not Found");
-        }
+        return $this->response_data($data);
     }
 
     public static function sendFirebaseNotification($fcmTokens = null, $notify_user, $notify_type, $message, $notify_by = null)
