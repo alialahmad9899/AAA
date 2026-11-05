@@ -90,8 +90,8 @@ class ProfileController extends Controller
         $data = [];
         try {
             $data = (new BasicInformation($user))->toArray(request());
-        } catch (\\Throwable $e) {
-            \\Log::warning('Owner basic profile resource fallback used: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            \Log::warning('Owner basic profile resource fallback used: ' . $e->getMessage());
         }
 
         $photoUrl = !empty($user->photo) ? uploaded_asset($user->photo) : null;
