@@ -116,7 +116,7 @@ Route::group(['namespace' => 'Api', 'middleware' => ['app_language']], function 
     Route::post('/logout', 'AuthController@logout')->name('logout')->middleware('auth:sanctum');
     Route::get('/member-validate', 'MemberController@member_validate');
 
-    Route::group(['middleware' => ['auth:sanctum', 'api_email_verified']], function () {
+    Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/member/dashboard', 'HomeController@member_dashboard');
         Route::get('/member/verification_form', 'MemberController@getVerifyForm');
         Route::get('/member/is-approved', 'MemberController@isApproved');
@@ -134,7 +134,7 @@ Route::group(['namespace' => 'Api', 'middleware' => ['app_language']], function 
         Route::post('/vip-services/submit-specifications/{id}', 'VipServiceApiController@submitSpecifications');
     });
 
-    Route::group(['middleware' => ['auth:sanctum', 'api_email_verified', 'api_member']], function () {
+    Route::group(['middleware' => ['auth:sanctum', 'api_member']], function () {
         Route::post('/update-device-token', 'AuthController@update_device_token');
         Route::get('/app-check', 'AuthController@checkedData');
         
