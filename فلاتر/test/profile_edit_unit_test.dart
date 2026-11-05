@@ -84,6 +84,34 @@ void main() {
     expect(profile.basicInfo.maritalStatus, '2');
   });
 
+  test('preserves birth date, marital status ID and zero children count', () {
+    final profile = MemberProfileModel.fromJson({
+      'basic_info': {
+        'date_of_birth': '1998-04-12',
+        'marital_status_id': 1,
+        'no_of_children': 0,
+      },
+    });
+
+    expect(profile.basicInfo.dateOfBirth, '1998-04-12');
+    expect(profile.basicInfo.maritalStatus, '1');
+    expect(profile.basicInfo.noOfChildren, '0');
+  });
+
+  test('prefers raw physical values over localized display labels', () {
+    final profile = MemberProfileModel.fromJson({
+      'physical_attributes': {
+        'body_type': 'عادي / متوسط 🚶‍♂️',
+        'raw_body_type': 'عادي',
+        'body_art': 'لا يوجد ❌',
+        'raw_body_art': 'لا يوجد',
+      },
+    });
+
+    expect(profile.physicalAttributes?.bodyType, 'عادي');
+    expect(profile.physicalAttributes?.bodyArt, 'لا يوجد');
+  });
+
   group('Premium subscription status', () {
     String dateOnly(DateTime date) =>
         '${date.year.toString().padLeft(4, '0')}-'
