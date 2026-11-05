@@ -2749,6 +2749,17 @@ class ApiService {
       final Map<String, dynamic> enrichedPayload = Map.from(payload);
       enrichedPayload.remove('_method');
 
+      // Keep signup and profile editing aligned with the canonical API value.
+      for (final key in const [
+        'partner_children_acceptable',
+        'smoking_acceptable',
+        'drinking_acceptable',
+      ]) {
+        if (enrichedPayload[key]?.toString() == 'dose_not_matter') {
+          enrichedPayload[key] = 'does_not_matter';
+        }
+      }
+
       if (enrichedPayload.containsKey('partner_education')) {
         enrichedPayload['pertner_education'] =
             enrichedPayload['partner_education'];
