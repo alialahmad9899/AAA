@@ -194,14 +194,6 @@ class AuthController extends Controller
             \Log::warning('Signup admin email failed: ' . $e->getMessage());
         }
 
-        if (!$autoVerify) {
-            try {
-                $user->notify(new VerificationCode($user));
-            } catch (\Throwable $e) {
-                \Log::warning('Signup verification notification failed: ' . $e->getMessage());
-            }
-        }
-
         return $this->authResponse($user);
     }
 
