@@ -42,8 +42,9 @@ class AuthController extends Controller
         $storedPhotoPath = null;
 
         try {
-            $autoVerify = (get_setting('email_verification') != 1 && !addon_activation('otp_system'))
-                || get_setting('registration_verification') === '1';
+            // The mobile API does not require email verification. Optional phone OTP
+            // remains governed by its separate OTP add-on flow.
+            $autoVerify = true;
 
             $user = DB::transaction(function () use ($request, &$storedPhotoPath, $autoVerify) {
                 $package = Package::where('id', 1)->first();
@@ -56,8 +57,10 @@ class AuthController extends Controller
                     'gender', 'birthday', 'on_behalves_id', 'date_of_birth',
                     'on_behalf', 'photo', 'avatar', 'image',
                 ]);
+                // AuthRequest prepares new app accounts with the free membership tier.
+                // safe() omits this server-prepared value because it is not a client input rule.
+                $userData['membership'] = 1;
                 $user = $user_service->store($userData);
-
                 $member_service = new MemberService();
                 // Normalize the field names sent by the Flutter signup form.
                 // The app sends date_of_birth and on_behalf; MemberService expects
@@ -94,8 +97,14 @@ class AuthController extends Controller
                     $upload->file_size = $photoFile->getSize();
                     $upload->save();
 
-                    $user->avatar_original = $upload->id;
-                    $user->avatar = $storedPhotoPath;
+                    // Some deployed databases use "photo" as the canonical upload ID and do not have avatar_original.
+                    if (\Schema::hasColumn('users', 'avatar_original')) {
+                        $user->avatar_original = $upload->id;
+                    }
+                    // The deployed users table may not include the legacy avatar path column.
+                    if (\Schema::hasColumn('users', 'avatar')) {
+                        $user->avatar = $storedPhotoPath;
+                    }
                     if (\Schema::hasColumn('users', 'photo')) {
                         $user->photo = $upload->id;
                     }
@@ -104,7 +113,7 @@ class AuthController extends Controller
                     $user->save();
                 }
 
-                if ($autoVerify && ($user->email != null || $user->phone != null)) {
+                if ($autoVerify && $user->email != null) {
                     $user->email_verified_at = date('Y-m-d H:i:s');
                     $user->save();
                 }
@@ -155,16 +164,21 @@ class AuthController extends Controller
         }
 
         try {
-            $notify_type = 'member_registration';
-            $id = unique_notify_id();
-            $notify_by = $user->id;
-            $info_id = $user->id;
-            $message = translate('A new member has been registered to your system. Name: ') . $user->first_name . ' ' . $user->last_name;
-            $route = route('members.index', $user->membership);
-            Notification::send(
-                User::where('user_type', 'admin')->first(),
-                new DbStoreNotification($notify_type, $id, $notify_by, $info_id, $message, $route)
-            );
+            $admin = User::where('user_type', 'admin')->first();
+            if ($admin) {
+                $notify_type = 'member_registration';
+                $id = unique_notify_id();
+                $notify_by = $user->id;
+                $info_id = $user->id;
+                $message = translate('A new member has been registered to your system. Name: ') . $user->first_name . ' ' . $user->last_name;
+                $membershipId = (int) ($user->membership ?: 1);
+                $route = route('members.index', ['id' => $membershipId]);
+
+                Notification::send(
+                    $admin,
+                    new DbStoreNotification($notify_type, $id, $notify_by, $info_id, $message, $route)
+                );
+            }
         } catch (\Throwable $e) {
             \Log::warning('Signup admin notification failed: ' . $e->getMessage());
         }
@@ -178,14 +192,6 @@ class AuthController extends Controller
             }
         } catch (\Throwable $e) {
             \Log::warning('Signup admin email failed: ' . $e->getMessage());
-        }
-
-        if (!$autoVerify) {
-            try {
-                $user->notify(new VerificationCode($user));
-            } catch (\Throwable $e) {
-                \Log::warning('Signup verification notification failed: ' . $e->getMessage());
-            }
         }
 
         return $this->authResponse($user);
@@ -261,14 +267,6 @@ class AuthController extends Controller
             }
             $user->save();
 
-            if ($user->approved == 0) {
-                return response()->json([
-                    'result' => false,
-                    'message' => translate('Please wait for admin approval'),
-                    'user' => null,
-                ], 401);
-            }
-
             return $this->authResponse($user);
         } else {
             return response()->json([
@@ -320,16 +318,13 @@ class AuthController extends Controller
         $existingUserByProviderId = User::where('provider_id', $request->provider)->first();
 
         if ($existingUserByProviderId) {
-            if ($existingUserByProviderId->approved == 0) {
-                return response()->json(['result' => false, 'message' => translate('Please wait for admin approval'), 'user' => null], 401);
-            } else {
-                $fcmToken = $request->fcm_token ?? $request->device_token;
-                if ($fcmToken) {
-                    $existingUserByProviderId->fcm_token = $fcmToken;
-                    $existingUserByProviderId->save();
-                }
-                return $this->authResponse($existingUserByProviderId);
+            $fcmToken = $request->fcm_token ?? $request->device_token;
+            if ($fcmToken) {
+                $existingUserByProviderId->fcm_token = $fcmToken;
             }
+            $existingUserByProviderId->save();
+
+            return $this->authResponse($existingUserByProviderId);
         } else {
             $newUser                     = new User;
             $newUser->first_name         = $request->name;
@@ -365,11 +360,7 @@ class AuthController extends Controller
             $member->package_validity           = Date('Y-m-d', strtotime($package->validity . " days"));
             $member->save();
 
-            if ($newUser->approved == 0) {
-                return response()->json(['result' => false, 'message' => translate('Please wait for admin approval'), 'user' => null], 401);
-            } else {
-                return $this->authResponse($newUser);
-            }
+            return $this->authResponse($newUser);
         }
     }
 
@@ -396,6 +387,7 @@ class AuthController extends Controller
         $maritial_status = MaritalStatus::where('id', $user->member->marital_status_id ?? 0)->first();
         $token = $user->createToken('API Token')->plainTextToken;
         $age = Carbon::parse($user->member->birthday ?? now())->age;
+        $photoUrl = uploaded_asset($user->photo) ?: uploaded_asset($user->avatar_original ?? null);
 
         return response()->json([
             'result' => true,
@@ -406,7 +398,9 @@ class AuthController extends Controller
             'user' => [
                 'id' => $user->id,
                 'type' => $user->user_type,
-                'name' => $user->first_name . ' ' . $user->last_name,
+                'name' => trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')),
+                'first_name' => $user->first_name ?? '',
+                'last_name' => $user->last_name ?? '',
                 'membership' => $user->membership,
                 'email_verified_at' => $user->email_verified_at,
                 'photo_approved' => $user->photo_approved,
@@ -418,7 +412,8 @@ class AuthController extends Controller
                 'height' => $user->physical_attributes ? $user->physical_attributes->height : 0,
                 'marital_status_id' => $maritial_status ? new MaritialStatusResource($maritial_status) :  new MaritialStatusResource($maritial_status),
                 'avatar' => $user->avatar ?? '',
-                'avatar_original' => uploaded_asset($user->avatar_original) ?? '',
+                'photo' => $photoUrl ?? '',
+                'avatar_original' => $photoUrl ?? '',
                 'phone' => $user->phone ?? '',
             ],
         ]);
@@ -540,11 +535,15 @@ class AuthController extends Controller
     {
         $maritial_status = MaritalStatus::where('id', $user->member->marital_status_id ?? 0)->first();
         $age = Carbon::parse($user->member->birthday ?? now())->age;
+        $photoUrl = uploaded_asset($user->photo) ?: uploaded_asset($user->avatar_original ?? null);
+
         return response()->json(
             [
                 'id' => $user->id,
                 'type' => $user->user_type,
-                'name' => $user->first_name . ' ' . $user->last_name,
+                'name' => trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')),
+                'first_name' => $user->first_name ?? '',
+                'last_name' => $user->last_name ?? '',
                 'membership' => $user->membership,
                 'email_verified_at' => $user->email_verified_at,
                 'photo_approved' => $user->photo_approved,
@@ -556,7 +555,8 @@ class AuthController extends Controller
                 'height' => $user->physical_attributes ? $user->physical_attributes->height : 0,
                 'marital_status_id' => $maritial_status ? new MaritialStatusResource($maritial_status) :  new MaritialStatusResource($maritial_status),
                 'avatar' => $user->avatar ?? '',
-                'avatar_original' => uploaded_asset($user->avatar_original) ?? '',
+                'photo' => $photoUrl ?? '',
+                'avatar_original' => $photoUrl ?? '',
                 'phone' => $user->phone ?? '',
             ]
         );
