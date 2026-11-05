@@ -1368,6 +1368,59 @@ class ApiService {
     }
   }
 
+  /// Lightweight authenticated identity endpoint used by the account header.
+  /// It does not depend on profile aggregates or public photo-privacy rules.
+  static Future<Map<String, dynamic>?> getCurrentUserSummary(
+      {String? lang}) async {
+    try {
+      final response = await get('/user-by-token', lang: lang);
+      if (response == null || response['result'] == false) return null;
+
+      final record = _extractMapData(response) ?? response;
+      final nestedUser = record['user'];
+      final user = nestedUser is Map
+          ? Map<String, dynamic>.from(nestedUser)
+          : record;
+
+      final int userId = int.tryParse(
+            (user['id'] ?? user['user_id'] ?? '').toString(),
+          ) ??
+          0;
+      final firstName =
+          (user['first_name'] ?? user['firs_name'] ?? '').toString().trim();
+      final lastName = (user['last_name'] ?? '').toString().trim();
+      final responseName = (user['name'] ?? '').toString().trim();
+      final name = [firstName, lastName]
+          .where((part) => part.isNotEmpty)
+          .join(' ')
+          .trim();
+      final resolvedName = name.isNotEmpty ? name : responseName;
+
+      dynamic rawPhoto =
+          user['photo'] ?? user['avatar_original'] ?? user['avatar'] ?? '';
+      if (rawPhoto is Map) {
+        rawPhoto = rawPhoto['url'] ?? rawPhoto['path'] ?? rawPhoto['value'] ?? '';
+      }
+      final photo = rawPhoto?.toString().trim() ?? '';
+
+      if (userId > 0) {
+        final prefs = await SharedPreferences.getInstance();
+        if (prefs.getInt('user_id') != userId) {
+          await prefs.setInt('user_id', userId);
+        }
+      }
+
+      return {
+        'user_id': userId,
+        'name': resolvedName,
+        'photo': photo,
+      };
+    } catch (e) {
+      if (kDebugMode) debugPrint('❌ [API ERROR getCurrentUserSummary]: $e');
+      return null;
+    }
+  }
+
   static Future<MemberProfileModel?> getCurrentUserProfile(
       {String? lang}) async {
     try {
@@ -1397,6 +1450,25 @@ class ApiService {
           }
           return MemberProfileModel.fromJson(fullProfile, resolvedUserId);
         }
+      }
+
+      // The dedicated identity endpoint still provides the account header when
+      // an unrelated profile section fails to load.
+      final summary = await getCurrentUserSummary(lang: lang);
+      if (summary != null &&
+          (summary['name']?.toString().trim().isNotEmpty ?? false)) {
+        final parts = summary['name'].toString().trim().split(RegExp(r'\s+'));
+        final basicInfo = <String, dynamic>{
+          'firs_name': parts.first,
+          'first_name': parts.first,
+          'last_name': parts.length > 1 ? parts.skip(1).join(' ') : '',
+          'photo': summary['photo'] ?? '',
+          'gender': '',
+        };
+        return MemberProfileModel.fromJson({
+          'user_id': summary['user_id'],
+          'basic_info': basicInfo,
+        }, int.tryParse(summary['user_id'].toString()) ?? currentUserId);
       }
 
       // Compatibility fallback for hosting versions without the consolidated
