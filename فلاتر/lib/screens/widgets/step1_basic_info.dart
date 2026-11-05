@@ -356,7 +356,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                 Center(
                   child: Text(
                     _isAr
-                        ? 'خطوة 1: لنبدأ بالتعرف عليك ✨'
+                        ? 'الخطوة الأولى: بداية حكايتك مع وصال ✨'
                         : 'Step 1: Let us know you ✨',
                     style: const TextStyle(
                       fontSize: 19,
@@ -493,7 +493,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
 
                 _buildQuestionTitle(
                   _isAr
-                      ? '1. لمن تقوم بإنشاء هذا الحساب اليوم؟'
+                      ? '1. لمن نجهّز حساب وصال اليوم؟'
                       : '1. Who are you creating this profile for?',
                 ),
                 Wrap(
@@ -512,7 +512,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                 const SizedBox(height: 18),
 
                 _buildQuestionTitle(
-                  _isAr ? '2. ما اسمك ؟' : '2. What is your full name?',
+                  _isAr ? '2. بأي اسم تحب أن نناديك؟' : '2. What is your full name?',
                 ),
                 Row(
                   children: [
@@ -558,14 +558,14 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                 const SizedBox(height: 18),
 
                 _buildQuestionTitle(
-                  _isAr ? '3. الجنس *' : '3. Gender *',
+                  _isAr ? '3. ما الجنس الذي ندوّنه في ملفك؟ *' : '3. Gender *',
                 ),
                 Row(
                   children: [
                     Expanded(
                       child: _buildGenderCard(
                         '1',
-                        _isAr ? 'رجل 👨' : 'Male 👨',
+                        _isAr ? 'ذكر 👨' : 'Male 👨',
                         Icons.male_rounded,
                       ),
                     ),
@@ -573,7 +573,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                     Expanded(
                       child: _buildGenderCard(
                         '2',
-                        _isAr ? 'امرأة 👩' : 'Female 👩',
+                        _isAr ? 'أنثى 👩' : 'Female 👩',
                         Icons.female_rounded,
                       ),
                     ),
@@ -583,10 +583,10 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
 
                 _buildQuestionTitle(
                   _isAr
-                      ? '4. متى تاريخ ميلادك ؟ 🎂'
+                      ? '4. متى يوافق يوم ميلادك؟ 🎂'
                       : '4. What is your date of birth? 🎂',
                   subtitle: _isAr
-                      ? 'اختر اليوم والشهر والسنة'
+                      ? 'اختر تاريخ ميلادك بدقة'
                       : 'Select Day, Month, and Year',
                 ),
                 Row(
@@ -619,9 +619,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                         items: _days
                             .map((d) => DropdownMenuItem(
                                   value: d,
-                                  child: Text(d,
-                                      style: const TextStyle(
-                                          color: Colors.black87)),
+                                  child: _buildDateDropdownLabel(d),
                                 ))
                             .toList(),
                         onChanged: (val) {
@@ -659,9 +657,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                         items: _months
                             .map((m) => DropdownMenuItem(
                                   value: m,
-                                  child: Text(m,
-                                      style: const TextStyle(
-                                          color: Colors.black87)),
+                                  child: _buildDateDropdownLabel(m),
                                 ))
                             .toList(),
                         onChanged: (val) {
@@ -699,9 +695,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                         items: _years
                             .map((y) => DropdownMenuItem(
                                   value: y,
-                                  child: Text(y,
-                                      style: const TextStyle(
-                                          color: Colors.black87)),
+                                  child: _buildDateDropdownLabel(y),
                                 ))
                             .toList(),
                         onChanged: (val) {
@@ -716,7 +710,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
 
                 _buildQuestionTitle(
                   _isAr
-                      ? '5. البريد الإلكتروني وكلمة السر 🔐'
+                      ? '5. لنجهّز بيانات دخولك بأمان 🔐'
                       : '5. Account Credentials 🔐',
                 ),
                 TextFormField(
@@ -856,6 +850,25 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateDropdownLabel(String value) {
+    return Directionality(
+      textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
+      child: Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: Text(
+          value,
+          textAlign: TextAlign.start,
+          textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
+          style: const TextStyle(
+            color: Colors.black87,
+            fontFamily: 'Cairo',
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),
