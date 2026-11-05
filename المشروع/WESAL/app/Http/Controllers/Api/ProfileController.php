@@ -130,6 +130,8 @@ class ProfileController extends Controller
         }
 
         $data = [
+            // Return the authenticated owner ID so Flutter can recover its local session metadata.
+            'user_id'              => $user->id,
             'intoduction'          => new AboutUser($user),
             'basic_info'           => new BasicInformation($user),
             'contact_details'      => [
