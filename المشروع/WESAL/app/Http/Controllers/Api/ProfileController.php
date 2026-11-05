@@ -120,6 +120,76 @@ class ProfileController extends Controller
     }
 
     /**
+     * Resolve optional language selections without allowing stale/deleted IDs
+     * or malformed legacy JSON to break profile serialization.
+     */
+    private function member_language_resources(?Member $member): array
+    {
+        $memberKnownLanguages = null;
+        $memberMotherTongue = null;
+
+        if (!$member) {
+            return [
+                'known_languages' => $memberKnownLanguages,
+                'mother_tongue' => $memberMotherTongue,
+            ];
+        }
+
+        $knownRaw = $member->known_languages;
+        $knownValues = is_array($knownRaw)
+            ? $knownRaw
+            : json_decode((string) ($knownRaw ?? '[]'), true);
+
+        if (!is_array($knownValues)) {
+            $knownValues = is_numeric($knownValues) ? [$knownValues] : [];
+        }
+
+        $knownIds = array_values(array_unique(array_filter(
+            array_map(static function ($value): int {
+                if (is_array($value)) {
+                    $value = $value['id'] ?? null;
+                } elseif (is_object($value)) {
+                    $value = $value->id ?? null;
+                }
+
+                return is_numeric($value) ? (int) $value : 0;
+            }, $knownValues),
+            static function (int $id): bool {
+                return $id > 0;
+            }
+        )));
+
+        if ($knownIds !== []) {
+            $knownRecords = MemberLanguage::whereIn('id', $knownIds)->get();
+            if ($knownRecords->isNotEmpty()) {
+                $memberKnownLanguages = LanguageResource::collection($knownRecords);
+            }
+        }
+
+        $motherRaw = $member->mothere_tongue;
+        $motherValue = is_numeric($motherRaw)
+            ? $motherRaw
+            : json_decode((string) ($motherRaw ?? 'null'), true);
+
+        if (is_array($motherValue)) {
+            $motherValue = $motherValue['id'] ?? $motherValue[0] ?? null;
+        }
+
+        $motherId = is_numeric($motherValue) ? (int) $motherValue : 0;
+        if ($motherId > 0) {
+            $motherRecord = MemberLanguage::where('id', $motherId)->first();
+            if ($motherRecord) {
+                $memberMotherTongue = new LanguageResource($motherRecord);
+            }
+        }
+
+        return [
+            'known_languages' => $memberKnownLanguages,
+            'mother_tongue' => $memberMotherTongue,
+        ];
+    }
+
+    /**
      * دالة جلب كافة بيانات الملف الشخصي للمستخدم الحالي دفعة واحدة لسرعة فائقة
      */
     public function get_full_my_profile()
@@ -147,18 +217,9 @@ class ProfileController extends Controller
             return $this->failure_message('User Not Found');
         }
 
-        $member_known_languages = null;
-        $member_mother_tongue = null;
-        if ($user->member) {
-            $known_languages = json_decode($user->member->known_languages);
-            $mother_tongue = json_decode($user->member->mothere_tongue);
-            if ($known_languages != null) {
-                $member_known_languages = LanguageResource::collection(MemberLanguage::whereIn('id', $known_languages)->get());
-            }
-            if ($mother_tongue != null) {
-                $member_mother_tongue = new LanguageResource(MemberLanguage::where('id', $mother_tongue)->first());
-            }
-        }
+        $languageResources = $this->member_language_resources($user->member);
+        $member_known_languages = $languageResources['known_languages'];
+        $member_mother_tongue = $languageResources['mother_tongue'];
 
         // Keep contact fields private to the owner; retired fields are not returned.
         $ownerLifestyle = null;
@@ -1130,52 +1191,10 @@ class ProfileController extends Controller
             ], 404);
         }
 
-        $member_known_languages = null;
-        $member_mother_tongue = null;
+        $languageResources = $this->member_language_resources($targetMember);
+        $member_known_languages = $languageResources['known_languages'];
+        $member_mother_tongue = $languageResources['mother_tongue'];
 
-        // Legacy profiles may contain an empty, scalar, malformed or partially
-        // deleted language selection. Normalize it before passing values to whereIn.
-        $knownLanguageValues = json_decode($targetMember->known_languages ?? '[]', true);
-        if (!is_array($knownLanguageValues)) {
-            $knownLanguageValues = is_numeric($knownLanguageValues)
-                ? [$knownLanguageValues]
-                : [];
-        }
-
-        $knownLanguageIds = array_values(array_unique(array_filter(
-            array_map(static function ($value): int {
-                if (is_array($value)) {
-                    $value = $value['id'] ?? null;
-                } elseif (is_object($value)) {
-                    $value = $value->id ?? null;
-                }
-
-                return is_numeric($value) ? (int) $value : 0;
-            }, $knownLanguageValues),
-            static function (int $id): bool {
-                return $id > 0;
-            }
-        )));
-
-        if ($knownLanguageIds !== []) {
-            $knownLanguageRecords = MemberLanguage::whereIn('id', $knownLanguageIds)->get();
-            if ($knownLanguageRecords->isNotEmpty()) {
-                $member_known_languages = LanguageResource::collection($knownLanguageRecords);
-            }
-        }
-
-        $motherTongueValue = json_decode($targetMember->mothere_tongue ?? 'null', true);
-        if (is_array($motherTongueValue)) {
-            $motherTongueValue = $motherTongueValue['id'] ?? $motherTongueValue[0] ?? null;
-        }
-        $motherTongueId = is_numeric($motherTongueValue) ? (int) $motherTongueValue : 0;
-
-        if ($motherTongueId > 0) {
-            $motherTongueRecord = MemberLanguage::where('id', $motherTongueId)->first();
-            if ($motherTongueRecord) {
-                $member_mother_tongue = new LanguageResource($motherTongueRecord);
-            }
-        }
             $data['intoduction'] = new AboutUser($user);
             $data['basic_info'] = new PublicBasicInformation($user);
 
