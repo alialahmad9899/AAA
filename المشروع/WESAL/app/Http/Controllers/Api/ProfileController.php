@@ -155,6 +155,68 @@ class ProfileController extends Controller
         return $this->response_data($data);
     }
 
+    /**
+     * ملخص خاص بصاحب الحساب لبطاقة الحساب الشخصي في التطبيق.
+     * الإحصاءات هنا أعداد فعلية، وليست أرصدة الباقات المتبقية.
+     */
+    public function account_summary()
+    {
+        $user = auth()->user()->loadMissing([
+            'member',
+            'spiritual_backgrounds',
+            'recidency',
+        ]);
+
+        SubscriptionUtility::deactivateIfInvalid($user);
+
+        $residenceInfo = $user->recidency
+            ? (new ResidenceInformation($user->recidency))->resolve(request())
+            : [];
+
+        // Compatibility for older accounts that have a present Address but
+        // do not have a Recidency row yet.
+        if (empty($residenceInfo['residency_country'])) {
+            $presentAddress = Address::with('country')
+                ->where('user_id', $user->id)
+                ->where('type', 'present')
+                ->first();
+
+            $presentCountry = trim((string) ($presentAddress->country->name ?? ''));
+            if ($presentCountry !== '') {
+                $residenceInfo['residency_country'] = $presentCountry;
+                $residenceInfo['recidency_country'] = $presentCountry;
+                $residenceInfo['country'] = $presentCountry;
+            }
+        }
+
+        // One row per expressed-interest request; count unique recipients
+        // so historical duplicate rows cannot inflate the profile-card number.
+        $sentInterestsCount = ExpressInterest::where('interested_by', $user->id)
+            ->distinct()
+            ->count('user_id');
+
+        // Match the same active-viewer criteria used by the visitors screen.
+        $profileVisitorsCount = ProfileViewer::where('user_id', $user->id)
+            ->whereIn('viewed_by', function ($query) {
+                $query->select('id')
+                    ->from('users')
+                    ->where('approved', '1')
+                    ->where('blocked', 0)
+                    ->where('deactivated', 0)
+                    ->where('permanently_delete', 0);
+            })
+            ->distinct()
+            ->count('viewed_by');
+
+        return $this->response_data([
+            'user_id' => $user->id,
+            'basic_info' => (new PublicBasicInformation($user))->resolve(request()),
+            'residence_info' => !empty($residenceInfo) ? $residenceInfo : null,
+            'sent_interests_count' => (int) $sentInterestsCount,
+            'profile_visitors_count' => (int) $profileVisitorsCount,
+        ]);
+    }
+
     public function profile_settings()
     {
         $member             = User::findOrFail(auth()->user()->id);
