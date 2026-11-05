@@ -1216,6 +1216,10 @@ class _EditProfileScreenState extends State<EditProfileScreen>
         'complexion',
         'height',
         'weight',
+        'body_type',
+        'raw_body_type',
+        'body_art',
+        'raw_body_art',
         'eye_colour',
         'hair_colour'
       ],
@@ -1440,11 +1444,15 @@ class _EditProfileScreenState extends State<EditProfileScreen>
       }
       if (physical.containsKey('body_type')) {
         _selectedBodyType =
-            _matchListedOption(_fieldString(physical['body_type']), _bodyTypeOptions);
+            _matchListedOption(
+              _fieldString(physical['raw_body_type'] ?? physical['body_type']),
+              _bodyTypeOptions);
       }
       if (physical.containsKey('body_art')) {
         _selectedBodyArt =
-            _matchListedOption(_fieldString(physical['body_art']), _bodyArtOptions);
+            _matchListedOption(
+              _fieldString(physical['raw_body_art'] ?? physical['body_art']),
+              _bodyArtOptions);
       }
     } else if (fullProfile.physicalAttributes != null) {
       final phys = fullProfile.physicalAttributes!;
