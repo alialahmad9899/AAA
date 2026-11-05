@@ -291,7 +291,7 @@ class Step2PersonalDetails extends StatelessWidget {
                 Center(
                   child: Text(
                     _isAr
-                        ? 'خطوة 2: تعليمك ومظهرك الخارجي 🎓📏'
+                        ? 'الخطوة الثانية: لنتعرّف إلى تفاصيلك ✨'
                         : 'Step 2: Education & Physical Traits 🎓📏',
                     style: const TextStyle(
                       fontSize: 19,
@@ -306,7 +306,7 @@ class Step2PersonalDetails extends StatelessWidget {
                 // 1. المستوى التعليمي
                 _buildQuestionTitle(
                   _isAr
-                      ? '1. ما هو مستواك التعليمي الحالي؟ *'
+                      ? '1. إلى أي مستوى تعليمي وصلت؟ *'
                       : '1. What is your education degree? *',
                 ),
                 Wrap(
@@ -327,7 +327,7 @@ class Step2PersonalDetails extends StatelessWidget {
                 // 2. التخصص والمهنة                // 2. التخصص والمهنة
                 _buildQuestionTitle(
                   _isAr
-                      ? '2. التخصص أو المهنة والحقل العلمي'
+                      ? '2. ما تخصصك الدراسي أو مجالك العلمي؟'
                       : '2. University & Career Details',
                 ),
                 TextFormField(
@@ -340,7 +340,7 @@ class Step2PersonalDetails extends StatelessWidget {
                   ),
                   decoration: _buildInputDecoration(
                     hintText: _isAr
-                        ? 'الجامعة / التخصص *'
+                        ? 'اسم الجامعة أو التخصص *'
                         : 'University / Specialization *',
                     prefixIcon: Icons.account_balance_outlined,
                   ),
@@ -359,7 +359,7 @@ class Step2PersonalDetails extends StatelessWidget {
                   ),
                   decoration: _buildInputDecoration(
                     hintText: _isAr
-                        ? 'المهنة / المسمى الوظيفي *'
+                        ? 'ما مهنتك أو مسماك الوظيفي حالياً؟ *'
                         : 'Job Title / Career *',
                     prefixIcon: Icons.work_outline,
                   ),
@@ -371,7 +371,7 @@ class Step2PersonalDetails extends StatelessWidget {
                 TextFormField(
                   controller: companyController,
                   decoration: _buildInputDecoration(
-                    hintText: _isAr ? 'جهة العمل (اختياري)' : 'Company / Employer (optional)',
+                    hintText: _isAr ? 'اسم جهة العمل (اختياري)' : 'Company / Employer (optional)',
                     prefixIcon: Icons.business_outlined,
                   ),
                 ),
@@ -383,7 +383,7 @@ class Step2PersonalDetails extends StatelessWidget {
                 // 3. الطول والوزن
                 _buildQuestionTitle(
                   _isAr
-                      ? '3. حدد طولك ووزنك بلمسة واحدة'
+                      ? '3. كيف تصف طولك ووزنك؟ 📏'
                       : '3. Select your height & weight',
                 ),
                 Container(
@@ -473,7 +473,7 @@ class Step2PersonalDetails extends StatelessWidget {
                 // 4. خيارات الألوان
                 _buildQuestionTitle(
                   _isAr
-                      ? '4. اختيارات الألوان المميزة لك *'
+                      ? '4. ما الألوان التي تميّز ملامحك؟ *'
                       : '4. Select your personal features *',
                 ),
                 _buildVisualColorSelector(
@@ -503,10 +503,10 @@ class Step2PersonalDetails extends StatelessWidget {
 
                 // 5. بنية الجسد والوشم
                 _buildQuestionTitle(
-                  _isAr ? '5. بنية الجسد والوشم' : '5. Body Structure & Art',
+                  _isAr ? '5. كيف تصف قوامك، وهل لديك وشم؟' : '5. Body Structure & Art',
                 ),
 
-                _buildSubTitle(_isAr ? '• بنية الجسد *:' : '• Body Type *:'),
+                _buildSubTitle(_isAr ? '• كيف تصف بنية جسمك؟ *' : '• Body Type *:'),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -522,7 +522,7 @@ class Step2PersonalDetails extends StatelessWidget {
                 const SizedBox(height: 12),
 
                 _buildSubTitle(_isAr
-                    ? '• الوشم والرسومات على الجسد *:'
+                    ? '• هل لديك وشم أو رسومات على الجسد؟ *'
                     : '• Body Art / Tattoo *:'),
                 Wrap(
                   spacing: 8,
@@ -537,7 +537,7 @@ class Step2PersonalDetails extends StatelessWidget {
                   }).toList(),
                 ),
                 const SizedBox(height: 18),
-                _buildQuestionTitle(_isAr ? '6. هل تتناول المشروبات؟ 🥤' : '6. Do you drink? 🥤'),
+                _buildQuestionTitle(_isAr ? '6. هل تتناول الكحول؟' : '6. Do you drink? 🥤'),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -555,7 +555,7 @@ class Step2PersonalDetails extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 18),
-                _buildQuestionTitle(_isAr ? '7. ما هو برجك الشمسي؟ ♈' : '7. Your zodiac sign ♈'),
+                _buildQuestionTitle(_isAr ? '7. أي برج شمسي يرافق تاريخ ميلادك؟ ♈' : '7. Your zodiac sign ♈'),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -570,7 +570,7 @@ class Step2PersonalDetails extends StatelessWidget {
                       .toList(),
                 ),
                 const SizedBox(height: 18),
-                _buildQuestionTitle(_isAr ? '8. كيف تعبّر عادةً عن مشاعرك؟ 💖' : '8. How do you express affection? 💖'),
+                _buildQuestionTitle(_isAr ? '8. كيف تحب أن تعبّر عن المودة؟ 💖' : '8. How do you express affection? 💖'),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -585,7 +585,7 @@ class Step2PersonalDetails extends StatelessWidget {
                       .toList(),
                 ),
                 const SizedBox(height: 18),
-                _buildQuestionTitle(_isAr ? '9. كيف تصف حس الفكاهة لديك؟ 😄' : '9. Describe your sense of humor 😄'),
+                _buildQuestionTitle(_isAr ? '9. أي وصف أقرب إلى حسّك الفكاهي؟ 😄' : '9. Describe your sense of humor 😄'),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
