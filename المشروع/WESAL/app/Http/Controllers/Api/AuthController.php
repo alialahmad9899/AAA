@@ -410,6 +410,7 @@ class AuthController extends Controller
         $maritial_status = MaritalStatus::where('id', $user->member->marital_status_id ?? 0)->first();
         $token = $user->createToken('API Token')->plainTextToken;
         $age = Carbon::parse($user->member->birthday ?? now())->age;
+        $photoUrl = uploaded_asset($user->photo) ?: uploaded_asset($user->avatar_original ?? null);
 
         return response()->json([
             'result' => true,
@@ -420,7 +421,9 @@ class AuthController extends Controller
             'user' => [
                 'id' => $user->id,
                 'type' => $user->user_type,
-                'name' => $user->first_name . ' ' . $user->last_name,
+                'name' => trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')),
+                'first_name' => $user->first_name ?? '',
+                'last_name' => $user->last_name ?? '',
                 'membership' => $user->membership,
                 'email_verified_at' => $user->email_verified_at,
                 'photo_approved' => $user->photo_approved,
@@ -432,7 +435,8 @@ class AuthController extends Controller
                 'height' => $user->physical_attributes ? $user->physical_attributes->height : 0,
                 'marital_status_id' => $maritial_status ? new MaritialStatusResource($maritial_status) :  new MaritialStatusResource($maritial_status),
                 'avatar' => $user->avatar ?? '',
-                'avatar_original' => uploaded_asset($user->avatar_original ?: $user->photo) ?? '',
+                'photo' => $photoUrl ?? '',
+                'avatar_original' => $photoUrl ?? '',
                 'phone' => $user->phone ?? '',
             ],
         ]);
@@ -554,11 +558,15 @@ class AuthController extends Controller
     {
         $maritial_status = MaritalStatus::where('id', $user->member->marital_status_id ?? 0)->first();
         $age = Carbon::parse($user->member->birthday ?? now())->age;
+        $photoUrl = uploaded_asset($user->photo) ?: uploaded_asset($user->avatar_original ?? null);
+
         return response()->json(
             [
                 'id' => $user->id,
                 'type' => $user->user_type,
-                'name' => $user->first_name . ' ' . $user->last_name,
+                'name' => trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')),
+                'first_name' => $user->first_name ?? '',
+                'last_name' => $user->last_name ?? '',
                 'membership' => $user->membership,
                 'email_verified_at' => $user->email_verified_at,
                 'photo_approved' => $user->photo_approved,
@@ -570,7 +578,8 @@ class AuthController extends Controller
                 'height' => $user->physical_attributes ? $user->physical_attributes->height : 0,
                 'marital_status_id' => $maritial_status ? new MaritialStatusResource($maritial_status) :  new MaritialStatusResource($maritial_status),
                 'avatar' => $user->avatar ?? '',
-                'avatar_original' => uploaded_asset($user->avatar_original ?: $user->photo) ?? '',
+                'photo' => $photoUrl ?? '',
+                'avatar_original' => $photoUrl ?? '',
                 'phone' => $user->phone ?? '',
             ]
         );
