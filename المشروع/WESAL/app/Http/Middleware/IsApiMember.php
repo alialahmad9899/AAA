@@ -8,6 +8,22 @@ use Illuminate\Http\Request;
 class IsApiMember
 {
     private const PROFILE_SETUP_READ_PATHS = [
+        'api/member/full-my-profile',
+        'api/member/basic-info',
+        'api/member/introduction',
+        'api/member/get-email',
+        'api/member/present/address',
+        'api/member/permanent/address',
+        'api/member/physical-attributes',
+        'api/member/language',
+        'api/member/hobbies-interests',
+        'api/member/attitude-behavior',
+        'api/member/residency-info',
+        'api/member/spiritual-background',
+        'api/member/life-style',
+        'api/member/astronomic',
+        'api/member/family-info',
+        'api/member/partner-expectation',
         'api/member/education',
         'api/member/career',
         'api/member/languages',
