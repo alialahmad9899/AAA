@@ -58,7 +58,7 @@ jobs:
           php -l 'المشروع/WESAL/tests/Unit/PartnerExpectationAgeValidationTest.php'
       - name: Prepare Laravel runtime directories
         working-directory: ./المشروع/WESAL
-        run: mkdir -p bootstrap/cache
+        run: mkdir -p bootstrap/cache storage/framework/cache/data storage/framework/views storage/framework/sessions storage/logs storage/app/public
       - name: Install Laravel dependencies
         working-directory: ./المشروع/WESAL
         # CI only: Composer advisory blocking is bypassed to test the existing Laravel 10 dependency set.
