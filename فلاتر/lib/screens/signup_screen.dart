@@ -265,6 +265,15 @@ class _SignupScreenState extends State<SignupScreen> {
     return null;
   }
 
+  bool _hasPersistedValue(dynamic value) {
+    if (value == null) return false;
+    final normalized = value.toString().trim().toLowerCase();
+    return normalized.isNotEmpty &&
+        normalized != 'null' &&
+        normalized != 'undefined' &&
+        normalized != '---';
+  }
+
   String _stepErrorMessage(Object error, String fallback) {
     return error is _SignupStepSaveException ? error.message : fallback;
   }
