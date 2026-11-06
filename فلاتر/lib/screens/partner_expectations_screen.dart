@@ -1096,11 +1096,15 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                     children: [
                                                       Text(
-                                                        'من: \${_partnerAgeRange.start.round()} سنة',
+                                                        isAr
+                                                            ? 'من: ${_partnerAgeRange.start.round()} سنة'
+                                                            : 'From: ${_partnerAgeRange.start.round()} yrs',
                                                         style: const TextStyle(color: Colors.amberAccent, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
                                                       ),
                                                       Text(
-                                                        'إلى: \${_partnerAgeRange.end.round()} سنة',
+                                                        isAr
+                                                            ? 'إلى: ${_partnerAgeRange.end.round()} سنة'
+                                                            : 'To: ${_partnerAgeRange.end.round()} yrs',
                                                         style: const TextStyle(color: Colors.amberAccent, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
                                                       ),
                                                     ],
