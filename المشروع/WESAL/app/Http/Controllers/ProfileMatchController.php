@@ -13,6 +13,7 @@ use App\Models\Address;
 use App\Models\IgnoredUser;
 use App\Models\Lifestyle;
 use App\Models\User;
+use App\Utility\MemberUtility;
 
 class ProfileMatchController extends Controller
 {
@@ -239,8 +240,13 @@ class ProfileMatchController extends Controller
             return redirect()->route('login');
         }
 
-        // تم إلغاء شرط auto_profile_match للسماح لجميع المستويات بالظهور ورؤية المطابقات
-        
+        // The premium auto-match feature is enforced on the server.
+        // Female accounts remain eligible under the free-base policy.
+        if (!MemberUtility::can_auto_match($user)) {
+            flash(translate('ميزة التطابق التلقائي تتطلب باقة فعالة.'))->warning();
+            return redirect()->route('packages');
+        }
+
         // تحديث المطابقة المباشرة لهذا العضو بآخر البيانات
         $this->match_profiles($user->id);
 

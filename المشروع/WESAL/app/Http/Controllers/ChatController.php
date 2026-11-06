@@ -179,10 +179,8 @@ class ChatController extends Controller
         if ($chat_thread->sender_user_id != Auth::user()->id && $chat_thread->receiver_user_id != Auth::user()->id) {
             return '<div class="alert alert-danger text-center w-100 fs-12 mb-3 shadow-sm">غير مصرح لك بإرسال رسائل هنا.</div>';
         }
-        if (!MemberUtility::can_initiate_chat(Auth::user()->id)) {
-            return '<div class="alert alert-warning text-center w-100 fs-12 mb-3 shadow-sm">انتهت صلاحية اشتراكك. جدّد الباقة لمتابعة إرسال الرسائل.</div>';
-        }
-
+        // Sending remains enabled in an already-owned conversation after expiry.
+        // Creating a new conversation is still restricted in store().
         $message_content = trim($request->message);
 
         if ($this->isSmartPhoneNumber($message_content)) {

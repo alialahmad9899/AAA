@@ -49,8 +49,9 @@ class ProfileViewerController extends Controller
             $allowedLimit = 3;
         }
 
-        // 5. جلب قائمة الزوار النشطين والمفعلين مرتبة حسب الأحدث
-        $profileViewers = ProfileViewer::where('user_id', $user->id)
+        // 5. Enforce the three free profile visitors for non-subscribed male accounts
+        // in the API response itself, not only by hiding rows inside Flutter.
+        $viewersQuery = ProfileViewer::where('user_id', $user->id)
             ->whereIn("viewed_by", function ($query) {
                 $query->select('id')
                     ->from('users')
@@ -58,18 +59,32 @@ class ProfileViewerController extends Controller
                     ->where('blocked', 0)
                     ->where('deactivated', 0)
                     ->where('permanently_delete', 0);
-            })
-            ->orderBy('updated_at', 'desc')
-            ->paginate(15);
+            });
+        $totalViewers = (clone $viewersQuery)->count();
 
-        // 6. إرجاع النتيجة مع قيم السيرفر الديناميكية لتطبيق الموبايل
+        if (!$isFemale && !$isSubscribed) {
+            $profileViewers = (clone $viewersQuery)
+                ->orderBy('updated_at', 'desc')
+                ->limit(3)
+                ->get();
+            $lockedCount = max(0, $totalViewers - $profileViewers->count());
+        } else {
+            $profileViewers = (clone $viewersQuery)
+                ->orderBy('updated_at', 'desc')
+                ->paginate(15);
+            $lockedCount = 0;
+        }
+
+        // 6. Return only entitled visitor records with the quota metadata.
         return MyProfileViewerResource::collection($profileViewers)->additional([
             'result' => true,
             'status' => 'success',
-            'package_limit' => $allowedLimit,        // سقف المشاهدات للباقة الحالية
-            'remaining_quota' => $packageQuota,      // الرصيد المتبقي للباقة
+            'package_limit' => $allowedLimit,
+            'remaining_quota' => $packageQuota,
             'is_subscribed' => $isSubscribed || $isFemale,
             'is_female' => $isFemale,
+            'locked_count' => $lockedCount,
+            'total_viewers' => $totalViewers,
         ]);
     }
 

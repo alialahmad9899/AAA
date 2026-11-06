@@ -7,6 +7,7 @@ use App\Models\ChatThread;
 use App\Models\MessageQuotaUsage;
 use App\Models\Package;
 use App\Models\PackagePayment;
+use App\Models\ProfileViewer;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -168,9 +169,21 @@ class SubscriptionUtility
             }
 
             $isFemale = MemberUtility::is_female($user);
+            $hasActivePaidPackage = self::currentActivePaidPackageForMember($member) !== null;
             $quota = (int) ($member->{$quotaColumn} ?? 0);
+
+            // Free male accounts get three recorded profile visitors. Female base
+            // accounts remain unlimited; other quotas require an active paid package.
+            $freeProfileViewerAllowance = !$isFemale
+                && !$hasActivePaidPackage
+                && $quotaColumn === 'remaining_profile_viewer_view';
+
             if (!$isFemale) {
-                if (!self::currentActivePaidPackageForMember($member) || ($quota !== -1 && $quota <= 0)) {
+                if ($freeProfileViewerAllowance) {
+                    if (ProfileViewer::where('user_id', $user->id)->count() >= 3) {
+                        return null;
+                    }
+                } elseif (!$hasActivePaidPackage || ($quota !== -1 && $quota <= 0)) {
                     return null;
                 }
             }
@@ -180,7 +193,7 @@ class SubscriptionUtility
                 return $result;
             }
 
-            if (!$isFemale && $quota > 0) {
+            if (!$isFemale && $hasActivePaidPackage && $quota > 0) {
                 $member->{$quotaColumn} = $quota - 1;
                 $member->save();
             }

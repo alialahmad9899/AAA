@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\User;
 use App\Utility\SubscriptionUtility;
+use App\Utility\MemberUtility;
 use App\Models\Career;
 use App\Models\Member;
 use App\Models\Address;
@@ -42,6 +43,13 @@ class MemberController extends Controller
 
         // 1. استقبال متغير التفعيل من الطلب (افتراضياً false لإظهار كافة الأعضاء)
         $match_enabled = filter_var($request->input('match_enabled', false), FILTER_VALIDATE_BOOLEAN);
+        if ($match_enabled && !MemberUtility::can_auto_match($user)) {
+            return response()->json([
+                'result' => false,
+                'status' => 'package_required',
+                'message' => 'ميزة التطابق الذكي متاحة ضمن الباقات المدفوعة. حسابات الإناث مستثناة ومجانية.'
+            ], 403);
+        }
 
         $users_query = User::query();
         $users_query->orderBy('created_at', 'desc')
