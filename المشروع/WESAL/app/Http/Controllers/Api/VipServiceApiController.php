@@ -61,7 +61,6 @@ class VipServiceApiController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'service_type' => 'required|string|in:highlight_profile,direct_contact,special_matchmaking',
-            'amount' => 'required|numeric',
         ]);
 
         if ($validator->fails()) {
@@ -69,7 +68,12 @@ class VipServiceApiController extends Controller
         }
 
         $user = Auth::user();
-        $amount = (float) $request->amount;
+        $servicePrices = [
+            'highlight_profile' => 10.00,
+            'direct_contact' => 25.00,
+            'special_matchmaking' => 100.00,
+        ];
+        $amount = $servicePrices[$request->service_type];
         $orderCode = 'VIP-' . date('Ymd-His') . '-' . rand(100, 999);
 
         // إنشاء سجل الطلب بحالة "في انتظار الدفع"
@@ -122,25 +126,71 @@ class VipServiceApiController extends Controller
     {
         $request->validate([
             'order_id' => 'required|integer',
+            'payment_intent_id' => 'required|string|max:255',
         ]);
 
         $user = Auth::user();
-        $order = VipServiceOrder::where('id', $request->order_id)->where('user_id', $user->id)->first();
+        $order = VipServiceOrder::where('id', $request->order_id)
+            ->where('user_id', $user->id)
+            ->first();
 
         if (!$order) {
             return response()->json(['result' => false, 'message' => 'الطلب غير موجود.'], 404);
         }
 
-        $order->payment_status = 'paid';
-        $order->paid_at = now();
-
         $specs = is_array($order->specifications) ? $order->specifications : [];
-        if (!empty($request->payment_intent_id)) {
-            $specs['stripe_payment_intent_id'] = $request->payment_intent_id;
+        $alreadyConfirmedIntent = (string) ($specs['stripe_payment_intent_id'] ?? '');
+        if ($order->payment_status === 'paid' && hash_equals($alreadyConfirmedIntent, $request->payment_intent_id)) {
+            return response()->json([
+                'result' => true,
+                'already_paid' => true,
+                'message' => 'تم تأكيد الدفع مسبقاً.',
+                'order_id' => $order->id,
+            ]);
         }
-        $order->specifications = $specs;
 
-        $order->save();
+        try {
+            $stripeSecret = config('services.stripe.secret') ?: env('STRIPE_SECRET');
+            if (empty($stripeSecret)) {
+                return response()->json(['result' => false, 'message' => 'Stripe is not configured.'], 500);
+            }
+
+            Stripe::setApiKey($stripeSecret);
+            $intent = PaymentIntent::retrieve($request->payment_intent_id);
+            $expectedAmount = (int) round(((float) $order->amount) * 100);
+            $metadata = $intent->metadata ?? null;
+
+            if (($intent->status ?? null) !== 'succeeded'
+                || (int) ($intent->amount_received ?? 0) !== $expectedAmount
+                || strtolower((string) ($intent->currency ?? '')) !== 'usd'
+                || (string) ($metadata->order_id ?? '') !== (string) $order->id
+                || (string) ($metadata->order_code ?? '') !== (string) $order->order_code
+                || (string) ($metadata->user_id ?? '') !== (string) $user->id
+                || (string) ($metadata->service_type ?? '') !== (string) $order->service_type) {
+                return response()->json([
+                    'result' => false,
+                    'message' => 'تعذر التحقق من الدفع أو أن بيانات العملية لا تطابق الطلب.',
+                ], 422);
+            }
+
+            $specs['stripe_payment_intent_id'] = $intent->id;
+            $specs['stripe_payment_status'] = $intent->status;
+            $order->specifications = $specs;
+            $order->payment_status = 'paid';
+            $order->paid_at = now();
+            $order->save();
+        } catch (\\Throwable $exception) {
+            \\Log::error('VIP Stripe confirmation failed.', [
+                'order_id' => $order->id,
+                'user_id' => $user->id,
+                'payment_intent_id' => $request->payment_intent_id,
+                'message' => $exception->getMessage(),
+            ]);
+            return response()->json([
+                'result' => false,
+                'message' => 'تعذر التحقق من عملية الدفع حالياً.',
+            ], 502);
+        }
 
         return response()->json([
             'result' => true,
@@ -156,7 +206,6 @@ class VipServiceApiController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'service_type' => 'required|string|in:highlight_profile,direct_contact,special_matchmaking',
-            'amount' => 'required|numeric',
             'account_name' => 'required|string',
             'payment_proof' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:8192',
         ]);
@@ -166,6 +215,12 @@ class VipServiceApiController extends Controller
         }
 
         $user = Auth::user();
+        $servicePrices = [
+            'highlight_profile' => 10.00,
+            'direct_contact' => 25.00,
+            'special_matchmaking' => 100.00,
+        ];
+        $amount = $servicePrices[$request->service_type];
         $orderCode = 'VIP-SHAM-' . date('Ymd-His') . '-' . rand(100, 999);
 
         $proofPath = null;
@@ -196,7 +251,7 @@ class VipServiceApiController extends Controller
             'user_id' => $user->id,
             'order_code' => $orderCode,
             'service_type' => $request->service_type,
-            'amount' => $request->amount,
+            'amount' => $amount,
             'payment_method' => 'sham_cash',
             'payment_status' => 'pending_verification',
             'execution_status' => 'pending',
