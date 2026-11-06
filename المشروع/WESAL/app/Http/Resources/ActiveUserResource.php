@@ -28,7 +28,7 @@ class ActiveUserResource extends JsonResource
             : null;
         $countryName = optional(optional($presentAddress)->country)->name ?? '';
         $religionName = optional(optional($this->spiritual_backgrounds)->religion)->name ?? '';
-        $motherTongueName = optional(optional($this->mothere_tongue)->mothere_tongue)->name ?? '';
+        $motherTongueName = optional(optional($this->member)->mothereTongue)->name ?? '';
         $maritalStatusName = optional(optional($this)->marital_status)->name ?? optional(optional($this->member)->marital_status)->name ?? '';
         $casteName = optional(optional($this->spiritual_backgrounds)->caste)->name;
 
