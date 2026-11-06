@@ -368,7 +368,7 @@ class SmartMatchingService
 
     private function hasPreferences(array $expectations): bool
     {
-        return $this->scoreData($expectations, [])->get('criteria_count', 0) > 0;
+        return ($this->scoreData($expectations, [])['criteria_count'] ?? 0) > 0;
     }
 
     private function hasValue($value): bool
