@@ -470,7 +470,18 @@
 - نقطة البداية: Commit `378b8762f3b9903f12cd8839ead14d961a329901`.
 - التحقق من السجلات: Run `42243578776` وRun `42244025174` يثبتان نجاح `flutter test` بـ45 اختباراً واختبارات PHPUnit بـ9 حالات و18 assertion؛ لكن `flutter analyze --no-pub` انهار في كليهما بسبب LSP `FormatException` ولم ينفذ تحليلاً صالحاً.
 - الإصلاح الإضافي: توحيد قراءة نطاق العمر في التسجيل والتعديل عبر `ApiService.parsePartnerAgeRange`، مع دعم `min_age/max_age` والحقول التاريخية `partner_age/partner_max_age`، ورفض القيم المفقودة/المعكوسة/خارج 18–100، وإضافة اختبارات parsing.
-- CI: أضيف فحص `dart analyze` للملفات المتغيرة كفحص ساكن إلزامي مستقل عن تعطل LSP في أمر `flutter analyze`. النتيجة ستوثق بعد انتهاء تشغيل CI لهذه الدفعة.
+- CI: أضيف فحص `dart analyze --fatal-infos` للملفات المتغيرة كفحص ساكن إلزامي مستقل عن تعطل LSP في أمر `flutter analyze`.
+- نتيجة التحقق النهائية على Commit الكود `c33e5524c71efe34ab2da33876acdf7d974b51e8`، GitHub Actions Run `42250596112`:
+  - `dart analyze --fatal-infos` على ملفات Flutter الخمسة المعدلة: `No issues found!`، دون أخطاء أو معلومات متبقية.
+  - `flutter test`: نجح، 48 اختباراً.
+  - `php -l`: اجتاز جميع ملفات PHP المعدلة واختبار PHPUnit الجديد.
+  - PHPUnit: نجحت 9 اختبارات مع 18 assertion؛ ظهر تحذير deprecation واحد من PHPUnit دون فشل.
+  - وظيفة بناء الحزمة: نجحت؛ تم التحقق من سلامة ZIP ووجود 12 ملفاً فقط بالمسارات النسبية الأصلية المتوقعة.
+  - ملاحظة واضحة: `flutter analyze --no-pub` نفسه ما زال يتعطل عند بدء analysis_server/LSP برسالة `FormatException: Unexpected end of input` المرتبطة برسالة JSON مقطوعة؛ لم يُحسب نجاحاً. البديل المستقل `dart analyze --fatal-infos` اجتاز الفحص بالكامل.
+- أرشيف آخر دفعة: `WESAL_PARTNER_AGE_RANGE_FIX.zip`، Artifact ID `13520236524` في Run `42250596112`؛ تم استخراج ملف ZIP الداخلي وفحصه مستقلاً: 12 ملفاً، لا توجد أخطاء CRC، ولا يحتوي `PROJECT_NOTES.md` أو Workflow.
+- قاعدة البيانات والاستضافة: فحص ملفات SQL المتاحة بالمستودع لم يثبت وجود أعمدة العمر في مخطط الإنتاج؛ الكود يدعم الزوج الحديث `min_age/max_age` أو الزوج القديم `partner_age/partner_max_age` ويرفض الحفظ بوضوح عند غيابهما معاً. يجب التحقق من أحد الزوجين في قاعدة الاستضافة قبل النشر.
+- لم يُنفذ HTTP حي على الاستضافة أو اختبار على جهاز Android/iOS فعلي. لم يُنشر شيء ولم يُدمج الفرع إلى `main`; بقي `main` على Commit `f86275f0121c048d09fb4600dd6ed152bc4a952e`.
+
 - لم يتغير `main` ولم يتم النشر إلى الاستضافة.
 
 
