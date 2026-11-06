@@ -42,6 +42,7 @@ jobs:
             "المشروع/WESAL/app/Http/Middleware/EmailVerifiedApi.php"
             "المشروع/WESAL/app/Http/Middleware/IsApiMember.php"
             "المشروع/WESAL/app/Http/Requests/PartnerExpectationRequest.php"
+            "المشروع/WESAL/app/Models/PartnerExpectation.php"
             "المشروع/WESAL/app/Http/Resources/Profile/OnBehalfResource.php"
             "المشروع/WESAL/app/Http/Resources/PublicProfile/AboutUser.php"
             "المشروع/WESAL/app/Http/Resources/PublicProfile/BasicInformation.php"
@@ -75,3 +76,65 @@ jobs:
       - name: Run profile, signup and account model regression tests
         working-directory: فلاتر
         run: flutter test
+
+  session-repair-zip:
+    if: github.event_name == 'pull_request'
+    needs:
+      - backend-php-syntax
+      - flutter-regression-tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Checkout pull request source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: Package only files changed in this repair session
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          package_dir="$RUNNER_TEMP/wesal-session-repair"
+          mkdir -p "$package_dir"
+          changed_list="$RUNNER_TEMP/wesal-session-files.txt"
+          git diff --name-only --diff-filter=ACMRT "$BASE_SHA" "$HEAD_SHA" \
+            | grep -E '^(المشروع/WESAL/|فلاتر/|\.github/workflows/)' \
+            | grep -Ev '(^|/)(AGENTS\.md|PROJECT_NOTES\.md|تعليمات العمل\.md)$' \
+            > "$changed_list" || true
+
+          copied=0
+          while IFS= read -r file; do
+            [ -n "$file" ] || continue
+            [ -f "$file" ] || continue
+            mkdir -p "$package_dir/$(dirname "$file")"
+            cp -- "$file" "$package_dir/$file"
+            copied=$((copied + 1))
+          done < "$changed_list"
+
+          if [ "$copied" -eq 0 ]; then
+            echo "No changed runtime/source/test files were found for this session."
+            exit 1
+          fi
+
+          zip_path="$GITHUB_WORKSPACE/WESAL_SESSION_FIXES.zip"
+          (
+            cd "$package_dir"
+            zip -qr "$zip_path" .
+          )
+          unzip -tq "$zip_path"
+          echo "Packaged $copied changed files."
+          sha256sum "$zip_path"
+          unzip -Z1 "$zip_path"
+
+      - name: Upload session repair ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: wesal-session-fixes
+          path: WESAL_SESSION_FIXES.zip
+          if-no-files-found: error
+          retention-days: 30
