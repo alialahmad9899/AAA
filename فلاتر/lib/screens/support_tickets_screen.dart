@@ -3,7 +3,8 @@
 // المشروع: تطبيق وصال (Wesal) - Modern Premium UI 2026
 // الوصف: شاشة إدارة تذاكر الدعم الفني وتوليد التذاكر الجديدة مع الربط
 //        بمكوّن AppSnackBar والتنقل المرن.
-// ============================================================================import 'package:flutter/material.dart';
+// ============================================================================
+import 'package:flutter/material.dart';
 import 'package:wesal_app/widgets/bottom_system_inset.dart';
 import '../models/support_ticket_model.dart';
 import '../services/api_service.dart';

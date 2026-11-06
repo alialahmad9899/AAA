@@ -3,7 +3,8 @@
 // المشروع: تطبيق وصال (Wesal) - Modern Premium UI 2026
 // الوصف: واجهة الفلترة المتقدمة بتصميمها الزجاجي الأصلي الشفاف مع الدعم
 //        الكامل للغتين (عربي / إنجليزي) ووضوح محسّن للخطوط والقوائم.
-// ============================================================================import 'package:flutter/material.dart';
+// ============================================================================
+import 'package:flutter/material.dart';
 import 'package:wesal_app/widgets/bottom_system_inset.dart';
 import '../../../services/api_service.dart';
 import '../search_results_screen.dart';

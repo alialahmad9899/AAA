@@ -2,7 +2,8 @@
 // الملف: lib/screens/widgets/step3_residency_religion.dart
 // المشروع: تطبيق وصال (Wesal) - Modern Premium UI 2026
 // الوصف: المرحلة 3 - المنشأ والإقامة مع الدعم الكامل للغتين والتأقلم مع الاتجاه.
-// ============================================================================import 'package:flutter/material.dart';
+// ============================================================================
+import 'package:flutter/material.dart';
 import 'package:wesal_app/widgets/bottom_system_inset.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/api_service.dart';
