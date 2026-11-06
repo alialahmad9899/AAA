@@ -100,7 +100,7 @@ jobs:
           package_dir="$RUNNER_TEMP/wesal-session-repair"
           mkdir -p "$package_dir"
           changed_list="$RUNNER_TEMP/wesal-session-files.txt"
-          git diff --name-only --diff-filter=ACMRT "$BASE_SHA" "$HEAD_SHA" \
+          git -c core.quotePath=false diff --name-only --diff-filter=ACMRT "$BASE_SHA" "$HEAD_SHA" \
             | grep -E '^(المشروع/WESAL/|فلاتر/|\.github/workflows/)' \
             | grep -Ev '(^|/)(AGENTS\.md|PROJECT_NOTES\.md|تعليمات العمل\.md)$' \
             > "$changed_list" || true
