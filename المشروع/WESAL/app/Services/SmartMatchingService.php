@@ -35,11 +35,13 @@ class SmartMatchingService
 
         $candidates = User::query()
             ->with([
-                'member',
+                'member.marital_status',
+                'member.mothereTongue',
                 'addresses.country',
                 'recidency',
                 'physical_attributes',
-                'spiritual_backgrounds',
+                'spiritual_backgrounds.religion',
+                'spiritual_backgrounds.caste',
                 'lifestyles',
                 'education',
                 'career',
@@ -96,11 +98,13 @@ class SmartMatchingService
     {
         $viewer->loadMissing(['member', 'partner_expectations']);
         $candidate->loadMissing([
-            'member',
+            'member.marital_status',
+            'member.mothereTongue',
             'addresses',
             'recidency',
             'physical_attributes',
-            'spiritual_backgrounds',
+            'spiritual_backgrounds.religion',
+            'spiritual_backgrounds.caste',
             'lifestyles',
             'education',
             'career',
@@ -178,8 +182,8 @@ class SmartMatchingService
             $add('state', 7, $score);
         }
 
-        $minAge = $this->numericOrNull($expectations['min_age'] ?? null);
-        $maxAge = $this->numericOrNull($expectations['max_age'] ?? null);
+        $minAge = $this->numericOrNull($expectations['min_age'] ?? $expectations['partner_age'] ?? null);
+        $maxAge = $this->numericOrNull($expectations['max_age'] ?? $expectations['partner_max_age'] ?? null);
         if ($minAge !== null || $maxAge !== null) {
             $age = $this->numericOrNull($candidate['age'] ?? null);
             $score = $age === null ? 0.5 : $this->rangeScore($age, $minAge, $maxAge, 2, 5);
@@ -369,11 +373,24 @@ class SmartMatchingService
             'eye_color' => $physical->eye_color ?? null,
             'hair_color' => $physical->hair_color ?? null,
             'education' => $candidate->education ? $candidate->education->pluck('degree')->filter()->values()->all() : [],
-            'professions' => $candidate->career ? $candidate->career->pluck('designation')->filter()->values()->all() : [],
+            'professions' => $this->candidateProfessions($candidate),
             'language_ids' => array_values(array_unique($languageIds)),
             'smoke' => $lifestyle->smoke ?? null,
             'drink' => $lifestyle->drink ?? null,
         ];
+    }
+
+    private function candidateProfessions(User $candidate): array
+    {
+        $careers = $candidate->career ?? collect();
+        $currentCareers = $careers->where('present', 1);
+        $selectedCareers = $currentCareers->isNotEmpty() ? $currentCareers : $careers;
+
+        return $selectedCareers
+            ->pluck('designation')
+            ->filter()
+            ->values()
+            ->all();
     }
 
     private function candidateAge($member): ?int
