@@ -1079,7 +1079,7 @@ class ProfileController extends Controller
 
         if ((array_key_exists('min_age', $input) && $ageMinColumn === null) ||
             (array_key_exists('max_age', $input) && $ageMaxColumn === null)) {
-            \\Log::error('Partner age preferences submitted but no compatible database columns exist.', [
+            \Log::error('Partner age preferences submitted but no compatible database columns exist.', [
                 'table' => $partnerTable,
             ]);
             return response()->json([
