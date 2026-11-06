@@ -97,10 +97,12 @@ jobs:
           zip -qr "$GITHUB_WORKSPACE/WESAL_PARTNER_AGE_RANGE_FIX.zip" .
           unzip -t "$GITHUB_WORKSPACE/WESAL_PARTNER_AGE_RANGE_FIX.zip"
           python - <<'PY'
+          import os
           from zipfile import ZipFile
-          with ZipFile("WESAL_PARTNER_AGE_RANGE_FIX.zip") as archive:
+          archive_path = os.path.join(os.environ["GITHUB_WORKSPACE"], "WESAL_PARTNER_AGE_RANGE_FIX.zip")
+          with ZipFile(archive_path) as archive:
               assert archive.testzip() is None
-              names = sorted(archive.namelist())
+              names = sorted(name for name in archive.namelist() if not name.endswith("/"))
               expected = sorted([
                   "فلاتر/lib/screens/signup_screen.dart",
                   "فلاتر/lib/screens/widgets/step4_partner_expectations.dart",
