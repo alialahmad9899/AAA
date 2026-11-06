@@ -4,7 +4,6 @@ namespace App\Http\Resources;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Utility\MemberUtility;
 
 class ActiveUserResource extends JsonResource
 {
@@ -24,7 +23,10 @@ class ActiveUserResource extends JsonResource
         $package_update_alert = (get_setting('full_profile_show_according_to_membership') == 1 && optional(auth()->user())->membership == 1);
 
         // 2. جلب أسماء النصوص المباشرة
-        $countryName = optional(optional($this->address)->country)->name ?? '';
+        $presentAddress = $this->addresses
+            ? ($this->addresses->firstWhere('type', 'present') ?? $this->addresses->first())
+            : null;
+        $countryName = optional(optional($presentAddress)->country)->name ?? '';
         $religionName = optional(optional($this->spiritual_backgrounds)->religion)->name ?? '';
         $motherTongueName = optional(optional($this->mothere_tongue)->mothere_tongue)->name ?? '';
         $maritalStatusName = optional(optional($this)->marital_status)->name ?? optional(optional($this->member)->marital_status)->name ?? '';
