@@ -441,3 +441,9 @@
 - الملفات المعدلة: `المشروع/WESAL/app/Utility/SubscriptionUtility.php`، `المشروع/WESAL/app/Http/Controllers/Api/ChatController.php`، `المشروع/WESAL/app/Http/Controllers/Api/MemberController.php`، `المشروع/WESAL/app/Http/Controllers/Api/ProfileViewerController.php`، `المشروع/WESAL/app/Http/Controllers/Api/PackageController.php`.
 - الاختبارات: لم تُشغّل بعد؛ يلزم CI واختبارات قاعدة البيانات قبل النشر.
 - المتبقي: استكمال تعطيل بوابات الدفع القديمة من كل المسارات، إزالة تسريب بيانات PhonePe، استكمال تحقق Razorpay/SSLCommerz/PayPal/Instamojo/Paystack/Paytm، مواءمة عرض كل ميزات الباقات في Flutter، وإضافة اختبارات رجعية. لم يتم تعديل `main` أو النشر على الاستضافة.
+
+
+## 2026-11-06 — قصر كتالوج ومسارات دفع API على Stripe وشام كاش
+- قُصر كتالوج وسائل الدفع في API على Stripe وشام كاش فقط، وأزيلت مسارات PayPal وPaytm وPaystack وRazorpay وPhonePe وInstamojo من API، بما فيها endpoint كشف سر PhonePe وendpoint Razorpay success غير الموثق.
+- الملفات المعدلة: `المشروع/WESAL/app/Http/Controllers/Api/Payment/PaymentTypesController.php`، `المشروع/WESAL/routes/api.php`، مع تصحيح استدعاء MemberUtility في `المشروع/WESAL/app/Http/Controllers/Api/MemberController.php`.
+- الاختبارات: لم تُشغّل بعد؛ يلزم CI. لم يتم تعديل إعدادات لوحة الإدارة أو مسارات الموقع العام.

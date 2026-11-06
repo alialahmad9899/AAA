@@ -78,39 +78,11 @@ Route::group(['namespace' => 'Api', 'middleware' => ['app_language']], function 
     Route::post('/registration/verification-code-send', 'MemberRegistrationVerificationController@sendRegVerificationCode');
     Route::post('/registration/verification-code-confirmation', 'MemberRegistrationVerificationController@regVerifyCodeConfirmation');
 
-    // Payment Gateways
+    // Payment callbacks exposed to guests are limited to Stripe only.
     Route::group(['namespace' => 'Payment'], function () {
-        // Paypal START
-        Route::get('/paypal/payment/done', 'PaypalController@getDone')->name('api.paypal.done');
-        Route::get('/paypal/payment/cancel', 'PaypalController@getCancel')->name('api.paypal.cancel');
-        
-        // Stripe Start            
         Route::any('/stripe/cancel', 'StripeController@cancel')->name('api.stripe.cancel');
         Route::any('/stripe/create-checkout-session', 'StripeController@create_checkout_session')->name('api.stripe.get_token');
         Route::post('/stripe/direct-card-pay', 'StripeController@payWithCardDirectly')->name('api.stripe.direct_card_pay');
-
-
-        // PayStack
-        Route::get('/paystack/payment/callback', 'PaystackController@handleGatewayCallback');
-        // Paytm
-        Route::post('/paytm/callback', 'PaytmController@callback')->name('api.paytm.callback');
-
-        // Razor Pay
-        Route::controller(RazorpayController::class)->group(function () {
-            Route::any('razorpay/payment', 'payment')->name('api.razorpay.payment');
-            Route::post('razorpay/success', 'success')->name('api.razorpay.success');
-        });
-
-        // Phonepe
-        Route::controller(PhonepeController::class)->group(function () {
-            Route::any('phonepe/redirecturl', 'phonepe_redirecturl')->name('api.phonepe.redirecturl');
-            Route::any('phonepe/callbackUrl', 'phonepe_callbackUrl')->name('api.phonepe.callbackUrl');
-        });
-
-        // Instamojo
-        Route::controller(InstamojoController::class)->group(function () {
-            Route::get('instamojo/success', 'success')->name('api.instamojo.success');
-        });
     });
 
     Route::post('/logout', 'AuthController@logout')->name('logout')->middleware('auth:sanctum');
@@ -145,14 +117,14 @@ Route::group(['namespace' => 'Api', 'middleware' => ['app_language']], function 
             Route::post('/stripe/confirm-payment-intent', 'StripeController@confirm_payment_intent')->name('api.stripe.confirm_payment_intent');
             Route::post('/stripe/success', 'StripeController@success')->name('api.stripe.success');
             Route::get('payment-types', 'PaymentTypesController@getList');
-            Route::any('paypal/payment/pay', 'PaypalController@pay')->name('api.paypal.pay');
+
             Route::any('stripe', 'StripeController@stripe');
             Route::any('/stripe/payment/callback', 'StripeController@callback')->name('api.stripe.callback');
-            Route::get('/paytm/index', 'PaytmController@index');
-            Route::any('pay-with-razorpay', 'RazorpayController@payWithRazorpay')->name('api.razorpay.payment');
-            Route::any('pay-with-phonepe', 'PhonepeController@pay')->name('api.phonepe.pay');
-            Route::get('/phonepe-credentials', 'PhonepeController@getPhonePayCredentials')->name('api.phonepe.credentials');  
-            Route::any('pay-with-instamojo', 'InstamojoController@pay')->name('api.phonepe.pay');
+
+
+
+
+
         });
 
         Route::group(['prefix' => 'member'], function () {
