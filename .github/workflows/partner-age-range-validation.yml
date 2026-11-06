@@ -47,11 +47,6 @@ jobs:
           php-version: '8.2'
           tools: composer:v2
           extensions: mbstring, pdo_sqlite, sqlite3
-      - name: Install Laravel dependencies
-        working-directory: ./المشروع/WESAL
-        # CI only: the existing Laravel 10 dependency set is blocked by current Composer advisories.
-        # Do not use this override for deployments or production dependency updates.
-        run: COMPOSER_NO_SECURITY_BLOCKING=1 composer install --no-interaction --prefer-dist --no-progress
       - name: Check changed Laravel PHP syntax
         run: |
           php -l 'المشروع/WESAL/app/Http/Controllers/Api/ProfileController.php'
@@ -61,6 +56,14 @@ jobs:
           php -l 'المشروع/WESAL/app/Models/PartnerExpectation.php'
           php -l 'المشروع/WESAL/app/Utility/PartnerAgeRange.php'
           php -l 'المشروع/WESAL/tests/Unit/PartnerExpectationAgeValidationTest.php'
+      - name: Prepare Laravel runtime directories
+        working-directory: ./المشروع/WESAL
+        run: mkdir -p bootstrap/cache
+      - name: Install Laravel dependencies
+        working-directory: ./المشروع/WESAL
+        # CI only: Composer advisory blocking is bypassed to test the existing Laravel 10 dependency set.
+        # Never use this override for deployments or production dependency updates.
+        run: COMPOSER_NO_SECURITY_BLOCKING=1 composer install --no-interaction --prefer-dist --no-progress
       - name: Test Laravel age validation, resource and matching boundaries
         working-directory: ./المشروع/WESAL
         run: ./vendor/bin/phpunit tests/Unit/PartnerExpectationAgeValidationTest.php
