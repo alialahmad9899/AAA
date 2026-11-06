@@ -7,6 +7,7 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:wesal_app/widgets/bottom_system_inset.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:image_picker/image_picker.dart';
@@ -489,7 +490,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
           constraints: BoxConstraints(
             maxHeight: MediaQuery.of(ctx).size.height * 0.85,
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 20),
+          padding: EdgeInsets.fromLTRB(22, 20, 22, 20 + WesalBottomInsets.of(ctx)),
           decoration: BoxDecoration(
             color: const Color(0xFF0D1322),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(36)),
@@ -1455,7 +1456,7 @@ class _VipPaymentModalSheetState extends State<_VipPaymentModalSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final bottomInset = WesalBottomInsets.of(context);
 
     return Directionality(
       textDirection: widget.isArabic ? TextDirection.rtl : TextDirection.ltr,
@@ -1936,7 +1937,7 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
 
           return Container(
             height: MediaQuery.of(context).size.height * 0.70,
-            padding: const EdgeInsets.all(18),
+            padding: EdgeInsets.fromLTRB(18, 18, 18, 18 + WesalBottomInsets.of(context)),
             child: Column(
               children: [
                 Center(
@@ -2229,7 +2230,7 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
         ? ['مستقر', 'متوسط', 'محدود']
         : ['Stable', 'Medium', 'Limited'];
 
-    final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+    final bottomPadding = WesalBottomInsets.of(context);
 
     return Directionality(
       textDirection: widget.isArabic ? TextDirection.rtl : TextDirection.ltr,
@@ -2241,7 +2242,7 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
           top: 18,
           left: 18,
           right: 18,
-          bottom: bottomPadding > 0 ? 12 : 18,
+          bottom: bottomPadding + 18,
         ),
         decoration: const BoxDecoration(
           color: Color(0xFF0F172A),
