@@ -30,6 +30,7 @@ jobs:
             "المشروع/WESAL/app/Http/Controllers/Api/VipServiceApiController.php"
             "المشروع/WESAL/routes/api.php"
             "فلاتر/lib/screens/home/tabs/account_tab.dart"
+            "فلاتر/lib/screens/signup_screen.dart"
           )
           for file in "${files[@]}"; do
             test -f "$file"
