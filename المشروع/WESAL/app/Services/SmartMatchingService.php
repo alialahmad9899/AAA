@@ -357,7 +357,7 @@ class SmartMatchingService
         }
 
         return [
-            'age' => $member && $member->birthday ? \Carbon\Carbon::parse($member->birthday)->age : null,
+            'age' => $this->candidateAge($member),
             'marital_status_id' => $member->marital_status_id ?? null,
             'children' => $member->children ?? null,
             'country_id' => $residency->recidency_country_id ?? $presentAddress->country_id ?? null,
@@ -374,6 +374,19 @@ class SmartMatchingService
             'smoke' => $lifestyle->smoke ?? null,
             'drink' => $lifestyle->drink ?? null,
         ];
+    }
+
+    private function candidateAge($member): ?int
+    {
+        if (!$member || empty($member->birthday)) {
+            return null;
+        }
+
+        try {
+            return (int) \Carbon\Carbon::parse($member->birthday)->age;
+        } catch (\Throwable $exception) {
+            return null;
+        }
     }
 
     private function hasPreferences(array $expectations): bool
