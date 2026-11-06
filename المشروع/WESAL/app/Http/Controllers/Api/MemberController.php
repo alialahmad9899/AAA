@@ -75,9 +75,11 @@ class MemberController extends Controller
         $usersQuery = User::query()
             ->with([
                 'member.marital_status',
+                'member.mothereTongue',
                 'addresses.country',
                 'physical_attributes',
                 'spiritual_backgrounds.religion',
+                'spiritual_backgrounds.caste',
                 'career',
                 'recidency',
             ])
