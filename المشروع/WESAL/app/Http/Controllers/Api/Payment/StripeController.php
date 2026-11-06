@@ -25,6 +25,13 @@ class StripeController extends Controller
     {
         $request->validate(['package_id' => ['required', 'integer']]);
 
+        if ((int) get_setting('stripe_payment_activation') !== 1) {
+            return response()->json([
+                'result' => false,
+                'message' => 'الدفع عبر Stripe غير متاح حالياً.',
+            ], 403);
+        }
+
         $user = auth('sanctum')->user();
         if (!$user) {
             return response()->json(['result' => false, 'message' => 'Unauthenticated.'], 401);

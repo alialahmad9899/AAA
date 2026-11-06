@@ -229,6 +229,23 @@ class PackageController extends Controller
         $clientKey = $request->input('idempotency_key') ?: $request->header('Idempotency-Key');
         $payment_data['activation_key'] = (string) ($clientKey ?: Str::uuid());
 
+        // Validate the exact manual method against the only permitted offline
+        // provider. Hiding other methods from the app is not a security boundary.
+        $manualMethod = ManualPaymentMethod::query()
+            ->whereKey($request->integer('manual_payment_id'))
+            ->where(function ($query) {
+                $query->whereRaw('LOWER(COALESCE(heading, "")) LIKE ?', ['%شام كاش%'])
+                    ->orWhereRaw('LOWER(COALESCE(heading_en, "")) LIKE ?', ['%sham cash%']);
+            })
+            ->first();
+
+        if (!$manualMethod) {
+            $message = ($lang === 'en')
+                ? 'Only a valid Sham Cash payment method is supported.'
+                : 'طريقة الدفع اليدوي المحددة غير صالحة. يُقبل شام كاش فقط.';
+            return $this->failure_message($message);
+        }
+
         // Sham Cash is the only supported manual/offline package payment method.
         if ($request->payment_method == 'manual_payment') {
             $transactionReference = trim((string) $request->input('transaction_id', ''));
@@ -264,8 +281,6 @@ class PackageController extends Controller
             if ($request->hasFile('payment_proof')) {
                 $payment_proof = upload_api_file($request->file('payment_proof'));
             }
-
-            $manualMethod = ManualPaymentMethod::find($request->manual_payment_id);
 
             $package_payment = new PackagePayment();
             $package_payment->payment_code                    = date('ymd-His') . '-' . Str::upper(Str::random(4));
