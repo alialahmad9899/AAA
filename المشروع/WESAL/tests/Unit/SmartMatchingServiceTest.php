@@ -2,10 +2,10 @@
 
 namespace Tests\Unit;
 
-require_once __DIR__ . '/../../app/Services/SmartMatchingService.php';
-
 use App\Services\SmartMatchingService;
 use PHPUnit\Framework\TestCase;
+
+require_once __DIR__ . '/../../app/Services/SmartMatchingService.php';
 
 class SmartMatchingServiceTest extends TestCase
 {
@@ -59,6 +59,21 @@ class SmartMatchingServiceTest extends TestCase
 
         $this->assertSame(100, $result['percentage']);
         $this->assertSame(2, $result['criteria_count']);
+    }
+
+    public function test_age_range_scores_inside_range_above_outside_range(): void
+    {
+        $expectations = [
+            'min_age' => 25,
+            'max_age' => 35,
+        ];
+
+        $inside = $this->service->scoreData($expectations, ['age' => 30]);
+        $nearOutside = $this->service->scoreData($expectations, ['age' => 38]);
+
+        $this->assertSame(100, $inside['percentage']);
+        $this->assertSame(30, $nearOutside['percentage']);
+        $this->assertGreaterThan($nearOutside['percentage'], $inside['percentage']);
     }
 
     public function test_candidate_outside_a_rejected_children_preference_loses_that_criterion(): void
