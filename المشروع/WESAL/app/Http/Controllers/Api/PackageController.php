@@ -119,6 +119,8 @@ class PackageController extends Controller
                 'profile_viewers_view' => $package->profile_viewers_view,
                 'profile_image_view'   => $package->profile_image_view,
                 'gallery_image_view'   => $package->gallery_image_view,
+                'message_profile_quota' => $package->message_profile_quota,
+                'auto_profile_match'    => (int) ($package->auto_profile_match ?? 0),
             ];
         });
 

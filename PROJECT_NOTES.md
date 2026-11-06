@@ -447,3 +447,10 @@
 - قُصر كتالوج وسائل الدفع في API على Stripe وشام كاش فقط، وأزيلت مسارات PayPal وPaytm وPaystack وRazorpay وPhonePe وInstamojo من API، بما فيها endpoint كشف سر PhonePe وendpoint Razorpay success غير الموثق.
 - الملفات المعدلة: `المشروع/WESAL/app/Http/Controllers/Api/Payment/PaymentTypesController.php`، `المشروع/WESAL/routes/api.php`، مع تصحيح استدعاء MemberUtility في `المشروع/WESAL/app/Http/Controllers/Api/MemberController.php`.
 - الاختبارات: لم تُشغّل بعد؛ يلزم CI. لم يتم تعديل إعدادات لوحة الإدارة أو مسارات الموقع العام.
+
+
+## 2026-11-06 — ربط عرض ميزات الباقات بإعدادات الخادم
+- أضيفت حقول `message_profile_quota` و`auto_profile_match` إلى استجابات قائمة الباقات وتفاصيلها.
+- أزيلت الادعاءات الثابتة غير الصحيحة من بطاقة الباقة في Flutter (مراسلات/اهتمامات غير محدودة، المطابقة التلقائية الدائمة، والترويج على Facebook اعتماداً على السعر/الاسم)، واستُبدلت بعرض المزايا حسب قيم الباقة الفعلية: عدد المراسلات، الاهتمامات، رفع الصور، جهات الاتصال، الزوار، الصور الخاصة، ومعيار المطابقة التلقائية.
+- الملفات المعدلة: `المشروع/WESAL/app/Http/Controllers/Api/PackageController.php`، `فلاتر/lib/screens/home/tabs/account_tab.dart`.
+- الاختبارات: لم تُشغّل بعد؛ يلزم تشغيل flutter test وPHP syntax CI للتحقق من التوافق.

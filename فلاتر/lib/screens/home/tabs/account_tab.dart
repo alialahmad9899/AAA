@@ -2765,27 +2765,59 @@ class _SubscriptionsModalContentState
                     ),
                     const Divider(
                         color: Color.fromARGB(85, 255, 254, 254), height: 20),
-                    _buildPackageFeatureRow(
-                      widget.isArabic
-                          ? 'محادثات وإعجابات غير محدودة'
-                          : 'Unlimited Chats & Likes',
-                    ),
+                    if ((int.tryParse(pkg['message_profile_quota']?.toString() ?? '0') ?? 0) != 0)
+                      _buildPackageFeatureRow(
+                        (int.tryParse(pkg['message_profile_quota']?.toString() ?? '0') ?? 0) == -1
+                            ? (widget.isArabic ? 'مراسلة غير محدودة' : 'Unlimited messaging')
+                            : (widget.isArabic
+                                ? 'مراسلة حتى ${pkg['message_profile_quota']} أعضاء'
+                                : 'Message up to ${pkg['message_profile_quota']} members'),
+                      ),
+                    if ((int.tryParse(pkg['express_interest']?.toString() ?? '0') ?? 0) != 0)
+                      _buildPackageFeatureRow(
+                        (int.tryParse(pkg['express_interest']?.toString() ?? '0') ?? 0) == -1
+                            ? (widget.isArabic ? 'إبداء اهتمام غير محدود' : 'Unlimited interests')
+                            : (widget.isArabic
+                                ? '${pkg['express_interest']} طلبات اهتمام'
+                                : '${pkg['express_interest']} interest requests'),
+                      ),
+                    if ((int.tryParse(pkg['photo_gallery']?.toString() ?? '0') ?? 0) != 0)
+                      _buildPackageFeatureRow(
+                        widget.isArabic
+                            ? 'رفع ${pkg['photo_gallery']} صور إلى المعرض'
+                            : 'Upload ${pkg['photo_gallery']} gallery photos',
+                      ),
+                    if ((int.tryParse(pkg['contact']?.toString() ?? '0') ?? 0) != 0)
+                      _buildPackageFeatureRow(
+                        widget.isArabic
+                            ? 'عرض ${pkg['contact']} بيانات اتصال'
+                            : 'View ${pkg['contact']} contact details',
+                      ),
                     if (viewersView > 0)
                       _buildPackageFeatureRow(
                         widget.isArabic
                             ? 'إمكانية رؤية حتى $viewersView زائر لملفك'
                             : 'View up to $viewersView profile visitors',
                       ),
-                    _buildPackageFeatureRow(
-                      widget.isArabic
-                          ? 'تطابق تلقائي متتقدم ومميز مع الشريك'
-                          : 'Advanced Auto-Profile Matching',
-                    ),
-                    if (price >= 50 || rawPkgName.contains('VIP'))
+                    if ((int.tryParse(pkg['profile_image_view']?.toString() ?? '0') ?? 0) != 0)
                       _buildPackageFeatureRow(
                         widget.isArabic
-                            ? 'نشر بوست مخصص على الفيسبوك للوصول لأكبر عدد من التوافقات'
-                            : 'Custom Facebook Post Promotion for Best Match',
+                            ? 'عرض ${pkg['profile_image_view']} صور شخصية خاصة'
+                            : 'View ${pkg['profile_image_view']} private profile photos',
+                      ),
+                    if ((int.tryParse(pkg['gallery_image_view']?.toString() ?? '0') ?? 0) != 0)
+                      _buildPackageFeatureRow(
+                        widget.isArabic
+                            ? 'عرض ${pkg['gallery_image_view']} صور معرض خاصة'
+                            : 'View ${pkg['gallery_image_view']} private gallery photos',
+                      ),
+                    if (pkg['auto_profile_match'] == true ||
+                        pkg['auto_profile_match'] == 1 ||
+                        pkg['auto_profile_match']?.toString() == '1')
+                      _buildPackageFeatureRow(
+                        widget.isArabic
+                            ? 'مطابقة تلقائية ذكية مع الشريك'
+                            : 'Advanced auto-profile matching',
                       ),
                   ],
                 ),
