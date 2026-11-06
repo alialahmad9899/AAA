@@ -27,6 +27,21 @@ class ActiveUserResource extends JsonResource
             ? ($this->addresses->firstWhere('type', 'present') ?? $this->addresses->first())
             : null;
         $countryName = optional(optional($presentAddress)->country)->name ?? '';
+        $occupation = '';
+        $careers = $this->career;
+        if ($careers) {
+            $currentCareer = $careers->firstWhere('present', 1) ?? $careers->first();
+            $occupation = optional($currentCareer)->designation ?? '';
+        }
+        $age = null;
+        $birthday = optional($this->member)->birthday;
+        if ($birthday) {
+            try {
+                $age = Carbon::parse($birthday)->age;
+            } catch (\Throwable $exception) {
+                $age = null;
+            }
+        }
         $religionName = optional(optional($this->spiritual_backgrounds)->religion)->name ?? '';
         $motherTongueName = optional(optional($this->member)->mothereTongue)->name ?? '';
         $maritalStatusName = optional(optional($this)->marital_status)->name ?? optional(optional($this->member)->marital_status)->name ?? '';
@@ -46,8 +61,10 @@ class ActiveUserResource extends JsonResource
             'first_name'               => $this->first_name ?? '',
             'last_name'                => $this->last_name ?? '',
             'photo'                    => $profile_picture_show && !empty($this->photo) ? uploaded_asset($this->photo) : static_asset($avatar_image),
-            'age'                      => !empty(optional($this->member)->birthday) ? Carbon::parse($this->member->birthday)->age : 0,
+            'age'                      => $age ?? 0,
             'country'                  => $countryName,
+            'occupation'               => $occupation,
+            'profession'               => $occupation,
             'height'                   => optional($this->physical_attributes)->height ?? '',
             'religion'                 => $religionName,
             'mothere_tongue'           => $motherTongueName,
