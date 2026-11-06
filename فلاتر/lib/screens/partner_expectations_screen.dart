@@ -1132,6 +1132,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                         _partnerAgeRange = newRange;
                                                         _ageRangeEdited = true;
                                                         _ageRangeCleared = false;
+                                                        _ageRangeCleared = false;
                                                       });
                                                     },
                                                   ),
