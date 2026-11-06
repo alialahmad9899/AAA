@@ -2803,6 +2803,33 @@ class ApiService {
     return <String, int>{'min_age': minAge, 'max_age': maxAge};
   }
 
+  /// Reads the canonical age fields and historical aliases returned by Laravel.
+  /// Partial legacy ranges are completed with the supported minimum/maximum.
+  static Map<String, int>? parsePartnerAgeRange(
+    Map<String, dynamic>? expectations,
+  ) {
+    if (expectations == null) return null;
+
+    final rawMin = expectations['min_age'] ?? expectations['partner_age'];
+    final rawMax =
+        expectations['max_age'] ?? expectations['partner_max_age'];
+    if (rawMin == null && rawMax == null) return null;
+
+    final minAge = rawMin == null ? 18 : int.tryParse(rawMin.toString());
+    final maxAge = rawMax == null ? 100 : int.tryParse(rawMax.toString());
+    if (minAge == null ||
+        maxAge == null ||
+        minAge < 18 ||
+        maxAge > 100 ||
+        maxAge < 18 ||
+        minAge > 100 ||
+        minAge > maxAge) {
+      return null;
+    }
+
+    return <String, int>{'min_age': minAge, 'max_age': maxAge};
+  }
+
   static Future<Map<String, dynamic>> updatePartnerExpectations(
       Map<String, dynamic> payload,
       {String? lang}) async {

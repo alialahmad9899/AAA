@@ -797,9 +797,10 @@ class _SignupScreenState extends State<SignupScreen> {
         final savedExpectations = await ApiService.getPartnerExpectations(
           lang: widget.currentLanguage,
         );
-        final savedMinAge = num.tryParse(savedExpectations?['min_age']?.toString() ?? '')?.round();
-        final savedMaxAge = num.tryParse(savedExpectations?['max_age']?.toString() ?? '')?.round();
-        if (savedMinAge != _partnerAgeRange.start.round() || savedMaxAge != _partnerAgeRange.end.round()) {
+        final savedAgeRange =
+            ApiService.parsePartnerAgeRange(savedExpectations);
+        if (savedAgeRange?['min_age'] != _partnerAgeRange.start.round() ||
+            savedAgeRange?['max_age'] != _partnerAgeRange.end.round()) {
           throw _SignupStepSaveException(
             isAr
                 ? 'لم نتأكد من حفظ نطاق العمر. يرجى المحاولة مرة أخرى.'

@@ -215,12 +215,12 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
         _selectedHairColor = hairVal?.toString().trim();
 
         // Restore the saved partner age range (including legacy field names).
-        final rawMinAge = num.tryParse((expectations['min_age'] ?? expectations['partner_age'] ?? '').toString())?.toDouble();
-        final rawMaxAge = num.tryParse((expectations['max_age'] ?? expectations['partner_max_age'] ?? '').toString())?.toDouble();
-        if (rawMinAge != null || rawMaxAge != null) {
-          final minAge = (rawMinAge ?? 18).clamp(18.0, 100.0);
-          final maxAge = (rawMaxAge ?? 100).clamp(18.0, 100.0);
-          if (minAge <= maxAge) _partnerAgeRange = RangeValues(minAge, maxAge);
+        final savedAgeRange = ApiService.parsePartnerAgeRange(expectations);
+        if (savedAgeRange != null) {
+          _partnerAgeRange = RangeValues(
+            savedAgeRange['min_age']!.toDouble(),
+            savedAgeRange['max_age']!.toDouble(),
+          );
         }
 
         // Restore exact partner height range when it is available.
@@ -506,9 +506,10 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
 
       if (success && _ageRangeEdited) {
         final savedExpectations = await ApiService.getPartnerExpectations(lang: widget.currentLanguage);
-        final savedMinAge = num.tryParse(savedExpectations?['min_age']?.toString() ?? '')?.round();
-        final savedMaxAge = num.tryParse(savedExpectations?['max_age']?.toString() ?? '')?.round();
-        if (savedMinAge != _partnerAgeRange.start.round() || savedMaxAge != _partnerAgeRange.end.round()) {
+        final savedAgeRange =
+            ApiService.parsePartnerAgeRange(savedExpectations);
+        if (savedAgeRange?['min_age'] != _partnerAgeRange.start.round() ||
+            savedAgeRange?['max_age'] != _partnerAgeRange.end.round()) {
           success = false;
           message = isAr
               ? 'لم نتأكد من حفظ نطاق العمر بعد التحديث. يرجى إعادة المحاولة.'

@@ -33,6 +33,14 @@ jobs:
       - name: Analyze Flutter sources
         continue-on-error: true
         run: flutter analyze --no-pub
+      - name: Analyze changed Dart sources with Dart CLI
+        run: |
+          dart analyze \
+            lib/screens/signup_screen.dart \
+            lib/screens/partner_expectations_screen.dart \
+            lib/screens/widgets/step4_partner_expectations.dart \
+            lib/services/api_service.dart \
+            test/partner_expectation_age_widget_test.dart
       - name: Run all Flutter tests
         run: flutter test
 
