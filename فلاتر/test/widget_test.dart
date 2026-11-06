@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:wesal_app/main.dart';
+// Resolve the app entry point relative to this test, independent of package URI mapping.
+import '../lib/main.dart';
 
 void main() {
   testWidgets('Wesal app builds the signed-out welcome route',

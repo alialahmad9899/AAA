@@ -31,6 +31,14 @@ jobs:
             "المشروع/WESAL/app/Http/Controllers/Api/AuthController.php"
             "المشروع/WESAL/app/Http/Controllers/Api/HomeController.php"
             "المشروع/WESAL/app/Http/Controllers/Api/MemberController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/ChatController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/PackageController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/Payment/PaymentTypesController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/Payment/StripeController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/ProfileViewerController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/VipServiceApiController.php"
+            "المشروع/WESAL/app/Utility/SubscriptionUtility.php"
+            "المشروع/WESAL/routes/api.php"
             "المشروع/WESAL/app/Http/Resources/ActiveUserResource.php"
             "المشروع/WESAL/app/Services/SmartMatchingService.php"
             "المشروع/WESAL/tests/Unit/SmartMatchingServiceTest.php"
@@ -73,6 +81,9 @@ jobs:
       - name: Resolve Flutter dependencies
         working-directory: فلاتر
         run: flutter pub get
+      - name: Analyze Dart sources without the LSP server
+        working-directory: فلاتر
+        run: dart analyze --fatal-infos
       - name: Run profile, signup and account model regression tests
         working-directory: فلاتر
         run: flutter test
