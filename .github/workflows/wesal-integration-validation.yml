@@ -17,36 +17,21 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-      - name: Validate Laravel PHP syntax
+      - name: Validate all changed Laravel PHP files
         shell: bash
         run: |
           set -euo pipefail
-          files=(
-            "المشروع/WESAL/app/Http/Controllers/Api/AuthController.php"
-            "المشروع/WESAL/app/Http/Controllers/Api/HomeController.php"
-            "المشروع/WESAL/app/Http/Controllers/Api/MemberController.php"
-            "المشروع/WESAL/app/Http/Controllers/Api/ProfileController.php"
-            "المشروع/WESAL/app/Http/Controllers/Api/ProfileDropdownController.php"
-            "المشروع/WESAL/app/Http/Controllers/Api/ProfileViewerController.php"
-            "المشروع/WESAL/app/Http/Controllers/CareerController.php"
-            "المشروع/WESAL/app/Http/Controllers/EducationController.php"
-            "المشروع/WESAL/app/Http/Middleware/EmailVerifiedApi.php"
-            "المشروع/WESAL/app/Http/Middleware/IsApiMember.php"
-            "المشروع/WESAL/app/Http/Requests/PartnerExpectationRequest.php"
-            "المشروع/WESAL/app/Http/Resources/Profile/OnBehalfResource.php"
-            "المشروع/WESAL/app/Http/Resources/PublicProfile/AboutUser.php"
-            "المشروع/WESAL/app/Http/Resources/PublicProfile/BasicInformation.php"
-            "المشروع/WESAL/app/Http/Resources/PublicProfile/PhysicalAttributes.php"
-            "المشروع/WESAL/app/Models/Astrology.php"
-            "المشروع/WESAL/app/Models/Attitude.php"
-            "المشروع/WESAL/app/Models/Hobby.php"
-            "المشروع/WESAL/routes/api.php"
-            "المشروع/WESAL/database/migrations/2026_11_05_000001_convert_attitudes_table_to_utf8mb4.php"
-          )
+          mapfile -t files < <(git diff --name-only origin/main...HEAD -- 'المشروع/WESAL/**/*.php' 'المشروع/WESAL/*.php')
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No changed PHP files to lint."
+            exit 0
+          fi
           for file in "${files[@]}"; do
             php -l "$file"
           done
@@ -63,6 +48,6 @@ jobs:
       - name: Resolve Flutter dependencies
         working-directory: فلاتر
         run: flutter pub get
-      - name: Run profile, signup and account model regression tests
+      - name: Run all Flutter regression tests
         working-directory: فلاتر
-        run: flutter test test/profile_edit_unit_test.dart
+        run: flutter test
