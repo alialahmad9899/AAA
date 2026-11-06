@@ -416,6 +416,8 @@ class SmartMatchingService
             'لايهم',
             'does not matter',
             'doesnt matter',
+            'doesn t matter',
+            'dont care',
             'any',
             'no preference',
         ], true);
