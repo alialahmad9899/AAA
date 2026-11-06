@@ -1,0 +1,47 @@
+name: Export subscription and payment fix files
+
+on:
+  push:
+    branches:
+      - fix/subscription-payment-entitlements-2026-11-06
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Build source-only ZIP with original repository paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          package_dir="$RUNNER_TEMP/wesal_subscription_payment"
+          mkdir -p "$package_dir"
+          files=(
+            "المشروع/WESAL/app/Utility/SubscriptionUtility.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/ChatController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/MemberController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/ProfileViewerController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/PackageController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/Payment/PaymentTypesController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/VipServiceApiController.php"
+            "المشروع/WESAL/routes/api.php"
+            "فلاتر/lib/screens/home/tabs/account_tab.dart"
+          )
+          for file in "${files[@]}"; do
+            test -f "$file"
+            mkdir -p "$package_dir/$(dirname "$file")"
+            cp "$file" "$package_dir/$file"
+          done
+          (cd "$package_dir" && zip -qr "$GITHUB_WORKSPACE/WESAL_SUBSCRIPTION_PAYMENT_FIXES_2026-11-06.zip" "${files[@]}")
+          unzip -t "$GITHUB_WORKSPACE/WESAL_SUBSCRIPTION_PAYMENT_FIXES_2026-11-06.zip"
+      - name: Upload source ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: WESAL_SUBSCRIPTION_PAYMENT_FIXES_2026-11-06
+          path: WESAL_SUBSCRIPTION_PAYMENT_FIXES_2026-11-06.zip
+          if-no-files-found: error
+          retention-days: 14
