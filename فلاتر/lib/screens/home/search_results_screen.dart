@@ -551,7 +551,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
           ),
           centerTitle: true,
         ),
-        body: Column(
+        body: SafeArea(top: false, bottom: true, child: Column(
           children: [
             // شريط ملخص الفلاتر
             Container(
@@ -716,7 +716,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                         ),
             ),
           ],
-        ),
+        )),
       ),
     );
   }

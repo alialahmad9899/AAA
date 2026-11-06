@@ -948,9 +948,7 @@ class _SignupScreenState extends State<SignupScreen> {
     const primaryColor = Color(0xFF0288D1);
     const darkBgColor = Color(0xFF01579B);
 
-    final double bottomInset = MediaQuery.of(context).padding.bottom;
-    final double bottomButtonPadding =
-        bottomInset > 0 ? bottomInset + 10.0 : 16.0;
+    const double bottomButtonPadding = 10.0;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(

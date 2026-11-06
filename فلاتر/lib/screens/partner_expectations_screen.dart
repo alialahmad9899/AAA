@@ -893,9 +893,8 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
     const primaryColor = Color(0xFF0288D1);
     const darkBgColor = Color(0xFF01579B);
 
-    final double bottomInset = MediaQuery.of(context).padding.bottom;
-    final double saveButtonBottom = bottomInset > 0 ? bottomInset + 12 : 16;
-    final double scrollBottomPadding = 90 + bottomInset;
+    const double saveButtonBottom = 12;
+    const double scrollBottomPadding = 90;
 
     String? maritalName;
     if (_selectedMaritalStatusId != null && _maritalStatuses.isNotEmpty) {

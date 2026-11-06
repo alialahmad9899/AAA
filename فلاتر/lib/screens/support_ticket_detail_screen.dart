@@ -80,7 +80,7 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
             ),
           ),
         ),
-        body: Container(
+        body: SafeArea(top: false, bottom: true, child: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [Color(0xFF081827), Color(0xFF0D233A), Color(0xFF090D16)],
@@ -180,7 +180,7 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                         ],
                       ),
                     ),
-        ),
+        )),
       ),
     );
   }

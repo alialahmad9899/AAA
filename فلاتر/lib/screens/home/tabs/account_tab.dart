@@ -7,6 +7,7 @@
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
+import 'package:wesal_app/widgets/bottom_system_inset.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -215,7 +216,7 @@ class AccountTab extends StatefulWidget {
       builder: (modalContext) => Directionality(
         textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
         child: Container(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + WesalBottomInsets.of(modalContext)),
           decoration: BoxDecoration(
             color: const Color(0xFF0F172A).withValues(alpha: 0.96),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -2172,7 +2173,7 @@ class _SubscriptionsModalContentState
 
   @override
   Widget build(BuildContext context) {
-    final double bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    final double bottomInset = WesalBottomInsets.of(context);
     final double screenHeight = MediaQuery.sizeOf(context).height;
 
     return Directionality(
