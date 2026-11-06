@@ -243,6 +243,22 @@ class _SignupScreenState extends State<SignupScreen> {
     }
     return result;
   }
+  
+  bool _hasPersistedValue(dynamic value) {
+    if (value == null) return false;
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      return normalized.isNotEmpty &&
+          normalized != 'null' &&
+          normalized != 'undefined' &&
+          normalized != '0';
+    }
+    if (value is num) return value > 0;
+    if (value is bool) return value;
+    if (value is Map) return value.isNotEmpty;
+    if (value is List) return value.isNotEmpty;
+    return true;
+  }
 
   int? _extractRecordId(dynamic value, Set<String> idKeys) {
     if (value is Map) {
