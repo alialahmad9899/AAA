@@ -11,124 +11,45 @@ class PaymentTypesController extends Controller
 {
     public function getList(Request $request)
     {
-        $payment_types = array();
-
-        if (get_setting('paypal_payment_activation') == 1) {
-            $payment_type = array();
-            $payment_type['payment_type'] = 'paypal_payment';
-            $payment_type['payment_type_key'] = 'paypal';
-            $payment_type['image'] = static_asset('assets/img/payment_method/paypal.png');
-            $payment_type['name'] = "Paypal";
-            $payment_type['title'] = "Checkout with Paypal";
-            $payment_type['offline_payment_id'] = 0;
-            $payment_type['details'] = "";
-            $payment_types[] = $payment_type;
-        }
+        $payment_types = [];
 
         if (get_setting('stripe_payment_activation') == 1) {
-            $payment_type = array();
-            $payment_type['payment_type'] = 'stripe_payment';
-            $payment_type['payment_type_key'] = 'stripe';
-            $payment_type['image'] = static_asset('assets/img/payment_method/stripe.png');
-            $payment_type['name'] = "Stripe";
-            $payment_type['title'] = "Checkout with Stripe";
-            $payment_type['offline_payment_id'] = 0;
-            $payment_type['details'] = "";
-
-            $payment_types[] = $payment_type;
-        }
-        if (get_setting('phonepe_payment_activation') == 1 && get_setting('phonepe_version', '1') == 2) {
-            $payment_type = array();
-            $payment_type['payment_type'] = 'phonepe_payment';
-            $payment_type['payment_type_key'] = 'phonepe';
-            $payment_type['image'] = static_asset('assets/img/payment_method/phonepe.png');
-            $payment_type['name'] = "phonepe";
-            $payment_type['title'] = "Checkout with phonepe";
-            $payment_type['offline_payment_id'] = 0;
-            $payment_type['details'] = "";
-
-            $payment_types[] = $payment_type;
+            $payment_types[] = [
+                'payment_type' => 'stripe_payment',
+                'payment_type_key' => 'stripe',
+                'image' => static_asset('assets/img/payment_method/stripe.png'),
+                'name' => 'Stripe',
+                'title' => 'Checkout with Stripe',
+                'offline_payment_id' => 0,
+                'details' => '',
+            ];
         }
 
-         if (get_setting('razorpay_payment_activation') == 1) {
-                $payment_type = array();
-                $payment_type['payment_type'] = 'razorpay_payment';
-                $payment_type['payment_type_key'] = 'razorpay';
-                $payment_type['image'] = static_asset('assets/img/payment_method/rozarpay.png');
-                $payment_type['name'] = "Razorpay";
-                $payment_type['title'] = translate("Checkout with Razorpay");
-                $payment_type['offline_payment_id'] = 0;
-                $payment_type['details'] = "";
+        $methods = ManualPaymentMethod::query()
+            ->where(function ($query) {
+                $query->whereRaw('LOWER(COALESCE(heading, "")) LIKE ?', ['%شام كاش%'])
+                    ->orWhereRaw('LOWER(COALESCE(heading_en, "")) LIKE ?', ['%sham cash%']);
+            })->get();
 
-                $payment_types[] = $payment_type;
-            }
-
-        //African Payment Gateways
-        if (get_setting('paytm_payment_activation') == 1) {
-            $payment_type = array();
-            $payment_type['payment_type'] = 'paytm';
-            $payment_type['payment_type_key'] = 'paytm';
-            $payment_type['image'] = static_asset('assets/img/payment_method/paytm.png');
-            $payment_type['name'] = "Paytm";
-            $payment_type['title'] = "Checkout with Paytm";
-            $payment_type['offline_payment_id'] = 0;
-            $payment_type['details'] = "";
-
-            $payment_types[] = $payment_type;
-        }
-
-        if (get_setting('instamojo_payment_activation') == 1) {
-            $payment_type = array();
-            $payment_type['payment_type'] = 'instamojo_payment';
-            $payment_type['payment_type_key'] = 'instamojo_payment';
-            $payment_type['image'] = static_asset('assets/img/payment_method/instamojo.png');
-            $payment_type['name'] = "Instamojo";
-            $payment_type['title'] = translate("Checkout with Instamojo");
-            $payment_type['offline_payment_id'] = 0;
-            $payment_type['details'] = "";
-
-            $payment_types[] = $payment_type;
-        }
-
-        // manual payment start
-        foreach (ManualPaymentMethod::all() as $method) {
-
-            $bank_list = "";
-            $bank_list_item = "";
-
+        foreach ($methods as $method) {
+            $bankList = '';
             if ($method->bank_info != null) {
-                foreach (json_decode($method->bank_info) as $key => $info) {
-                    $bank_list_item .= "<li>" . 'Bank Name' . " -  {$info->bank_name} ," .  'Account Name' . "  -  $info->account_name , " . 'Account Number' . " - {$info->account_number} , " . 'Routing Number' . " - {$info->routing_number}</li>";
+                foreach (json_decode($method->bank_info) ?: [] as $info) {
+                    $bankList .= '<li>Bank Name - ' . e($info->bank_name ?? '') .
+                        ', Account Name - ' . e($info->account_name ?? '') .
+                        ', Account Number - ' . e($info->account_number ?? '') .
+                        ', Routing Number - ' . e($info->routing_number ?? '') . '</li>';
                 }
-                $bank_list = "<ul> $bank_list_item <ul>";
             }
-
-            $payment_type = array();
-            $payment_type['payment_type'] = 'manual_payment';
-            $payment_type['payment_type_key'] = 'manual_payment_' . $method->id;
-            $payment_type['image'] = uploaded_asset($method->photo);
-            $payment_type['name'] = $method->heading;
-            $payment_type['title'] = $method->heading;
-            $payment_type['manual_payment_id'] = $method->id;
-            $payment_type['details'] = "<div> {$method->description} $bank_list  </div>";
-
-            $payment_types[] = $payment_type;
-        }
-        // manual payment end
-        if ($request->payment_type !== 'wallet_recharge') {
-            // you cannot recharge wallet by wallet or cash payment
-            if (get_setting('wallet_system') == 1) {
-                $payment_type = array();
-                $payment_type['payment_type'] = 'wallet_system';
-                $payment_type['payment_type_key'] = 'wallet';
-                $payment_type['image'] = static_asset('assets/img/payment_method/wallet.png');
-                $payment_type['name'] = "Wallet";
-                $payment_type['title'] = "Wallet Payment";
-                $payment_type['offline_payment_id'] = 0;
-                $payment_type['details'] = "";
-
-                $payment_types[] = $payment_type;
-            }
+            $payment_types[] = [
+                'payment_type' => 'manual_payment',
+                'payment_type_key' => 'manual_payment_' . $method->id,
+                'image' => uploaded_asset($method->photo),
+                'name' => $method->heading,
+                'title' => $method->heading,
+                'manual_payment_id' => $method->id,
+                'details' => '<div>' . e($method->description ?? '') . ' <ul>' . $bankList . '</ul></div>',
+            ];
         }
 
         return $this->response_data($payment_types);

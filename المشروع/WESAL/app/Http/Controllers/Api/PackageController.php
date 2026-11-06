@@ -60,7 +60,13 @@ class PackageController extends Controller
     public function manual_payment_methods(Request $request)
     {
         $lang = $this->getRequestLanguage($request);
-        $methods = ManualPaymentMethod::all()->map(function ($method) use ($lang) {
+        $methods = ManualPaymentMethod::query()
+            ->where(function ($query) {
+                $query->whereRaw('LOWER(COALESCE(heading, "")) LIKE ?', ['%شام كاش%'])
+                    ->orWhereRaw('LOWER(COALESCE(heading_en, "")) LIKE ?', ['%sham cash%']);
+            })
+            ->get()
+            ->map(function ($method) use ($lang) {
             return [
                 'id'          => $method->id,
                 'heading'     => ($lang === 'en' && !empty($method->heading_en)) ? $method->heading_en : $method->heading,
@@ -112,6 +118,8 @@ class PackageController extends Controller
                 'profile_viewers_view' => $package->profile_viewers_view,
                 'profile_image_view'   => $package->profile_image_view,
                 'gallery_image_view'   => $package->gallery_image_view,
+                'message_profile_quota' => $package->message_profile_quota,
+                'auto_profile_match'    => (int) ($package->auto_profile_match ?? 0),
             ];
         });
 
@@ -207,7 +215,7 @@ class PackageController extends Controller
             return $this->failure_message($message);
         }
 
-        if (!in_array($request->payment_method, ['wallet', 'manual_payment'], true)) {
+        if (!in_array($request->payment_method, ['manual_payment'], true)) {
             $message = ($lang === 'en') ? 'Unsupported payment method.' : 'طريقة الدفع غير مدعومة.';
             return $this->failure_message($message);
         }
@@ -221,14 +229,25 @@ class PackageController extends Controller
         $clientKey = $request->input('idempotency_key') ?: $request->header('Idempotency-Key');
         $payment_data['activation_key'] = (string) ($clientKey ?: Str::uuid());
 
-        // 1. الدفع عبر المحفظة الداخلية
-        if ($request->payment_method == 'wallet') {
-            // The transactional activation method checks and deducts the wallet
-            // balance under a row lock. Do not debit it here as well.
-            return $this->package_payment_done($user->id, $payment_data, null, $lang);
-        } 
-        // 2. الدفع اليدوي / أوفلاين (الشام كاش)
-        elseif ($request->payment_method == 'manual_payment') {
+        // Validate the exact manual method against the only permitted offline
+        // provider. Hiding other methods from the app is not a security boundary.
+        $manualMethod = ManualPaymentMethod::query()
+            ->whereKey((int) $request->input('manual_payment_id'))
+            ->where(function ($query) {
+                $query->whereRaw('LOWER(COALESCE(heading, "")) LIKE ?', ['%شام كاش%'])
+                    ->orWhereRaw('LOWER(COALESCE(heading_en, "")) LIKE ?', ['%sham cash%']);
+            })
+            ->first();
+
+        if (!$manualMethod) {
+            $message = ($lang === 'en')
+                ? 'Only a valid Sham Cash payment method is supported.'
+                : 'طريقة الدفع اليدوي المحددة غير صالحة. يُقبل شام كاش فقط.';
+            return $this->failure_message($message);
+        }
+
+        // Sham Cash is the only supported manual/offline package payment method.
+        if ($request->payment_method == 'manual_payment') {
             $transactionReference = trim((string) $request->input('transaction_id', ''));
             $clientRequestKey = trim((string) ($clientKey ?? ''));
             $manualFallbackFingerprint = hash('sha256', implode('|', [
@@ -262,8 +281,6 @@ class PackageController extends Controller
             if ($request->hasFile('payment_proof')) {
                 $payment_proof = upload_api_file($request->file('payment_proof'));
             }
-
-            $manualMethod = ManualPaymentMethod::find($request->manual_payment_id);
 
             $package_payment = new PackagePayment();
             $package_payment->payment_code                    = date('ymd-His') . '-' . Str::upper(Str::random(4));
