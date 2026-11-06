@@ -314,8 +314,6 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
         lang: widget.currentLanguage,
       );
 
-      members.shuffle();
-
       if (mounted && currentRequestToken == _fetchCounter) {
         setState(() {
           _matchedMembers = members;
@@ -331,8 +329,16 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
       }
     } catch (e) {
       if (mounted && currentRequestToken == _fetchCounter) {
+        final matchingLocked = e.toString().contains('smart_matching_locked');
         setState(() {
-          _errorMessage = widget.txt('matches_fetch_failed');
+          if (matchingLocked) {
+            _isSubscribedOrFemale = false;
+            _isMatchFilterEnabled = true;
+            _matchedMembers = [];
+            _errorMessage = null;
+          } else {
+            _errorMessage = widget.txt('matches_fetch_failed');
+          }
           _isLoading = false;
         });
       }
@@ -1231,7 +1237,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                                         height: screenHeight * 0.5,
                                         child: Center(
                                           child: Text(
-                                            widget.txt('no_data'),
+                                            widget.txt(_isMatchFilterEnabled ? 'no_smart_matches' : 'no_data'),
                                             style: const TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 16,
