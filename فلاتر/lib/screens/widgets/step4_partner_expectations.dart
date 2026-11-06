@@ -10,8 +10,10 @@ class Step4PartnerExpectations extends StatelessWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController generalController;
   final TextEditingController professionController;
+  final RangeValues ageRange;
   final RangeValues heightRange;
   final RangeValues weightRange;
+  final bool ageRangeWasSelected;
   final bool heightRangeWasSelected;
   final bool weightRangeWasSelected;
   final String? education;
@@ -32,6 +34,7 @@ class Step4PartnerExpectations extends StatelessWidget {
   final String drinkingAcceptable;
   final String lang;
 
+  final ValueChanged<RangeValues> onAgeRangeChanged;
   final ValueChanged<RangeValues> onHeightRangeChanged;
   final ValueChanged<RangeValues> onWeightRangeChanged;
   final ValueChanged<String?> onEducationChanged;
@@ -52,8 +55,10 @@ class Step4PartnerExpectations extends StatelessWidget {
     required this.formKey,
     required this.generalController,
     required this.professionController,
+    required this.ageRange,
     required this.heightRange,
     required this.weightRange,
+    required this.ageRangeWasSelected,
     required this.heightRangeWasSelected,
     required this.weightRangeWasSelected,
     required this.education,
@@ -73,6 +78,7 @@ class Step4PartnerExpectations extends StatelessWidget {
     required this.smokingAcceptable,
     required this.drinkingAcceptable,
     this.lang = 'ar',
+    required this.onAgeRangeChanged,
     required this.onHeightRangeChanged,
     required this.onWeightRangeChanged,
     required this.onEducationChanged,
@@ -359,6 +365,7 @@ class Step4PartnerExpectations extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final safeAgeRange = _clampRange(ageRange, 18, 100);
     final safeHeightRange = _clampRange(heightRange, 140, 210);
     final safeWeightRange = _clampRange(weightRange, 40, 140);
     final languageItems = languages.whereType<Map>().map((language) {
@@ -457,10 +464,78 @@ class Step4PartnerExpectations extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
-                // 2. نطاق الطول
+                // 2. نطاق العمر
                 _buildSectionTitle(_isAr
-                    ? '2. أي نطاق للطول تفضّله؟ (سم) 📏 *'
-                    : '2. Preferred Height Range (cm) 📏 *'),
+                    ? '2. ما العمر المناسب لك في شريك حياتك؟ (سنة) 🎂 *'
+                    : '2. Preferred Partner Age Range (years) 🎂 *'),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.white24),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _isAr
+                                  ? (ageRangeWasSelected
+                                      ? 'من: ${safeAgeRange.start.round()} سنة'
+                                      : 'لم يتم تحديد نطاق العمر بعد')
+                                  : (ageRangeWasSelected
+                                      ? 'From: ${safeAgeRange.start.round()} years'
+                                      : 'Age range not selected yet'),
+                              softWrap: true,
+                              textAlign: TextAlign.start,
+                              style: const TextStyle(color: Colors.amberAccent, fontWeight: FontWeight.bold, fontFamily: 'Cairo', fontSize: 12),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _isAr
+                                  ? (ageRangeWasSelected
+                                      ? 'إلى: ${safeAgeRange.end.round()} سنة'
+                                      : 'حرّك المؤشر لاختيار العمر')
+                                  : (ageRangeWasSelected
+                                      ? 'To: ${safeAgeRange.end.round()} years'
+                                      : 'Move the slider to choose an age range'),
+                              softWrap: true,
+                              textAlign: TextAlign.end,
+                              style: const TextStyle(color: Colors.amberAccent, fontWeight: FontWeight.bold, fontFamily: 'Cairo', fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          trackHeight: 4,
+                          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+                        ),
+                        child: RangeSlider(
+                          key: const ValueKey<String>('partner-age-range-slider'),
+                          values: safeAgeRange,
+                          min: 18,
+                          max: 100,
+                          divisions: 82,
+                          activeColor: ageRangeWasSelected ? Colors.amberAccent : Colors.white24,
+                          inactiveColor: Colors.white24,
+                          onChanged: onAgeRangeChanged,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
+
+                // 3. نطاق الطول
+                _buildSectionTitle(_isAr
+                    ? '3. أي نطاق للطول تفضّله؟ (سم) 📏 *'
+                    : '3. Preferred Height Range (cm) 📏 *'),
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -539,8 +614,8 @@ class Step4PartnerExpectations extends StatelessWidget {
 
                 // 3. نطاق الوزن
                 _buildSectionTitle(_isAr
-                    ? '3. وأي نطاق للوزن يبدو مناسباً لك؟ (كغ) ⚖️ *'
-                    : '3. Preferred Weight Range (kg) ⚖️ *'),
+                    ? '4. وأي نطاق للوزن يبدو مناسباً لك؟ (كغ) ⚖️ *'
+                    : '4. Preferred Weight Range (kg) ⚖️ *'),
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -619,8 +694,8 @@ class Step4PartnerExpectations extends StatelessWidget {
 
                 // 4. المستوى التعليمي المفضل
                 _buildSectionTitle(_isAr
-                    ? '4. ما المستوى التعليمي الذي تفضّله؟ 🎓 *'
-                    : '4. Education Level 🎓 *'),
+                    ? '5. ما المستوى التعليمي الذي تفضّله؟ 🎓 *'
+                    : '5. Education Level 🎓 *'),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -639,8 +714,8 @@ class Step4PartnerExpectations extends StatelessWidget {
 
                 // 5. لون البشرة المفضل
                 _buildSectionTitle(_isAr
-                    ? '5. هل لديك تفضيل للون البشرة؟ 🎨 *'
-                    : '5. Preferred Complexion 🎨 *'),
+                    ? '6. هل لديك تفضيل للون البشرة؟ 🎨 *'
+                    : '6. Preferred Complexion 🎨 *'),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -660,8 +735,8 @@ class Step4PartnerExpectations extends StatelessWidget {
 
                 // 6. لون العينين المفضل
                 _buildSectionTitle(_isAr
-                    ? '6. أي لون للعينين تفضّل؟ 👁️ *'
-                    : '6. Preferred Eye Color 👁️ *'),
+                    ? '7. أي لون للعينين تفضّل؟ 👁️ *'
+                    : '7. Preferred Eye Color 👁️ *'),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -680,8 +755,8 @@ class Step4PartnerExpectations extends StatelessWidget {
 
                 // 7. لون الشعر المفضل
                 _buildSectionTitle(_isAr
-                    ? '7. وأي لون للشعر تفضّل؟ 💇 *'
-                    : '7. Preferred Hair Color 💇 *'),
+                    ? '8. وأي لون للشعر تفضّل؟ 💇 *'
+                    : '8. Preferred Hair Color 💇 *'),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -700,8 +775,8 @@ class Step4PartnerExpectations extends StatelessWidget {
 
                 // 8. اللغة المفضلة للشريك
                 _buildSectionTitle(_isAr
-                    ? '8. بأي لغة تحب أن تتواصل مع شريك حياتك؟ *'
-                    : '8. Preferred Partner Language *'),
+                    ? '9. بأي لغة تحب أن تتواصل مع شريك حياتك؟ *'
+                    : '9. Preferred Partner Language *'),
                 if (isLoadingLanguages)
                   const Center(
                     child: CircularProgressIndicator(color: Colors.amberAccent),
@@ -738,7 +813,7 @@ class Step4PartnerExpectations extends StatelessWidget {
                 const SizedBox(height: 18),
 
                                 if (religionItems.isNotEmpty) ...[
-                  _buildSectionTitle(_isAr ? '9. هل تفضّل ديانة معيّنة للشريك؟' : 'Preferred Partner Religion'),
+                  _buildSectionTitle(_isAr ? '10. هل تفضّل ديانة معيّنة للشريك؟' : 'Preferred Partner Religion'),
                   DropdownButtonFormField<String>(
                     key: ValueKey('partner-religion-$preferredReligionId'),
                     initialValue: religionItems.any((e) => e.value == preferredReligionId) ? preferredReligionId : null,
@@ -750,7 +825,7 @@ class Step4PartnerExpectations extends StatelessWidget {
                   const SizedBox(height: 16),
                 ],
                 if (countryItems.isNotEmpty) ...[
-                  _buildSectionTitle(_isAr ? '10. في أي بلد تفضّل أن يقيم شريك حياتك؟' : 'Preferred Partner Country'),
+                  _buildSectionTitle(_isAr ? '11. في أي بلد تفضّل أن يقيم شريك حياتك؟' : 'Preferred Partner Country'),
                   DropdownButtonFormField<String>(
                     key: ValueKey('partner-country-$preferredCountryId'),
                     initialValue: countryItems.any((e) => e.value == preferredCountryId) ? preferredCountryId : null,
@@ -762,7 +837,7 @@ class Step4PartnerExpectations extends StatelessWidget {
                   const SizedBox(height: 16),
                 ],
                 if (stateItems.isNotEmpty) ...[
-                  _buildSectionTitle(_isAr ? '11. هل تفضّل محافظة معيّنة؟' : 'Preferred Partner Governorate'),
+                  _buildSectionTitle(_isAr ? '12. هل تفضّل محافظة معيّنة؟' : 'Preferred Partner Governorate'),
                   DropdownButtonFormField<String>(
                     key: ValueKey('partner-state-$preferredStateId'),
                     initialValue: stateItems.any((e) => e.value == preferredStateId) ? preferredStateId : null,
@@ -775,8 +850,8 @@ class Step4PartnerExpectations extends StatelessWidget {
                 ],
 // 9. مهنة الشريك
                 _buildSectionTitle(_isAr
-                    ? '12. ما المجال المهني الذي تفضّله في شريك حياتك؟ 💼'
-                    : '12. Preferred Career 💼'),
+                    ? '13. ما المجال المهني الذي تفضّله في شريك حياتك؟ 💼'
+                    : '13. Preferred Career 💼'),
                 TextFormField(
                   controller: professionController,
                   style: const TextStyle(
@@ -796,8 +871,8 @@ class Step4PartnerExpectations extends StatelessWidget {
 
                 // 7. قبول وجود أطفال
                 _buildSectionTitle(_isAr
-                    ? '13. هل يناسبك شريك لديه أطفال من زواج سابق؟ 👶 *'
-                    : '13. Accept Children? 👶 *'),
+                    ? '14. هل يناسبك شريك لديه أطفال من زواج سابق؟ 👶 *'
+                    : '14. Accept Children? 👶 *'),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -823,7 +898,7 @@ class Step4PartnerExpectations extends StatelessWidget {
 
                 // 8. موقف التدخين
                 _buildSectionTitle(
-                    _isAr ? '14. ما موقفك من التدخين لدى الشريك؟ 🚬 *' : '14. Accept Smoking? 🚬 *'),
+                    _isAr ? '15. ما موقفك من التدخين لدى الشريك؟ 🚬 *' : '15. Accept Smoking? 🚬 *'),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -849,8 +924,8 @@ class Step4PartnerExpectations extends StatelessWidget {
 
                 // 9. موقف الكحول / المشروبات
                 _buildSectionTitle(_isAr
-                    ? '15. ما موقفك من تناول الكحول لدى الشريك؟ 🍷 *'
-                    : '15. Accept Alcohol? 🍷 *'),
+                    ? '16. ما موقفك من تناول الكحول لدى الشريك؟ 🍷 *'
+                    : '16. Accept Alcohol? 🍷 *'),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,

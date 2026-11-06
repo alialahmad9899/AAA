@@ -1,0 +1,117 @@
+name: Validate partner age range integration
+
+on:
+  push:
+    branches:
+      - fix/partner-age-range-sync-2026-11-06
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'فلاتر/**'
+      - 'المشروع/WESAL/**'
+      - '.github/workflows/partner-age-range-validation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  flutter:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./فلاتر
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Analyze Flutter sources
+        continue-on-error: true
+        run: flutter analyze --no-pub
+      - name: Run all Flutter tests
+        run: flutter test
+
+  laravel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+          extensions: mbstring, pdo_sqlite, sqlite3
+      - name: Install Laravel dependencies
+        working-directory: ./المشروع/WESAL
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Check changed Laravel PHP syntax
+        run: |
+          php -l 'المشروع/WESAL/app/Http/Controllers/Api/ProfileController.php'
+          php -l 'المشروع/WESAL/app/Http/Controllers/Api/MemberController.php'
+          php -l 'المشروع/WESAL/app/Http/Controllers/ProfileMatchController.php'
+          php -l 'المشروع/WESAL/app/Http/Requests/PartnerExpectationRequest.php'
+          php -l 'المشروع/WESAL/app/Models/PartnerExpectation.php'
+          php -l 'المشروع/WESAL/app/Utility/PartnerAgeRange.php'
+          php -l 'المشروع/WESAL/tests/Unit/PartnerExpectationAgeValidationTest.php'
+      - name: Test Laravel age validation, resource and matching boundaries
+        working-directory: ./المشروع/WESAL
+        run: ./vendor/bin/phpunit tests/Unit/PartnerExpectationAgeValidationTest.php
+
+  package:
+    runs-on: ubuntu-latest
+    needs:
+      - flutter
+      - laravel
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build current-batch patch archive
+        run: |
+          git fetch origin main
+          rm -rf /tmp/wesal-age-patch
+          mkdir -p /tmp/wesal-age-patch
+          git diff --name-only origin/main...HEAD | grep -v '^PROJECT_NOTES.md$' | grep -v '^.github/workflows/partner-age-range-validation.yml$' | while IFS= read -r file; do
+            mkdir -p "/tmp/wesal-age-patch/$(dirname "$file")"
+            cp -- "$file" "/tmp/wesal-age-patch/$file"
+          done
+          cd /tmp/wesal-age-patch
+          zip -qr "$GITHUB_WORKSPACE/WESAL_PARTNER_AGE_RANGE_FIX.zip" .
+          unzip -t "$GITHUB_WORKSPACE/WESAL_PARTNER_AGE_RANGE_FIX.zip"
+          python - <<'PY'
+          from zipfile import ZipFile
+          with ZipFile("WESAL_PARTNER_AGE_RANGE_FIX.zip") as archive:
+              assert archive.testzip() is None
+              names = sorted(archive.namelist())
+              expected = sorted([
+                  "فلاتر/lib/screens/signup_screen.dart",
+                  "فلاتر/lib/screens/widgets/step4_partner_expectations.dart",
+                  "فلاتر/lib/screens/partner_expectations_screen.dart",
+                  "فلاتر/lib/services/api_service.dart",
+                  "فلاتر/test/partner_expectation_age_widget_test.dart",
+                  "المشروع/WESAL/app/Http/Controllers/Api/ProfileController.php",
+                  "المشروع/WESAL/app/Http/Controllers/Api/MemberController.php",
+                  "المشروع/WESAL/app/Http/Controllers/ProfileMatchController.php",
+                  "المشروع/WESAL/app/Http/Requests/PartnerExpectationRequest.php",
+                  "المشروع/WESAL/app/Models/PartnerExpectation.php",
+                  "المشروع/WESAL/app/Utility/PartnerAgeRange.php",
+                  "المشروع/WESAL/tests/Unit/PartnerExpectationAgeValidationTest.php",
+              ])
+              assert names == expected, (names, expected)
+              print("Verified ZIP files:", len(names))
+              print("\n".join(names))
+          PY
+      - name: Upload current-batch archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: wesal-partner-age-range-fix
+          path: WESAL_PARTNER_AGE_RANGE_FIX.zip
+          if-no-files-found: error
+          retention-days: 7

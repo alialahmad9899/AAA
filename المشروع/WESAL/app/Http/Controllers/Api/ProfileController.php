@@ -71,6 +71,7 @@ use Illuminate\Auth\Events\Validated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use App\Notifications\DbStoreNotification;
@@ -1067,6 +1068,26 @@ class ProfileController extends Controller
         $partner = PartnerExpectation::where('user_id', auth()->id())->first();
         $oldPreferredCountry = $partner ? $partner->preferred_country_id : null;
 
+        // Use canonical age columns when present, with a legacy-schema fallback.
+        $partnerTable = (new PartnerExpectation())->getTable();
+        $ageMinColumn = Schema::hasColumn($partnerTable, 'min_age')
+            ? 'min_age'
+            : (Schema::hasColumn($partnerTable, 'partner_age') ? 'partner_age' : null);
+        $ageMaxColumn = Schema::hasColumn($partnerTable, 'max_age')
+            ? 'max_age'
+            : (Schema::hasColumn($partnerTable, 'partner_max_age') ? 'partner_max_age' : null);
+
+        if ((array_key_exists('min_age', $input) && $ageMinColumn === null) ||
+            (array_key_exists('max_age', $input) && $ageMaxColumn === null)) {
+            \\Log::error('Partner age preferences submitted but no compatible database columns exist.', [
+                'table' => $partnerTable,
+            ]);
+            return response()->json([
+                'result' => false,
+                'message' => translate('The current database schema does not support partner age preferences.'),
+            ], 500);
+        }
+
         foreach ([
             ['min_height', 'max_height', 'height'],
             ['min_weight', 'max_weight', 'weight'],
@@ -1086,6 +1107,22 @@ class ProfileController extends Controller
                     'message' => translate('The minimum partner ' . $label . ' cannot exceed the maximum.'),
                 ], 422);
             }
+        }
+
+        $minimumAge = array_key_exists('min_age', $input)
+            ? $input['min_age']
+            : ($partner ? ($partner->min_age ?? $partner->partner_age ?? null) : null);
+        $maximumAge = array_key_exists('max_age', $input)
+            ? $input['max_age']
+            : ($partner ? ($partner->max_age ?? $partner->partner_max_age ?? null) : null);
+
+        if ($minimumAge !== null && $maximumAge !== null &&
+            is_numeric($minimumAge) && is_numeric($maximumAge) &&
+            (int) $minimumAge > (int) $maximumAge) {
+            return response()->json([
+                'result' => false,
+                'message' => translate('The minimum partner age cannot exceed the maximum.'),
+            ], 422);
         }
 
         $fields = [
@@ -1117,6 +1154,13 @@ class ProfileController extends Controller
             'eye_color' => ['partner_eye_color', 'eye_color'],
             'hair_color' => ['partner_hair_color', 'hair_color'],
         ];
+
+        if ($ageMinColumn !== null) {
+            $fields[$ageMinColumn] = ['min_age'];
+        }
+        if ($ageMaxColumn !== null) {
+            $fields[$ageMaxColumn] = ['max_age'];
+        }
 
         $hasUpdates = false;
         foreach ($fields as $keys) {

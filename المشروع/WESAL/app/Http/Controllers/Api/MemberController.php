@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use App\Models\PhysicalAttribute;
 use App\Models\SpiritualBackground;
 use App\Models\PartnerExpectation;
+use App\Utility\PartnerAgeRange;
 use App\Http\Controllers\Api\Controller;
 use App\Http\Resources\ActiveUserResource;
 use App\Http\Resources\IgnoredUserResource;
@@ -70,22 +71,23 @@ class MemberController extends Controller
             $expectation = PartnerExpectation::where('user_id', $user->id)->first();
 
             if ($expectation) {
-                // أ) التصفية حسب المدى العمري المطلوب
-                if (!empty($expectation->min_age)) {
-                    $age = $expectation->min_age + 1;
-                    $start = date('Y-m-d', strtotime("- $age years"));
-                    $user_ids = Member::where('birthday', '<=', $start)->pluck('user_id')->toArray();
-                    if (count($user_ids) > 0) {
-                        $users_query->whereIn('id', $user_ids);
+                // أ) تطبيق نطاق العمر بدقة ودعم أعمدة الإصدارات القديمة.
+                $minimumPartnerAge = $expectation->min_age ?? $expectation->partner_age ?? null;
+                $maximumPartnerAge = $expectation->max_age ?? $expectation->partner_max_age ?? null;
+                $ageBounds = PartnerAgeRange::birthdayBounds($minimumPartnerAge, $maximumPartnerAge);
+
+                if ($ageBounds['oldest_birth_date'] !== null ||
+                    $ageBounds['youngest_birth_date'] !== null) {
+                    $ageMembersQuery = Member::whereNotNull('birthday');
+                    if ($ageBounds['oldest_birth_date'] !== null) {
+                        $ageMembersQuery->where('birthday', '>=', $ageBounds['oldest_birth_date']);
                     }
-                }
-                if (!empty($expectation->max_age)) {
-                    $age = $expectation->max_age + 1;
-                    $end = date('Y-m-d', strtotime("- $age years +1 day"));
-                    $user_ids = Member::where('birthday', '>=', $end)->pluck('user_id')->toArray();
-                    if (count($user_ids) > 0) {
-                        $users_query->whereIn('id', $user_ids);
+                    if ($ageBounds['youngest_birth_date'] !== null) {
+                        $ageMembersQuery->where('birthday', '<=', $ageBounds['youngest_birth_date']);
                     }
+
+                    // Apply even an empty set; never bypass a selected age range.
+                    $users_query->whereIn('id', $ageMembersQuery->pluck('user_id'));
                 }
 
                 // ب) التصفية حسب الحالة الاجتماعية المطلوبة

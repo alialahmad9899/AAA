@@ -18,6 +18,10 @@ class PartnerExpectation extends Model
     protected $fillable = [
         'user_id',
         'general',
+        'min_age',
+        'max_age',
+        'partner_age',
+        'partner_max_age',
         'height',
         'weight',
         'min_height',

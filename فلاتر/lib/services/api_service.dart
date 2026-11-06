@@ -2792,6 +2792,17 @@ class ApiService {
     return payload;
   }
 
+  /// Builds the canonical age range payload shared by signup and profile editing.
+  static Map<String, int> buildPartnerAgeRangePayload({
+    required int minAge,
+    required int maxAge,
+  }) {
+    if (minAge < 18 || maxAge > 100 || maxAge < 18 || minAge > 100 || minAge > maxAge) {
+      throw ArgumentError('Partner age range must be between 18 and 100, with minAge <= maxAge.');
+    }
+    return <String, int>{'min_age': minAge, 'max_age': maxAge};
+  }
+
   static Future<Map<String, dynamic>> updatePartnerExpectations(
       Map<String, dynamic> payload,
       {String? lang}) async {

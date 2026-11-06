@@ -13,6 +13,7 @@ use App\Models\Address;
 use App\Models\IgnoredUser;
 use App\Models\Lifestyle;
 use App\Models\User;
+use App\Utility\PartnerAgeRange;
 
 class ProfileMatchController extends Controller
 {
@@ -107,6 +108,33 @@ class ProfileMatchController extends Controller
                     ->pluck('user_id')
                     ->toArray();
                 $partnersQuery->whereIn('id', $religion_partner_ids);
+            }
+
+            // -------------------------------------------------------------------------
+            // تطبيق نطاق العمر كشرط إلزامي عند تحديث نتائج المطابقة.
+            // -------------------------------------------------------------------------
+            $minimum_partner_age = $partner_expectations->min_age
+                ?? $partner_expectations->partner_age
+                ?? null;
+            $maximum_partner_age = $partner_expectations->max_age
+                ?? $partner_expectations->partner_max_age
+                ?? null;
+            $age_bounds = PartnerAgeRange::birthdayBounds(
+                $minimum_partner_age,
+                $maximum_partner_age
+            );
+
+            if ($age_bounds['oldest_birth_date'] !== null ||
+                $age_bounds['youngest_birth_date'] !== null) {
+                $age_members_query = Member::whereNotNull('birthday');
+                if ($age_bounds['oldest_birth_date'] !== null) {
+                    $age_members_query->where('birthday', '>=', $age_bounds['oldest_birth_date']);
+                }
+                if ($age_bounds['youngest_birth_date'] !== null) {
+                    $age_members_query->where('birthday', '<=', $age_bounds['youngest_birth_date']);
+                }
+
+                $partnersQuery->whereIn('id', $age_members_query->pluck('user_id'));
             }
 
             $partners = $partnersQuery->get();
