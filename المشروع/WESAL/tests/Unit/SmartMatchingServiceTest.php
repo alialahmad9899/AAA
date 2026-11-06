@@ -2,6 +2,8 @@
 
 namespace Tests\Unit;
 
+require_once __DIR__ . '/../../app/Services/SmartMatchingService.php';
+
 use App\Services\SmartMatchingService;
 use PHPUnit\Framework\TestCase;
 
