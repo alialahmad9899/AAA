@@ -7,6 +7,7 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:wesal_app/widgets/bottom_system_inset.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../services/api_service.dart';
 
@@ -235,7 +236,7 @@ class _GenericPickerBottomSheetContentState
 
   @override
   Widget build(BuildContext context) {
-    final double bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final double bottomInset = WesalBottomInsets.of(context);
 
     return Directionality(
       textDirection: widget.isAr ? TextDirection.rtl : TextDirection.ltr,

@@ -4,8 +4,8 @@
 // الوصف: شاشة إدارة تذاكر الدعم الفني وتوليد التذاكر الجديدة مع الربط
 //        بمكوّن AppSnackBar والتنقل المرن.
 // ============================================================================
-
 import 'package:flutter/material.dart';
+import 'package:wesal_app/widgets/bottom_system_inset.dart';
 import '../models/support_ticket_model.dart';
 import '../services/api_service.dart';
 import '../widgets/app_snackbar.dart';
@@ -112,7 +112,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
             ),
           ),
         ),
-        body: Container(
+        body: SafeArea(top: false, bottom: true, child: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [Color(0xFF081827), Color(0xFF0D233A), Color(0xFF090D16)],
@@ -173,7 +173,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                         return _buildTicketCard(ticket);
                       },
                     ),
-        ),
+        )),
       ),
     );
   }
@@ -380,7 +380,7 @@ class _CreateTicketModalState extends State<_CreateTicketModal> {
       textDirection: widget.isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Padding(
         padding:
-            EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+            EdgeInsets.only(bottom: WesalBottomInsets.of(context)),
         child: Container(
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
