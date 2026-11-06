@@ -18,6 +18,7 @@ import 'account_tab.dart';
 
 class AutoMatchingTab extends StatefulWidget {
   final String currentLanguage;
+  final bool isActive;
   final String Function(String) txt;
   final int unreadNotificationCount;
   final VoidCallback onNotificationPressed;
@@ -26,6 +27,7 @@ class AutoMatchingTab extends StatefulWidget {
   const AutoMatchingTab({
     super.key,
     required this.currentLanguage,
+    this.isActive = true,
     required this.txt,
     required this.unreadNotificationCount,
     required this.onNotificationPressed,
@@ -100,7 +102,10 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
   @override
   void didUpdateWidget(AutoMatchingTab oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.currentLanguage != widget.currentLanguage) {
+    final languageChanged =
+        oldWidget.currentLanguage != widget.currentLanguage;
+    final becameActive = !oldWidget.isActive && widget.isActive;
+    if (languageChanged || becameActive) {
       _checkSubscriptionAndFetch();
     }
   }
