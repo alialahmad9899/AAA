@@ -67,6 +67,15 @@ class MemberController extends Controller
 
         // 5. تطبيق شروط المطابقة حسب توقعات الشريك والبلد فقط عند تفعيل زر المطابقة (match_enabled = true)
         if ($match_enabled) {
+            if (!\\App\\Utility\\MemberUtility::can_auto_match($user->id)) {
+                return response()->json([
+                    'result' => false,
+                    'status' => 'package_required',
+                    'message' => 'ميزة المطابقة الذكية تتطلب باقة تتضمن هذه الميزة.',
+                    'data' => [],
+                ], 403);
+            }
+
             $expectation = PartnerExpectation::where('user_id', $user->id)->first();
 
             if ($expectation) {

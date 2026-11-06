@@ -50,7 +50,7 @@ class ProfileViewerController extends Controller
         }
 
         // 5. جلب قائمة الزوار النشطين والمفعلين مرتبة حسب الأحدث
-        $profileViewers = ProfileViewer::where('user_id', $user->id)
+        $profileViewersQuery = ProfileViewer::where('user_id', $user->id)
             ->whereIn("viewed_by", function ($query) {
                 $query->select('id')
                     ->from('users')
@@ -58,8 +58,13 @@ class ProfileViewerController extends Controller
                     ->where('deactivated', 0)
                     ->where('permanently_delete', 0);
             })
-            ->orderBy('updated_at', 'desc')
-            ->paginate(15);
+            ->orderBy('updated_at', 'desc');
+
+        // Apply the visitor visibility cap at the API layer as well as in Flutter.
+        if ($allowedLimit < 9999) {
+            $profileViewersQuery->limit(max(0, $allowedLimit));
+        }
+        $profileViewers = $profileViewersQuery->paginate(15);
 
         // 6. إرجاع النتيجة مع قيم السيرفر الديناميكية لتطبيق الموبايل
         return MyProfileViewerResource::collection($profileViewers)->additional([

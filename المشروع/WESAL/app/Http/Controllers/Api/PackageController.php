@@ -60,7 +60,14 @@ class PackageController extends Controller
     public function manual_payment_methods(Request $request)
     {
         $lang = $this->getRequestLanguage($request);
-        $methods = ManualPaymentMethod::all()->map(function ($method) use ($lang) {
+        $methods = ManualPaymentMethod::query()
+            ->where(function ($query) {
+                $query->whereRaw('LOWER(COALESCE(code, "")) LIKE ?', ['%sham%'])
+                    ->orWhereRaw('LOWER(COALESCE(heading, "")) LIKE ?', ['%شام كاش%'])
+                    ->orWhereRaw('LOWER(COALESCE(heading_en, "")) LIKE ?', ['%sham cash%']);
+            })
+            ->get()
+            ->map(function ($method) use ($lang) {
             return [
                 'id'          => $method->id,
                 'heading'     => ($lang === 'en' && !empty($method->heading_en)) ? $method->heading_en : $method->heading,
@@ -207,7 +214,7 @@ class PackageController extends Controller
             return $this->failure_message($message);
         }
 
-        if (!in_array($request->payment_method, ['wallet', 'manual_payment'], true)) {
+        if (!in_array($request->payment_method, ['manual_payment'], true)) {
             $message = ($lang === 'en') ? 'Unsupported payment method.' : 'طريقة الدفع غير مدعومة.';
             return $this->failure_message($message);
         }
@@ -221,14 +228,8 @@ class PackageController extends Controller
         $clientKey = $request->input('idempotency_key') ?: $request->header('Idempotency-Key');
         $payment_data['activation_key'] = (string) ($clientKey ?: Str::uuid());
 
-        // 1. الدفع عبر المحفظة الداخلية
-        if ($request->payment_method == 'wallet') {
-            // The transactional activation method checks and deducts the wallet
-            // balance under a row lock. Do not debit it here as well.
-            return $this->package_payment_done($user->id, $payment_data, null, $lang);
-        } 
-        // 2. الدفع اليدوي / أوفلاين (الشام كاش)
-        elseif ($request->payment_method == 'manual_payment') {
+        // Sham Cash is the only supported manual/offline package payment method.
+        if ($request->payment_method == 'manual_payment') {
             $transactionReference = trim((string) $request->input('transaction_id', ''));
             $clientRequestKey = trim((string) ($clientKey ?? ''));
             $manualFallbackFingerprint = hash('sha256', implode('|', [

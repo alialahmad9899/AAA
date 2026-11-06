@@ -168,9 +168,18 @@ class SubscriptionUtility
             }
 
             $isFemale = MemberUtility::is_female($user);
+            $hasActivePaidPackage = self::currentActivePaidPackageForMember($member) !== null;
             $quota = (int) ($member->{$quotaColumn} ?? 0);
+            $freeProfileViewerAllowance = !$isFemale
+                && !$hasActivePaidPackage
+                && $quotaColumn === 'remaining_profile_viewer_view';
+
             if (!$isFemale) {
-                if (!self::currentActivePaidPackageForMember($member) || ($quota !== -1 && $quota <= 0)) {
+                if ($freeProfileViewerAllowance) {
+                    if (ProfileViewer::where('user_id', $user->id)->count() >= 3) {
+                        return null;
+                    }
+                } elseif (!$hasActivePaidPackage || ($quota !== -1 && $quota <= 0)) {
                     return null;
                 }
             }
@@ -180,7 +189,7 @@ class SubscriptionUtility
                 return $result;
             }
 
-            if (!$isFemale && $quota > 0) {
+            if (!$isFemale && $hasActivePaidPackage && $quota > 0) {
                 $member->{$quotaColumn} = $quota - 1;
                 $member->save();
             }
@@ -218,13 +227,14 @@ class SubscriptionUtility
             $member = Member::where('user_id', $senderId)->lockForUpdate()->first();
             $isFemale = MemberUtility::is_female($user);
             $activePackage = self::currentActivePaidPackageForMember($member);
-            if (!$isFemale && !$activePackage) {
-                return ['status' => 'subscription_expired', 'thread' => null];
-            }
-
             $alreadyContacted = MessageQuotaUsage::where('user_id', $senderId)
                 ->where('recipient_id', $receiverId)
                 ->exists();
+
+            // Previously unlocked recipients remain available after package expiry.
+            if (!$isFemale && !$activePackage && !$alreadyContacted) {
+                return ['status' => 'subscription_expired', 'thread' => null];
+            }
 
             if (!$isFemale && !$alreadyContacted) {
                 $recipientLimit = (int) ($activePackage->message_profile_quota ?? 0);

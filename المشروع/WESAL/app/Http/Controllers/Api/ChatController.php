@@ -198,15 +198,8 @@ class ChatController extends Controller
         try {
             $sender_id = auth()->user()->id;
 
-            // 🟢 1. الفحص الأول: التأكد من أن الاشتراك مفعّل (للذكور)
-            if (!MemberUtility::can_initiate_chat($sender_id)) {
-                return response()->json([
-                    'result'  => false,
-                    'status'  => 'subscription_expired',
-                    'message' => 'عذراً، انتهت صلاحية اشتراكك! يرجى تجديد الاشتراك لتتمكن من متابعة المحادثة وإرسال الرسائل.'
-                ], 403);
-            }
-
+            // Eligibility is checked when opening a new recipient thread.
+            // Previously unlocked conversations remain usable after expiry.
             $message_content = $request->message ?? '';
             
             // 2. كشف أرقام الهواتف المحظورة
