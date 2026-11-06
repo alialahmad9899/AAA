@@ -1068,6 +1068,7 @@ class ProfileController extends Controller
         $oldPreferredCountry = $partner ? $partner->preferred_country_id : null;
 
         foreach ([
+            ['min_age', 'max_age', 'age'],
             ['min_height', 'max_height', 'height'],
             ['min_weight', 'max_weight', 'weight'],
         ] as [$minField, $maxField, $label]) {
@@ -1092,6 +1093,8 @@ class ProfileController extends Controller
             'general' => ['general'],
             'height' => ['partner_height'],
             'weight' => ['partner_weight'],
+            'min_age' => ['min_age', 'partner_age'],
+            'max_age' => ['max_age', 'partner_max_age'],
             'min_height' => ['min_height'],
             'max_height' => ['max_height'],
             'min_weight' => ['min_weight'],
