@@ -487,3 +487,9 @@
 - ضبط أمر Git في Workflow على `core.quotePath=false` كي تمر أسماء الملفات العربية كما هي إلى `php -l`.
 - الملف المعدل: `.github/workflows/wesal-integration-validation.yml`.
 - أُعيد تشغيل CI عبر تحديث طلب المراجعة؛ النتائج النهائية قيد الانتظار.
+
+
+## 2026-11-06 — إزالة اعتماد تصفية شام كاش على عمود غير مضمون
+- راجعت تعريف نموذج/ترحيل `manual_payment_methods`؛ عمود `code` غير مثبت في مخطط الترحيلات الموجود. أزلت الاعتماد عليه من استعلامات تصفية طرق الدفع، واعتمدت عناوين شام كاش العربية/الإنجليزية المعروفة والمستخدمة فعلياً في واجهات الإدارة.
+- الملفات المعدلة: `المشروع/WESAL/app/Http/Controllers/Api/PackageController.php`، `المشروع/WESAL/app/Http/Controllers/Api/Payment/PaymentTypesController.php`.
+- التحقق: فحص PHP syntax للنسخة السابقة نجح؛ يلزم إعادة CI بعد هذا التعديل.

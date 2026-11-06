@@ -27,8 +27,7 @@ class PaymentTypesController extends Controller
 
         $methods = ManualPaymentMethod::query()
             ->where(function ($query) {
-                $query->whereRaw('LOWER(COALESCE(code, "")) LIKE ?', ['%sham%'])
-                    ->orWhereRaw('LOWER(COALESCE(heading, "")) LIKE ?', ['%شام كاش%'])
+                $query->whereRaw('LOWER(COALESCE(heading, "")) LIKE ?', ['%شام كاش%'])
                     ->orWhereRaw('LOWER(COALESCE(heading_en, "")) LIKE ?', ['%sham cash%']);
             })->get();
 
