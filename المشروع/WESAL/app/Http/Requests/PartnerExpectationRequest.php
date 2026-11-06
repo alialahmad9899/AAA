@@ -33,7 +33,7 @@ class PartnerExpectationRequest extends FormRequest
                 (int) $minimum > (int) $maximum) {
                 $validator->errors()->add(
                     'max_age',
-                    translate('The minimum partner age cannot exceed the maximum.')
+                    __('The minimum partner age cannot exceed the maximum.')
                 );
             }
         });
