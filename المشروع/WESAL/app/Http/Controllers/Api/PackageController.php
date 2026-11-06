@@ -232,7 +232,7 @@ class PackageController extends Controller
         // Validate the exact manual method against the only permitted offline
         // provider. Hiding other methods from the app is not a security boundary.
         $manualMethod = ManualPaymentMethod::query()
-            ->whereKey($request->integer('manual_payment_id'))
+            ->whereKey((int) $request->input('manual_payment_id'))
             ->where(function ($query) {
                 $query->whereRaw('LOWER(COALESCE(heading, "")) LIKE ?', ['%شام كاش%'])
                     ->orWhereRaw('LOWER(COALESCE(heading_en, "")) LIKE ?', ['%sham cash%']);

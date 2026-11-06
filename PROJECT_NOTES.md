@@ -500,3 +500,6 @@
 - أصبح إنشاء Stripe PaymentIntent يرفض الطلب إذا كان Stripe معطلاً من إعدادات الإدارة، مع إبقاء تأكيد العمليات التي تم دفعها فعلياً خاضعاً للتحقق لدى Stripe.
 - الملفات المعدلة: `PackageController.php` و`Payment/StripeController.php`.
 - لم تُشغّل الاختبارات بعد لهذا التعديل الأخير.
+
+- توافق إصدار Laravel: استبدل فحص رقم وسيلة الدفع إلى cast مباشر من Request input، تجنباً للاعتماد على helper قد يختلف توفره حسب إصدار Laravel.
+- أُضيف `Payment/StripeController.php` إلى قائمة ملفات ZIP لأنه تغير في هذه الدفعة.
