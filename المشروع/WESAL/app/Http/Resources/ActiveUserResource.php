@@ -32,16 +32,12 @@ class ActiveUserResource extends JsonResource
         $maritalStatusName = optional(optional($this)->marital_status)->name ?? optional(optional($this->member)->marital_status)->name ?? '';
         $casteName = optional(optional($this->spiritual_backgrounds)->caste)->name;
 
-        // 3. حساب نسبة التطابق الحقيقية للعضو الحالي بالنسبة للمستخدم المسجل
-        $matchPercentage = 0;
-        if (class_exists('App\Utility\MemberUtility') && method_exists('App\Utility\MemberUtility', 'member_match_percentage')) {
-            // استدعاء دالة حساب نسبة التطابق الحقيقية من السيرفر
-            $matchPercentage = MemberUtility::member_match_percentage($this->id);
-        } elseif (isset($this->profile_match_percentage)) {
-            $matchPercentage = $this->profile_match_percentage;
-        } elseif (isset($this->match_percentage)) {
-            $matchPercentage = $this->match_percentage;
-        }
+        // تُضاف النسبة إلى نموذج المرشح من SmartMatchingService فقط.
+        // قوائم التصفح العامة لا تعرض نسبة غير محسوبة.
+        $matchPercentage = isset($this->profile_match_percentage)
+            ? max(0, min(100, (int) $this->profile_match_percentage))
+            : null;
+        $matchDetails = isset($this->match_details) ? $this->match_details : null;
 
         return [
             'user_id'                  => $this->id,
@@ -58,7 +54,8 @@ class ActiveUserResource extends JsonResource
             'marital_status'           => $maritalStatusName,
             'caste'                    => $casteName ? $casteName . ', ' : '',
             'package_update_alert'     => $package_update_alert,
-            'profile_match_percentage' => $matchPercentage, // <--- تمرير نسبة التطابق الحقيقية إلى التطبيق
+            'profile_match_percentage' => $matchPercentage,
+            'match_details'            => $matchDetails,
             'interest_status'          => 0,
             'interest_text'            => 'اهتمام',
             'shortlist_status'         => 0,
