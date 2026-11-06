@@ -269,7 +269,7 @@
                             <button class="btn btn-mobile-explicit rounded-pill" onclick="toggleMobileMenu()">
                                 <i class="las la-bars fs-18"></i>
                                 <span>القائمة السريعة</span>
-                                            </button>
+                            </button>
                         @else
                             <button class="btn btn-mobile-explicit rounded-pill" onclick="toggleMobileMenu()">
                                 <i class="las la-bars fs-18"></i>
@@ -323,6 +323,13 @@
         <a href="{{ route('packages') }}" class="mobile-nav-item"><i class="las la-gem mobile-nav-icon"></i> الباقات المميزة</a>
         <a href="{{ route('contact_us') }}" class="mobile-nav-item border-0"><i class="las la-headset mobile-nav-icon"></i> تواصل معنا</a>
         @if (Auth::check())
+            <a href="{{ route('frontend.notifications') }}" class="mobile-nav-item d-flex justify-content-between">
+                <div><i class="las la-bell mobile-nav-icon"></i> الإشعارات</div>
+                @if (isset($unseen_notification) && $unseen_notification > 0)
+                    <span class="badge bg-danger rounded-pill">{{ $unseen_notification }}</span>
+                @endif
+            </a>
+            <a href="{{ route('my_interests.index') }}" class="mobile-nav-item"><i class="las la-heart mobile-nav-icon"></i> الإعجابات الواردة</a>
             <a href="{{ route('logout') }}" class="mobile-nav-item text-danger mt-3 border-top"><i class="las la-sign-out-alt mobile-nav-icon text-danger"></i> تسجيل الخروج</a>
         @endif
     </div>
