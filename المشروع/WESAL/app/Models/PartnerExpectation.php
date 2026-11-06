@@ -20,6 +20,8 @@ class PartnerExpectation extends Model
         'general',
         'height',
         'weight',
+        'min_age',
+        'max_age',
         'min_height',
         'max_height',
         'min_weight',
