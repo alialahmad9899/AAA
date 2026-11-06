@@ -12,7 +12,6 @@ use App\Models\ReportedUser;
 use Illuminate\Http\Request;
 use App\Models\PhysicalAttribute;
 use App\Models\SpiritualBackground;
-use App\Models\PartnerExpectation;
 use App\Services\SmartMatchingService;
 use App\Utility\MemberUtility;
 use App\Http\Controllers\Api\Controller;
