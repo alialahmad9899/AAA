@@ -5,6 +5,7 @@
 //        بمكوّن AppSnackBar والتنقل المرن.
 // ============================================================================
 
+import 'package:wesal_app/widgets/bottom_system_inset.dart';
 import 'package:flutter/material.dart';
 import '../models/support_ticket_model.dart';
 import '../services/api_service.dart';
@@ -380,7 +381,7 @@ class _CreateTicketModalState extends State<_CreateTicketModal> {
       textDirection: widget.isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Padding(
         padding:
-            EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+            EdgeInsets.only(bottom: WesalBottomInsets.of(context)),
         child: Container(
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(

@@ -7,6 +7,7 @@
 
 import 'dart:async';
 import 'dart:ui';
+import 'package:wesal_app/widgets/bottom_system_inset.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/api_service.dart';
@@ -548,7 +549,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
 
             return Padding(
               padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
+                bottom: WesalBottomInsets.of(context),
               ),
               child: ClipRRect(
                 borderRadius:

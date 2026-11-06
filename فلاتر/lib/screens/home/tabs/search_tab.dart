@@ -5,6 +5,7 @@
 //        الكامل للغتين (عربي / إنجليزي) ووضوح محسّن للخطوط والقوائم.
 // ============================================================================
 
+import 'package:wesal_app/widgets/bottom_system_inset.dart';
 import 'package:flutter/material.dart';
 import '../../../services/api_service.dart';
 import '../search_results_screen.dart';
@@ -576,8 +577,7 @@ class _SearchTabState extends State<SearchTab> {
               }).toList();
 
               final double screenHeight = MediaQuery.sizeOf(context).height;
-              final double bottomInset =
-                  MediaQuery.viewInsetsOf(context).bottom;
+              final double bottomInset = WesalBottomInsets.of(context);
 
               return Container(
                 constraints: BoxConstraints(

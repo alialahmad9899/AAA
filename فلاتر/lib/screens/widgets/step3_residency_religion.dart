@@ -4,6 +4,7 @@
 // الوصف: المرحلة 3 - المنشأ والإقامة مع الدعم الكامل للغتين والتأقلم مع الاتجاه.
 // ============================================================================
 
+import 'package:wesal_app/widgets/bottom_system_inset.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/api_service.dart';
@@ -329,7 +330,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
               child: AnimatedPadding(
                 duration: const Duration(milliseconds: 150),
                 padding: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).viewInsets.bottom),
+                    bottom: WesalBottomInsets.of(context)),
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   height: MediaQuery.of(context).size.height * 0.7,
@@ -425,7 +426,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
       builder: (context) => Directionality(
         textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + WesalBottomInsets.of(context)),
           height: MediaQuery.of(context).size.height * 0.55,
           child: Column(
             children: [
