@@ -79,7 +79,9 @@ jobs:
         with:
           fetch-depth: 0
       - name: Build current-batch patch archive
+        shell: bash
         run: |
+          set -euo pipefail
           git fetch origin main
           rm -rf /tmp/wesal-age-patch
           mkdir -p /tmp/wesal-age-patch
@@ -115,44 +117,7 @@ jobs:
               ])
               assert names == expected, (names, expected)
               print("Verified ZIP files:", len(names))
-              print("\n".join(names))
-          PY
-      - name: Upload current-batch archive
-        uses: actions/upload-artifact@v4
-        with:
-          name: wesal-partner-age-range-fix
-          path: WESAL_PARTNER_AGE_RANGE_FIX.zip
-          if-no-files-found: error
-          retention-days: 7
- | grep -v '^.github/workflows/partner-age-range-validation.yml$' | while IFS= read -r file; do
-            mkdir -p "/tmp/wesal-age-patch/$(dirname "$file")"
-            cp -- "$file" "/tmp/wesal-age-patch/$file"
-          done
-          cd /tmp/wesal-age-patch
-          zip -qr "$GITHUB_WORKSPACE/WESAL_PARTNER_AGE_RANGE_FIX.zip" .
-          unzip -t "$GITHUB_WORKSPACE/WESAL_PARTNER_AGE_RANGE_FIX.zip"
-          python - <<'PY'
-          from zipfile import ZipFile
-          with ZipFile("WESAL_PARTNER_AGE_RANGE_FIX.zip") as archive:
-              assert archive.testzip() is None
-              names = sorted(archive.namelist())
-              expected = sorted([
-                  "فلاتر/lib/screens/signup_screen.dart",
-                  "فلاتر/lib/screens/widgets/step4_partner_expectations.dart",
-                  "فلاتر/lib/screens/partner_expectations_screen.dart",
-                  "فلاتر/lib/services/api_service.dart",
-                  "فلاتر/test/partner_expectation_age_widget_test.dart",
-                  "المشروع/WESAL/app/Http/Controllers/Api/ProfileController.php",
-                  "المشروع/WESAL/app/Http/Controllers/Api/MemberController.php",
-                  "المشروع/WESAL/app/Http/Controllers/ProfileMatchController.php",
-                  "المشروع/WESAL/app/Http/Requests/PartnerExpectationRequest.php",
-                  "المشروع/WESAL/app/Models/PartnerExpectation.php",
-                  "المشروع/WESAL/app/Utility/PartnerAgeRange.php",
-                  "المشروع/WESAL/tests/Unit/PartnerExpectationAgeValidationTest.php",
-              ])
-              assert names == expected, (names, expected)
-              print("Verified ZIP files:", len(names))
-              print("\n".join(names))
+              print("\\n".join(names))
           PY
       - name: Upload current-batch archive
         uses: actions/upload-artifact@v4
