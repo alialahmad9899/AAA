@@ -106,6 +106,16 @@ class SmartMatchingService
             'career',
         ]);
 
+        if (!$viewer->member || !$candidate->member ||
+            (int) $viewer->member->gender === (int) $candidate->member->gender ||
+            !in_array((int) $viewer->member->gender, [1, 2], true) ||
+            !in_array((int) $candidate->member->gender, [1, 2], true) ||
+            $candidate->user_type !== 'member' ||
+            (int) $candidate->blocked === 1 ||
+            (int) $candidate->deactivated === 1) {
+            return null;
+        }
+
         $expectations = $viewer->partner_expectations;
         if (!$expectations || !$this->hasPreferences($expectations->getAttributes())) {
             return null;
