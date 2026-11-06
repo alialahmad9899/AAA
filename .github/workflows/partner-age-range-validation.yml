@@ -83,10 +83,14 @@ jobs:
           git fetch origin main
           rm -rf /tmp/wesal-age-patch
           mkdir -p /tmp/wesal-age-patch
-          git -c core.quotePath=false diff --name-only origin/main...HEAD | grep -v '^PROJECT_NOTES.md | grep -v '^.github/workflows/partner-age-range-validation.yml$' | while IFS= read -r file; do
+          git -c core.quotePath=false diff --name-only origin/main...HEAD > /tmp/wesal-changed-files.txt
+          while IFS= read -r file; do
+            case "$file" in
+              PROJECT_NOTES.md|.github/workflows/partner-age-range-validation.yml) continue ;;
+            esac
             mkdir -p "/tmp/wesal-age-patch/$(dirname "$file")"
             cp -- "$file" "/tmp/wesal-age-patch/$file"
-          done
+          done < /tmp/wesal-changed-files.txt
           cd /tmp/wesal-age-patch
           zip -qr "$GITHUB_WORKSPACE/WESAL_PARTNER_AGE_RANGE_FIX.zip" .
           unzip -t "$GITHUB_WORKSPACE/WESAL_PARTNER_AGE_RANGE_FIX.zip"
