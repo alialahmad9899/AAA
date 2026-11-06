@@ -269,8 +269,7 @@
                             <button class="btn btn-mobile-explicit rounded-pill" onclick="toggleMobileMenu()">
                                 <i class="las la-bars fs-18"></i>
                                 <span>القائمة السريعة</span>
-                                <img src="{{ uploaded_asset(Auth::user()->photo) }}" class="rounded-circle ml-1 border" width="22" height="22" style="object-fit: cover; border-color: var(--primary) !important;" onerror="this.src='{{ static_asset('assets/img/avatar-place.png') }}'">
-                            </button>
+                                            </button>
                         @else
                             <button class="btn btn-mobile-explicit rounded-pill" onclick="toggleMobileMenu()">
                                 <i class="las la-bars fs-18"></i>
@@ -306,79 +305,28 @@
             </div>
         </div>
 
-        @if (Auth::check() && auth()->user()->user_type == 'member')
-            <div class="border-top d-none d-lg-block" style="border-color: rgba(0,0,0,0.05) !important;">
-                <div class="container">
-                    <ul class="list-inline d-flex align-items-center mb-0">
-                        <li class="list-inline-item">
-                            <a href="{{ route('dashboard') }}" class="text-reset premium-nav-link d-inline-block px-4 py-3 fw-600 {{ areActiveRoutes(['dashboard'],'text-primary-grad') }}">
-                                <i class="las la-tachometer-alt mr-1"></i><span>{{ translate('Dashboard') }}</span>
-                            </a>
-                        </li>
-                        <li class="list-inline-item">
-                            <a href="{{ route('profile_settings') }}" class="text-reset premium-nav-link d-inline-block px-4 py-3 fw-600 {{ areActiveRoutes(['profile_settings'],'text-primary-grad') }}">
-                                <i class="las la-user mr-1"></i><span>{{ translate('My Profile') }}</span>
-                            </a>
-                        </li>
-                        <li class="list-inline-item">
-                            <a href="{{ route('all.messages') }}" class="text-reset premium-nav-link d-inline-block px-4 py-3 fw-600 {{ areActiveRoutes(['all.messages'],'text-primary-grad') }}">
-                                <i class="las la-envelope mr-1"></i><span>{{ translate('Messaging') }}</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        @endif
     </header>
 </div>
 
-{{-- 🛑 القائمة الجانبية للموبايل 🛑 --}}
+{{-- القائمة الجانبية للتنقل العام فقط؛ لا تعرض روابط الحساب الشخصي أو التسجيل والدخول. --}}
 <div class="mobile-menu-overlay" onclick="toggleMobileMenu()"></div>
 <div class="mobile-side-menu" id="mobileMenu">
-    @if(Auth::check())
-        <div class="mobile-menu-header text-center">
-            <button class="close-mobile-menu" onclick="toggleMobileMenu()"><i class="las la-times fs-20"></i></button>
-            <img src="{{ uploaded_asset(Auth::user()->photo) }}" class="rounded-circle mb-3 border" width="80" height="80" style="object-fit: cover; border: 3px solid #D4AF37;" onerror="this.src='{{ static_asset('assets/img/avatar-place.png') }}'">
-            <h6 class="mb-0 text-white fw-800">{{ Auth::user()->first_name }}</h6>
-            <p class="fs-12 opacity-70 mb-0 mt-1">عضو في وصال</p>
-        </div>
-        
-        <div class="pb-3">
-            <div class="mobile-nav-heading">قائمة التنقل بالموقع</div>
-            <a href="{{ route('home') }}" class="mobile-nav-item"><i class="las la-home mobile-nav-icon"></i> الرئيسية</a>
-            <a href="{{ route('member.listing') }}" class="mobile-nav-item"><i class="las la-users mobile-nav-icon"></i> الأعضاء النشطين</a>
-            <a href="{{ route('packages') }}" class="mobile-nav-item"><i class="las la-gem mobile-nav-icon"></i> الباقات المميزة</a>
-            <a href="{{ route('contact_us') }}" class="mobile-nav-item"><i class="las la-headset mobile-nav-icon"></i> تواصل معنا</a>
-            
-            <div class="mobile-nav-heading mt-3">حسابي الشخصي</div>
-            <a href="{{ route('dashboard') }}" class="mobile-nav-item"><i class="las la-tachometer-alt mobile-nav-icon"></i> لوحة التحكم</a>
-            <a href="{{ route('profile_settings') }}" class="mobile-nav-item"><i class="las la-user-edit mobile-nav-icon"></i> تعديل ملفي الشخصي</a>
-            <a href="{{ route('frontend.notifications') }}" class="mobile-nav-item d-flex justify-content-between">
-                <div><i class="las la-bell mobile-nav-icon"></i> الإشعارات</div>
-                @if(isset($unseen_notification) && $unseen_notification > 0)
-                    <span class="badge bg-danger rounded-pill">{{ $unseen_notification }}</span>
-                @endif
-            </a>
-            <a href="{{ route('my_interests.index') }}" class="mobile-nav-item"><i class="las la-heart mobile-nav-icon"></i> الإعجابات الواردة</a>
-            
+    <div class="mobile-menu-header text-center pb-4">
+        <button class="close-mobile-menu" onclick="toggleMobileMenu()"><i class="las la-times fs-20"></i></button>
+        <i class="las la-heart text-white opacity-75" style="font-size: 60px;"></i>
+        <h6 class="mb-0 text-white mt-3 fw-800">مرحباً بك في وصال</h6>
+    </div>
+    <div class="p-4 pb-3">
+        <div class="mobile-nav-heading">قائمة التنقل بالموقع</div>
+        <a href="{{ route('home') }}" class="mobile-nav-item"><i class="las la-home mobile-nav-icon"></i> الرئيسية</a>
+        <a href="{{ route('member.listing') }}" class="mobile-nav-item"><i class="las la-users mobile-nav-icon"></i> الأعضاء النشطين</a>
+        <a href="{{ route('packages') }}" class="mobile-nav-item"><i class="las la-gem mobile-nav-icon"></i> الباقات المميزة</a>
+        <a href="{{ route('contact_us') }}" class="mobile-nav-item border-0"><i class="las la-headset mobile-nav-icon"></i> تواصل معنا</a>
+        @if (Auth::check())
             <a href="{{ route('logout') }}" class="mobile-nav-item text-danger mt-3 border-top"><i class="las la-sign-out-alt mobile-nav-icon text-danger"></i> تسجيل الخروج</a>
-        </div>
-    @else
-        <div class="mobile-menu-header text-center pb-4">
-            <button class="close-mobile-menu" onclick="toggleMobileMenu()"><i class="las la-times fs-20"></i></button>
-            <i class="las la-heart text-white opacity-75" style="font-size: 60px;"></i>
-            <h6 class="mb-0 text-white mt-3 fw-800">أهلاً بك في وصال</h6>
-        </div>
-        <div class="p-4">
-            <div class="mobile-nav-heading">قائمة التنقل بالموقع</div>
-            <a href="{{ route('home') }}" class="mobile-nav-item"><i class="las la-home mobile-nav-icon"></i> الرئيسية</a>
-            <a href="{{ route('member.listing') }}" class="mobile-nav-item"><i class="las la-users mobile-nav-icon"></i> الأعضاء النشطين</a>
-            <a href="{{ route('packages') }}" class="mobile-nav-item"><i class="las la-gem mobile-nav-icon"></i> الباقات المميزة</a>
-            <a href="{{ route('contact_us') }}" class="mobile-nav-item border-0"><i class="las la-headset mobile-nav-icon"></i> تواصل معنا</a>
-        </div>
-    @endif
+        @endif
+    </div>
 </div>
-
 <script>
     function toggleMobileMenu() {
         $('#mobileMenu').toggleClass('show');

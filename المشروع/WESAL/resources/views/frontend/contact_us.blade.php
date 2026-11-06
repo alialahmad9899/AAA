@@ -2,96 +2,176 @@
 
 @section('content')
 <style>
-    #wesal-contact-page {
-        --contact-ink: var(--secondary, #0F172A);
-        --contact-gold: var(--primary, #D4AF37);
-        background:
-            radial-gradient(circle at 12% 10%, rgba(212, 175, 55, .10), transparent 28rem),
-            linear-gradient(180deg, #ffffff 0%, var(--bg-body, #F8FAFC) 100%);
-        color: var(--contact-ink);
-        font-family: 'Cairo', sans-serif;
-        padding: 64px 0 76px;
-        min-height: 70vh;
+    body.wesal-contact-body,
+    body.wesal-contact-body .aiz-main-wrapper {
+        background: #FDFBF7 !important;
+        color: #1D2D44 !important;
+        font-family: 'Cairo', sans-serif !important;
     }
-    #wesal-contact-page .contact-shell { max-width: 1180px; }
+    body.wesal-contact-body .aiz-main-wrapper { min-height: 100vh; }
+
+    #wesal-contact-page {
+        --ws-primary: #0F4C5C;
+        --ws-primary-2: #1F6675;
+        --ws-coral: #E07A5F;
+        --ws-coral-soft: #F2B5A0;
+        --ws-cream: #FDFBF7;
+        --ws-white: #FFFFFF;
+        --ws-ink: #1D2D44;
+        --ws-muted: #6C7A89;
+        --ws-line: #E8E4DE;
+        --ws-shadow: 0 18px 55px rgba(29, 45, 68, .09);
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        min-height: calc(100vh - 90px);
+        padding: clamp(42px, 6.5vw, 82px) 0 clamp(54px, 7vw, 90px);
+        background:
+            radial-gradient(circle at 8% 8%, rgba(242,181,160,.26), transparent 30rem),
+            radial-gradient(circle at 92% 88%, rgba(31,102,117,.08), transparent 28rem),
+            linear-gradient(180deg, #FDFBF7 0%, #F7F5F0 100%);
+        color: var(--ws-ink);
+        font-family: 'Cairo', sans-serif;
+        direction: rtl;
+    }
+    #wesal-contact-page,
+    #wesal-contact-page * { box-sizing: border-box; }
+    #wesal-contact-page .contact-shell { width: min(1180px, calc(100% - 44px)); max-width: 1180px; margin-inline: auto; }
     #wesal-contact-page .contact-eyebrow {
         display: inline-flex; align-items: center; gap: 9px;
-        padding: 8px 16px; border-radius: 999px;
-        background: rgba(212, 175, 55, .12); color: var(--contact-ink);
-        border: 1px solid rgba(212, 175, 55, .30); font-weight: 800; font-size: 13px;
+        padding: 9px 16px; border-radius: 999px;
+        background: rgba(224,122,95,.10); color: var(--ws-primary);
+        border: 1px solid rgba(224,122,95,.25);
+        font-size: 13px; font-weight: 800;
     }
-    #wesal-contact-page .contact-eyebrow i { color: var(--contact-gold); font-size: 18px; }
-    #wesal-contact-page .contact-title { color: var(--contact-ink); font-size: clamp(28px, 4vw, 42px); font-weight: 900; line-height: 1.35; margin: 18px 0 10px; }
-    #wesal-contact-page .contact-title span { color: #B58B22; }
-    #wesal-contact-page .contact-lead { max-width: 720px; margin: 0 auto; color: #64748b; line-height: 2; font-size: 15px; font-weight: 600; }
-    #wesal-contact-page .contact-heading-line { width: 66px; height: 4px; border-radius: 99px; margin: 18px auto 0; background: linear-gradient(90deg, #B58B22, var(--contact-gold)); }
+    #wesal-contact-page .contact-eyebrow i { color: var(--ws-coral); font-size: 18px; }
+    #wesal-contact-page .contact-title {
+        margin: 18px 0 12px; color: var(--ws-ink);
+        font-size: clamp(32px, 4.8vw, 48px); font-weight: 900;
+        line-height: 1.35; letter-spacing: -1px;
+    }
+    #wesal-contact-page .contact-title span { color: var(--ws-coral); }
+    #wesal-contact-page .contact-lead {
+        max-width: 720px; margin: 0 auto; color: var(--ws-muted);
+        font-size: 15px; font-weight: 600; line-height: 2.05;
+    }
+    #wesal-contact-page .contact-heading-line {
+        width: 58px; height: 4px; border-radius: 99px;
+        margin: 20px auto 0; background: linear-gradient(90deg, var(--ws-primary), var(--ws-coral));
+    }
     #wesal-contact-page .contact-panel {
-        border: 1px solid rgba(15, 23, 42, .07); border-radius: 24px;
-        background: rgba(255,255,255,.94); box-shadow: 0 18px 55px rgba(15, 23, 42, .08);
-        overflow: hidden; height: 100%;
+        height: 100%; overflow: hidden; border: 1px solid var(--ws-line);
+        border-radius: 26px; background: rgba(255,255,255,.96);
+        box-shadow: var(--ws-shadow);
     }
-    #wesal-contact-page .contact-form-panel { padding: clamp(22px, 3.5vw, 40px); }
-    #wesal-contact-page .contact-panel-title { color: var(--contact-ink); font-size: 22px; font-weight: 900; margin-bottom: 8px; }
-    #wesal-contact-page .contact-panel-subtitle { color: #64748b; font-weight: 600; line-height: 1.9; font-size: 14px; margin-bottom: 26px; }
-    #wesal-contact-page .contact-label { display: block; color: var(--contact-ink); font-weight: 800; font-size: 14px; margin-bottom: 9px; }
-    #wesal-contact-page .contact-required { color: #dc2626; }
+    #wesal-contact-page .contact-form-panel { padding: clamp(22px, 3.6vw, 42px); }
+    #wesal-contact-page .contact-panel-title {
+        margin: 0 0 9px; color: var(--ws-ink);
+        font-size: 23px; font-weight: 900; line-height: 1.5;
+    }
+    #wesal-contact-page .contact-panel-subtitle {
+        margin: 0 0 26px; color: var(--ws-muted);
+        font-size: 13px; font-weight: 600; line-height: 1.9;
+    }
+    #wesal-contact-page .contact-label {
+        display: block; margin-bottom: 9px;
+        color: var(--ws-ink); font-size: 14px; font-weight: 800;
+    }
+    #wesal-contact-page .contact-required { color: #D94841; }
     #wesal-contact-page .contact-field {
-        width: 100%; border: 1px solid #e2e8f0; border-radius: 12px;
-        background: #f8fafc; color: var(--contact-ink); font-family: inherit;
-        font-size: 14px; font-weight: 600; padding: 13px 15px; min-height: 50px;
+        width: 100%; min-height: 51px; padding: 13px 15px;
+        border: 1px solid #E5E6E3; border-radius: 13px;
+        background: #FBFAF7; color: var(--ws-ink);
+        font-family: inherit; font-size: 14px; font-weight: 600;
         transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
     }
-    #wesal-contact-page .contact-field::placeholder { color: #94a3b8; font-weight: 500; }
-    #wesal-contact-page .contact-field:focus { outline: none; background: #fff; border-color: var(--contact-gold); box-shadow: 0 0 0 4px rgba(212,175,55,.14); }
+    #wesal-contact-page .contact-field::placeholder { color: #97A1A8; font-weight: 500; }
+    #wesal-contact-page .contact-field:focus {
+        outline: none; background: #fff; border-color: var(--ws-coral);
+        box-shadow: 0 0 0 4px rgba(224,122,95,.13);
+    }
     #wesal-contact-page textarea.contact-field { min-height: 168px; resize: vertical; line-height: 1.9; }
-    #wesal-contact-page .contact-help { display: block; margin-top: 7px; color: #64748b; font-size: 12px; font-weight: 600; }
+    #wesal-contact-page .contact-help { display: block; margin-top: 7px; color: var(--ws-muted); font-size: 12px; font-weight: 600; }
     #wesal-contact-page .contact-submit {
-        width: 100%; border: 0; border-radius: 13px; min-height: 54px;
-        background: linear-gradient(135deg, #0F172A 0%, #1e293b 100%);
-        color: #fff; font-family: inherit; font-weight: 900; font-size: 15px;
-        box-shadow: 0 10px 22px rgba(15,23,42,.16); transition: transform .2s ease, box-shadow .2s ease;
+        width: 100%; min-height: 55px; border: 0; border-radius: 14px;
+        background: linear-gradient(135deg, var(--ws-primary) 0%, var(--ws-primary-2) 100%);
+        color: #fff; font-family: inherit; font-size: 15px; font-weight: 900;
+        box-shadow: 0 12px 28px rgba(15,76,92,.18);
+        transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+        cursor: pointer;
     }
-    #wesal-contact-page .contact-submit i { color: var(--contact-gold); margin-left: 8px; font-size: 18px; }
-    #wesal-contact-page .contact-submit:hover { transform: translateY(-2px); box-shadow: 0 14px 28px rgba(15,23,42,.20); }
+    #wesal-contact-page .contact-submit i { margin-left: 8px; color: var(--ws-coral-soft); font-size: 18px; }
+    #wesal-contact-page .contact-submit:hover {
+        transform: translateY(-2px); background: var(--ws-primary-2);
+        box-shadow: 0 15px 30px rgba(15,76,92,.23);
+    }
     #wesal-contact-page .contact-info-panel {
-        position: relative; padding: clamp(24px, 3vw, 34px); color: #e2e8f0;
-        background: linear-gradient(145deg, #0F172A 0%, #1e293b 100%);
-        border-radius: 24px; box-shadow: 0 18px 45px rgba(15,23,42,.16); overflow: hidden; height: 100%;
+        position: relative; height: 100%; overflow: hidden;
+        padding: clamp(24px, 3.2vw, 38px); border-radius: 26px;
+        color: #fff; background: linear-gradient(145deg, #0F4C5C 0%, #174F5B 58%, #1F6675 100%);
+        box-shadow: 0 18px 45px rgba(15,76,92,.17);
     }
-    #wesal-contact-page .contact-info-panel:before {
-        content: ''; position: absolute; width: 230px; height: 230px; border-radius: 50%;
-        border: 1px solid rgba(212,175,55,.16); top: -105px; left: -90px;
-        box-shadow: 0 0 0 22px rgba(212,175,55,.035), 0 0 0 46px rgba(212,175,55,.025);
+    #wesal-contact-page .contact-info-panel::before,
+    #wesal-contact-page .contact-info-panel::after {
+        content: ''; position: absolute; z-index: 0; border-radius: 50%;
+        border: 1px solid rgba(242,181,160,.22); pointer-events: none;
+    }
+    #wesal-contact-page .contact-info-panel::before {
+        width: 250px; height: 250px; top: -125px; left: -110px;
+        box-shadow: 0 0 0 22px rgba(242,181,160,.045), 0 0 0 46px rgba(242,181,160,.025);
+    }
+    #wesal-contact-page .contact-info-panel::after {
+        width: 170px; height: 170px; bottom: -100px; right: -75px;
+        border-color: rgba(255,255,255,.10);
     }
     #wesal-contact-page .contact-info-panel > * { position: relative; z-index: 1; }
-    #wesal-contact-page .contact-info-kicker { color: var(--contact-gold); font-weight: 800; font-size: 12px; letter-spacing: .3px; }
-    #wesal-contact-page .contact-info-title { color: #fff; font-weight: 900; font-size: 25px; line-height: 1.5; margin: 10px 0 12px; }
-    #wesal-contact-page .contact-info-copy { color: #cbd5e1; line-height: 1.95; font-size: 13px; font-weight: 600; margin-bottom: 20px; }
+    #wesal-contact-page .contact-info-kicker { color: var(--ws-coral-soft); font-size: 12px; font-weight: 800; }
+    #wesal-contact-page .contact-info-title {
+        margin: 12px 0 13px; color: #fff;
+        font-size: 27px; font-weight: 900; line-height: 1.5;
+    }
+    #wesal-contact-page .contact-info-copy { margin-bottom: 22px; color: #D9E5E7; font-size: 13px; font-weight: 600; line-height: 1.95; }
     #wesal-contact-page .contact-policy-alert {
-        display: flex; align-items: flex-start; gap: 11px; margin: 0 0 20px;
-        padding: 14px; border-radius: 13px; color: #fff1c2;
-        background: rgba(212,175,55,.10); border: 1px solid rgba(212,175,55,.28);
+        display: flex; align-items: flex-start; gap: 11px;
+        margin: 0 0 20px; padding: 14px; border-radius: 14px;
+        color: #FFF1E9; background: rgba(224,122,95,.12);
+        border: 1px solid rgba(242,181,160,.28);
         font-size: 12px; font-weight: 700; line-height: 1.9;
     }
-    #wesal-contact-page .contact-policy-alert i { flex: 0 0 auto; color: var(--contact-gold); font-size: 19px; margin-top: 2px; }
-    #wesal-contact-page .contact-info-item { display: flex; align-items: flex-start; gap: 14px; padding: 17px 0; border-top: 1px solid rgba(255,255,255,.10); }
-    #wesal-contact-page .contact-info-icon {
-        flex: 0 0 42px; width: 42px; height: 42px; border-radius: 12px;
-        display: flex; align-items: center; justify-content: center;
-        color: var(--contact-gold); background: rgba(212,175,55,.12); border: 1px solid rgba(212,175,55,.22); font-size: 20px;
+    #wesal-contact-page .contact-policy-alert i { flex: 0 0 auto; margin-top: 2px; color: var(--ws-coral-soft); font-size: 19px; }
+    #wesal-contact-page .contact-info-item {
+        display: flex; align-items: flex-start; gap: 14px;
+        padding: 17px 0; border-top: 1px solid rgba(255,255,255,.12);
     }
-    #wesal-contact-page .contact-info-item h3 { color: #fff; font-size: 14px; font-weight: 900; margin: 1px 0 5px; }
-    #wesal-contact-page .contact-info-item p { color: #cbd5e1; font-size: 12px; font-weight: 600; line-height: 1.85; margin: 0; }
-    #wesal-contact-page .contact-privacy-note { margin-top: 24px; padding: 13px 14px; border-radius: 12px; background: rgba(255,255,255,.06); color: #cbd5e1; font-size: 12px; font-weight: 600; line-height: 1.85; }
-    #wesal-contact-page .contact-privacy-note i { color: var(--contact-gold); margin-left: 6px; }
-    #wesal-contact-page .contact-errors { border-radius: 13px; border: 1px solid #fecaca; background: #fff7f7; color: #991b1b; padding: 14px 18px; font-weight: 700; }
+    #wesal-contact-page .contact-info-icon {
+        display: flex; flex: 0 0 42px; align-items: center; justify-content: center;
+        width: 42px; height: 42px; border-radius: 13px;
+        color: var(--ws-coral-soft); background: rgba(242,181,160,.10);
+        border: 1px solid rgba(242,181,160,.22); font-size: 20px;
+    }
+    #wesal-contact-page .contact-info-item h3 { margin: 1px 0 5px; color: #fff; font-size: 14px; font-weight: 900; }
+    #wesal-contact-page .contact-info-item p { margin: 0; color: #D9E5E7; font-size: 12px; font-weight: 600; line-height: 1.85; }
+    #wesal-contact-page .contact-privacy-note {
+        margin-top: 24px; padding: 13px 14px; border-radius: 13px;
+        background: rgba(255,255,255,.07); color: #D9E5E7;
+        font-size: 12px; font-weight: 600; line-height: 1.85;
+    }
+    #wesal-contact-page .contact-privacy-note i { margin-left: 6px; color: var(--ws-coral-soft); }
+    #wesal-contact-page .contact-errors {
+        padding: 14px 18px; border: 1px solid #F4CACA;
+        border-radius: 13px; background: #FFF7F6; color: #992F2F; font-weight: 700;
+    }
     #wesal-contact-page .contact-errors ul { margin: 0; padding-right: 20px; }
     @media (max-width: 767.98px) {
-        #wesal-contact-page { padding: 42px 0 52px; }
-        #wesal-contact-page .contact-title { font-size: 29px; }
+        #wesal-contact-page { min-height: auto; padding: 40px 0 52px; }
+        #wesal-contact-page .contact-shell { width: min(100% - 30px, 620px); }
+        #wesal-contact-page .contact-title { font-size: clamp(29px, 8vw, 38px); letter-spacing: -.5px; }
+        #wesal-contact-page .contact-lead { font-size: 14px; }
+        #wesal-contact-page .contact-info-panel { border-radius: 22px; }
+        #wesal-contact-page .contact-panel { border-radius: 22px; }
     }
     @media (prefers-reduced-motion: reduce) {
-        #wesal-contact-page *, #wesal-contact-page *:before, #wesal-contact-page *:after { transition: none !important; animation: none !important; }
+        #wesal-contact-page *, #wesal-contact-page *::before, #wesal-contact-page *::after { transition: none !important; animation: none !important; }
     }
 </style>
 

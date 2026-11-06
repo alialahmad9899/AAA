@@ -268,19 +268,20 @@ $lang = \App\Models\Language::where('code', $locale)->first();
     $isTermsConditionsPage = Route::currentRouteName() === 'custom-pages.show_custom_page'
         && request()->route('slug') === 'terms-conditions';
     $isWesalLandingPage = in_array(Route::currentRouteName(), ['home', 'index'], true);
+    $isWesalContactPage = Route::currentRouteName() === 'contact_us';
 @endphp
 
-<body class="text-left {{ Route::currentRouteName() == 'all.messages' ? 'h-100' : '' }} {{ $isTermsConditionsPage ? 'wesal-terms-document-body' : '' }} {{ $isWesalLandingPage ? 'wesal-landing-body' : '' }}">
+<body class="text-left {{ Route::currentRouteName() == 'all.messages' ? 'h-100' : '' }} {{ $isTermsConditionsPage ? 'wesal-terms-document-body' : '' }} {{ $isWesalLandingPage ? 'wesal-landing-body' : '' }} {{ $isWesalContactPage ? 'wesal-contact-body' : '' }}">
 
     {{-- 🛑 تجريد الغلاف من الـ Flexbox والهوامش إذا كنا في صفحة المحادثة 🛑 --}}
     <div
         class="aiz-main-wrapper position-relative 
-        @if (!$isWesalLandingPage && Route::currentRouteName() != 'all.messages' && !$isTermsConditionsPage)
+        @if (!$isWesalLandingPage && Route::currentRouteName() != 'all.messages' && !$isTermsConditionsPage && !$isWesalContactPage)
             d-flex flex-column pt-8 pt-lg-10
         @endif
         {{ Route::currentRouteName() == 'all.messages' ? 'chat-wrapper-clean' : '' }}">
 
-        @if (!$isTermsConditionsPage && !$isWesalLandingPage)
+        @if (!$isTermsConditionsPage && !$isWesalLandingPage && !$isWesalContactPage)
             @include('frontend.inc.header')
         @endif
 

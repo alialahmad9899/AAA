@@ -50,16 +50,14 @@
     .ws-nav { display: flex; align-items: center; gap: clamp(16px, 2.5vw, 32px); }
     .ws-nav a { color: var(--ws-ink); font-size: 13px; font-weight: 800; text-decoration: none !important; transition: color .2s ease; }
     .ws-nav a:hover { color: var(--ws-coral); }
-    .ws-header-actions { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
-    .ws-login-link { color: var(--ws-primary); font-weight: 800; font-size: 13px; text-decoration: none !important; padding: 10px 12px; }
-    .ws-header-cta, .ws-button-primary {
+    .ws-button-primary {
         display: inline-flex; align-items: center; justify-content: center; gap: 9px;
         border: 0; border-radius: 999px; padding: 12px 21px;
         background: var(--ws-primary); color: #fff !important; text-decoration: none !important;
         font-size: 13px; font-weight: 800; box-shadow: 0 9px 22px rgba(15,76,92,.17);
         transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
     }
-    .ws-header-cta:hover, .ws-button-primary:hover { background: var(--ws-primary-2); color: #fff !important; transform: translateY(-2px); box-shadow: 0 13px 28px rgba(15,76,92,.23); }
+    .ws-button-primary:hover { background: var(--ws-primary-2); color: #fff !important; transform: translateY(-2px); box-shadow: 0 13px 28px rgba(15,76,92,.23); }
     .ws-mobile-toggle { display: none; border: 1px solid var(--ws-line); color: var(--ws-primary); background: white; border-radius: 13px; width: 44px; height: 44px; font-size: 23px; }
     .ws-mobile-menu { display: none; padding: 6px 0 18px; }
     .ws-mobile-menu a { display: block; padding: 12px 4px; border-top: 1px solid var(--ws-line); color: var(--ws-ink); font-weight: 800; text-decoration: none; }
@@ -260,12 +258,6 @@
                     <a href="#men">الأعضاء</a>
                     <a href="#how-it-works">كيف يعمل</a>
                 </nav>
-                <div class="ws-header-actions">
-                    @guest
-                        <a class="ws-login-link" href="{{ route('login') }}">تسجيل الدخول</a>
-                        <a class="ws-header-cta" href="{{ route('register') }}">إنشاء حساب <i class="las la-arrow-left"></i></a>
-                    @endguest
-                </div>
                 <button class="ws-mobile-toggle" type="button" id="wsMobileToggle" aria-label="فتح القائمة" aria-expanded="false" aria-controls="wsMobileMenu"><i class="las la-bars"></i></button>
             </div>
             <nav class="ws-mobile-menu" id="wsMobileMenu" aria-label="قائمة الهاتف">
@@ -274,10 +266,6 @@
                 <a href="#women">العضوات</a>
                 <a href="#men">الأعضاء</a>
                 <a href="#how-it-works">كيف يعمل</a>
-                @guest
-                    <a href="{{ route('login') }}">تسجيل الدخول</a>
-                    <a href="{{ route('register') }}">إنشاء حساب جديد</a>
-                @endguest
             </nav>
         </div>
     </header>
