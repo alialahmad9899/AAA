@@ -113,7 +113,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
             ),
           ),
         ),
-        body: Container(
+        body: SafeArea(top: false, bottom: true, child: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [Color(0xFF081827), Color(0xFF0D233A), Color(0xFF090D16)],
@@ -174,7 +174,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                         return _buildTicketCard(ticket);
                       },
                     ),
-        ),
+        )),
       ),
     );
   }
