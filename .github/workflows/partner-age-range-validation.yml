@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - fix/partner-age-range-sync-2026-11-06
+      - fix/partner-age-range-local-sync-2026-11-07
   pull_request:
     branches:
       - main
