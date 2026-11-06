@@ -35,7 +35,6 @@ jobs:
             "المشروع/WESAL/app/Http/Controllers/Api/PackageController.php"
             "المشروع/WESAL/app/Http/Controllers/Api/Payment/PaymentTypesController.php"
             "المشروع/WESAL/app/Http/Controllers/Api/Payment/StripeController.php"
-            "المشروع/WESAL/app/Http/Controllers/Api/ProfileViewerController.php"
             "المشروع/WESAL/app/Http/Controllers/Api/VipServiceApiController.php"
             "المشروع/WESAL/app/Utility/SubscriptionUtility.php"
             "المشروع/WESAL/routes/api.php"
@@ -44,7 +43,6 @@ jobs:
             "المشروع/WESAL/tests/Unit/SmartMatchingServiceTest.php"
             "المشروع/WESAL/app/Http/Controllers/Api/ProfileController.php"
             "المشروع/WESAL/app/Http/Controllers/Api/ProfileDropdownController.php"
-            "المشروع/WESAL/app/Http/Controllers/Api/ProfileViewerController.php"
             "المشروع/WESAL/app/Http/Controllers/CareerController.php"
             "المشروع/WESAL/app/Http/Controllers/EducationController.php"
             "المشروع/WESAL/app/Http/Middleware/EmailVerifiedApi.php"
@@ -58,7 +56,6 @@ jobs:
             "المشروع/WESAL/app/Models/Astrology.php"
             "المشروع/WESAL/app/Models/Attitude.php"
             "المشروع/WESAL/app/Models/Hobby.php"
-            "المشروع/WESAL/routes/api.php"
             "المشروع/WESAL/database/migrations/2026_11_05_000001_convert_attitudes_table_to_utf8mb4.php"
           )
           for file in "${files[@]}"; do

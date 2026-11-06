@@ -2414,7 +2414,7 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
               Expanded(
                 child: DropdownButtonFormField<String>(
                   isExpanded: true,
-                  initialValue: _maritalStatus,
+                  value: _maritalStatus,
                   dropdownColor: const Color(0xFF1E293B),
                   style: const TextStyle(
                       color: Colors.white, fontFamily: 'Cairo', fontSize: 13),
@@ -2435,7 +2435,7 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
               Expanded(
                 child: DropdownButtonFormField<String>(
                   isExpanded: true,
-                  initialValue: _financialStatus,
+                  value: _financialStatus,
                   dropdownColor: const Color(0xFF1E293B),
                   style: const TextStyle(
                       color: Colors.white, fontFamily: 'Cairo', fontSize: 13),

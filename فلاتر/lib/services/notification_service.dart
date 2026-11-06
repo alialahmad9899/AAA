@@ -320,7 +320,7 @@ class NotificationService {
 
       final String? fcmToken = await _messaging.getToken();
       if (fcmToken == null || fcmToken.isEmpty) return false;
-      return _syncSpecificToken(fcmToken, expectedUserToken: userToken);
+      return await _syncSpecificToken(fcmToken, expectedUserToken: userToken);
     } catch (error) {
       debugPrint('[Notification Token Sync] $error');
       return false;

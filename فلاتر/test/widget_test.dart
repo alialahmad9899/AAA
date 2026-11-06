@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-// Resolve the app entry point relative to this test, independent of package URI mapping.
+// Local environments may not refresh package_config.json after dependency resolution.
+ // ignore: avoid_relative_lib_imports
 import '../lib/main.dart';
 
 void main() {
