@@ -21,6 +21,8 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
+          extensions: mbstring
+          tools: phpunit:10
       - name: Validate Laravel PHP syntax
         shell: bash
         run: |
@@ -29,6 +31,9 @@ jobs:
             "المشروع/WESAL/app/Http/Controllers/Api/AuthController.php"
             "المشروع/WESAL/app/Http/Controllers/Api/HomeController.php"
             "المشروع/WESAL/app/Http/Controllers/Api/MemberController.php"
+            "المشروع/WESAL/app/Http/Resources/ActiveUserResource.php"
+            "المشروع/WESAL/app/Services/SmartMatchingService.php"
+            "المشروع/WESAL/tests/Unit/SmartMatchingServiceTest.php"
             "المشروع/WESAL/app/Http/Controllers/Api/ProfileController.php"
             "المشروع/WESAL/app/Http/Controllers/Api/ProfileDropdownController.php"
             "المشروع/WESAL/app/Http/Controllers/Api/ProfileViewerController.php"
@@ -50,6 +55,10 @@ jobs:
           for file in "${files[@]}"; do
             php -l "$file"
           done
+          (
+            cd "المشروع/WESAL"
+            phpunit --no-configuration tests/Unit/SmartMatchingServiceTest.php
+          )
 
   flutter-regression-tests:
     runs-on: ubuntu-latest
