@@ -1139,7 +1139,6 @@ class ProfileController extends Controller
             ], 422);
         }
 
-        $user = User::with('member')->findOrFail(auth()->id());
         $effectivePreferredCountry = array_key_exists('partner_country_id', $input)
             ? $input['partner_country_id']
             : ($partner ? $partner->preferred_country_id : null);
