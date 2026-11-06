@@ -74,4 +74,4 @@ jobs:
         run: flutter pub get
       - name: Run profile, signup and account model regression tests
         working-directory: فلاتر
-        run: flutter test test/profile_edit_unit_test.dart
+        run: flutter test
