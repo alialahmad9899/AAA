@@ -81,8 +81,8 @@ Route::group(['namespace' => 'Api', 'middleware' => ['app_language']], function 
     // Payment callbacks exposed to guests are limited to Stripe only.
     Route::group(['namespace' => 'Payment'], function () {
         Route::any('/stripe/cancel', 'StripeController@cancel')->name('api.stripe.cancel');
-        Route::any('/stripe/create-checkout-session', 'StripeController@create_checkout_session')->name('api.stripe.get_token');
-        Route::post('/stripe/direct-card-pay', 'StripeController@payWithCardDirectly')->name('api.stripe.direct_card_pay');
+
+
     });
 
     Route::post('/logout', 'AuthController@logout')->name('logout')->middleware('auth:sanctum');
