@@ -76,6 +76,19 @@ class SmartMatchingServiceTest extends TestCase
         $this->assertGreaterThan($nearOutside['percentage'], $inside['percentage']);
     }
 
+    public function test_legacy_partner_age_columns_are_scored(): void
+    {
+        $result = $this->service->scoreData([
+            'partner_age' => 25,
+            'partner_max_age' => 35,
+        ], [
+            'age' => 30,
+        ]);
+
+        $this->assertSame(100, $result['percentage']);
+        $this->assertSame(1, $result['criteria_count']);
+    }
+
     public function test_candidate_outside_a_rejected_children_preference_loses_that_criterion(): void
     {
         $result = $this->service->scoreData([
