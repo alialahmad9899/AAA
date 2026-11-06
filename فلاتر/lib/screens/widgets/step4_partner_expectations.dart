@@ -482,8 +482,8 @@ class Step4PartnerExpectations extends StatelessWidget {
                         children: [
                           Text(
                             _isAr
-                                ? 'من: \${safeAgeRange.start.round()} سنة'
-                                : 'From: \${safeAgeRange.start.round()} yrs',
+                                ? 'من: ${safeAgeRange.start.round()} سنة'
+                                : 'From: ${safeAgeRange.start.round()} yrs',
                             style: const TextStyle(
                               color: Colors.amberAccent,
                               fontWeight: FontWeight.bold,
@@ -493,8 +493,8 @@ class Step4PartnerExpectations extends StatelessWidget {
                           ),
                           Text(
                             _isAr
-                                ? 'إلى: \${safeAgeRange.end.round()} سنة'
-                                : 'To: \${safeAgeRange.end.round()} yrs',
+                                ? 'إلى: ${safeAgeRange.end.round()} سنة'
+                                : 'To: ${safeAgeRange.end.round()} yrs',
                             style: const TextStyle(
                               color: Colors.amberAccent,
                               fontWeight: FontWeight.bold,
