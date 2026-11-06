@@ -67,7 +67,7 @@ class MemberController extends Controller
 
         // 5. تطبيق شروط المطابقة حسب توقعات الشريك والبلد فقط عند تفعيل زر المطابقة (match_enabled = true)
         if ($match_enabled) {
-            if (!\\App\\Utility\\MemberUtility::can_auto_match($user->id)) {
+            if (!\App\Utility\MemberUtility::can_auto_match($user->id)) {
                 return response()->json([
                     'result' => false,
                     'status' => 'package_required',

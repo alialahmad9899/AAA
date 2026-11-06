@@ -179,8 +179,8 @@ class VipServiceApiController extends Controller
             $order->payment_status = 'paid';
             $order->paid_at = now();
             $order->save();
-        } catch (\\Throwable $exception) {
-            \\Log::error('VIP Stripe confirmation failed.', [
+        } catch (\Throwable $exception) {
+            \Log::error('VIP Stripe confirmation failed.', [
                 'order_id' => $order->id,
                 'user_id' => $user->id,
                 'payment_intent_id' => $request->payment_intent_id,
