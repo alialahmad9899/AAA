@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+// Keep the package URI aligned with the name in pubspec.yaml (wesal_app).
 import 'package:wesal_app/main.dart';
 
 void main() {

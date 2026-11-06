@@ -41,7 +41,8 @@ jobs:
             lib/screens/partner_expectations_screen.dart \
             lib/screens/widgets/step4_partner_expectations.dart \
             lib/services/api_service.dart \
-            test/partner_expectation_age_widget_test.dart
+            test/partner_expectation_age_widget_test.dart \
+            test/widget_test.dart
       - name: Run all Flutter tests
         run: flutter test
 
@@ -118,6 +119,7 @@ jobs:
                   "فلاتر/lib/screens/partner_expectations_screen.dart",
                   "فلاتر/lib/services/api_service.dart",
                   "فلاتر/test/partner_expectation_age_widget_test.dart",
+                  "فلاتر/test/widget_test.dart",
                   "المشروع/WESAL/app/Http/Controllers/Api/ProfileController.php",
                   "المشروع/WESAL/app/Http/Controllers/Api/MemberController.php",
                   "المشروع/WESAL/app/Http/Controllers/ProfileMatchController.php",
