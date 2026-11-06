@@ -426,6 +426,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
     final List<Widget> pages = [
       AutoMatchingTab(
         currentLanguage: _currentLanguage,
+        isActive: _currentIndex == 0,
         txt: _txt,
         unreadNotificationCount: _unreadNotificationCount,
         onNotificationPressed: _handleNotificationPressed,
