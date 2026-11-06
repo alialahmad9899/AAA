@@ -2783,33 +2783,43 @@ class _SubscriptionsModalContentState
                       ),
                     if ((int.tryParse(pkg['photo_gallery']?.toString() ?? '0') ?? 0) != 0)
                       _buildPackageFeatureRow(
-                        widget.isArabic
-                            ? 'رفع ${pkg['photo_gallery']} صور إلى المعرض'
-                            : 'Upload ${pkg['photo_gallery']} gallery photos',
+                        (int.tryParse(pkg['photo_gallery']?.toString() ?? '0') ?? 0) == -1
+                            ? (widget.isArabic ? 'رفع صور للمعرض دون حد' : 'Unlimited gallery uploads')
+                            : (widget.isArabic
+                                ? 'رفع ${pkg['photo_gallery']} صور إلى المعرض'
+                                : 'Upload ${pkg['photo_gallery']} gallery photos'),
                       ),
                     if ((int.tryParse(pkg['contact']?.toString() ?? '0') ?? 0) != 0)
                       _buildPackageFeatureRow(
-                        widget.isArabic
-                            ? 'عرض ${pkg['contact']} بيانات اتصال'
-                            : 'View ${pkg['contact']} contact details',
+                        (int.tryParse(pkg['contact']?.toString() ?? '0') ?? 0) == -1
+                            ? (widget.isArabic ? 'عرض بيانات الاتصال دون حد' : 'Unlimited contact views')
+                            : (widget.isArabic
+                                ? 'عرض ${pkg['contact']} بيانات اتصال'
+                                : 'View ${pkg['contact']} contact details'),
                       ),
-                    if (viewersView > 0)
+                    if (viewersView != 0)
                       _buildPackageFeatureRow(
-                        widget.isArabic
-                            ? 'إمكانية رؤية حتى $viewersView زائر لملفك'
-                            : 'View up to $viewersView profile visitors',
+                        viewersView == -1
+                            ? (widget.isArabic ? 'رؤية زوار الملف دون حد' : 'Unlimited profile visitors')
+                            : (widget.isArabic
+                                ? 'إمكانية رؤية حتى $viewersView زائر لملفك'
+                                : 'View up to $viewersView profile visitors'),
                       ),
                     if ((int.tryParse(pkg['profile_image_view']?.toString() ?? '0') ?? 0) != 0)
                       _buildPackageFeatureRow(
-                        widget.isArabic
-                            ? 'عرض ${pkg['profile_image_view']} صور شخصية خاصة'
-                            : 'View ${pkg['profile_image_view']} private profile photos',
+                        (int.tryParse(pkg['profile_image_view']?.toString() ?? '0') ?? 0) == -1
+                            ? (widget.isArabic ? 'عرض الصور الشخصية الخاصة دون حد' : 'Unlimited private profile photos')
+                            : (widget.isArabic
+                                ? 'عرض ${pkg['profile_image_view']} صور شخصية خاصة'
+                                : 'View ${pkg['profile_image_view']} private profile photos'),
                       ),
                     if ((int.tryParse(pkg['gallery_image_view']?.toString() ?? '0') ?? 0) != 0)
                       _buildPackageFeatureRow(
-                        widget.isArabic
-                            ? 'عرض ${pkg['gallery_image_view']} صور معرض خاصة'
-                            : 'View ${pkg['gallery_image_view']} private gallery photos',
+                        (int.tryParse(pkg['gallery_image_view']?.toString() ?? '0') ?? 0) == -1
+                            ? (widget.isArabic ? 'عرض صور المعرض الخاصة دون حد' : 'Unlimited private gallery photos')
+                            : (widget.isArabic
+                                ? 'عرض ${pkg['gallery_image_view']} صور معرض خاصة'
+                                : 'View ${pkg['gallery_image_view']} private gallery photos'),
                       ),
                     if (pkg['auto_profile_match'] == true ||
                         pkg['auto_profile_match'] == 1 ||

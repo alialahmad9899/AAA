@@ -252,29 +252,44 @@ class SubscriptionUtility
                 $query->where('sender_user_id', $receiverId)->where('receiver_user_id', $senderId);
             })->first();
 
-            if ($thread) {
-                return ['status' => 'existing', 'thread' => $thread];
+            $member = Member::where('user_id', $senderId)->lockForUpdate()->first();
+            if (!$member) {
+                return ['status' => 'invalid_target', 'thread' => null];
             }
 
-            $member = Member::where('user_id', $senderId)->lockForUpdate()->first();
             $isFemale = MemberUtility::is_female($user);
             $activePackage = self::currentActivePaidPackageForMember($member);
             $alreadyContacted = MessageQuotaUsage::where('user_id', $senderId)
                 ->where('recipient_id', $receiverId)
                 ->exists();
 
-            // Purchased messaging allowance survives package expiry. The user
-            // may consume any unused recipient allowance after the paid period.
+            // An existing thread must not bypass the sender's recipient quota.
+            // Purchased messaging allowance survives package expiry.
             $recipientLimit = self::lifetimeMessageRecipientLimit($senderId, $activePackage);
-            if (!$isFemale && !$activePackage && $recipientLimit <= 0) {
-                return ['status' => 'subscription_expired', 'thread' => null];
+            if (!$isFemale && !$alreadyContacted) {
+                if (!$activePackage && $recipientLimit <= 0) {
+                    return ['status' => 'subscription_expired', 'thread' => null];
+                }
+
+                if ($recipientLimit !== -1) {
+                    $contactedCount = MessageQuotaUsage::where('user_id', $senderId)->count();
+                    if ($contactedCount >= max(0, $recipientLimit)) {
+                        return ['status' => 'message_profile_quota', 'thread' => null];
+                    }
+                }
             }
 
-            if (!$isFemale && !$alreadyContacted && $recipientLimit !== -1) {
-                $contactedCount = MessageQuotaUsage::where('user_id', $senderId)->count();
-                if ($contactedCount >= max(0, $recipientLimit)) {
-                    return ['status' => 'message_profile_quota', 'thread' => null];
-                }
+            // Save the sender's entitlement even if the other participant
+            // originally created the conversation.
+            if (!$alreadyContacted) {
+                MessageQuotaUsage::firstOrCreate([
+                    'user_id' => $senderId,
+                    'recipient_id' => $receiverId,
+                ]);
+            }
+
+            if ($thread) {
+                return ['status' => 'existing', 'thread' => $thread];
             }
 
             $thread = new ChatThread();

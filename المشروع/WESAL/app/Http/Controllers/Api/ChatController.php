@@ -286,6 +286,35 @@ class ChatController extends Controller
                 }
             }
 
+            // Enforce sender entitlement even when the app sends only a thread ID.
+            $expectedReceiver = (int) ($ownedThread->sender_user_id == $sender_id
+                ? $ownedThread->receiver_user_id
+                : $ownedThread->sender_user_id);
+
+            $threadEntitlement = SubscriptionUtility::getOrCreateChatThread($sender_id, $expectedReceiver);
+            if ($threadEntitlement['status'] === 'subscription_expired') {
+                return response()->json([
+                    'result' => false,
+                    'status' => 'subscription_expired',
+                    'message' => 'لا يوجد رصيد مراسلة مكتسب لهذا العضو. اختر باقة تتيح بدء المراسلة.'
+                ], 403);
+            }
+            if ($threadEntitlement['status'] === 'message_profile_quota') {
+                return response()->json([
+                    'result' => false,
+                    'status' => 'message_profile_quota',
+                    'message' => 'استهلكت كامل رصيد المستلمين المسموح بمراسلتهم.'
+                ], 403);
+            }
+            if (empty($threadEntitlement['thread'])
+                || (int) $threadEntitlement['thread']->id !== (int) $ownedThread->id) {
+                return response()->json([
+                    'result' => false,
+                    'status' => 'unauthorized_chat_thread',
+                    'message' => 'تعذر التحقق من صلاحية هذه المحادثة.'
+                ], 403);
+            }
+
             // 🟢 4. الفحص الثاني (شرط الـ 3 رسائل للشباب قبل رد الأنثى):
             if (!MemberUtility::is_female($sender_id)) {
                 $has_receiver_replied = Chat::where('chat_thread_id', $chat_thread_id)

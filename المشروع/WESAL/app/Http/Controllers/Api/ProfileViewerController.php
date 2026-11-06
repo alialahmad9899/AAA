@@ -37,14 +37,16 @@ class ProfileViewerController extends Controller
             ? -1
             : ($isSubscribed ? (int) ($user->member->remaining_profile_viewer_view ?? 0) : 0);
 
-        // 4. تحديد سقف العرض الفعلي القادم من الباقة المفعلة:
-        // - الإناث: مفتوح بلا حدود (9999)
-        // - الذكور المشتركون: سقف الباقة المفعلة فعلياً (أو 50 كحد افتراضي للباقات)
-        // - الذكور غير المشتركين (الحساب المجاني): 3 مشاهدات فقط
+        // The package's configured allowance is the ceiling for the list.
+        // Remaining quota counts new visits received, not visitors already earned.
+        $activePackage = $isSubscribed
+            ? SubscriptionUtility::currentActivePaidPackage($user)
+            : null;
+
         if ($isFemale) {
-            $allowedLimit = 9999;
+            $allowedLimit = -1;
         } elseif ($isSubscribed) {
-            $allowedLimit = max(0, $packageQuota);
+            $allowedLimit = (int) ($activePackage->profile_viewers_view ?? 0);
         } else {
             $allowedLimit = 3;
         }
@@ -61,7 +63,7 @@ class ProfileViewerController extends Controller
             ->orderBy('updated_at', 'desc');
 
         // Apply the visitor visibility cap at the API layer as well as in Flutter.
-        if ($allowedLimit < 9999) {
+        if ($allowedLimit !== -1) {
             $profileViewersQuery->limit(max(0, $allowedLimit));
         }
         $profileViewers = $profileViewersQuery->paginate(15);
