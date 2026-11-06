@@ -525,6 +525,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
         _weightRangeEdited = false;
       }
 
+      if (!mounted) return;
       AppSnackBar.show(
         context: context,
         type: success ? NotificationType.success : NotificationType.error,

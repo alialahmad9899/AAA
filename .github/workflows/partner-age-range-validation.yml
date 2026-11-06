@@ -35,7 +35,7 @@ jobs:
         run: flutter analyze --no-pub
       - name: Analyze changed Dart sources with Dart CLI
         run: |
-          dart analyze \
+          dart analyze --fatal-infos \
             lib/screens/signup_screen.dart \
             lib/screens/partner_expectations_screen.dart \
             lib/screens/widgets/step4_partner_expectations.dart \
