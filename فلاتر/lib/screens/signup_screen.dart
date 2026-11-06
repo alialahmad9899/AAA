@@ -114,8 +114,10 @@ class _SignupScreenState extends State<SignupScreen> {
   // 4️⃣ متغيّرات الخطوة الرابعة (توقعات الشريك)
   final _partnerGeneralController = TextEditingController();
   final _partnerProfessionController = TextEditingController();
+  RangeValues _partnerAgeRange = const RangeValues(25, 45);
   RangeValues _partnerHeightRange = const RangeValues(155, 180);
   RangeValues _partnerWeightRange = const RangeValues(50, 80);
+  bool _partnerAgeWasSelected = false;
   bool _partnerHeightWasSelected = false;
   bool _partnerWeightWasSelected = false;
   String? _partnerEducation;
@@ -261,6 +263,15 @@ class _SignupScreenState extends State<SignupScreen> {
       return _extractRecordId(value.first, idKeys);
     }
     return null;
+  }
+
+  bool _hasPersistedValue(dynamic value) {
+    if (value == null) return false;
+    final normalized = value.toString().trim().toLowerCase();
+    return normalized.isNotEmpty &&
+        normalized != 'null' &&
+        normalized != 'undefined' &&
+        normalized != '---';
   }
 
   String _stepErrorMessage(Object error, String fallback) {
@@ -704,7 +715,8 @@ class _SignupScreenState extends State<SignupScreen> {
     // ------------------------------------------------------------------------
     else if (_currentStep == 3) {
       if (!_step4Key.currentState!.validate()) return;
-      if (!_partnerHeightWasSelected ||
+      if (!_partnerAgeWasSelected ||
+          !_partnerHeightWasSelected ||
           !_partnerWeightWasSelected ||
           _partnerEducation == null ||
           _partnerComplexion == null ||
@@ -716,8 +728,8 @@ class _SignupScreenState extends State<SignupScreen> {
           _partnerDrinkingAcceptable.isEmpty) {
         _showNotification(
           isAr
-              ? 'يرجى اختيار جميع تفضيلات الشريك، بما فيها نطاقات الطول والوزن والألوان واللغة'
-              : 'Please complete all partner preferences, including height, weight, colors, and language',
+              ? 'يرجى اختيار جميع تفضيلات الشريك، بما فيها نطاقات العمر والطول والوزن والألوان واللغة'
+              : 'Please complete all partner preferences, including age, height, weight, colors, and language',
           NotificationType.warning,
         );
         return;
@@ -728,6 +740,11 @@ class _SignupScreenState extends State<SignupScreen> {
         final partnerPayload = <String, dynamic>{
           if (_partnerGeneralController.text.trim().isNotEmpty)
             'general': _partnerGeneralController.text.trim(),
+          if (_partnerAgeWasSelected)
+            ...ApiService.buildPartnerAgeRangePayload(
+              minAge: _partnerAgeRange.start.round(),
+              maxAge: _partnerAgeRange.end.round(),
+            ),
           if (_partnerHeightWasSelected) ...{
             'min_height':
                 (_partnerHeightRange.start / 100).toStringAsFixed(2),
@@ -775,6 +792,21 @@ class _SignupScreenState extends State<SignupScreen> {
           ),
           isAr ? 'تعذر حفظ توقعات الشريك' : 'Failed to save partner expectations',
         );
+
+        // Confirm persisted age fields before completing signup.
+        final savedExpectations = await ApiService.getPartnerExpectations(
+          lang: widget.currentLanguage,
+        );
+        final savedAgeRange =
+            ApiService.parsePartnerAgeRange(savedExpectations);
+        if (savedAgeRange?['min_age'] != _partnerAgeRange.start.round() ||
+            savedAgeRange?['max_age'] != _partnerAgeRange.end.round()) {
+          throw _SignupStepSaveException(
+            isAr
+                ? 'لم نتأكد من حفظ نطاق العمر. يرجى المحاولة مرة أخرى.'
+                : 'The partner age range could not be verified after saving. Please try again.',
+          );
+        }
 
         await ProfileCacheService.clearCache();
 
@@ -1150,8 +1182,10 @@ class _SignupScreenState extends State<SignupScreen> {
                           formKey: _step4Key,
                           generalController: _partnerGeneralController,
                           professionController: _partnerProfessionController,
+                          ageRange: _partnerAgeRange,
                           heightRange: _partnerHeightRange,
                           weightRange: _partnerWeightRange,
+                          ageRangeWasSelected: _partnerAgeWasSelected,
                           heightRangeWasSelected: _partnerHeightWasSelected,
                           weightRangeWasSelected: _partnerWeightWasSelected,
                           education: _partnerEducation,
@@ -1171,6 +1205,10 @@ class _SignupScreenState extends State<SignupScreen> {
                           smokingAcceptable: _partnerSmokingAcceptable,
                           drinkingAcceptable: _partnerDrinkingAcceptable,
                           lang: widget.currentLanguage,
+                          onAgeRangeChanged: (v) => setState(() {
+                            _partnerAgeRange = v;
+                            _partnerAgeWasSelected = true;
+                          }),
                           onHeightRangeChanged: (v) => setState(() {
                             _partnerHeightRange = v;
                             _partnerHeightWasSelected = true;

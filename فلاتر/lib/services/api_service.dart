@@ -2792,6 +2792,53 @@ class ApiService {
     return payload;
   }
 
+  /// Builds the canonical age range payload shared by signup and profile editing.
+  static Map<String, int> buildPartnerAgeRangePayload({
+    required int minAge,
+    required int maxAge,
+  }) {
+    if (minAge < 18 || maxAge > 100 || maxAge < 18 || minAge > 100 || minAge > maxAge) {
+      throw ArgumentError('Partner age range must be between 18 and 100, with minAge <= maxAge.');
+    }
+    return <String, int>{'min_age': minAge, 'max_age': maxAge};
+  }
+
+  /// Reads the canonical age fields and historical aliases returned by Laravel.
+  /// Partial legacy ranges are completed with the supported minimum/maximum.
+  static Map<String, int>? parsePartnerAgeRange(
+    Map<String, dynamic>? expectations,
+  ) {
+    if (expectations == null) return null;
+
+    final rawMin = expectations['min_age'] ?? expectations['partner_age'];
+    final rawMax =
+        expectations['max_age'] ?? expectations['partner_max_age'];
+    final minText = rawMin?.toString().trim() ?? '';
+    final maxText = rawMax?.toString().trim() ?? '';
+    if (minText.isEmpty && maxText.isEmpty) return null;
+
+    final parsedMinAge =
+        minText.isEmpty ? null : int.tryParse(minText);
+    final parsedMaxAge =
+        maxText.isEmpty ? null : int.tryParse(maxText);
+    if ((minText.isNotEmpty && parsedMinAge == null) ||
+        (maxText.isNotEmpty && parsedMaxAge == null)) {
+      return null;
+    }
+
+    final minAge = parsedMinAge ?? 18;
+    final maxAge = parsedMaxAge ?? 100;
+    if (minAge < 18 ||
+        maxAge > 100 ||
+        maxAge < 18 ||
+        minAge > 100 ||
+        minAge > maxAge) {
+      return null;
+    }
+
+    return <String, int>{'min_age': minAge, 'max_age': maxAge};
+  }
+
   static Future<Map<String, dynamic>> updatePartnerExpectations(
       Map<String, dynamic> payload,
       {String? lang}) async {

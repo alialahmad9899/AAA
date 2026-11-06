@@ -21,12 +21,32 @@ class PartnerExpectationRequest extends FormRequest
      *
      * @return array<string, mixed>
      */
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $minimum = $this->input('min_age');
+            $maximum = $this->input('max_age');
+
+            if ($minimum !== null && $minimum !== '' &&
+                $maximum !== null && $maximum !== '' &&
+                is_numeric($minimum) && is_numeric($maximum) &&
+                (int) $minimum > (int) $maximum) {
+                $validator->errors()->add(
+                    'max_age',
+                    __('The minimum partner age cannot exceed the maximum.')
+                );
+            }
+        });
+    }
+
     public function rules()
     {
         return [
             'general' => ['sometimes', 'nullable', 'string', 'max:5000'],
             'partner_height' => ['sometimes', 'nullable', 'numeric', 'between:0.4,2.5'],
             'partner_weight' => ['sometimes', 'nullable', 'numeric', 'between:1,999.99'],
+            'min_age' => ['sometimes', 'nullable', 'integer', 'between:18,100'],
+            'max_age' => ['sometimes', 'nullable', 'integer', 'between:18,100'],
             'min_height' => ['sometimes', 'nullable', 'numeric', 'between:0.4,2.5'],
             'max_height' => ['sometimes', 'nullable', 'numeric', 'between:0.4,2.5'],
             'min_weight' => ['sometimes', 'nullable', 'numeric', 'between:1,999.99'],

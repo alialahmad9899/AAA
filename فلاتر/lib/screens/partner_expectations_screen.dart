@@ -53,9 +53,11 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
   final _generalCtrl = TextEditingController();
   final _professionCtrl = TextEditingController();
 
-  // النطاقات المحددة بالطول والوزن
+  // النطاقات المحددة بالعمر والطول والوزن
+  RangeValues _partnerAgeRange = const RangeValues(25, 45);
   RangeValues _partnerHeightRange = const RangeValues(155, 180);
   RangeValues _partnerWeightRange = const RangeValues(50, 80);
+  bool _ageRangeEdited = false;
   bool _heightRangeEdited = false;
   bool _weightRangeEdited = false;
   bool _generalWasLoaded = false;
@@ -211,6 +213,15 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
         final hairVal = expectations['hair_color'] ?? expectations['partner_hair_color'];
         _selectedEyeColor = eyeVal?.toString().trim();
         _selectedHairColor = hairVal?.toString().trim();
+
+        // Restore the saved partner age range (including legacy field names).
+        final savedAgeRange = ApiService.parsePartnerAgeRange(expectations);
+        if (savedAgeRange != null) {
+          _partnerAgeRange = RangeValues(
+            savedAgeRange['min_age']!.toDouble(),
+            savedAgeRange['max_age']!.toDouble(),
+          );
+        }
 
         // Restore exact partner height range when it is available.
         final rawMinHeight = double.tryParse(
@@ -428,6 +439,12 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
         countryId: _selectedPartnerCountryId,
         stateId: _selectedStateId,
       ));
+      if (_ageRangeEdited) {
+        payload.addAll(ApiService.buildPartnerAgeRangePayload(
+          minAge: _partnerAgeRange.start.round(),
+          maxAge: _partnerAgeRange.end.round(),
+        ));
+      }
       if (_heightRangeEdited) {
         payload['min_height'] =
             (_partnerHeightRange.start / 100).toStringAsFixed(2);
@@ -475,9 +492,9 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
       );
 
       if (!mounted) return;
-      final bool success = result['success'] == true;
+      bool success = result['success'] == true;
       final bool isAr = widget.currentLanguage == 'ar';
-      final String message = result['message'] != null
+      String message = result['message'] != null
           ? result['message'].toString()
           : (success
               ? (isAr
@@ -487,13 +504,28 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                   ? 'حدث خطأ أثناء حفظ التوقعات'
                   : 'Failed to save expectations'));
 
+      if (success && _ageRangeEdited) {
+        final savedExpectations = await ApiService.getPartnerExpectations(lang: widget.currentLanguage);
+        final savedAgeRange =
+            ApiService.parsePartnerAgeRange(savedExpectations);
+        if (savedAgeRange?['min_age'] != _partnerAgeRange.start.round() ||
+            savedAgeRange?['max_age'] != _partnerAgeRange.end.round()) {
+          success = false;
+          message = isAr
+              ? 'لم نتأكد من حفظ نطاق العمر بعد التحديث. يرجى إعادة المحاولة.'
+              : 'The age range could not be verified after the update. Please retry.';
+        }
+      }
+
       if (success) {
         _generalWasLoaded = true;
         _professionWasLoaded = true;
+        _ageRangeEdited = false;
         _heightRangeEdited = false;
         _weightRangeEdited = false;
       }
 
+      if (!mounted) return;
       AppSnackBar.show(
         context: context,
         type: success ? NotificationType.success : NotificationType.error,
@@ -1215,6 +1247,55 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                               ),
                                               const SizedBox(height: 12),
                                             ],
+                                            _buildSectionHeader(
+                                                isAr
+                                                    ? 'العمر المناسب للشريك 🎂'
+                                                    : 'Preferred Partner Age 🎂',
+                                                Icons.cake_rounded),
+                                            Text(
+                                              isAr
+                                                  ? 'نطاق عمر الشريك المطلوب (سنة):'
+                                                  : 'Preferred partner age range (years):',
+                                              style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+                                            ),
+                                            const SizedBox(height: 6),
+                                            Container(
+                                              padding: const EdgeInsets.all(12),
+                                              decoration: BoxDecoration(
+                                                color: Colors.black.withValues(alpha: 0.2),
+                                                borderRadius: BorderRadius.circular(16),
+                                                border: Border.all(color: Colors.white24),
+                                              ),
+                                              child: Column(
+                                                children: [
+                                                  Row(
+                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                    children: [
+                                                      Text(isAr ? 'من: ${_partnerAgeRange.start.round()} سنة' : 'From: ${_partnerAgeRange.start.round()} years',
+                                                        style: const TextStyle(color: Colors.amberAccent, fontSize: 14, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+                                                      Text(isAr ? 'إلى: ${_partnerAgeRange.end.round()} سنة' : 'To: ${_partnerAgeRange.end.round()} years',
+                                                        style: const TextStyle(color: Colors.amberAccent, fontSize: 14, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+                                                    ],
+                                                  ),
+                                                  RangeSlider(
+                                                    key: const ValueKey<String>('partner-age-range-edit-slider'),
+                                                    values: _partnerAgeRange,
+                                                    min: 18,
+                                                    max: 100,
+                                                    divisions: 82,
+                                                    activeColor: Colors.amberAccent,
+                                                    inactiveColor: Colors.white24,
+                                                    onChanged: (newRange) {
+                                                      setState(() {
+                                                        _partnerAgeRange = newRange;
+                                                        _ageRangeEdited = true;
+                                                      });
+                                                    },
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            const SizedBox(height: 14),
                                             _buildSectionHeader(
                                                 isAr
                                                     ? 'المظهر والسمات البدنية 📏'
