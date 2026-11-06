@@ -486,3 +486,18 @@
 
 
 - تدقيق إضافي قبل التسليم: تم توحيد parser مع طريقة Laravel Resource في إرجاع الأعمدة غير الموجودة كسلاسل فارغة، وأصبحت شاشة تعديل التوقعات تعرض عنوان نطاق العمر مترجماً بالعربية والإنجليزية. أظهر `dart analyze` على الملفات الخمسة في Run `42249894418` ملاحظة واحدة `use_build_context_synchronously` بعد تحقق القراءة؛ عولجت بإعادة فحص `mounted` قبل استعمال `context`، وحُوّل فحص CLI في CI إلى `--fatal-infos` حتى لا يمر أي تنبيه متبقٍ.
+
+
+## 2026-11-07 — إصلاح أخطاء Flutter Analyzer بعد دمج نطاق العمر
+- الفرع: `fix/partner-age-range-sync-2026-11-06`.
+- السبب المثبت من مخرجات المستخدم:
+  - `flutter pub get` اكتمل بنجاح، و`flutter test` اجتاز 48 اختباراً.
+  - `flutter analyze` سجّل خطأ حل URI في `test/widget_test.dart` على `package:wesal_app/main.dart` ثم خطأ `MyApp` المتسلسل الناتج عنه. نسخة المستودع تؤكد أن `pubspec.yaml` يعرّف `wesal_app` وأن `lib/main.dart` يحتوي `MyApp`; لجعل الاختبار مستقلاً عن حل package URI المحلي استُخدم استيراد نسبي مباشر `../lib/main.dart`.
+  - ظهر تحذيران معلوماتيان عن استخدام `DropdownButtonFormField.value` بعد إهماله في Flutter الحديث.
+- الملفات المعدّلة في هذه الدفعة:
+  - `فلاتر/test/widget_test.dart`: استيراد نسبي مباشر لمدخل التطبيق.
+  - `فلاتر/lib/screens/vip_services_screen.dart`: تحويل حقلي الحالة الاجتماعية والوضع المادي إلى `initialValue` مع الإبقاء على callbacks والحالة.
+  - `.github/workflows/partner-age-range-validation.yml`: توسيع `dart analyze --fatal-infos` ليشمل الملفين المعدّلين.
+- لم تُغيّر التبعيات أو سلوك API أو البيانات، ولم يتم تعديل Laravel.
+- ستوثق نتائج CI بعد انتهاء فحص Dart واختبارات Flutter على هذا Commit.
+- لم يتغير `main` ولم يتم النشر إلى الاستضافة.

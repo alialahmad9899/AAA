@@ -40,7 +40,9 @@ jobs:
             lib/screens/partner_expectations_screen.dart \
             lib/screens/widgets/step4_partner_expectations.dart \
             lib/services/api_service.dart \
-            test/partner_expectation_age_widget_test.dart
+            lib/screens/vip_services_screen.dart \
+            test/partner_expectation_age_widget_test.dart \
+            test/widget_test.dart
       - name: Run all Flutter tests
         run: flutter test
 
