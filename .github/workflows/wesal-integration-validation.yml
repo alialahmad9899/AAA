@@ -79,9 +79,7 @@ jobs:
 
   session-repair-zip:
     if: github.event_name == 'pull_request'
-    needs:
-      - backend-php-syntax
-      - flutter-regression-tests
+    # Package creation is independent from test execution; both outcomes are reported separately.
     runs-on: ubuntu-latest
     permissions:
       contents: read
