@@ -198,6 +198,38 @@ class SubscriptionUtility
     }
 
     /**
+     * Messaging rights are purchased entitlements, not an expiring feature.
+     * Sum the unique-recipient allowances from successful package payments.
+     * A -1 allowance means unlimited and remains unlimited after expiry.
+     */
+    public static function lifetimeMessageRecipientLimit(int $userId, ?Package $activePackage = null): int
+    {
+        $payments = PackagePayment::query()
+            ->where('user_id', $userId)
+            ->where('payment_status', 'Paid')
+            ->whereNotNull('package_id')
+            ->with('package')
+            ->get();
+
+        $limit = 0;
+        foreach ($payments as $payment) {
+            $granted = (int) ($payment->package->message_profile_quota ?? 0);
+            if ($granted === -1) {
+                return -1;
+            }
+            $limit += max(0, $granted);
+        }
+
+        // Compatibility for legacy accounts whose current paid package was
+        // activated before package-payment history was recorded.
+        if ($limit === 0 && $activePackage) {
+            $limit = (int) ($activePackage->message_profile_quota ?? 0);
+        }
+
+        return $limit;
+    }
+
+    /**
      * Find or create a conversation thread while enforcing the sender's current
      * paid-plan state and the package's unique-recipient quota atomically.
      * Female accounts keep the application's existing free-chat policy.
@@ -231,18 +263,17 @@ class SubscriptionUtility
                 ->where('recipient_id', $receiverId)
                 ->exists();
 
-            // Previously unlocked recipients remain available after package expiry.
-            if (!$isFemale && !$activePackage && !$alreadyContacted) {
+            // Purchased messaging allowance survives package expiry. The user
+            // may consume any unused recipient allowance after the paid period.
+            $recipientLimit = self::lifetimeMessageRecipientLimit($senderId, $activePackage);
+            if (!$isFemale && !$activePackage && $recipientLimit <= 0) {
                 return ['status' => 'subscription_expired', 'thread' => null];
             }
 
-            if (!$isFemale && !$alreadyContacted) {
-                $recipientLimit = (int) ($activePackage->message_profile_quota ?? 0);
-                if ($recipientLimit !== -1) {
-                    $contactedCount = MessageQuotaUsage::where('user_id', $senderId)->count();
-                    if ($contactedCount >= max(0, $recipientLimit)) {
-                        return ['status' => 'message_profile_quota', 'thread' => null];
-                    }
+            if (!$isFemale && !$alreadyContacted && $recipientLimit !== -1) {
+                $contactedCount = MessageQuotaUsage::where('user_id', $senderId)->count();
+                if ($contactedCount >= max(0, $recipientLimit)) {
+                    return ['status' => 'message_profile_quota', 'thread' => null];
                 }
             }
 
