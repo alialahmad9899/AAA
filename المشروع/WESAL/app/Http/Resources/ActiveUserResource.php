@@ -4,7 +4,6 @@ namespace App\Http\Resources;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Utility\MemberUtility;
 
 class ActiveUserResource extends JsonResource
 {
@@ -24,22 +23,36 @@ class ActiveUserResource extends JsonResource
         $package_update_alert = (get_setting('full_profile_show_according_to_membership') == 1 && optional(auth()->user())->membership == 1);
 
         // 2. جلب أسماء النصوص المباشرة
-        $countryName = optional(optional($this->address)->country)->name ?? '';
+        $presentAddress = $this->addresses
+            ? ($this->addresses->firstWhere('type', 'present') ?? $this->addresses->first())
+            : null;
+        $countryName = optional(optional($presentAddress)->country)->name ?? '';
+        $occupation = '';
+        $careers = $this->career;
+        if ($careers) {
+            $currentCareer = $careers->firstWhere('present', 1) ?? $careers->first();
+            $occupation = optional($currentCareer)->designation ?? '';
+        }
+        $age = null;
+        $birthday = optional($this->member)->birthday;
+        if ($birthday) {
+            try {
+                $age = Carbon::parse($birthday)->age;
+            } catch (\Throwable $exception) {
+                $age = null;
+            }
+        }
         $religionName = optional(optional($this->spiritual_backgrounds)->religion)->name ?? '';
-        $motherTongueName = optional(optional($this->mothere_tongue)->mothere_tongue)->name ?? '';
+        $motherTongueName = optional(optional($this->member)->mothereTongue)->name ?? '';
         $maritalStatusName = optional(optional($this)->marital_status)->name ?? optional(optional($this->member)->marital_status)->name ?? '';
         $casteName = optional(optional($this->spiritual_backgrounds)->caste)->name;
 
-        // 3. حساب نسبة التطابق الحقيقية للعضو الحالي بالنسبة للمستخدم المسجل
-        $matchPercentage = 0;
-        if (class_exists('App\Utility\MemberUtility') && method_exists('App\Utility\MemberUtility', 'member_match_percentage')) {
-            // استدعاء دالة حساب نسبة التطابق الحقيقية من السيرفر
-            $matchPercentage = MemberUtility::member_match_percentage($this->id);
-        } elseif (isset($this->profile_match_percentage)) {
-            $matchPercentage = $this->profile_match_percentage;
-        } elseif (isset($this->match_percentage)) {
-            $matchPercentage = $this->match_percentage;
-        }
+        // تُضاف النسبة إلى نموذج المرشح من SmartMatchingService فقط.
+        // قوائم التصفح العامة لا تعرض نسبة غير محسوبة.
+        $matchPercentage = isset($this->profile_match_percentage)
+            ? max(0, min(100, (int) $this->profile_match_percentage))
+            : null;
+        $matchDetails = isset($this->match_details) ? $this->match_details : null;
 
         return [
             'user_id'                  => $this->id,
@@ -48,15 +61,18 @@ class ActiveUserResource extends JsonResource
             'first_name'               => $this->first_name ?? '',
             'last_name'                => $this->last_name ?? '',
             'photo'                    => $profile_picture_show && !empty($this->photo) ? uploaded_asset($this->photo) : static_asset($avatar_image),
-            'age'                      => !empty(optional($this->member)->birthday) ? Carbon::parse($this->member->birthday)->age : 0,
+            'age'                      => $age ?? 0,
             'country'                  => $countryName,
+            'occupation'               => $occupation,
+            'profession'               => $occupation,
             'height'                   => optional($this->physical_attributes)->height ?? '',
             'religion'                 => $religionName,
             'mothere_tongue'           => $motherTongueName,
             'marital_status'           => $maritalStatusName,
             'caste'                    => $casteName ? $casteName . ', ' : '',
             'package_update_alert'     => $package_update_alert,
-            'profile_match_percentage' => $matchPercentage, // <--- تمرير نسبة التطابق الحقيقية إلى التطبيق
+            'profile_match_percentage' => $matchPercentage,
+            'match_details'            => $matchDetails,
             'interest_status'          => 0,
             'interest_text'            => 'اهتمام',
             'shortlist_status'         => 0,

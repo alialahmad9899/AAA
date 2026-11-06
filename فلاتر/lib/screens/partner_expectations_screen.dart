@@ -54,8 +54,12 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
   final _professionCtrl = TextEditingController();
 
   // النطاقات المحددة بالطول والوزن
+  RangeValues _partnerAgeRange = const RangeValues(22, 45);
   RangeValues _partnerHeightRange = const RangeValues(155, 180);
   RangeValues _partnerWeightRange = const RangeValues(50, 80);
+  bool _ageRangeEdited = false;
+  bool _ageRangeCleared = false;
+  bool _locationPreferenceEdited = false;
   bool _heightRangeEdited = false;
   bool _weightRangeEdited = false;
   bool _generalWasLoaded = false;
@@ -89,7 +93,8 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
     'دبلوم',
     'بكالوريوس',
     'ماجستير',
-    'دكتوراه'
+    'دكتوراه',
+    'لا يهم'
   ];
 
   final List<String> _complexionOptions = [
@@ -107,6 +112,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
     'أخضر',
     'عسلي',
     'رمادي',
+    'لا يهم',
   ];
   final List<String> _hairColorOptions = [
     'أسود',
@@ -115,6 +121,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
     'أشقر',
     'أحمر',
     'رمادي / شيب',
+    'لا يهم',
   ];
 
   @override
@@ -194,6 +201,18 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
         _professionCtrl.text = expectations['profession']?.toString() ??
             expectations['partner_profession']?.toString() ??
             '';
+
+        final rawMinAge = int.tryParse(
+            (expectations['min_age'] ?? expectations['partner_age'])?.toString() ?? '');
+        final rawMaxAge = int.tryParse(
+            (expectations['max_age'] ?? expectations['partner_max_age'])?.toString() ?? '');
+        if (rawMinAge != null || rawMaxAge != null) {
+          final minAge = (rawMinAge ?? 18).clamp(18, 80).toDouble();
+          final maxAge = (rawMaxAge ?? 80).clamp(18, 80).toDouble();
+          if (minAge <= maxAge) {
+            _partnerAgeRange = RangeValues(minAge, maxAge);
+          }
+        }
 
         final eduVal = expectations['education'] ??
             expectations['partner_education'] ??
@@ -424,10 +443,21 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
 
       // Persist the preferred partner location only. Never overwrite the
       // independent residence_country_id field from this screen.
-      payload.addAll(ApiService.buildPreferredPartnerLocationPayload(
-        countryId: _selectedPartnerCountryId,
-        stateId: _selectedStateId,
-      ));
+      if (_locationPreferenceEdited) {
+        payload['partner_country_id'] = _selectedPartnerCountryId;
+        payload['partner_state_id'] = _selectedStateId;
+      } else {
+        payload.addAll(ApiService.buildPreferredPartnerLocationPayload(
+          countryId: _selectedPartnerCountryId,
+          stateId: _selectedStateId,
+        ));
+      }
+      if (_ageRangeEdited) {
+        payload['min_age'] =
+            _ageRangeCleared ? null : _partnerAgeRange.start.round();
+        payload['max_age'] =
+            _ageRangeCleared ? null : _partnerAgeRange.end.round();
+      }
       if (_heightRangeEdited) {
         payload['min_height'] =
             (_partnerHeightRange.start / 100).toStringAsFixed(2);
@@ -490,6 +520,9 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
       if (success) {
         _generalWasLoaded = true;
         _professionWasLoaded = true;
+        _ageRangeEdited = false;
+        _ageRangeCleared = false;
+        _locationPreferenceEdited = false;
         _heightRangeEdited = false;
         _weightRangeEdited = false;
       }
@@ -1058,6 +1091,72 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                   Icons.edit_note_rounded),
                                             ),
                                             _buildSectionHeader(
+                                              isAr ? 'النطاق العمري المفضل 🎂' : 'Preferred Age Range 🎂',
+                                              Icons.cake_rounded,
+                                            ),
+                                            Container(
+                                              padding: const EdgeInsets.all(12),
+                                              decoration: BoxDecoration(
+                                                color: Colors.black.withValues(alpha: 0.2),
+                                                borderRadius: BorderRadius.circular(16),
+                                                border: Border.all(color: Colors.white24),
+                                              ),
+                                              child: Column(
+                                                children: [
+                                                  Row(
+                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                    children: [
+                                                      Text(
+                                                        isAr
+                                                            ? 'من: ${_partnerAgeRange.start.round()} سنة'
+                                                            : 'From: ${_partnerAgeRange.start.round()} yrs',
+                                                        style: const TextStyle(color: Colors.amberAccent, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+                                                      ),
+                                                      Text(
+                                                        isAr
+                                                            ? 'إلى: ${_partnerAgeRange.end.round()} سنة'
+                                                            : 'To: ${_partnerAgeRange.end.round()} yrs',
+                                                        style: const TextStyle(color: Colors.amberAccent, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  RangeSlider(
+                                                    values: _partnerAgeRange,
+                                                    min: 18,
+                                                    max: 80,
+                                                    divisions: 62,
+                                                    activeColor: Colors.amberAccent,
+                                                    inactiveColor: Colors.white24,
+                                                    onChanged: (newRange) {
+                                                      setState(() {
+                                                        _partnerAgeRange = newRange;
+                                                        _ageRangeEdited = true;
+                                                        _ageRangeCleared = false;
+                                                        _ageRangeCleared = false;
+                                                      });
+                                                    },
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            Align(
+                                              alignment: AlignmentDirectional.centerStart,
+                                              child: TextButton.icon(
+                                                onPressed: () {
+                                                  setState(() {
+                                                    _ageRangeEdited = true;
+                                                    _ageRangeCleared = true;
+                                                  });
+                                                },
+                                                icon: const Icon(Icons.clear_rounded, color: Colors.white70),
+                                                label: Text(
+                                                  isAr ? 'لا يهم العمر / إلغاء التفضيل' : 'No age preference',
+                                                  style: const TextStyle(color: Colors.white70, fontFamily: 'Cairo'),
+                                                ),
+                                              ),
+                                            ),
+                                            _buildSectionHeader(
                                                 isAr
                                                     ? 'مكان الإقامة واللغة 🌍'
                                                     : 'Location & Language 🌍',
@@ -1090,8 +1189,9 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                   onSelected: (v) {
                                                     setState(() {
                                                       _selectedPartnerCountryId =
-                                                          v;
+                                                          v.isEmpty ? null : v;
                                                       _selectedStateId = null;
+                                                      _locationPreferenceEdited = true;
                                                     });
                                                     _loadStatesForCountry(v);
                                                   },
@@ -1099,6 +1199,26 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                               },
                                             ),
                                             const SizedBox(height: 12),
+                                            Align(
+                                              alignment: AlignmentDirectional.centerStart,
+                                              child: TextButton.icon(
+                                                onPressed: _selectedPartnerCountryId == null
+                                                    ? null
+                                                    : () {
+                                                        setState(() {
+                                                          _selectedPartnerCountryId = null;
+                                                          _selectedStateId = null;
+                                                          _states = [];
+                                                          _locationPreferenceEdited = true;
+                                                        });
+                                                      },
+                                                icon: const Icon(Icons.clear_rounded, color: Colors.white70),
+                                                label: Text(
+                                                  isAr ? 'إلغاء تفضيل البلد والمحافظة' : 'Clear country and governorate preference',
+                                                  style: const TextStyle(color: Colors.white70, fontFamily: 'Cairo'),
+                                                ),
+                                              ),
+                                            ),
                                             if (_isLoadingStates) ...[
                                               Container(
                                                 padding:
@@ -1172,9 +1292,10 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                         _selectedStateId,
                                                     isAr: isAr,
                                                     enableSearch: true,
-                                                    onSelected: (v) => setState(
-                                                        () => _selectedStateId =
-                                                            v),
+                                                    onSelected: (v) => setState(() {
+                                                      _selectedStateId = v.isEmpty ? null : v;
+                                                      _locationPreferenceEdited = true;
+                                                    }),
                                                   );
                                                 },
                                               ),

@@ -25,6 +25,10 @@ class PartnerExpectationRequest extends FormRequest
     {
         return [
             'general' => ['sometimes', 'nullable', 'string', 'max:5000'],
+            'min_age' => ['sometimes', 'nullable', 'integer', 'between:18,100'],
+            'max_age' => ['sometimes', 'nullable', 'integer', 'between:18,100'],
+            'partner_age' => ['sometimes', 'nullable', 'integer', 'between:18,100'],
+            'partner_max_age' => ['sometimes', 'nullable', 'integer', 'between:18,100'],
             'partner_height' => ['sometimes', 'nullable', 'numeric', 'between:0.4,2.5'],
             'partner_weight' => ['sometimes', 'nullable', 'numeric', 'between:1,999.99'],
             'min_height' => ['sometimes', 'nullable', 'numeric', 'between:0.4,2.5'],

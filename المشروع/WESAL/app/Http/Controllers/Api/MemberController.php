@@ -12,7 +12,8 @@ use App\Models\ReportedUser;
 use Illuminate\Http\Request;
 use App\Models\PhysicalAttribute;
 use App\Models\SpiritualBackground;
-use App\Models\PartnerExpectation;
+use App\Services\SmartMatchingService;
+use App\Utility\MemberUtility;
 use App\Http\Controllers\Api\Controller;
 use App\Http\Resources\ActiveUserResource;
 use App\Http\Resources\IgnoredUserResource;
@@ -28,96 +29,83 @@ use Laravel\Sanctum\PersonalAccessToken;
 class MemberController extends Controller
 {
     /**
-     * جلب الأعضاء:
-     * - افتراضياً (match_enabled = false): إظهار جميع الأعضاء من الجنس المعاكس المتاحين بالموقع.
-     * - عند التفعيل (match_enabled = true): التصفية والتطابق الذكي حسب بلد الإقامة وتوقعات الشريك (Partner Expectations).
+     * جلب أعضاء الجنس الآخر، مع تشغيل محرك التوافق الموحد عند تفعيل المطابقة الذكية.
+     * لا نفرض اعتماداً إدارياً على مستخدمي الموبايل؛ نستبعد فقط الحسابات المحظورة/المعطلة.
      */
     public function matched_profile(Request $request)
     {
         $user = auth()->user();
 
         if (!$user || !$user->member) {
-            return ActiveUserResource::collection(collect([]));
+            return ActiveUserResource::collection(collect([]))->additional([
+                'result' => true,
+            ]);
         }
 
-        // 1. استقبال متغير التفعيل من الطلب (افتراضياً false لإظهار كافة الأعضاء)
-        $match_enabled = filter_var($request->input('match_enabled', false), FILTER_VALIDATE_BOOLEAN);
+        $matchEnabled = filter_var(
+            $request->input('match_enabled', false),
+            FILTER_VALIDATE_BOOLEAN
+        );
 
-        $users_query = User::query();
-        $users_query->orderBy('created_at', 'desc')
+        $gender = (int) $user->member->gender;
+        if (!in_array($gender, [1, 2], true)) {
+            return ActiveUserResource::collection(collect([]))->additional([
+                'result' => true,
+            ]);
+        }
+
+        if ($matchEnabled) {
+            if (!MemberUtility::can_auto_match($user->id)) {
+                return response()->json([
+                    'result' => false,
+                    'status' => 'matching_locked',
+                    'message' => translate('Smart matching is not enabled for this account.'),
+                ], 403);
+            }
+
+            $matches = app(SmartMatchingService::class)->getMatches($user);
+
+            return ActiveUserResource::collection($matches)->additional([
+                'result' => true,
+                'smart_matching' => true,
+            ]);
+        }
+
+        $oppositeGender = $gender === 1 ? 2 : 1;
+        $usersQuery = User::query()
+            ->with([
+                'member.marital_status',
+                'member.mothereTongue',
+                'addresses.country',
+                'physical_attributes',
+                'spiritual_backgrounds.religion',
+                'spiritual_backgrounds.caste',
+                'career',
+                'recidency',
+            ])
             ->where('user_type', 'member')
             ->where('id', '!=', $user->id)
             ->where('blocked', 0)
-            ->where('deactivated', 0);
+            ->where('deactivated', 0)
+            ->whereHas('member', function ($query) use ($oppositeGender) {
+                $query->where('gender', $oppositeGender);
+            })
+            ->whereNotIn('id', function ($query) use ($user) {
+                $query->select('user_id')
+                    ->from('ignored_users')
+                    ->where('ignored_by', $user->id);
+            })
+            ->whereNotIn('id', function ($query) use ($user) {
+                $query->select('ignored_by')
+                    ->from('ignored_users')
+                    ->where('user_id', $user->id);
+            })
+            ->orderByDesc('created_at');
 
-        // 2. تصفية الأعضاء من الجنس المعاكس فقط
-        $opposite_gender_ids = Member::where('gender', '!=', $user->member->gender)->pluck('user_id')->toArray();
-        $users_query->whereIn('id', $opposite_gender_ids);
-
-        // 3. استبعاد الأعضاء المحظورين والمتجاهلين تبادلياً
-        $users_query->whereNotIn("id", function ($query) use ($user) {
-            $query->select('user_id')
-                ->from('ignored_users')
-                ->where('ignored_by', $user->id)->orWhere('user_id', $user->id);
-        })->whereNotIn("id", function ($query) use ($user) {
-            $query->select('ignored_by')
-                ->from('ignored_users')
-                ->where('ignored_by', $user->id)->orWhere('user_id', $user->id);
-        });
-
-        // 5. تطبيق شروط المطابقة حسب توقعات الشريك والبلد فقط عند تفعيل زر المطابقة (match_enabled = true)
-        if ($match_enabled) {
-            $expectation = PartnerExpectation::where('user_id', $user->id)->first();
-
-            if ($expectation) {
-                // أ) التصفية حسب المدى العمري المطلوب
-                if (!empty($expectation->min_age)) {
-                    $age = $expectation->min_age + 1;
-                    $start = date('Y-m-d', strtotime("- $age years"));
-                    $user_ids = Member::where('birthday', '<=', $start)->pluck('user_id')->toArray();
-                    if (count($user_ids) > 0) {
-                        $users_query->whereIn('id', $user_ids);
-                    }
-                }
-                if (!empty($expectation->max_age)) {
-                    $age = $expectation->max_age + 1;
-                    $end = date('Y-m-d', strtotime("- $age years +1 day"));
-                    $user_ids = Member::where('birthday', '>=', $end)->pluck('user_id')->toArray();
-                    if (count($user_ids) > 0) {
-                        $users_query->whereIn('id', $user_ids);
-                    }
-                }
-
-                // ب) التصفية حسب الحالة الاجتماعية المطلوبة
-                if (!empty($expectation->marital_status_id)) {
-                    $user_ids = Member::where('marital_status_id', $expectation->marital_status_id)->pluck('user_id')->toArray();
-                    if (count($user_ids) > 0) {
-                        $users_query->whereIn('id', $user_ids);
-                    }
-                }
-
-                // ج) التصفية حسب الديانة المطلوبة
-                if (!empty($expectation->religion_id)) {
-                    $user_ids = SpiritualBackground::where('religion_id', $expectation->religion_id)->pluck('user_id')->toArray();
-                    if (count($user_ids) > 0) {
-                        $users_query->whereIn('id', $user_ids);
-                    }
-                }
-
-                // د) التصفية حسب بلد الإقامة المطلوب
-                $target_country = $expectation->residency_country_id ?? $expectation->country_id ?? null;
-                if (!empty($target_country)) {
-                    $user_ids = Address::where('country_id', $target_country)->pluck('user_id')->toArray();
-                    if (count($user_ids) > 0) {
-                        $users_query->whereIn('id', $user_ids);
-                    }
-                }
-            }
-        }
-
-        $matched_members = $users_query->get();
-
-        return ActiveUserResource::collection($matched_members);
+        return ActiveUserResource::collection($usersQuery->get())->additional([
+            'result' => true,
+            'smart_matching' => false,
+        ]);
     }
 
     public function member_listing(Request $request)

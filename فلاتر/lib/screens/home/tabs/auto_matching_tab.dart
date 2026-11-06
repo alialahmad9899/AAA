@@ -18,6 +18,7 @@ import 'account_tab.dart';
 
 class AutoMatchingTab extends StatefulWidget {
   final String currentLanguage;
+  final bool isActive;
   final String Function(String) txt;
   final int unreadNotificationCount;
   final VoidCallback onNotificationPressed;
@@ -26,6 +27,7 @@ class AutoMatchingTab extends StatefulWidget {
   const AutoMatchingTab({
     super.key,
     required this.currentLanguage,
+    this.isActive = true,
     required this.txt,
     required this.unreadNotificationCount,
     required this.onNotificationPressed,
@@ -100,7 +102,10 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
   @override
   void didUpdateWidget(AutoMatchingTab oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.currentLanguage != widget.currentLanguage) {
+    final languageChanged =
+        oldWidget.currentLanguage != widget.currentLanguage;
+    final becameActive = !oldWidget.isActive && widget.isActive;
+    if (languageChanged || becameActive) {
       _checkSubscriptionAndFetch();
     }
   }
@@ -314,8 +319,6 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
         lang: widget.currentLanguage,
       );
 
-      members.shuffle();
-
       if (mounted && currentRequestToken == _fetchCounter) {
         setState(() {
           _matchedMembers = members;
@@ -331,8 +334,16 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
       }
     } catch (e) {
       if (mounted && currentRequestToken == _fetchCounter) {
+        final matchingLocked = e.toString().contains('smart_matching_locked');
         setState(() {
-          _errorMessage = widget.txt('matches_fetch_failed');
+          if (matchingLocked) {
+            _isSubscribedOrFemale = false;
+            _isMatchFilterEnabled = true;
+            _matchedMembers = [];
+            _errorMessage = null;
+          } else {
+            _errorMessage = widget.txt('matches_fetch_failed');
+          }
           _isLoading = false;
         });
       }
@@ -1231,7 +1242,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                                         height: screenHeight * 0.5,
                                         child: Center(
                                           child: Text(
-                                            widget.txt('no_data'),
+                                            widget.txt(_isMatchFilterEnabled ? 'no_smart_matches' : 'no_data'),
                                             style: const TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 16,

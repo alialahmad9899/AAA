@@ -2895,6 +2895,16 @@ class ApiService {
     if (response.statusCode == 200) {
       return await compute(_parseMatchedProfilesIsolate, response.body);
     } else {
+      if (response.statusCode == 403) {
+        try {
+          final decoded = jsonDecode(response.body);
+          if (decoded is Map && decoded['status'] == 'matching_locked') {
+            throw Exception('smart_matching_locked');
+          }
+        } catch (error) {
+          if (error.toString().contains('smart_matching_locked')) rethrow;
+        }
+      }
       throw Exception('فشل في جلب قائمة الأعضاء من السيرفر');
     }
   }

@@ -10,8 +10,10 @@ class Step4PartnerExpectations extends StatelessWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController generalController;
   final TextEditingController professionController;
+  final RangeValues ageRange;
   final RangeValues heightRange;
   final RangeValues weightRange;
+  final bool ageRangeWasSelected;
   final bool heightRangeWasSelected;
   final bool weightRangeWasSelected;
   final String? education;
@@ -32,6 +34,7 @@ class Step4PartnerExpectations extends StatelessWidget {
   final String drinkingAcceptable;
   final String lang;
 
+  final ValueChanged<RangeValues> onAgeRangeChanged;
   final ValueChanged<RangeValues> onHeightRangeChanged;
   final ValueChanged<RangeValues> onWeightRangeChanged;
   final ValueChanged<String?> onEducationChanged;
@@ -52,8 +55,10 @@ class Step4PartnerExpectations extends StatelessWidget {
     required this.formKey,
     required this.generalController,
     required this.professionController,
+    required this.ageRange,
     required this.heightRange,
     required this.weightRange,
+    required this.ageRangeWasSelected,
     required this.heightRangeWasSelected,
     required this.weightRangeWasSelected,
     required this.education,
@@ -73,6 +78,7 @@ class Step4PartnerExpectations extends StatelessWidget {
     required this.smokingAcceptable,
     required this.drinkingAcceptable,
     this.lang = 'ar',
+    required this.onAgeRangeChanged,
     required this.onHeightRangeChanged,
     required this.onWeightRangeChanged,
     required this.onEducationChanged,
@@ -359,6 +365,7 @@ class Step4PartnerExpectations extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final safeAgeRange = _clampRange(ageRange, 18, 80);
     final safeHeightRange = _clampRange(heightRange, 140, 210);
     final safeWeightRange = _clampRange(weightRange, 40, 140);
     final languageItems = languages.whereType<Map>().map((language) {
@@ -456,6 +463,79 @@ class Step4PartnerExpectations extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
+
+                // النطاق العمري اختياري ويُحفظ فقط عند تغييره.
+                _buildSectionTitle(_isAr
+                    ? 'أي نطاق عمري تفضّله؟ (سنة) 🎂'
+                    : 'Preferred Age Range (years) 🎂'),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.white24),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            _isAr
+                                ? 'من: ${safeAgeRange.start.round()} سنة'
+                                : 'From: ${safeAgeRange.start.round()} yrs',
+                            style: const TextStyle(
+                              color: Colors.amberAccent,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Cairo',
+                              fontSize: 12,
+                            ),
+                          ),
+                          Text(
+                            _isAr
+                                ? 'إلى: ${safeAgeRange.end.round()} سنة'
+                                : 'To: ${safeAgeRange.end.round()} yrs',
+                            style: const TextStyle(
+                              color: Colors.amberAccent,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Cairo',
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                      RangeSlider(
+                        values: safeAgeRange,
+                        min: 18,
+                        max: 80,
+                        divisions: 62,
+                        activeColor: ageRangeWasSelected
+                            ? Colors.amberAccent
+                            : Colors.white24,
+                        inactiveColor: Colors.white24,
+                        onChanged: onAgeRangeChanged,
+                      ),
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(
+                          _isAr
+                              ? (ageRangeWasSelected
+                                  ? 'يمكنك تعديل النطاق أو تركه دون تحديد.'
+                                  : 'هذا التفضيل اختياري.')
+                              : (ageRangeWasSelected
+                                  ? 'You can adjust or leave this optional range.'
+                                  : 'This preference is optional.'),
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontFamily: 'Cairo',
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
 
                 // 2. نطاق الطول
                 _buildSectionTitle(_isAr

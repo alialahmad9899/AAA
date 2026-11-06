@@ -72,6 +72,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
       'cancel': 'إلغاء',
       'lang_name': 'العربية',
       'no_data': 'لا توجد اقتراحات تطابق حالياً من السيرفر',
+      'no_smart_matches': 'لا توجد نتائج مطابقة حالياً. حدّث توقعات الشريك لزيادة فرص العثور على توافق.',
       'delete_chat': 'حذف المحادثة',
       'delete_confirm': 'هل أنت متأكد من رغبتك في حذف هذه المحادثة بالكامل؟',
       'delete_all_confirm':
@@ -141,6 +142,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
       'cancel': 'Cancel',
       'lang_name': 'English',
       'no_data': 'No match suggestions available from server',
+      'no_smart_matches': 'No matching profiles yet. Update your partner expectations to improve your results.',
       'delete_chat': 'Delete Chat',
       'delete_confirm': 'Are you sure you want to completely delete this chat?',
       'delete_all_confirm':
@@ -424,6 +426,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
     final List<Widget> pages = [
       AutoMatchingTab(
         currentLanguage: _currentLanguage,
+        isActive: _currentIndex == 0,
         txt: _txt,
         unreadNotificationCount: _unreadNotificationCount,
         onNotificationPressed: _handleNotificationPressed,
