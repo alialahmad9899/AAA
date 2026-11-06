@@ -114,8 +114,10 @@ class _SignupScreenState extends State<SignupScreen> {
   // 4️⃣ متغيّرات الخطوة الرابعة (توقعات الشريك)
   final _partnerGeneralController = TextEditingController();
   final _partnerProfessionController = TextEditingController();
+  RangeValues _partnerAgeRange = const RangeValues(22, 45);
   RangeValues _partnerHeightRange = const RangeValues(155, 180);
   RangeValues _partnerWeightRange = const RangeValues(50, 80);
+  bool _partnerAgeWasSelected = false;
   bool _partnerHeightWasSelected = false;
   bool _partnerWeightWasSelected = false;
   String? _partnerEducation;
@@ -728,6 +730,10 @@ class _SignupScreenState extends State<SignupScreen> {
         final partnerPayload = <String, dynamic>{
           if (_partnerGeneralController.text.trim().isNotEmpty)
             'general': _partnerGeneralController.text.trim(),
+          if (_partnerAgeWasSelected) ...{
+            'min_age': _partnerAgeRange.start.round().toString(),
+            'max_age': _partnerAgeRange.end.round().toString(),
+          },
           if (_partnerHeightWasSelected) ...{
             'min_height':
                 (_partnerHeightRange.start / 100).toStringAsFixed(2),
@@ -1148,6 +1154,8 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                         Step4PartnerExpectations(
                           formKey: _step4Key,
+                          ageRange: _partnerAgeRange,
+                          ageRangeWasSelected: _partnerAgeWasSelected,
                           generalController: _partnerGeneralController,
                           professionController: _partnerProfessionController,
                           heightRange: _partnerHeightRange,
@@ -1171,6 +1179,10 @@ class _SignupScreenState extends State<SignupScreen> {
                           smokingAcceptable: _partnerSmokingAcceptable,
                           drinkingAcceptable: _partnerDrinkingAcceptable,
                           lang: widget.currentLanguage,
+                          onAgeRangeChanged: (v) => setState(() {
+                            _partnerAgeRange = v;
+                            _partnerAgeWasSelected = true;
+                          }),
                           onHeightRangeChanged: (v) => setState(() {
                             _partnerHeightRange = v;
                             _partnerHeightWasSelected = true;
