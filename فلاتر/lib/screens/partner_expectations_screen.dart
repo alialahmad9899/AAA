@@ -1251,9 +1251,11 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                     ? 'العمر المناسب للشريك 🎂'
                                                     : 'Preferred Partner Age 🎂',
                                                 Icons.cake_rounded),
-                                            const Text(
-                                              'نطاق عمر الشريك المطلوب (سنة):',
-                                              style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+                                            Text(
+                                              isAr
+                                                  ? 'نطاق عمر الشريك المطلوب (سنة):'
+                                                  : 'Preferred partner age range (years):',
+                                              style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
                                             ),
                                             const SizedBox(height: 6),
                                             Container(

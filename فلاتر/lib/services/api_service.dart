@@ -2813,13 +2813,22 @@ class ApiService {
     final rawMin = expectations['min_age'] ?? expectations['partner_age'];
     final rawMax =
         expectations['max_age'] ?? expectations['partner_max_age'];
-    if (rawMin == null && rawMax == null) return null;
+    final minText = rawMin?.toString().trim() ?? '';
+    final maxText = rawMax?.toString().trim() ?? '';
+    if (minText.isEmpty && maxText.isEmpty) return null;
 
-    final minAge = rawMin == null ? 18 : int.tryParse(rawMin.toString());
-    final maxAge = rawMax == null ? 100 : int.tryParse(rawMax.toString());
-    if (minAge == null ||
-        maxAge == null ||
-        minAge < 18 ||
+    final parsedMinAge =
+        minText.isEmpty ? null : int.tryParse(minText);
+    final parsedMaxAge =
+        maxText.isEmpty ? null : int.tryParse(maxText);
+    if ((minText.isNotEmpty && parsedMinAge == null) ||
+        (maxText.isNotEmpty && parsedMaxAge == null)) {
+      return null;
+    }
+
+    final minAge = parsedMinAge ?? 18;
+    final maxAge = parsedMaxAge ?? 100;
+    if (minAge < 18 ||
         maxAge > 100 ||
         maxAge < 18 ||
         minAge > 100 ||

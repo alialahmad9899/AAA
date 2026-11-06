@@ -46,6 +46,14 @@ void main() {
         ApiService.parsePartnerAgeRange({'partner_age': 26}),
         <String, int>{'min_age': 26, 'max_age': 100},
       );
+      // Laravel Resource serializes absent numeric columns as empty strings.
+      expect(
+        ApiService.parsePartnerAgeRange({
+          'min_age': 26,
+          'max_age': '',
+        }),
+        <String, int>{'min_age': 26, 'max_age': 100},
+      );
     });
 
     test('returns null for missing, reversed or out-of-bounds persisted ranges', () {
