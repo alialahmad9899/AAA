@@ -57,9 +57,9 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
     return Directionality(
       textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: const AppColors.backgroundColor,
+        backgroundColor: AppColors.backgroundColor,
         appBar: AppBar(
-          backgroundColor: const AppColors.cardColor,
+          backgroundColor: AppColors.cardColor,
           elevation: 0,
           leading: IconButton(
             icon: Icon(
@@ -139,7 +139,7 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                               width: double.infinity,
                               padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
-                                color: const AppColors.cardColor
+                                color: AppColors.cardColor
                                     .withValues(alpha: 0.5),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
@@ -193,7 +193,7 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const AppColors.cardColor.withValues(alpha: 0.85),
+        color: AppColors.cardColor.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: AppColors.textDark.withValues(alpha: 0.15)),
         boxShadow: [
@@ -214,10 +214,10 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const AppColors.primaryTeal.withValues(alpha: 0.15),
+                  color: AppColors.primaryTeal.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                      color: const AppColors.primaryTeal.withValues(alpha: 0.3)),
+                      color: AppColors.primaryTeal.withValues(alpha: 0.3)),
                 ),
                 child: Text(
                   '#${ticket.ticketId}',
@@ -314,10 +314,10 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const AppColors.cardColor.withValues(alpha: 0.8),
+        color: AppColors.cardColor.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(20),
         border:
-            Border.all(color: const AppColors.primaryTeal.withValues(alpha: 0.3)),
+            Border.all(color: AppColors.primaryTeal.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -357,7 +357,7 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: const AppColors.success.withValues(alpha: 0.2),
+                  color: AppColors.success.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
