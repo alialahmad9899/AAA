@@ -220,7 +220,7 @@ class AccountTab extends StatefulWidget {
             color: const Color(0xFF0F172A).withValues(alpha: 0.96),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
             border: Border.all(
-                color: const Color(0xFF38BDF8).withValues(alpha: 0.4)),
+                color: const AppColors.accentLight.withValues(alpha: 0.4)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1252,7 +1252,7 @@ class AccountTabState extends State<AccountTab> {
                           icon: Icons.edit_note_rounded,
                           title: widget.txt('edit_profile'),
                           gradientColors: const [
-                            Color(0xFF0288D1),
+                            AppColors.primaryTeal,
                             AppColors.secondaryTeal
                           ],
                           onTap: () async {
@@ -1272,8 +1272,8 @@ class AccountTabState extends State<AccountTab> {
                           icon: Icons.tune_rounded,
                           title: widget.txt('expectations'),
                           gradientColors: const [
-                            Color(0xFF8E24AA),
-                            Color(0xFFAB47BC)
+                            AppColors.secondaryTeal,
+                            AppColors.primaryTeal
                           ],
                           onTap: () {
                             Navigator.push(
@@ -1290,8 +1290,8 @@ class AccountTabState extends State<AccountTab> {
                           icon: Icons.workspace_premium_rounded,
                           title: widget.txt('subscriptions'),
                           gradientColors: const [
-                            Color(0xFFFF8F00),
-                            Color(0xFFFFB300)
+                            AppColors.accentWarm,
+                            AppColors.accentLight
                           ],
                           onTap: showSubscriptionsModal,
                         ),
@@ -1301,8 +1301,8 @@ class AccountTabState extends State<AccountTab> {
                               ? 'الخدمات الإضافية VIP'
                               : 'VIP Extra Services',
                           gradientColors: const [
-                            Color(0xFFFFD700),
-                            Color(0xFFFFA000)
+                            AppColors.warning,
+                            AppColors.accentWarm
                           ],
                           onTap: () {
                             Navigator.push(
@@ -1319,8 +1319,8 @@ class AccountTabState extends State<AccountTab> {
                           icon: Icons.favorite_rounded,
                           title: _isAr ? 'طلبات الاهتمام' : 'Interest Requests',
                           gradientColors: const [
-                            Color(0xFFE91E63),
-                            Color(0xFFF48FB1)
+                            AppColors.accentWarm,
+                            AppColors.accentLight
                           ],
                           onTap: () {
                             Navigator.pushNamed(
@@ -1336,8 +1336,8 @@ class AccountTabState extends State<AccountTab> {
                           icon: Icons.block_rounded,
                           title: widget.txt('blocked'),
                           gradientColors: const [
-                            Color(0xFFD32F2F),
-                            Color(0xFFE53935)
+                            AppColors.error,
+                            AppColors.warning
                           ],
                           showDivider: false,
                           onTap: () {
@@ -1365,8 +1365,8 @@ class AccountTabState extends State<AccountTab> {
                           icon: Icons.menu_book_rounded,
                           title: widget.txt('faq'),
                           gradientColors: const [
-                            Color(0xFF00897B),
-                            Color(0xFF26A69A)
+                            AppColors.primaryTeal,
+                            AppColors.secondaryTeal
                           ],
                           onTap: () => Navigator.push(
                               context,
@@ -1379,8 +1379,8 @@ class AccountTabState extends State<AccountTab> {
                           icon: Icons.support_agent_rounded,
                           title: widget.txt('support'),
                           gradientColors: const [
-                            Color(0xFF43A047),
-                            Color(0xFF66BB6A)
+                            AppColors.secondaryTeal,
+                            AppColors.primaryTeal
                           ],
                           onTap: () => Navigator.push(
                               context,
@@ -1393,8 +1393,8 @@ class AccountTabState extends State<AccountTab> {
                           icon: Icons.auto_awesome_rounded,
                           title: widget.txt('about'),
                           gradientColors: const [
-                            Color(0xFF00ACC1),
-                            Color(0xFF26C6DA)
+                            AppColors.primaryTeal,
+                            AppColors.accentLight
                           ],
                           showDivider: false,
                           onTap: () => AboutAppDialog.show(context,
@@ -2008,14 +2008,14 @@ class _SubscriptionsModalContentState
           style: ThemeMode.dark,
           appearance: const PaymentSheetAppearance(
             colors: PaymentSheetAppearanceColors(
-              primary: Color(0xFF0288D1),
+              primary: AppColors.primaryTeal,
               background: Color(0xFF0F172A),
               componentBackground: Color(0xFF1E293B),
               componentText: Colors.white,
               primaryText: Colors.white,
               secondaryText: Colors.white70,
               placeholderText: Colors.white38,
-              icon: Color(0xFF38BDF8),
+              icon: AppColors.accentLight,
               error: Colors.redAccent,
             ),
             shapes: PaymentSheetShape(
@@ -2136,7 +2136,7 @@ class _SubscriptionsModalContentState
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(32)),
               border: Border.all(
-                  color: const Color(0xFF38BDF8).withValues(alpha: 0.4)),
+                  color: const AppColors.accentLight.withValues(alpha: 0.4)),
             ),
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -2215,13 +2215,13 @@ class _SubscriptionsModalContentState
                     padding: const EdgeInsets.only(top: 12.0),
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0288D1),
+                        backgroundColor: const AppColors.primaryTeal,
                         padding: const EdgeInsets.symmetric(vertical: 15),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(18)),
                         elevation: 8,
                         shadowColor:
-                            const Color(0xFF0288D1).withValues(alpha: 0.5),
+                            const AppColors.primaryTeal.withValues(alpha: 0.5),
                       ),
                       onPressed: () {
                         setState(() {
@@ -2337,7 +2337,7 @@ class _SubscriptionsModalContentState
                 ]
               : [
                   const Color(0xFF00897B).withValues(alpha: 0.28),
-                  const Color(0xFF0288D1).withValues(alpha: 0.18)
+                  const AppColors.primaryTeal.withValues(alpha: 0.18)
                 ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -2429,7 +2429,7 @@ class _SubscriptionsModalContentState
                   border: Border.all(
                     color: isExpiringSoon
                         ? Colors.redAccent.withValues(alpha: 0.6)
-                        : const Color(0xFF4FC3F7).withValues(alpha: 0.5),
+                        : const AppColors.accentLight.withValues(alpha: 0.5),
                   ),
                 ),
                 child: Column(
@@ -2499,7 +2499,7 @@ class _SubscriptionsModalContentState
                 style: ElevatedButton.styleFrom(
                   backgroundColor: isExpiringSoon
                       ? const Color(0xFFE65100)
-                      : const Color(0xFF0288D1),
+                      : const AppColors.primaryTeal,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   shape: RoundedRectangleBorder(
@@ -2597,9 +2597,9 @@ class _SubscriptionsModalContentState
               badgeTag = widget.isArabic ? 'الباقة الذهبية 🥇' : 'Gold Package';
               badgeIcon = Icons.stars_rounded;
             } else {
-              themeColor = const Color(0xFF38BDF8);
+              themeColor = const AppColors.accentLight;
               gradientColors = [
-                const Color(0xFF0288D1),
+                const AppColors.primaryTeal,
                 const Color(0xFF005691)
               ];
               badgeTag =
@@ -2756,12 +2756,12 @@ class _SubscriptionsModalContentState
               color: Colors.white.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                  color: const Color(0xFF38BDF8).withValues(alpha: 0.3)),
+                  color: const AppColors.accentLight.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
                 const Icon(Icons.check_circle,
-                    color: Color(0xFF38BDF8), size: 20),
+                    color: AppColors.accentLight, size: 20),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -2803,12 +2803,12 @@ class _SubscriptionsModalContentState
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
                       color: _selectedPaymentCategory == 2
-                          ? const Color(0xFF0288D1).withValues(alpha: 0.2)
+                          ? const AppColors.primaryTeal.withValues(alpha: 0.2)
                           : Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: _selectedPaymentCategory == 2
-                            ? const Color(0xFF38BDF8)
+                            ? const AppColors.accentLight
                             : Colors.white12,
                       ),
                     ),
@@ -2816,7 +2816,7 @@ class _SubscriptionsModalContentState
                       children: [
                         Icon(Icons.credit_card_rounded,
                             color: _selectedPaymentCategory == 2
-                                ? const Color(0xFF38BDF8)
+                                ? const AppColors.accentLight
                                 : Colors.white54,
                             size: 24),
                         const SizedBox(height: 4),
@@ -2826,7 +2826,7 @@ class _SubscriptionsModalContentState
                               : 'Visa / Credit Card',
                           style: TextStyle(
                               color: _selectedPaymentCategory == 2
-                                  ? const Color(0xFF38BDF8)
+                                  ? const AppColors.accentLight
                                   : Colors.white70,
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
@@ -2892,7 +2892,7 @@ class _SubscriptionsModalContentState
                 color: Colors.white.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(
-                    color: const Color(0xFF38BDF8).withValues(alpha: 0.35)),
+                    color: const AppColors.accentLight.withValues(alpha: 0.35)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -2903,11 +2903,11 @@ class _SubscriptionsModalContentState
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color:
-                              const Color(0xFF38BDF8).withValues(alpha: 0.18),
+                              const AppColors.accentLight.withValues(alpha: 0.18),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.shield_outlined,
-                            color: Color(0xFF38BDF8), size: 26),
+                            color: AppColors.accentLight, size: 26),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -2973,7 +2973,7 @@ class _SubscriptionsModalContentState
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0288D1),
+                        backgroundColor: const AppColors.primaryTeal,
                         padding: const EdgeInsets.symmetric(vertical: 15),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16)),
@@ -3146,7 +3146,7 @@ class _SubscriptionsModalContentState
                         BorderSide(color: Colors.white.withValues(alpha: 0.2))),
                 focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: Color(0xFF38BDF8))),
+                    borderSide: const BorderSide(color: AppColors.accentLight)),
               ),
             ),
             const SizedBox(height: 12),
@@ -3163,7 +3163,7 @@ class _SubscriptionsModalContentState
                 child: Row(
                   children: [
                     const Icon(Icons.cloud_upload_rounded,
-                        color: Color(0xFF38BDF8)),
+                        color: AppColors.accentLight),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -3188,7 +3188,7 @@ class _SubscriptionsModalContentState
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0288D1),
+                  backgroundColor: const AppColors.primaryTeal,
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16)),
