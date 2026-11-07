@@ -8,6 +8,7 @@
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../constants/colors.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -1461,7 +1462,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     }
   }
 
-  /// 🟢 بناء شريط التنبيه بمرونة عالية لدعم الترجُمة التلقائية (العربية / الإنجليزية)
+  /// شريط إرشادي واضح لا يعيق قراءة الرسائل أو التفاعل معها.
   Widget _buildRulesBanner() {
     if (_chatRules == null || _chatRules!.isUnlocked) {
       return const SizedBox.shrink();
@@ -1473,26 +1474,30 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF0288D1).withValues(alpha: 0.25),
-        border: Border(
-            bottom: BorderSide(
-                color: const Color(0xFF38BDF8).withValues(alpha: 0.3))),
+        color: AppColors.sectionBackground,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.lineColor),
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline_rounded,
-              color: Color(0xFF38BDF8), size: 20),
+          const Icon(
+            Icons.info_outline_rounded,
+            color: AppColors.primaryTeal,
+            size: 19,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               bannerText,
               style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 11.5,
-                  fontFamily: 'Cairo',
-                  height: 1.3),
+                color: AppColors.textDark,
+                fontSize: 11.5,
+                fontFamily: 'Cairo',
+                height: 1.35,
+              ),
             ),
           ),
         ],
@@ -1509,122 +1514,151 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         _handlePop();
       },
       child: Scaffold(
+        backgroundColor: AppColors.backgroundColor,
         body: Directionality(
           textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
-          child: Container(
-            width: double.infinity,
-            height: double.infinity,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xFF01579B),
-                  Color(0xFF0288D1),
-                  Color(0xFF070A11)
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-            child: SafeArea(
-              child: Column(
-                children: [
-                  _buildHeader(),
-                  _buildRulesBanner(),
-                  if (_isLoadingMore)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 6.0),
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2),
+          child: SafeArea(
+            child: Column(
+              children: [
+                _buildHeader(),
+                _buildRulesBanner(),
+                if (_isLoadingMore)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 6),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: AppColors.primaryTeal,
+                        strokeWidth: 2,
                       ),
                     ),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        _dismissKeyboard();
-                        if (_showEmojiPicker) {
-                          setState(() => _showEmojiPicker = false);
-                        }
-                      },
-                      child: _isLoading
-                          ? const Center(
-                              child: CircularProgressIndicator(
-                                  color: Colors.white))
-                          : _messages.isEmpty
-                              ? _hasMessageLoadError
-                                  ? Center(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(24),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const Icon(
-                                              Icons.cloud_off_rounded,
-                                              color: Colors.white70,
-                                              size: 46,
-                                            ),
-                                            const SizedBox(height: 12),
-                                            Text(
-                                              _messageLoadError,
-                                              textAlign: TextAlign.center,
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 14,
-                                                fontFamily: 'Cairo',
-                                              ),
-                                            ),
-                                            const SizedBox(height: 14),
-                                            ElevatedButton.icon(
-                                              onPressed: () => _loadMessages(),
-                                              icon: const Icon(Icons.refresh_rounded),
-                                              label: Text(_isArabic
-                                                  ? 'إعادة المحاولة'
-                                                  : 'Retry'),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    )
-                                  : Center(
-                                      child: Text(
-                                        _isArabic
-                                            ? 'لا توجد رسائل سابقة في هذه المحادثة'
-                                            : 'No message history in this chat',
-                                        style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 15,
-                                            fontFamily: 'Cairo'),
-                                      ),
-                                    )
-                              : ListView.builder(
-                                  controller: _scrollController,
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 14, vertical: 8),
-                                  itemCount: _messages.length,
-                                  itemBuilder: (context, index) {
-                                    final msg = _messages[index];
-                                    return RepaintBoundary(
-                                      key: ValueKey(msg.id),
-                                      child: msg.isMe
-                                          ? _SenderMessageBubble(
-                                              message: msg,
-                                              isArabic: _isArabic,
-                                            )
-                                          : _ReceiverMessageBubble(
-                                              message: msg,
-                                              isArabic: _isArabic,
-                                            ),
-                                    );
-                                  },
-                                ),
-                    ),
                   ),
-                  _buildInputArea(),
-                  if (_showEmojiPicker) _buildEmojiStickerPicker(),
-                ],
-              ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      _dismissKeyboard();
+                      if (_showEmojiPicker) {
+                        setState(() => _showEmojiPicker = false);
+                      }
+                    },
+                    child: _isLoading
+                        ? const Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.primaryTeal,
+                            ),
+                          )
+                        : _messages.isEmpty
+                            ? _hasMessageLoadError
+                                ? Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(24),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(
+                                            Icons.cloud_off_rounded,
+                                            color: AppColors.textLight,
+                                            size: 46,
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Text(
+                                            _messageLoadError,
+                                            textAlign: TextAlign.center,
+                                            style: const TextStyle(
+                                              color: AppColors.textDark,
+                                              fontSize: 14,
+                                              fontFamily: 'Cairo',
+                                            ),
+                                          ),
+                                          const SizedBox(height: 14),
+                                          ElevatedButton.icon(
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor:
+                                                  AppColors.primaryTeal,
+                                              foregroundColor: Colors.white,
+                                            ),
+                                            onPressed: () => _loadMessages(),
+                                            icon: const Icon(
+                                              Icons.refresh_rounded,
+                                            ),
+                                            label: Text(
+                                              _isArabic
+                                                  ? 'إعادة المحاولة'
+                                                  : 'Retry',
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                : Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(24),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(
+                                            Icons.forum_outlined,
+                                            color: AppColors.textLight,
+                                            size: 42,
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Text(
+                                            _isArabic
+                                                ? 'ابدأ محادثة لطيفة ومحترمة'
+                                                : 'Start a kind and respectful conversation',
+                                            textAlign: TextAlign.center,
+                                            style: const TextStyle(
+                                              color: AppColors.textDark,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              fontFamily: 'Cairo',
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            _isArabic
+                                                ? 'ستظهر رسائلك هنا'
+                                                : 'Your messages will appear here',
+                                            style: const TextStyle(
+                                              color: AppColors.textMuted,
+                                              fontSize: 12,
+                                              fontFamily: 'Cairo',
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                            : ListView.builder(
+                                controller: _scrollController,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 12,
+                                ),
+                                itemCount: _messages.length,
+                                itemBuilder: (context, index) {
+                                  final msg = _messages[index];
+                                  return RepaintBoundary(
+                                    key: ValueKey(msg.id),
+                                    child: msg.isMe
+                                        ? _SenderMessageBubble(
+                                            message: msg,
+                                            isArabic: _isArabic,
+                                          )
+                                        : _ReceiverMessageBubble(
+                                            message: msg,
+                                            isArabic: _isArabic,
+                                          ),
+                                  );
+                                },
+                              ),
+                  ),
+                ),
+                _buildInputArea(),
+                if (_showEmojiPicker) _buildEmojiStickerPicker(),
+              ],
             ),
           ),
         ),
@@ -1632,293 +1666,263 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     );
   }
 
-  /// 🟢 هيدر المحادثة الزجاجي الفاخر بمستوى Modern Premium UI 2026 مع شارات الباقات
+  /// رأس المحادثة ببطاقة فاتحة مع بقاء ملف العضو وقائمة الخيارات قابلين للفتح.
   Widget _buildHeader() {
     final String presenceText = widget.thread.isOnline
         ? (_isArabic ? 'متصل الآن' : 'Online')
         : _translateLastSeen(widget.thread.lastSeen);
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 6.0),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.white.withValues(alpha: 0.22),
-                  Colors.white.withValues(alpha: 0.12),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+      margin: const EdgeInsets.fromLTRB(14, 8, 14, 10),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+      decoration: BoxDecoration(
+        color: AppColors.cardColor,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.lineColor),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.textDark.withValues(alpha: 0.045),
+            blurRadius: 14,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Material(
+            color: AppColors.sectionBackground,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: _handlePop,
+              child: SizedBox(
+                width: 40,
+                height: 40,
+                child: Icon(
+                  _isArabic
+                      ? Icons.arrow_back_ios_new_rounded
+                      : Icons.arrow_forward_ios_rounded,
+                  color: AppColors.textDark,
+                  size: 17,
+                ),
               ),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.35),
-                width: 1.2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                // زر العودة الشفاف الأنيق
-                Material(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(18),
-                  child: InkWell(
-                    onTap: _handlePop,
-                    borderRadius: BorderRadius.circular(18),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.12),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.25),
-                        ),
-                      ),
-                      child: Icon(
-                        _isArabic
-                            ? Icons.arrow_back_ios_new_rounded
-                            : Icons.arrow_forward_ios_rounded,
-                        color: Colors.white,
-                        size: 18,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-
-                // زر معلومات ومعاينة بروفايل العضو
-                Expanded(
-                  child: Material(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(16),
-                    child: InkWell(
-                      onTap: _navigateToProfile,
-                      borderRadius: BorderRadius.circular(16),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 4),
-                        child: Row(
-                          children: [
-                            Stack(
-                              children: [
-                                _StyledGenderAvatar(
-                                  imageUrl: widget.thread.image,
-                                  gender: widget.thread.gender,
-                                  radius: 21,
-                                ),
-                                if (widget.thread.isOnline)
-                                  Positioned(
-                                    bottom: 0,
-                                    right: 0,
-                                    child: Container(
-                                      width: 12,
-                                      height: 12,
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF10B981),
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                            color: Colors.white, width: 2),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: const Color(0xFF10B981)
-                                                .withValues(alpha: 0.6),
-                                            blurRadius: 6,
-                                            spreadRadius: 1,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Flexible(
-                                        child: Text(
-                                          widget.thread.name,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 15.5,
-                                            fontWeight: FontWeight.bold,
-                                            fontFamily: 'Cairo',
-                                            letterSpacing: 0.2,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      // 🟢 إظهار شارة الباقة الموحدة بجانب اسم العضو في الشات
-                                      if (widget
-                                          .thread.packageName.isNotEmpty) ...[
-                                        const SizedBox(width: 6),
-                                        PackageBadgeWidget(
-                                          packageName:
-                                              widget.thread.packageName,
-                                          compact: true,
-                                          isArabic: _isArabic,
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Row(
-                                    children: [
-                                      if (widget.thread.isOnline)
-                                        Container(
-                                          margin: const EdgeInsets.only(
-                                              left: 4, right: 4),
-                                          width: 6,
-                                          height: 6,
-                                          decoration: const BoxDecoration(
-                                            color: Color(0xFF34D399),
-                                            shape: BoxShape.circle,
-                                          ),
-                                        ),
-                                      Expanded(
-                                        child: Text(
-                                          presenceText,
-                                          style: TextStyle(
-                                            color: widget.thread.isOnline
-                                                ? const Color(0xFF34D399)
-                                                : Colors.white
-                                                    .withValues(alpha: 0.75),
-                                            fontSize: 11.5,
-                                            fontFamily: 'Cairo',
-                                            fontWeight: widget.thread.isOnline
-                                                ? FontWeight.w600
-                                                : FontWeight.normal,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-
-                // زر قائمة الخيارات الزجاجي الفاخر
-                Material(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(18),
-                  child: InkWell(
-                    onTap: _showChatOptionsMenu,
-                    borderRadius: BorderRadius.circular(18),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.12),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.25),
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.more_vert_rounded,
-                        color: Colors.white,
-                        size: 22,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
             ),
           ),
-        ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: InkWell(
+              onTap: _navigateToProfile,
+              borderRadius: BorderRadius.circular(15),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+                child: Row(
+                  children: [
+                    Stack(
+                      children: [
+                        _StyledGenderAvatar(
+                          imageUrl: widget.thread.image,
+                          gender: widget.thread.gender,
+                          radius: 21,
+                        ),
+                        if (widget.thread.isOnline)
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Container(
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                color: AppColors.success,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 2,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  widget.thread.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: AppColors.textDark,
+                                    fontSize: 14.5,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Cairo',
+                                  ),
+                                ),
+                              ),
+                              if (widget.thread.packageName.isNotEmpty) ...[
+                                const SizedBox(width: 5),
+                                PackageBadgeWidget(
+                                  packageName: widget.thread.packageName,
+                                  compact: true,
+                                  isArabic: _isArabic,
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              if (widget.thread.isOnline)
+                                Container(
+                                  margin: const EdgeInsetsDirectional.only(end: 5),
+                                  width: 6,
+                                  height: 6,
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.success,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              Expanded(
+                                child: Text(
+                                  presenceText,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: widget.thread.isOnline
+                                        ? AppColors.success
+                                        : AppColors.textMuted,
+                                    fontSize: 10.5,
+                                    fontFamily: 'Cairo',
+                                    fontWeight: widget.thread.isOnline
+                                        ? FontWeight.w600
+                                        : FontWeight.normal,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Material(
+            color: AppColors.sectionBackground,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: _showChatOptionsMenu,
+              child: const SizedBox(
+                width: 40,
+                height: 40,
+                child: Icon(
+                  Icons.more_vert_rounded,
+                  color: AppColors.textDark,
+                  size: 22,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildInputArea() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(8, 9, 8, 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A).withValues(alpha: 0.85),
-        border: Border(
-            top: BorderSide(color: Colors.white.withValues(alpha: 0.15))),
+        color: AppColors.cardColor,
+        border: const Border(
+          top: BorderSide(color: AppColors.lineColor),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.textDark.withValues(alpha: 0.035),
+            blurRadius: 10,
+            offset: const Offset(0, -3),
+          ),
+        ],
       ),
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.add_a_photo_rounded,
-                color: Color(0xFF38BDF8), size: 22),
+            tooltip: _isArabic ? 'إرفاق صورة' : 'Attach image',
+            icon: const Icon(
+              Icons.add_a_photo_rounded,
+              color: AppColors.primaryTeal,
+              size: 21,
+            ),
             onPressed: () => _pickImage(ImageSource.gallery),
           ),
           IconButton(
+            tooltip: _isArabic ? 'الرموز والملصقات' : 'Emojis and stickers',
             icon: Icon(
-                _showEmojiPicker
-                    ? Icons.keyboard_rounded
-                    : Icons.sentiment_satisfied_alt_rounded,
-                color: const Color(0xFF38BDF8),
-                size: 24),
+              _showEmojiPicker
+                  ? Icons.keyboard_rounded
+                  : Icons.sentiment_satisfied_alt_rounded,
+              color: AppColors.accentWarm,
+              size: 23,
+            ),
             onPressed: _toggleEmojiPicker,
           ),
           Expanded(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                color: AppColors.sectionBackground,
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: AppColors.lineColor),
               ),
               child: TextField(
                 controller: _messageController,
                 focusNode: _inputFocusNode,
                 style: const TextStyle(
-                    color: Colors.white, fontFamily: 'Cairo', fontSize: 14),
+                  color: AppColors.textDark,
+                  fontFamily: 'Cairo',
+                  fontSize: 14,
+                ),
                 decoration: InputDecoration(
-                  hintText:
-                      _isArabic ? 'اكتب رسالتك هنا...' : 'Type your message...',
+                  hintText: _isArabic
+                      ? 'اكتب رسالتك هنا...'
+                      : 'Type your message...',
                   hintStyle: const TextStyle(
-                      color: Colors.white54, fontFamily: 'Cairo', fontSize: 13),
+                    color: AppColors.textMuted,
+                    fontFamily: 'Cairo',
+                    fontSize: 12.5,
+                  ),
                   border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
             ),
           ),
           const SizedBox(width: 8),
-          InkWell(
-            onTap: () => _sendMessage(),
-            borderRadius: BorderRadius.circular(24),
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                    colors: [Color(0xFF0288D1), Color(0xFF00B0FF)]),
+          Material(
+            color: AppColors.primaryTeal,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: () => _sendMessage(),
+              child: const SizedBox(
+                width: 44,
+                height: 44,
+                child: Icon(
+                  Icons.send_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
-              child:
-                  const Icon(Icons.send_rounded, color: Colors.white, size: 20),
             ),
           ),
         ],
@@ -1929,20 +1933,21 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   Widget _buildEmojiStickerPicker() {
     return Container(
       height: 230,
-      decoration: BoxDecoration(
-        color: const Color(0xFF0F172A).withValues(alpha: 0.95),
+      decoration: const BoxDecoration(
+        color: AppColors.cardColor,
         border: Border(
-            top: BorderSide(color: Colors.white.withValues(alpha: 0.15))),
+          top: BorderSide(color: AppColors.lineColor),
+        ),
       ),
       child: Column(
         children: [
           Container(
-            height: 42,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
+            height: 44,
+            decoration: const BoxDecoration(
+              color: AppColors.sectionBackground,
               border: Border(
-                  bottom:
-                      BorderSide(color: Colors.white.withValues(alpha: 0.1))),
+                bottom: BorderSide(color: AppColors.lineColor),
+              ),
             ),
             child: Row(
               children: [
@@ -1952,20 +1957,26 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                     child: Container(
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                          border: Border(
-                              bottom: BorderSide(
-                                  color: _selectedPickerTab == 0
-                                      ? const Color(0xFF38BDF8)
-                                      : Colors.transparent,
-                                  width: 2))),
-                      child: Text(_isArabic ? 'وجوه تعبيرية' : 'Emojis',
-                          style: TextStyle(
-                              color: _selectedPickerTab == 0
-                                  ? const Color(0xFF38BDF8)
-                                  : Colors.white60,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                              fontFamily: 'Cairo')),
+                        border: Border(
+                          bottom: BorderSide(
+                            color: _selectedPickerTab == 0
+                                ? AppColors.primaryTeal
+                                : Colors.transparent,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      child: Text(
+                        _isArabic ? 'وجوه تعبيرية' : 'Emojis',
+                        style: TextStyle(
+                          color: _selectedPickerTab == 0
+                              ? AppColors.primaryTeal
+                              : AppColors.textMuted,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                          fontFamily: 'Cairo',
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -1975,20 +1986,26 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                     child: Container(
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                          border: Border(
-                              bottom: BorderSide(
-                                  color: _selectedPickerTab == 1
-                                      ? const Color(0xFF38BDF8)
-                                      : Colors.transparent,
-                                  width: 2))),
-                      child: Text(_isArabic ? 'ملصقات وصال' : 'Wesal Stickers',
-                          style: TextStyle(
-                              color: _selectedPickerTab == 1
-                                  ? const Color(0xFF38BDF8)
-                                  : Colors.white60,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                              fontFamily: 'Cairo')),
+                        border: Border(
+                          bottom: BorderSide(
+                            color: _selectedPickerTab == 1
+                                ? AppColors.primaryTeal
+                                : Colors.transparent,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      child: Text(
+                        _isArabic ? 'ملصقات وصال' : 'Wesal Stickers',
+                        style: TextStyle(
+                          color: _selectedPickerTab == 1
+                              ? AppColors.primaryTeal
+                              : AppColors.textMuted,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                          fontFamily: 'Cairo',
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -2001,9 +2018,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                     padding: const EdgeInsets.all(10),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 8,
-                            mainAxisSpacing: 8,
-                            crossAxisSpacing: 8),
+                      crossAxisCount: 8,
+                      mainAxisSpacing: 8,
+                      crossAxisSpacing: 8,
+                    ),
                     itemCount: _emojis.length,
                     itemBuilder: (context, index) {
                       final emoji = _emojis[index];
@@ -2012,12 +2030,18 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                           _messageController.text =
                               _messageController.text + emoji;
                           _messageController.selection =
-                              TextSelection.fromPosition(TextPosition(
-                                  offset: _messageController.text.length));
+                              TextSelection.fromPosition(
+                            TextPosition(
+                              offset: _messageController.text.length,
+                            ),
+                          );
                         },
                         child: Center(
-                            child: Text(emoji,
-                                style: const TextStyle(fontSize: 22))),
+                          child: Text(
+                            emoji,
+                            style: const TextStyle(fontSize: 22),
+                          ),
+                        ),
                       );
                     },
                   )
@@ -2025,10 +2049,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                     padding: const EdgeInsets.all(12),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 2.8,
-                            mainAxisSpacing: 10,
-                            crossAxisSpacing: 10),
+                      crossAxisCount: 2,
+                      childAspectRatio: 2.8,
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
+                    ),
                     itemCount: _stickers.length,
                     itemBuilder: (context, index) {
                       final sticker = _stickers[index];
@@ -2036,22 +2061,25 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                         onTap: () => _sendMessage(customText: sticker),
                         borderRadius: BorderRadius.circular(14),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 10),
                           decoration: BoxDecoration(
-                            color:
-                                const Color(0xFF0288D1).withValues(alpha: 0.25),
+                            color: AppColors.accentLight.withValues(alpha: 0.28),
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
-                                color: const Color(0xFF38BDF8)
-                                    .withValues(alpha: 0.4)),
+                              color: AppColors.accentLight,
+                            ),
                           ),
                           alignment: Alignment.center,
-                          child: Text(sticker,
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'Cairo')),
+                          child: Text(
+                            sticker,
+                            style: const TextStyle(
+                              color: AppColors.textDark,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Cairo',
+                            ),
+                          ),
                         ),
                       );
                     },
@@ -2061,6 +2089,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       ),
     );
   }
+
 }
 
 bool _isDefaultPlaceholderText(String text) {
@@ -2129,7 +2158,7 @@ class _SenderMessageBubble extends StatelessWidget {
               constraints: BoxConstraints(
                   maxWidth: MediaQuery.of(context).size.width * 0.75),
               decoration: const BoxDecoration(
-                color: Color(0xFF0288D1),
+                color: AppColors.primaryTeal,
                 borderRadius: borderRadius,
               ),
               child: ClipRRect(
@@ -2186,7 +2215,7 @@ class _SenderMessageBubble extends StatelessWidget {
                 children: [
                   Text(_formatMessageTime(message.time, isArabic),
                       style: const TextStyle(
-                          color: Colors.white54,
+                          color: AppColors.textMuted,
                           fontSize: 10.5,
                           fontFamily: 'Cairo')),
                   const SizedBox(width: 5),
@@ -2196,8 +2225,8 @@ class _SenderMessageBubble extends StatelessWidget {
                           : Icons.check_rounded,
                       size: 14,
                       color: message.isSeen
-                          ? const Color(0xFF38BDF8)
-                          : Colors.white54),
+                          ? AppColors.primaryTeal
+                          : AppColors.textLight),
                 ],
               ),
             ),
@@ -2244,9 +2273,9 @@ class _ReceiverMessageBubble extends StatelessWidget {
               constraints: BoxConstraints(
                   maxWidth: MediaQuery.of(context).size.width * 0.75),
               decoration: BoxDecoration(
-                color: const Color(0xFF1E293B),
+                color: AppColors.sectionBackground,
                 borderRadius: borderRadius,
-                border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                border: Border.all(color: AppColors.lineColor),
               ),
               child: ClipRRect(
                 borderRadius: borderRadius,
@@ -2285,7 +2314,7 @@ class _ReceiverMessageBubble extends StatelessWidget {
                         padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
                         child: Text(cleanText,
                             style: const TextStyle(
-                                color: Colors.white,
+                                color: AppColors.textDark,
                                 fontSize: 14.5,
                                 fontFamily: 'Cairo',
                                 height: 1.35)),
@@ -2299,7 +2328,7 @@ class _ReceiverMessageBubble extends StatelessWidget {
               padding: const EdgeInsets.only(left: 4, right: 4),
               child: Text(_formatMessageTime(message.time, isArabic),
                   style: const TextStyle(
-                      color: Colors.white54,
+                      color: AppColors.textMuted,
                       fontSize: 10.5,
                       fontFamily: 'Cairo')),
             ),
@@ -2328,8 +2357,8 @@ class _StyledGenderAvatar extends StatelessWidget {
         gender.contains('انثى');
 
     final List<Color> gradientColors = isFemale
-        ? [const Color(0xFFF48FB1), const Color(0xFFC2185B)]
-        : [const Color(0xFF64B5F6), const Color(0xFF1565C0)];
+        ? [const Color(0xFFB85C4A), const Color(0xFF8E4438)]
+        : [AppColors.primaryTeal, AppColors.secondaryTeal];
 
     final IconData avatarIcon =
         isFemale ? Icons.female_rounded : Icons.male_rounded;

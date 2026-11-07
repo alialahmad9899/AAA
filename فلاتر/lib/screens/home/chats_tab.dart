@@ -7,6 +7,7 @@
 
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../../constants/colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../models/chat_model.dart';
@@ -534,203 +535,154 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
   // 4. بناء الواجهات العلوية وشريط الترقية الاختياري
   // --------------------------------------------------------------------------
 
-  /// شريط ترقية اختياري وأنيق يظهر لغير المشتركين دون أن يعرقل المحادثات
+  /// شريط ترقية اختياري يظهر من دون أن يعيق الوصول إلى المحادثات.
   Widget _buildOptionalUpgradeBanner() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-      child: ClipRRect(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.sectionBackground,
         borderRadius: BorderRadius.circular(18),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  const Color(0xFF0288D1).withValues(alpha: 0.25),
-                  const Color(0xFF0F172A).withValues(alpha: 0.4),
-                ],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              ),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: const Color(0xFF38BDF8).withValues(alpha: 0.35),
-                width: 1,
-              ),
+        border: Border.all(color: AppColors.accentLight.withValues(alpha: 0.65)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(9),
+            decoration: const BoxDecoration(
+              color: Color(0xFFECE7DE),
+              shape: BoxShape.circle,
             ),
-            child: Row(
+            child: const Icon(
+              Icons.workspace_premium_rounded,
+              color: AppColors.primaryTeal,
+              size: 21,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.amber.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.workspace_premium_rounded,
-                    color: Colors.amber,
-                    size: 20,
+                Text(
+                  isArabicLocale ? 'ارتقِ بتجربتك مع وصال' : 'Make more of Wesal',
+                  style: const TextStyle(
+                    color: AppColors.textDark,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Cairo',
                   ),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        isArabicLocale
-                            ? 'تميز بحسابك ترقية اختيارية'
-                            : 'Optional Premium Upgrade',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Cairo',
-                        ),
-                      ),
-                      Text(
-                        isArabicLocale
-                            ? 'احصل على شارة تميز ملكية وأولوية بالظهور'
-                            : 'Get a royal badge and priority listing',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.75),
-                          fontSize: 11,
-                          fontFamily: 'Cairo',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0288D1),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: widget.onUpgradeRequested,
-                  child: Text(
-                    isArabicLocale ? 'ترقية' : 'Upgrade',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Cairo',
-                    ),
+                const SizedBox(height: 2),
+                Text(
+                  isArabicLocale
+                      ? 'ميزات إضافية وظهور أفضل لملفك الشخصي'
+                      : 'Extra benefits and better profile visibility',
+                  style: const TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 11,
+                    fontFamily: 'Cairo',
                   ),
                 ),
               ],
             ),
           ),
-        ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryTeal,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: widget.onUpgradeRequested,
+            child: Text(
+              isArabicLocale ? 'ترقية' : 'Upgrade',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Cairo',
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildCompactHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+      padding: const EdgeInsets.fromLTRB(18, 12, 16, 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.25),
-                    width: 1.2,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: AppColors.textDark,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    fontFamily: 'Cairo',
                   ),
                 ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 9,
-                      height: 9,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF38BDF8),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color:
-                                const Color(0xFF38BDF8).withValues(alpha: 0.8),
-                            blurRadius: 8,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Cairo',
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 2),
+                Text(
+                  isArabicLocale
+                      ? 'كل محادثاتك ورسائلك في مكان واحد'
+                      : 'Your conversations, all in one place',
+                  style: const TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 12,
+                    fontFamily: 'Cairo',
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.25),
-                    width: 1.2,
-                  ),
-                ),
+          Material(
+            color: AppColors.cardColor,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: widget.onNotificationPressed,
+              child: SizedBox(
+                width: 44,
+                height: 44,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    IconButton(
-                      constraints:
-                          const BoxConstraints(minWidth: 42, minHeight: 42),
-                      padding: EdgeInsets.zero,
-                      icon: const Icon(Icons.notifications_none_rounded,
-                          color: Colors.white, size: 22),
-                      onPressed: widget.onNotificationPressed,
+                    const Icon(
+                      Icons.notifications_none_rounded,
+                      color: AppColors.primaryTeal,
+                      size: 23,
                     ),
                     if (widget.unreadNotificationCount > 0)
                       Positioned(
-                        top: 6,
-                        right: 6,
+                        top: 5,
+                        right: 5,
                         child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: Colors.redAccent,
+                          constraints: const BoxConstraints(minWidth: 16),
+                          padding: const EdgeInsets.all(3),
+                          decoration: const BoxDecoration(
+                            color: AppColors.accentWarm,
                             shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.redAccent.withValues(alpha: 0.6),
-                                blurRadius: 6,
-                              ),
-                            ],
                           ),
                           child: Text(
                             '${widget.unreadNotificationCount}',
+                            textAlign: TextAlign.center,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 9,
+                              fontSize: 8,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -748,76 +700,102 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
 
   Widget _buildSearchAndFilterSection() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
-      child: Column(
-        children: [
-          Container(
-            height: 46,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.09),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.cardColor,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.lineColor),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.textDark.withValues(alpha: 0.04),
+              blurRadius: 14,
+              offset: const Offset(0, 5),
             ),
-            child: TextField(
+          ],
+        ),
+        child: Column(
+          children: [
+            TextField(
               controller: _searchController,
               onChanged: (val) => setState(() => _searchQuery = val),
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.textDark,
                 fontSize: 14,
                 fontFamily: 'Cairo',
                 fontWeight: FontWeight.w500,
               ),
               decoration: InputDecoration(
                 hintText: _labels['search_hint'],
-                hintStyle: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.6),
-                  fontSize: 13,
+                hintStyle: const TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 12.5,
                   fontFamily: 'Cairo',
-                  fontWeight: FontWeight.w400,
                 ),
                 prefixIcon: const Icon(
                   Icons.search_rounded,
-                  color: Color(0xFF38BDF8),
+                  color: AppColors.primaryTeal,
                   size: 22,
                 ),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.close_rounded,
-                            color: Colors.white70, size: 18),
+                        icon: const Icon(
+                          Icons.close_rounded,
+                          color: AppColors.textMuted,
+                          size: 18,
+                        ),
                         onPressed: () {
                           _searchController.clear();
                           setState(() => _searchQuery = '');
                         },
                       )
                     : null,
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 11),
+                filled: true,
+                fillColor: AppColors.sectionBackground,
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: AppColors.lineColor),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(
+                    color: AppColors.primaryTeal,
+                    width: 1.3,
+                  ),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              _buildFilterPill(
-                id: 'all',
-                label: _labels['all_chats']!,
-                icon: Icons.chat_bubble_outline_rounded,
-              ),
-              const SizedBox(width: 8),
-              _buildFilterPill(
-                id: 'unread',
-                label: _labels['unread']!,
-                icon: Icons.mark_chat_unread_outlined,
-              ),
-              const SizedBox(width: 8),
-              _buildFilterPill(
-                id: 'online',
-                label: _labels['online']!,
-                icon: Icons.sensors_rounded,
-              ),
-            ],
-          ),
-        ],
+            const SizedBox(height: 11),
+            Row(
+              children: [
+                _buildFilterPill(
+                  id: 'all',
+                  label: _labels['all_chats']!,
+                  icon: Icons.chat_bubble_outline_rounded,
+                ),
+                const SizedBox(width: 8),
+                _buildFilterPill(
+                  id: 'unread',
+                  label: _labels['unread']!,
+                  icon: Icons.mark_chat_unread_outlined,
+                ),
+                const SizedBox(width: 8),
+                _buildFilterPill(
+                  id: 'online',
+                  label: _labels['online']!,
+                  icon: Icons.sensors_rounded,
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -832,47 +810,38 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
     return Expanded(
       child: InkWell(
         onTap: () => setState(() => _selectedFilter = id),
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+        borderRadius: BorderRadius.circular(13),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
           decoration: BoxDecoration(
-            color: isSelected
-                ? const Color(0xFF0288D1)
-                : Colors.white.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(16),
+            color: isSelected ? AppColors.primaryTeal : AppColors.sectionBackground,
+            borderRadius: BorderRadius.circular(13),
             border: Border.all(
-              color: isSelected
-                  ? const Color(0xFF38BDF8)
-                  : Colors.white.withValues(alpha: 0.18),
-              width: 1.2,
+              color: isSelected ? AppColors.primaryTeal : AppColors.lineColor,
             ),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: const Color(0xFF0288D1).withValues(alpha: 0.5),
-                      blurRadius: 10,
-                    ),
-                  ]
-                : [],
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 icon,
-                size: 15,
-                color: isSelected ? Colors.white : Colors.white70,
+                size: 14,
+                color: isSelected ? Colors.white : AppColors.textMuted,
               ),
               const SizedBox(width: 5),
-              Text(
-                label,
-                style: TextStyle(
-                  color: isSelected
-                      ? Colors.white
-                      : Colors.white.withValues(alpha: 0.9),
-                  fontSize: 11.5,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                  fontFamily: 'Cairo',
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : AppColors.textDark,
+                    fontSize: 11,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.w600,
+                    fontFamily: 'Cairo',
+                  ),
                 ),
               ),
             ],
@@ -892,8 +861,8 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
         gender.contains('انثى');
 
     final List<Color> gradientColors = isFemale
-        ? [const Color(0xFFF48FB1), const Color(0xFFC2185B)]
-        : [const Color(0xFF64B5F6), const Color(0xFF1565C0)];
+        ? [const Color(0xFFB85C4A), const Color(0xFF8E4438)]
+        : [AppColors.primaryTeal, AppColors.secondaryTeal];
 
     final IconData avatarIcon =
         isFemale ? Icons.female_rounded : Icons.male_rounded;
@@ -932,7 +901,7 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
         child: CachedNetworkImage(
           imageUrl: imageUrl,
           fit: BoxFit.cover,
-          placeholder: (context, url) => Container(color: Colors.white12),
+          placeholder: (context, url) => Container(color: AppColors.sectionBackground),
           errorWidget: (context, url, error) {
             return Container(
               decoration: BoxDecoration(
@@ -975,6 +944,7 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
   // 5. بناء شجرة المكونات الرئيسية (UI Build)
   // --------------------------------------------------------------------------
   @override
+  @override
   Widget build(BuildContext context) {
     final filteredList = _filteredThreads;
 
@@ -986,60 +956,79 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
           _buildSearchAndFilterSection(),
           if (!_isSubscribedOrFemale && widget.onUpgradeRequested != null)
             _buildOptionalUpgradeBanner(),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Expanded(
             child: _isCheckingSubscription || _isChatsLoading
                 ? const Center(
-                    child: CircularProgressIndicator(color: Colors.white))
+                    child: CircularProgressIndicator(
+                      color: AppColors.primaryTeal,
+                    ),
+                  )
                 : _chatsErrorMessage != null
                     ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              _chatsErrorMessage!,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 15,
-                                fontFamily: 'Cairo',
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.cloud_off_rounded,
+                                color: AppColors.textLight,
+                                size: 44,
                               ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 12),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: const Color(0xFF0288D1),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16)),
+                              const SizedBox(height: 12),
+                              Text(
+                                _chatsErrorMessage!,
+                                style: const TextStyle(
+                                  color: AppColors.textDark,
+                                  fontSize: 14,
+                                  fontFamily: 'Cairo',
+                                ),
+                                textAlign: TextAlign.center,
                               ),
-                              onPressed: _checkSubscriptionAndFetch,
-                              child: Text(widget.txt('retry'),
-                                  style: const TextStyle(fontFamily: 'Cairo')),
-                            )
-                          ],
+                              const SizedBox(height: 12),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primaryTeal,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ),
+                                onPressed: _checkSubscriptionAndFetch,
+                                child: Text(
+                                  widget.txt('retry'),
+                                  style: const TextStyle(fontFamily: 'Cairo'),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       )
                     : RefreshIndicator(
                         onRefresh: _checkSubscriptionAndFetch,
+                        color: AppColors.primaryTeal,
+                        backgroundColor: AppColors.cardColor,
                         child: filteredList.isEmpty
                             ? ListView(
                                 physics: const AlwaysScrollableScrollPhysics(),
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 40),
+                                  horizontal: 16,
+                                  vertical: 40,
+                                ),
                                 children: [
                                   SizedBox(
-                                    height: MediaQuery.of(context).size.height *
-                                        0.35,
+                                    height:
+                                        MediaQuery.of(context).size.height *
+                                            0.35,
                                     child: Center(
                                       child: Column(
                                         mainAxisAlignment:
                                             MainAxisAlignment.center,
                                         children: [
-                                          Icon(
+                                          const Icon(
                                             Icons.chat_bubble_outline_rounded,
-                                            color: Colors.white
-                                                .withValues(alpha: 0.35),
+                                            color: AppColors.textLight,
                                             size: 54,
                                           ),
                                           const SizedBox(height: 12),
@@ -1047,10 +1036,10 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
                                             _searchQuery.isNotEmpty
                                                 ? _labels['no_search_results']!
                                                 : widget.txt('no_chats'),
-                                            style: TextStyle(
-                                              color: Colors.white
-                                                  .withValues(alpha: 0.75),
-                                              fontSize: 15,
+                                            textAlign: TextAlign.center,
+                                            style: const TextStyle(
+                                              color: AppColors.textMuted,
+                                              fontSize: 14,
                                               fontWeight: FontWeight.w600,
                                               fontFamily: 'Cairo',
                                             ),
@@ -1063,11 +1052,12 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
                               )
                             : ListView.builder(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 8),
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
                                 itemCount: filteredList.length,
                                 itemBuilder: (context, index) {
                                   final chat = filteredList[index];
-
                                   final String displayTime =
                                       _formatChatTimeDynamic(chat.time);
                                   final bool isRecentNow = displayTime ==
@@ -1079,247 +1069,230 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
                                   return Dismissible(
                                     key: Key('chat_thread_${chat.id}'),
                                     direction: DismissDirection.endToStart,
-                                    confirmDismiss: (direction) async {
-                                      return await _showDeleteConfirmationDialog(
-                                          chat);
-                                    },
-                                    onDismissed: (direction) {
-                                      _executeChatDeletion(chat);
-                                    },
+                                    confirmDismiss: (direction) async =>
+                                        _showDeleteConfirmationDialog(chat),
+                                    onDismissed: (direction) =>
+                                        _executeChatDeletion(chat),
                                     background: Container(
                                       margin: const EdgeInsets.only(bottom: 12),
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 20),
+                                        horizontal: 20,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: Colors.redAccent
-                                            .withValues(alpha: 0.88),
-                                        borderRadius: BorderRadius.circular(22),
-                                        border: Border.all(
-                                          color: Colors.white
-                                              .withValues(alpha: 0.3),
-                                        ),
+                                        color: AppColors.error,
+                                        borderRadius: BorderRadius.circular(20),
                                       ),
                                       alignment: Alignment.centerLeft,
                                       child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
                                         children: [
                                           const Icon(
-                                              Icons.delete_forever_rounded,
-                                              color: Colors.white,
-                                              size: 26),
+                                            Icons.delete_forever_rounded,
+                                            color: Colors.white,
+                                          ),
                                           const SizedBox(width: 8),
                                           Text(
                                             widget.txt('delete_action'),
                                             style: const TextStyle(
                                               color: Colors.white,
                                               fontWeight: FontWeight.bold,
-                                              fontSize: 14,
+                                              fontSize: 13,
                                               fontFamily: 'Cairo',
                                             ),
                                           ),
                                         ],
                                       ),
                                     ),
-                                    child: InkWell(
-                                      onLongPress: () async {
-                                        final confirm =
-                                            await _showDeleteConfirmationDialog(
-                                                chat);
-                                        if (confirm == true) {
-                                          _executeChatDeletion(chat);
-                                        }
-                                      },
-                                      onTap: () => _openChatDetail(chat),
-                                      borderRadius: BorderRadius.circular(22),
-                                      child: Container(
-                                        margin:
-                                            const EdgeInsets.only(bottom: 12),
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 14, vertical: 13),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white
-                                              .withValues(alpha: 0.12),
-                                          borderRadius:
-                                              BorderRadius.circular(22),
-                                          border: Border.all(
-                                            color: Colors.white
-                                                .withValues(alpha: 0.25),
-                                            width: 1.2,
+                                    child: Material(
+                                      color: AppColors.cardColor,
+                                      borderRadius: BorderRadius.circular(20),
+                                      child: InkWell(
+                                        onLongPress: () async {
+                                          final confirm =
+                                              await _showDeleteConfirmationDialog(
+                                                  chat);
+                                          if (confirm == true) {
+                                            _executeChatDeletion(chat);
+                                          }
+                                        },
+                                        onTap: () => _openChatDetail(chat),
+                                        borderRadius: BorderRadius.circular(20),
+                                        child: Container(
+                                          margin:
+                                              const EdgeInsets.only(bottom: 12),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 14,
+                                            vertical: 13,
                                           ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black
-                                                  .withValues(alpha: 0.12),
-                                              blurRadius: 12,
-                                              offset: const Offset(0, 4),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.cardColor,
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                            border: Border.all(
+                                              color: AppColors.lineColor,
                                             ),
-                                          ],
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Stack(
-                                              children: [
-                                                _buildStyledAvatar(
-                                                  imageUrl: chat.image,
-                                                  gender: chat.gender,
-                                                  radius: 27,
-                                                ),
-                                                if (chat.isOnline)
-                                                  Positioned(
-                                                    bottom: 0,
-                                                    right: 0,
-                                                    child: Container(
-                                                      width: 13,
-                                                      height: 13,
-                                                      decoration: BoxDecoration(
-                                                        color: const Color(
-                                                            0xFF10B981),
-                                                        shape: BoxShape.circle,
-                                                        border: Border.all(
-                                                          color: Colors.white,
-                                                          width: 1.8,
-                                                        ),
-                                                        boxShadow: const [
-                                                          BoxShadow(
-                                                            color: Color(
-                                                                0xFF10B981),
-                                                            blurRadius: 5,
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ),
-                                              ],
-                                            ),
-                                            const SizedBox(width: 14),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: AppColors.textDark
+                                                    .withValues(alpha: 0.045),
+                                                blurRadius: 14,
+                                                offset: const Offset(0, 5),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Stack(
                                                 children: [
-                                                  Row(
-                                                    children: [
-                                                      Flexible(
-                                                        child: Text(
-                                                          chat.name,
-                                                          maxLines: 1,
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
-                                                          style:
-                                                              const TextStyle(
+                                                  _buildStyledAvatar(
+                                                    imageUrl: chat.image,
+                                                    gender: chat.gender,
+                                                    radius: 27,
+                                                  ),
+                                                  if (chat.isOnline)
+                                                    Positioned(
+                                                      bottom: 0,
+                                                      right: 0,
+                                                      child: Container(
+                                                        width: 13,
+                                                        height: 13,
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: AppColors.success,
+                                                          shape:
+                                                              BoxShape.circle,
+                                                          border: Border.all(
                                                             color: Colors.white,
-                                                            fontWeight:
-                                                                FontWeight.w800,
-                                                            fontSize: 16,
-                                                            fontFamily: 'Cairo',
-                                                            letterSpacing: 0.2,
+                                                            width: 1.8,
                                                           ),
                                                         ),
                                                       ),
-                                                      // 🟢 إظهار شارة الباقات الموحدة عند توفر اسم الباقة
-                                                      if (chat.packageName
-                                                          .isNotEmpty) ...[
-                                                        const SizedBox(
-                                                            width: 6),
-                                                        PackageBadgeWidget(
-                                                          packageName:
-                                                              chat.packageName,
-                                                          compact: true,
-                                                          isArabic:
-                                                              isArabicLocale,
-                                                        ),
-                                                      ],
-                                                    ],
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Text(
-                                                    chat.lastMessage,
-                                                    maxLines: 1,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                    style: TextStyle(
-                                                      color:
-                                                          chat.unreadCount > 0
-                                                              ? Colors.white
-                                                              : const Color(
-                                                                  0xFFCBD5E1),
-                                                      fontSize: 13.5,
-                                                      height: 1.3,
-                                                      fontWeight:
-                                                          chat.unreadCount > 0
-                                                              ? FontWeight.w700
-                                                              : FontWeight.w400,
-                                                      fontFamily: 'Cairo',
                                                     ),
-                                                  ),
                                                 ],
                                               ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.end,
-                                              children: [
-                                                Text(
-                                                  displayTime,
-                                                  style: TextStyle(
-                                                    color: isRecentNow
-                                                        ? const Color(
-                                                            0xFF38BDF8)
-                                                        : const Color(
-                                                            0xFF94A3B8),
-                                                    fontSize: 11.5,
-                                                    fontWeight: isRecentNow
-                                                        ? FontWeight.bold
-                                                        : FontWeight.w600,
-                                                    fontFamily: 'Cairo',
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 6),
-                                                if (chat.unreadCount > 0)
-                                                  Container(
-                                                    padding: const EdgeInsets
-                                                        .symmetric(
-                                                        horizontal: 9,
-                                                        vertical: 3.5),
-                                                    decoration: BoxDecoration(
-                                                      gradient:
-                                                          const LinearGradient(
-                                                        colors: [
-                                                          Color(0xFFDC2626),
-                                                          Color(0xFFF87171),
-                                                        ],
-                                                      ),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              12),
-                                                      boxShadow: [
-                                                        BoxShadow(
-                                                          color: const Color(
-                                                                  0xFFDC2626)
-                                                              .withValues(
-                                                                  alpha: 0.55),
-                                                          blurRadius: 8,
-                                                          offset: const Offset(
-                                                              0, 2),
+                                              const SizedBox(width: 13),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Row(
+                                                      children: [
+                                                        Flexible(
+                                                          child: Text(
+                                                            chat.name,
+                                                            maxLines: 1,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                            style:
+                                                                const TextStyle(
+                                                              color: AppColors
+                                                                  .textDark,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w800,
+                                                              fontSize: 15,
+                                                              fontFamily:
+                                                                  'Cairo',
+                                                            ),
+                                                          ),
                                                         ),
+                                                        if (chat.packageName
+                                                            .isNotEmpty) ...[
+                                                          const SizedBox(
+                                                              width: 6),
+                                                          PackageBadgeWidget(
+                                                            packageName:
+                                                                chat.packageName,
+                                                            compact: true,
+                                                            isArabic:
+                                                                isArabicLocale,
+                                                          ),
+                                                        ],
                                                       ],
                                                     ),
-                                                    child: Text(
-                                                      '${chat.unreadCount}',
-                                                      style: const TextStyle(
-                                                        color: Colors.white,
-                                                        fontSize: 10.5,
+                                                    const SizedBox(height: 4),
+                                                    Text(
+                                                      chat.lastMessage,
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      style: TextStyle(
+                                                        color:
+                                                            chat.unreadCount > 0
+                                                                ? AppColors
+                                                                    .textDark
+                                                                : AppColors
+                                                                    .textMuted,
+                                                        fontSize: 12.5,
+                                                        height: 1.3,
                                                         fontWeight:
-                                                            FontWeight.bold,
+                                                            chat.unreadCount > 0
+                                                                ? FontWeight
+                                                                    .w700
+                                                                : FontWeight
+                                                                    .w400,
                                                         fontFamily: 'Cairo',
                                                       ),
                                                     ),
+                                                  ],
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.end,
+                                                children: [
+                                                  Text(
+                                                    displayTime,
+                                                    style: TextStyle(
+                                                      color: isRecentNow
+                                                          ? AppColors.primaryTeal
+                                                          : AppColors.textLight,
+                                                      fontSize: 10.5,
+                                                      fontWeight: isRecentNow
+                                                          ? FontWeight.bold
+                                                          : FontWeight.w600,
+                                                      fontFamily: 'Cairo',
+                                                    ),
                                                   ),
-                                              ],
-                                            ),
-                                          ],
+                                                  const SizedBox(height: 6),
+                                                  if (chat.unreadCount > 0)
+                                                    Container(
+                                                      constraints:
+                                                          const BoxConstraints(
+                                                              minWidth: 22),
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                        horizontal: 7,
+                                                        vertical: 3,
+                                                      ),
+                                                      decoration:
+                                                          const BoxDecoration(
+                                                        color: AppColors
+                                                            .accentWarm,
+                                                        borderRadius:
+                                                            BorderRadius.all(
+                                                          Radius.circular(10),
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        '${chat.unreadCount}',
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        style: const TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 10,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontFamily: 'Cairo',
+                                                        ),
+                                                      ),
+                                                    ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),

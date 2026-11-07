@@ -5,6 +5,7 @@
 //        الكامل للغتين (عربي / إنجليزي) ووضوح محسّن للخطوط والقوائم.
 // ============================================================================
 import 'package:flutter/material.dart';
+import '../../../constants/colors.dart';
 import 'package:wesal_app/widgets/bottom_system_inset.dart';
 import '../../../services/api_service.dart';
 import '../search_results_screen.dart';
@@ -589,11 +590,11 @@ class _SearchTabState extends State<SearchTab> {
                   bottom: bottomInset + 18,
                 ),
                 decoration: BoxDecoration(
-                  color: Color(0xFF181824).withValues(alpha: 0.98),
+                  color: AppColors.cardColor,
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(28)),
                   border:
-                      Border.all(color: Colors.white.withValues(alpha: 0.25)),
+                      Border.all(color: AppColors.lineColor),
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -604,7 +605,7 @@ class _SearchTabState extends State<SearchTab> {
                         width: 38,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: Colors.white54,
+                          color: AppColors.textLight,
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
@@ -613,7 +614,7 @@ class _SearchTabState extends State<SearchTab> {
                     Text(
                       title,
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppColors.textDark,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         fontFamily: 'Cairo',
@@ -624,15 +625,15 @@ class _SearchTabState extends State<SearchTab> {
                       Container(
                         height: 46,
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.12),
+                          color: AppColors.sectionBackground,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.25)),
+                              color: AppColors.lineColor),
                         ),
                         child: TextField(
                           controller: searchController,
                           style: const TextStyle(
-                              color: Colors.white,
+                              color: AppColors.textDark,
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               fontFamily: 'Cairo'),
@@ -645,15 +646,15 @@ class _SearchTabState extends State<SearchTab> {
                             hintText:
                                 _isAr ? 'ابحث في القائمة...' : 'Search list...',
                             hintStyle: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.55),
+                                color: AppColors.textDark.withValues(alpha: 0.55),
                                 fontSize: 13.5,
                                 fontFamily: 'Cairo'),
                             prefixIcon: const Icon(Icons.search_rounded,
-                                color: Color(0xFF4FC3F7), size: 22),
+                                color: AppColors.secondaryTeal, size: 22),
                             suffixIcon: searchQuery.isNotEmpty
                                 ? IconButton(
                                     icon: const Icon(Icons.clear_rounded,
-                                        color: Colors.white70, size: 20),
+                                        color: AppColors.textMuted, size: 20),
                                     onPressed: () {
                                       searchController.clear();
                                       setModalState(() {
@@ -678,7 +679,7 @@ class _SearchTabState extends State<SearchTab> {
                                     ? 'لا توجد نتائج تطابق بحثك'
                                     : 'No matching results found',
                                 style: const TextStyle(
-                                    color: Colors.white70,
+                                    color: AppColors.textMuted,
                                     fontSize: 14,
                                     fontFamily: 'Cairo'),
                               ),
@@ -728,7 +729,7 @@ class _SearchTabState extends State<SearchTab> {
                                         child: Row(
                                           children: [
                                             const Icon(Icons.star_rounded,
-                                                color: Color(0xFF4FC3F7),
+                                                color: AppColors.secondaryTeal,
                                                 size: 16),
                                             const SizedBox(width: 6),
                                             Text(
@@ -736,7 +737,7 @@ class _SearchTabState extends State<SearchTab> {
                                                   ? 'الدول العربية'
                                                   : 'Arab Countries',
                                               style: const TextStyle(
-                                                color: Color(0xFF4FC3F7),
+                                                color: AppColors.secondaryTeal,
                                                 fontSize: 13,
                                                 fontWeight: FontWeight.bold,
                                                 fontFamily: 'Cairo',
@@ -756,7 +757,7 @@ class _SearchTabState extends State<SearchTab> {
                                         child: Row(
                                           children: [
                                             const Icon(Icons.public_rounded,
-                                                color: Colors.white70,
+                                                color: AppColors.textMuted,
                                                 size: 16),
                                             const SizedBox(width: 6),
                                             Text(
@@ -764,7 +765,7 @@ class _SearchTabState extends State<SearchTab> {
                                                   ? 'باقي دول العالم'
                                                   : 'Other Countries',
                                               style: const TextStyle(
-                                                color: Colors.white70,
+                                                color: AppColors.textMuted,
                                                 fontSize: 13,
                                                 fontWeight: FontWeight.bold,
                                                 fontFamily: 'Cairo',
@@ -791,16 +792,16 @@ class _SearchTabState extends State<SearchTab> {
                                                 horizontal: 14, vertical: 13),
                                             decoration: BoxDecoration(
                                               color: isSelected
-                                                  ? Color(0xFF4FC3F7)
+                                                  ? AppColors.secondaryTeal
                                                       .withValues(alpha: 0.22)
-                                                  : Colors.white
+                                                  : AppColors.textDark
                                                       .withValues(alpha: 0.08),
                                               borderRadius:
                                                   BorderRadius.circular(14),
                                               border: Border.all(
                                                 color: isSelected
-                                                    ? const Color(0xFF4FC3F7)
-                                                    : Colors.white.withValues(
+                                                    ? const AppColors.secondaryTeal
+                                                    : AppColors.textDark.withValues(
                                                         alpha: 0.15),
                                               ),
                                             ),
@@ -817,7 +818,7 @@ class _SearchTabState extends State<SearchTab> {
                                                         color: isSelected
                                                             ? const Color(
                                                                 0xFF4FC3F7)
-                                                            : Colors.white,
+                                                            : AppColors.textDark,
                                                         fontWeight: isSelected
                                                             ? FontWeight.bold
                                                             : FontWeight.w600,
@@ -836,7 +837,7 @@ class _SearchTabState extends State<SearchTab> {
                                                         decoration:
                                                             BoxDecoration(
                                                           color:
-                                                              Color(0xFF4FC3F7)
+                                                              AppColors.secondaryTeal
                                                                   .withValues(
                                                                       alpha:
                                                                           0.2),
@@ -871,7 +872,7 @@ class _SearchTabState extends State<SearchTab> {
                                                 if (isSelected)
                                                   const Icon(
                                                     Icons.check_circle_rounded,
-                                                    color: Color(0xFF4FC3F7),
+                                                    color: AppColors.secondaryTeal,
                                                     size: 20,
                                                   ),
                                               ],
@@ -913,73 +914,51 @@ class _SearchTabState extends State<SearchTab> {
       children: [
         Row(
           children: [
-            Icon(icon, color: const Color(0xFF4FC3F7), size: 18),
+            Icon(icon, color: AppColors.primaryTeal, size: 18),
             const SizedBox(width: 6),
-            Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white,
+            Expanded(
+              child: Text(title, style: const TextStyle(
+                color: AppColors.textDark,
                 fontSize: 13.5,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Cairo',
-              ),
+              )),
             ),
           ],
         ),
         const SizedBox(height: 10),
         Wrap(
           spacing: 8,
-          runSpacing: 10,
+          runSpacing: 9,
           children: items.map((item) {
             final String text = _getItemName(item);
             final bool isSelected = selectedItem != null &&
                 ((item['id'] == null && selectedItem['id'] == null) ||
                     (item['id'] != null &&
                         selectedItem['id'] != null &&
-                        item['id'].toString() ==
-                            selectedItem['id'].toString())) &&
+                        item['id'].toString() == selectedItem['id'].toString())) &&
                 text == selectedItemName;
-
             return Material(
               color: Colors.transparent,
               child: InkWell(
                 onTap: () => onSelected(item),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(13),
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 15, vertical: 9),
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
                   decoration: BoxDecoration(
-                    color: isSelected
-                        ? const Color(0xFF0288D1)
-                        : Colors.white.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
+                    color: isSelected ? AppColors.primaryTeal : AppColors.sectionBackground,
+                    borderRadius: BorderRadius.circular(13),
                     border: Border.all(
-                      color: isSelected
-                          ? const Color(0xFF4FC3F7)
-                          : Colors.white.withValues(alpha: 0.28),
-                      width: isSelected ? 1.5 : 1.0,
-                    ),
-                    boxShadow: isSelected
-                        ? [
-                            BoxShadow(
-                              color: Color(0xFF0288D1).withValues(alpha: 0.5),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            )
-                          ]
-                        : [],
-                  ),
-                  child: Text(
-                    text,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.w600,
-                      fontFamily: 'Cairo',
+                      color: isSelected ? AppColors.primaryTeal : AppColors.lineColor,
                     ),
                   ),
+                  child: Text(text, style: TextStyle(
+                    color: isSelected ? Colors.white : AppColors.textDark,
+                    fontSize: 12.5,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                    fontFamily: 'Cairo',
+                  )),
                 ),
               ),
             );
@@ -1004,46 +983,39 @@ class _SearchTabState extends State<SearchTab> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.12),
+            color: AppColors.cardColor,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+            border: Border.all(color: AppColors.lineColor),
           ),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
+                decoration: const BoxDecoration(
+                  color: AppColors.sectionBackground,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, color: const Color(0xFF4FC3F7), size: 20),
+                child: Icon(icon, color: AppColors.primaryTeal, size: 20),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      label,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.75),
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'Cairo',
-                      ),
-                    ),
+                    Text(label, style: const TextStyle(
+                      color: AppColors.textMuted,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Cairo',
+                    )),
                     const SizedBox(height: 2),
-                    Text(
-                      value,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Text(value, maxLines: 1, overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14.5,
+                        color: AppColors.textDark,
+                        fontSize: 14,
                         fontWeight: FontWeight.bold,
                         fontFamily: 'Cairo',
-                      ),
-                    ),
+                      )),
                   ],
                 ),
               ),
@@ -1053,15 +1025,12 @@ class _SearchTabState extends State<SearchTab> {
                   height: 18,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Color(0xFF4FC3F7),
+                    color: AppColors.primaryTeal,
                   ),
                 )
               else
-                Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: Colors.white.withValues(alpha: 0.85),
-                  size: 22,
-                ),
+                const Icon(Icons.keyboard_arrow_down_rounded,
+                  color: AppColors.textMuted, size: 22),
             ],
           ),
         ),
@@ -1071,78 +1040,73 @@ class _SearchTabState extends State<SearchTab> {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+      padding: const EdgeInsets.fromLTRB(18, 12, 16, 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
-            ),
-            child: Row(
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF4FC3F7),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 8),
+                Text(widget.txt('search'), style: const TextStyle(
+                  color: AppColors.textDark,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  fontFamily: 'Cairo',
+                )),
+                const SizedBox(height: 2),
                 Text(
-                  widget.txt('search'),
+                  _isAr
+                      ? 'حدّد المواصفات الأقرب لما تبحث عنه'
+                      : 'Choose the preferences that matter to you',
                   style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
+                    color: AppColors.textMuted,
+                    fontSize: 12,
                     fontFamily: 'Cairo',
                   ),
                 ),
               ],
             ),
           ),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.18),
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                IconButton(
-                  constraints:
-                      const BoxConstraints(minWidth: 38, minHeight: 38),
-                  icon: const Icon(Icons.notifications_none_rounded,
-                      color: Colors.white, size: 20),
-                  onPressed: widget.onNotificationPressed,
-                ),
-                if (widget.unreadNotificationCount > 0)
-                  Positioned(
-                    top: 6,
-                    right: 6,
-                    child: Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: const BoxDecoration(
-                        color: Colors.redAccent,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        '${widget.unreadNotificationCount}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Cairo',
+          Material(
+            color: AppColors.cardColor,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: widget.onNotificationPressed,
+              child: SizedBox(
+                width: 42,
+                height: 42,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const Icon(Icons.notifications_none_rounded,
+                      color: AppColors.primaryTeal, size: 21),
+                    if (widget.unreadNotificationCount > 0)
+                      Positioned(
+                        top: 5,
+                        right: 5,
+                        child: Container(
+                          constraints: const BoxConstraints(minWidth: 15),
+                          padding: const EdgeInsets.all(3),
+                          decoration: const BoxDecoration(
+                            color: AppColors.accentWarm,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            '${widget.unreadNotificationCount}',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Cairo',
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-              ],
+                  ],
+                ),
+              ),
             ),
           ),
         ],
@@ -1165,7 +1129,7 @@ class _SearchTabState extends State<SearchTab> {
             child: _isLoadingDropdowns
                 ? const Center(
                     child: CircularProgressIndicator(
-                      color: Color(0xFF4FC3F7),
+                      color: AppColors.primaryTeal,
                     ),
                   )
                 : SingleChildScrollView(
@@ -1177,10 +1141,10 @@ class _SearchTabState extends State<SearchTab> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.14),
+                            color: AppColors.cardColor,
                             borderRadius: BorderRadius.circular(24),
                             border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.28)),
+                                color: AppColors.lineColor),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1193,14 +1157,14 @@ class _SearchTabState extends State<SearchTab> {
                                     child: Row(
                                       children: [
                                         const Icon(Icons.tune_rounded,
-                                            color: Color(0xFF4FC3F7), size: 20),
+                                            color: AppColors.primaryTeal, size: 20),
                                         const SizedBox(width: 8),
                                         Expanded(
                                           child: Text(
                                             widget.txt('advanced_search'),
                                             overflow: TextOverflow.ellipsis,
                                             style: const TextStyle(
-                                              color: Colors.white,
+                                              color: AppColors.textDark,
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold,
                                               fontFamily: 'Cairo',
@@ -1220,12 +1184,12 @@ class _SearchTabState extends State<SearchTab> {
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           const Icon(Icons.refresh_rounded,
-                                              color: Colors.white, size: 16),
+                                              color: AppColors.primaryTeal, size: 16),
                                           const SizedBox(width: 4),
                                           Text(
                                             _isAr ? 'إعادة ضبط' : 'Reset',
                                             style: const TextStyle(
-                                                color: Colors.white,
+                                                color: AppColors.textDark,
                                                 fontSize: 12.5,
                                                 fontWeight: FontWeight.w600,
                                                 fontFamily: 'Cairo'),
@@ -1249,7 +1213,7 @@ class _SearchTabState extends State<SearchTab> {
                                       Row(
                                         children: [
                                           const Icon(Icons.cake_rounded,
-                                              color: Color(0xFF4FC3F7),
+                                              color: AppColors.secondaryTeal,
                                               size: 18),
                                           const SizedBox(width: 6),
                                           Text(
@@ -1257,7 +1221,7 @@ class _SearchTabState extends State<SearchTab> {
                                                 ? 'المدى العمري'
                                                 : 'Age Range',
                                             style: const TextStyle(
-                                              color: Colors.white,
+                                              color: AppColors.textDark,
                                               fontSize: 13.5,
                                               fontWeight: FontWeight.bold,
                                               fontFamily: 'Cairo',
@@ -1269,18 +1233,18 @@ class _SearchTabState extends State<SearchTab> {
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 11, vertical: 4),
                                         decoration: BoxDecoration(
-                                          color: Color(0xFF4FC3F7)
+                                          color: AppColors.secondaryTeal
                                               .withValues(alpha: 0.20),
                                           borderRadius:
                                               BorderRadius.circular(10),
                                           border: Border.all(
-                                              color: Color(0xFF4FC3F7)
+                                              color: AppColors.secondaryTeal
                                                   .withValues(alpha: 0.4)),
                                         ),
                                         child: Text(
                                           '${_ageRange.start.round()} - ${_ageRange.end.round()} ${_isAr ? 'سنة' : 'yrs'}',
                                           style: const TextStyle(
-                                            color: Colors.white,
+                                            color: AppColors.textDark,
                                             fontSize: 12.5,
                                             fontWeight: FontWeight.bold,
                                             fontFamily: 'Cairo',
@@ -1292,10 +1256,10 @@ class _SearchTabState extends State<SearchTab> {
                                   const SizedBox(height: 6),
                                   SliderTheme(
                                     data: SliderTheme.of(context).copyWith(
-                                      activeTrackColor: const Color(0xFF0288D1),
-                                      inactiveTrackColor: Colors.white30,
-                                      thumbColor: const Color(0xFF4FC3F7),
-                                      overlayColor: Color(0xFF4FC3F7)
+                                      activeTrackColor: AppColors.primaryTeal,
+                                      inactiveTrackColor: AppColors.lineColor,
+                                      thumbColor: AppColors.accentWarm,
+                                      overlayColor: AppColors.secondaryTeal
                                           .withValues(alpha: 0.25),
                                       trackHeight: 5,
                                     ),
@@ -1384,8 +1348,8 @@ class _SearchTabState extends State<SearchTab> {
                                 height: 50,
                                 child: ElevatedButton.icon(
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    foregroundColor: const Color(0xFF0288D1),
+                                    backgroundColor: AppColors.primaryTeal,
+                                    foregroundColor: Colors.white,
                                     elevation: 4,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(16),

@@ -6,6 +6,7 @@
 // ============================================================================
 
 import 'package:flutter/material.dart';
+import '../../constants/colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/api_service.dart';
 import '../../models/member_model.dart';
@@ -274,43 +275,38 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     );
   }
 
-  /// ودجت بناء شارة المعلومات المصغرة (Info Badge)
+  /// شارة بيانات صغيرة بنص داكن واضح على سطح فاتح.
   Widget _buildInfoBadge({
     required IconData icon,
     required String text,
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
+        color: color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, color: color, size: 12),
           const SizedBox(width: 4),
-          Text(
-            text,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.9),
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              fontFamily: 'Cairo',
-            ),
-          ),
+          Text(text, style: const TextStyle(
+            color: AppColors.textDark,
+            fontSize: 10.5,
+            fontWeight: FontWeight.w600,
+            fontFamily: 'Cairo',
+          )),
         ],
       ),
     );
   }
 
-  /// بطاقة عرض العضو الخارجية (2026 Modern Premium Member Card)
+  /// بطاقة عضو واضحة ومتناسقة مع شاشة البحث.
   Widget _buildMemberCard(MemberModel member) {
-    // 🟢 تطبيق المترجمات الديناميكية على تفاصيل العضو
-    final String maritalStatusText =
-        _translateMaritalStatus(member.maritalStatus);
+    final String maritalStatusText = _translateMaritalStatus(member.maritalStatus);
     final String religionText = _translateReligion(member.religion);
     final String residenceText = _translateResidence(member.residence);
     final String occupationText = _translateOccupation(member.occupation);
@@ -318,72 +314,67 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(22),
+        color: AppColors.cardColor,
+        borderRadius: BorderRadius.circular(20),
         child: InkWell(
           onTap: () => _openMemberProfile(member.id),
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(20),
           child: Container(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(13),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+              color: AppColors.cardColor,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.lineColor),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.20),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
+                  color: AppColors.textDark.withValues(alpha: 0.045),
+                  blurRadius: 14,
+                  offset: const Offset(0, 5),
                 ),
               ],
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // الصورة الشخصية مع إطار ملون ومعالجة أخطاء التحميل
                 Container(
                   padding: const EdgeInsets.all(2),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(
-                      color: const Color(0xFF4FC3F7).withValues(alpha: 0.6),
-                      width: 1.5,
-                    ),
+                    border: Border.all(color: AppColors.accentLight, width: 1.5),
                   ),
                   child: Container(
-                    width: 60,
-                    height: 60,
+                    width: 66,
+                    height: 66,
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white12,
+                      color: AppColors.sectionBackground,
                     ),
                     child: ClipOval(
                       child: member.image.isNotEmpty
                           ? CachedNetworkImage(
                               imageUrl: member.image,
-                              width: 60,
-                              height: 60,
+                              width: 66,
+                              height: 66,
                               fit: BoxFit.cover,
                               placeholder: (context, url) => Container(
-                                color: Colors.white12,
+                                color: AppColors.sectionBackground,
                               ),
-                              errorWidget: (context, url, error) => const Icon(
+                              errorWidget: (context, url, error) =>
+                                  const Icon(
                                 Icons.person_rounded,
-                                color: Colors.white,
-                                size: 30,
+                                color: AppColors.textLight,
+                                size: 31,
                               ),
                             )
                           : const Icon(
                               Icons.person_rounded,
-                              color: Colors.white,
-                              size: 30,
+                              color: AppColors.textLight,
+                              size: 31,
                             ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
-
-                // تفاصيل العضو والشارات
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -396,14 +387,13 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
+                                color: AppColors.textDark,
+                                fontSize: 15,
                                 fontWeight: FontWeight.bold,
                                 fontFamily: 'Cairo',
                               ),
                             ),
                           ),
-                          // شارة الباقة المخصصة
                           if (member.packageName.isNotEmpty) ...[
                             const SizedBox(width: 6),
                             _buildPackageBadge(member.packageName),
@@ -411,60 +401,54 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                         ],
                       ),
                       const SizedBox(height: 8),
-
-                      // شارات المعلومات: العمر - الحالة الاجتماعية - الديانة - الإقامة
                       Wrap(
                         spacing: 6,
                         runSpacing: 6,
                         children: [
                           _buildInfoBadge(
                             icon: Icons.cake_rounded,
-                            text: _isAr
-                                ? '${member.age} سنة'
-                                : '${member.age} yrs',
-                            color: const Color(0xFF4FC3F7),
+                            text: _isAr ? '${member.age} سنة' : '${member.age} yrs',
+                            color: AppColors.primaryTeal,
                           ),
                           if (maritalStatusText.isNotEmpty)
                             _buildInfoBadge(
                               icon: Icons.favorite_rounded,
                               text: maritalStatusText,
-                              color: const Color(0xFFFF80AB),
+                              color: const Color(0xFF9C4A62),
                             ),
                           if (religionText.isNotEmpty)
                             _buildInfoBadge(
                               icon: Icons.auto_awesome_rounded,
                               text: religionText,
-                              color: const Color(0xFFFFD54F),
+                              color: const Color(0xFF8A641D),
                             ),
                           if (residenceText.isNotEmpty)
                             _buildInfoBadge(
                               icon: Icons.location_on_rounded,
                               text: residenceText,
-                              color: const Color(0xFF81D4FA),
+                              color: AppColors.secondaryTeal,
                             ),
                         ],
                       ),
-
                       if (occupationText.isNotEmpty &&
                           occupationText != 'غير محدد' &&
                           occupationText != 'Unspecified') ...[
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            Icon(
-                              Icons.work_rounded,
-                              color: const Color(0xFF4FC3F7)
-                                  .withValues(alpha: 0.8),
-                              size: 13,
+                            const Icon(
+                              Icons.work_outline_rounded,
+                              color: AppColors.primaryTeal,
+                              size: 14,
                             ),
-                            const SizedBox(width: 4),
+                            const SizedBox(width: 5),
                             Expanded(
                               child: Text(
                                 occupationText,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.65),
+                                style: const TextStyle(
+                                  color: AppColors.textMuted,
                                   fontSize: 11,
                                   fontFamily: 'Cairo',
                                 ),
@@ -477,23 +461,19 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                   ),
                 ),
                 const SizedBox(width: 6),
-
-                // أيقونة سهم الانتقال
-                Padding(
-                  padding: const EdgeInsets.only(top: 4.0),
-                  child: Container(
-                    padding: const EdgeInsets.all(7),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.10),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      _isAr
-                          ? Icons.arrow_back_ios_new_rounded
-                          : Icons.arrow_forward_ios_rounded,
-                      color: Colors.white70,
-                      size: 12,
-                    ),
+                Container(
+                  margin: const EdgeInsets.only(top: 2),
+                  padding: const EdgeInsets.all(7),
+                  decoration: const BoxDecoration(
+                    color: AppColors.sectionBackground,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    _isAr
+                        ? Icons.arrow_back_ios_new_rounded
+                        : Icons.arrow_forward_ios_rounded,
+                    color: AppColors.textMuted,
+                    size: 12,
                   ),
                 ),
               ],
@@ -528,195 +508,196 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     return Directionality(
       textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: const Color(0xFF12121C),
+        backgroundColor: AppColors.backgroundColor,
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
+          backgroundColor: AppColors.backgroundColor,
+          surfaceTintColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
             icon: Icon(
               _isAr
                   ? Icons.arrow_back_ios_new_rounded
                   : Icons.arrow_back_ios_rounded,
-              color: Colors.white,
+              color: AppColors.textDark,
             ),
             onPressed: () => Navigator.pop(context),
           ),
           title: Text(
             _isAr ? 'نتائج البحث' : 'Search Results',
             style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Cairo'),
+              color: AppColors.textDark,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Cairo',
+            ),
           ),
           centerTitle: true,
         ),
-        body: SafeArea(top: false, bottom: true, child: Column(
-          children: [
-            // شريط ملخص الفلاتر
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.filter_alt_rounded,
-                      color: Color(0xFF4FC3F7), size: 18),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _buildFilterSummaryText(),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.85),
-                          fontSize: 12,
-                          fontFamily: 'Cairo'),
+        body: SafeArea(
+          top: false,
+          bottom: true,
+          child: Column(
+            children: [
+              Container(
+                margin: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                decoration: BoxDecoration(
+                  color: AppColors.cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.lineColor),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.filter_alt_rounded,
+                      color: AppColors.primaryTeal,
+                      size: 18,
                     ),
-                  ),
-                  if (!_isLoading)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF4FC3F7).withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                    const SizedBox(width: 8),
+                    Expanded(
                       child: Text(
-                        _isAr
-                            ? '${_results.length} عضو'
-                            : '${_results.length} members',
+                        _buildFilterSummaryText(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          color: Color(0xFF4FC3F7),
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
+                          color: AppColors.textDark,
+                          fontSize: 11.5,
                           fontFamily: 'Cairo',
                         ),
                       ),
                     ),
-                ],
-              ),
-            ),
-
-            // عرض نتائج الأعضاء
-            Expanded(
-              child: _isLoading
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const CircularProgressIndicator(
-                              color: Color(0xFF4FC3F7)),
-                          const SizedBox(height: 14),
-                          Text(
-                            _isAr
-                                ? 'جاري البحث عن الأعضاء المطابقين...'
-                                : 'Searching for matching members...',
-                            style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 13,
-                                fontFamily: 'Cairo'),
+                    if (!_isLoading)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.accentLight.withValues(alpha: 0.28),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          _isAr ? '${_results.length} عضو' : '${_results.length} members',
+                          style: const TextStyle(
+                            color: AppColors.primaryTeal,
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Cairo',
                           ),
-                        ],
+                        ),
                       ),
-                    )
-                  : _errorMessage != null
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.error_outline_rounded,
-                                  color: Colors.redAccent, size: 48),
-                              const SizedBox(height: 10),
-                              Text(
-                                _errorMessage!,
-                                style: const TextStyle(
-                                    color: Colors.white70, fontFamily: 'Cairo'),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: _isLoading
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const CircularProgressIndicator(color: AppColors.primaryTeal),
+                            const SizedBox(height: 14),
+                            Text(
+                              _isAr
+                                  ? 'جاري البحث عن الأعضاء المطابقين...'
+                                  : 'Searching for matching members...',
+                              style: const TextStyle(
+                                color: AppColors.textMuted,
+                                fontSize: 13,
+                                fontFamily: 'Cairo',
                               ),
-                              const SizedBox(height: 14),
-                              ElevatedButton(
-                                onPressed: _fetchSearchResults,
-                                style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF0288D1)),
-                                child: Text(
-                                  _isAr ? 'إعادة المحاولة' : 'Retry',
-                                  style: const TextStyle(
-                                      color: Colors.white, fontFamily: 'Cairo'),
-                                ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : _errorMessage != null
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 44),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    _errorMessage!,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      color: AppColors.textDark,
+                                      fontFamily: 'Cairo',
+                                    ),
+                                  ),
+                                  const SizedBox(height: 14),
+                                  ElevatedButton(
+                                    onPressed: _fetchSearchResults,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.primaryTeal,
+                                      foregroundColor: Colors.white,
+                                    ),
+                                    child: Text(
+                                      _isAr ? 'إعادة المحاولة' : 'Retry',
+                                      style: const TextStyle(color: Colors.white, fontFamily: 'Cairo'),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        )
-                      : RefreshIndicator(
-                          onRefresh: _fetchSearchResults,
-                          color: const Color(0xFF4FC3F7),
-                          backgroundColor: const Color(0xFF1E1E2C),
-                          child: _results.isEmpty
-                              ? ListView(
-                                  physics:
-                                      const AlwaysScrollableScrollPhysics(),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 40),
-                                  children: [
-                                    SizedBox(
-                                      height:
-                                          MediaQuery.of(context).size.height *
-                                              0.35,
-                                      child: Center(
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Icon(Icons.search_off_rounded,
-                                                color: Colors.white
-                                                    .withValues(alpha: 0.4),
-                                                size: 56),
-                                            const SizedBox(height: 12),
-                                            Text(
-                                              _isAr
-                                                  ? 'لا توجد نتائج تطابق خيارات الفلترة المحددة'
-                                                  : 'No members match the selected filters',
-                                              textAlign: TextAlign.center,
-                                              style: const TextStyle(
-                                                  color: Colors.white,
+                            ),
+                          )
+                        : RefreshIndicator(
+                            onRefresh: _fetchSearchResults,
+                            color: AppColors.primaryTeal,
+                            backgroundColor: AppColors.cardColor,
+                            child: _results.isEmpty
+                                ? ListView(
+                                    physics: const AlwaysScrollableScrollPhysics(),
+                                    padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 36),
+                                    children: [
+                                      SizedBox(
+                                        height: MediaQuery.of(context).size.height * 0.35,
+                                        child: Center(
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              const Icon(Icons.search_off_rounded, color: AppColors.textLight, size: 54),
+                                              const SizedBox(height: 12),
+                                              Text(
+                                                _isAr
+                                                    ? 'لا توجد نتائج تطابق خيارات الفلترة المحددة'
+                                                    : 'No members match the selected filters',
+                                                textAlign: TextAlign.center,
+                                                style: const TextStyle(
+                                                  color: AppColors.textDark,
                                                   fontSize: 14,
                                                   fontWeight: FontWeight.bold,
-                                                  fontFamily: 'Cairo'),
-                                            ),
-                                            const SizedBox(height: 6),
-                                            Text(
-                                              _isAr
-                                                  ? 'جرب توسيع نطاق البحث أو تغيير الدولة/المدينة'
-                                                  : 'Try expanding search range or changing country/city',
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                  color: Colors.white
-                                                      .withValues(alpha: 0.6),
+                                                  fontFamily: 'Cairo',
+                                                ),
+                                              ),
+                                              const SizedBox(height: 6),
+                                              Text(
+                                                _isAr
+                                                    ? 'جرّب توسيع نطاق البحث أو تغيير الدولة والمحافظة'
+                                                    : 'Try expanding your age range or changing the location',
+                                                textAlign: TextAlign.center,
+                                                style: const TextStyle(
+                                                  color: AppColors.textMuted,
                                                   fontSize: 12,
-                                                  fontFamily: 'Cairo'),
-                                            ),
-                                          ],
+                                                  fontFamily: 'Cairo',
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                )
-                              : ListView.builder(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 8),
-                                  itemCount: _results.length,
-                                  itemBuilder: (context, index) {
-                                    return _buildMemberCard(_results[index]);
-                                  },
-                                ),
-                        ),
-            ),
-          ],
-        )),
+                                    ],
+                                  )
+                                : ListView.builder(
+                                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 18),
+                                    itemCount: _results.length,
+                                    itemBuilder: (context, index) =>
+                                        _buildMemberCard(_results[index]),
+                                  ),
+                          ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

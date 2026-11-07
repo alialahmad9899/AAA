@@ -2124,6 +2124,9 @@ class _SubscriptionsModalContentState
   Widget build(BuildContext context) {
     final double bottomInset = MediaQuery.viewInsetsOf(context).bottom;
     final double screenHeight = MediaQuery.sizeOf(context).height;
+    final bool isPaymentStep = _showPaymentStep;
+    final Color headingColor =
+        isPaymentStep ? Colors.white : AppColors.textDark;
 
     return Directionality(
       textDirection: widget.isArabic ? TextDirection.rtl : TextDirection.ltr,
@@ -2134,20 +2137,25 @@ class _SubscriptionsModalContentState
           child: Container(
             height: screenHeight * 0.88,
             decoration: BoxDecoration(
-              color: const Color(0xFF0F172A).withValues(alpha: 0.96),
+              color: isPaymentStep
+                  ? const Color(0xFF0F172A).withValues(alpha: 0.98)
+                  : AppColors.backgroundColor,
               borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(32)),
+                  const BorderRadius.vertical(top: Radius.circular(30)),
               border: Border.all(
-                  color: AppColors.accentLight.withValues(alpha: 0.4)),
+                color: isPaymentStep
+                    ? AppColors.accentLight.withValues(alpha: 0.35)
+                    : AppColors.lineColor,
+              ),
             ),
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(18, 12, 18, 18),
             child: Column(
               children: [
                 Container(
                   width: 42,
-                  height: 4.5,
+                  height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.white30,
+                    color: isPaymentStep ? Colors.white30 : AppColors.lineColor,
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
@@ -2157,11 +2165,12 @@ class _SubscriptionsModalContentState
                     if (_showPaymentStep)
                       IconButton(
                         icon: Icon(
-                            widget.isArabic
-                                ? Icons.arrow_forward_ios_rounded
-                                : Icons.arrow_back_ios_rounded,
-                            color: Colors.white,
-                            size: 20),
+                          widget.isArabic
+                              ? Icons.arrow_forward_ios_rounded
+                              : Icons.arrow_back_ios_rounded,
+                          color: Colors.white,
+                          size: 19,
+                        ),
                         onPressed: _isSubmitting
                             ? null
                             : () {
@@ -2172,37 +2181,67 @@ class _SubscriptionsModalContentState
                               },
                       ),
                     Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(9),
                       decoration: BoxDecoration(
-                        color: Colors.amber.withValues(alpha: 0.2),
+                        color: isPaymentStep
+                            ? Colors.amber.withValues(alpha: 0.18)
+                            : AppColors.accentLight.withValues(alpha: 0.30),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.workspace_premium_rounded,
-                          color: Colors.amber, size: 24),
+                      child: Icon(
+                        Icons.workspace_premium_rounded,
+                        color: isPaymentStep
+                            ? Colors.amber
+                            : AppColors.primaryTeal,
+                        size: 23,
+                      ),
                     ),
-                    const SizedBox(width: 12),
-                    Text(
-                      _showPaymentStep
-                          ? (widget.isArabic
-                              ? 'وسائل الدفع المتاحة'
-                              : 'Payment Options')
-                          : (widget.isArabic
-                              ? 'باقات الاشتراك المميزة'
-                              : 'Subscription Packages'),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Cairo',
+                    const SizedBox(width: 11),
+                    Expanded(
+                      child: Text(
+                        _showPaymentStep
+                            ? (widget.isArabic
+                                ? 'وسائل الدفع المتاحة'
+                                : 'Payment Options')
+                            : (widget.isArabic
+                                ? 'اختر باقتك المناسبة'
+                                : 'Choose Your Plan'),
+                        style: TextStyle(
+                          color: headingColor,
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Cairo',
+                        ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                if (!_showPaymentStep && !_isLoading)
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 1, bottom: 9),
+                      child: Text(
+                        widget.isArabic
+                            ? 'مزايا وصال الإضافية، بخيارات واضحة وآمنة'
+                            : 'Explore Wesal benefits with clear, secure options',
+                        style: const TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 11.5,
+                          fontFamily: 'Cairo',
+                        ),
+                      ),
+                    ),
+                  ),
                 Expanded(
                   child: _isLoading
-                      ? const Center(
-                          child: CircularProgressIndicator(color: Colors.white))
+                      ? Center(
+                          child: CircularProgressIndicator(
+                            color: isPaymentStep
+                                ? Colors.white
+                                : AppColors.primaryTeal,
+                          ),
+                        )
                       : _isFreeFemale
                           ? _buildFemaleFreeCard()
                           : _showPaymentStep
@@ -2214,47 +2253,53 @@ class _SubscriptionsModalContentState
                     !_isFreeFemale &&
                     !_isLoading)
                   Padding(
-                    padding: const EdgeInsets.only(top: 12.0),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryTeal,
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18)),
-                        elevation: 8,
-                        shadowColor:
-                            AppColors.primaryTeal.withValues(alpha: 0.5),
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _showPaymentStep = true;
-                        });
-                      },
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.flash_on_rounded,
-                              color: Colors.amber, size: 22),
-                          const SizedBox(width: 8),
-                          Text(
-                            widget.isArabic
-                                ? 'الدفع الآن - $_currencySymbol$selectedAmountClean'
-                                : 'Pay Now - $_currencySymbol$selectedAmountClean',
-                            style: const TextStyle(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryTeal,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(17),
+                          ),
+                          elevation: 3,
+                          shadowColor:
+                              AppColors.primaryTeal.withValues(alpha: 0.20),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _showPaymentStep = true;
+                          });
+                        },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.lock_outline_rounded,
+                                color: Colors.white, size: 19),
+                            const SizedBox(width: 8),
+                            Text(
+                              widget.isArabic
+                                  ? 'المتابعة إلى الدفع - $_currencySymbol$selectedAmountClean'
+                                  : 'Continue to payment - $_currencySymbol$selectedAmountClean',
+                              style: const TextStyle(
                                 color: Colors.white,
-                                fontSize: 16,
+                                fontSize: 14.5,
                                 fontWeight: FontWeight.bold,
-                                fontFamily: 'Cairo'),
-                          ),
-                          const SizedBox(width: 8),
-                          Icon(
-                            widget.isArabic
-                                ? Icons.arrow_back_rounded
-                                : Icons.arrow_forward_rounded,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ],
+                                fontFamily: 'Cairo',
+                              ),
+                            ),
+                            const SizedBox(width: 7),
+                            Icon(
+                              widget.isArabic
+                                  ? Icons.arrow_back_rounded
+                                  : Icons.arrow_forward_rounded,
+                              color: Colors.white,
+                              size: 19,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -2276,45 +2321,62 @@ class _SubscriptionsModalContentState
   Widget _buildFemaleFreeCard() {
     return Center(
       child: Container(
-        padding: const EdgeInsets.all(24),
+        width: double.infinity,
+        margin: const EdgeInsets.symmetric(vertical: 18),
+        padding: const EdgeInsets.all(25),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-              colors: [Color(0xFFC2185B), Color(0xFFF48FB1)]),
-          borderRadius: BorderRadius.circular(28),
+            colors: [AppColors.primaryTeal, AppColors.secondaryTeal],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(26),
           boxShadow: [
             BoxShadow(
-                color: const Color(0xFFC2185B).withValues(alpha: 0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 8))
+              color: AppColors.primaryTeal.withValues(alpha: 0.18),
+              blurRadius: 22,
+              offset: const Offset(0, 8),
+            ),
           ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.stars_rounded, color: Colors.white, size: 64),
-            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.14),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white24),
+              ),
+              child: const Icon(Icons.favorite_rounded,
+                  color: Colors.white, size: 42),
+            ),
+            const SizedBox(height: 17),
             Text(
               widget.isArabic
-                  ? 'حسابكِ مفعل مجاناً بالكامل!'
-                  : 'Your account is completely FREE!',
+                  ? 'حسابكِ مفعّل مجاناً بالكامل'
+                  : 'Your account is fully activated for free',
               textAlign: TextAlign.center,
               style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Cairo'),
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Cairo',
+              ),
             ),
             const SizedBox(height: 10),
             Text(
               widget.isArabic
-                  ? 'تقديراً منا لدور المرأة، يمكنكِ المراسلة واستخدام كافة الميزات مجاناً ودائماً وبدون أي رسوم.'
-                  : 'You can message and use all features for free forever.',
+                  ? 'يمكنكِ المراسلة واستخدام الميزات المتاحة لكِ مجاناً. يسعدنا وجودكِ في وصال.'
+                  : 'You can message and enjoy the available features for free. We are glad to have you on Wesal.',
               textAlign: TextAlign.center,
               style: const TextStyle(
-                  color: Color(0xE6FFFFFF),
-                  fontSize: 13,
-                  fontFamily: 'Cairo',
-                  height: 1.4),
+                color: Colors.white,
+                fontSize: 12.5,
+                fontFamily: 'Cairo',
+                height: 1.5,
+              ),
             ),
           ],
         ),
@@ -2326,31 +2388,25 @@ class _SubscriptionsModalContentState
     final bool isExpiringSoon = _remainingDays <= 3;
     final double progressRatio =
         (_remainingDays / _totalValidityDays).clamp(0.0, 1.0);
+    final Color statusColor =
+        isExpiringSoon ? AppColors.error : AppColors.success;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(17),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isExpiringSoon
-              ? [
-                  const Color(0xFFD32F2F).withValues(alpha: 0.25),
-                  const Color(0xFFF57C00).withValues(alpha: 0.18)
-                ]
-              : [
-                  const Color(0xFF00897B).withValues(alpha: 0.28),
-                  AppColors.primaryTeal.withValues(alpha: 0.18)
-                ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
+        color: AppColors.cardColor,
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: isExpiringSoon
-              ? const Color(0xFFFF7043)
-              : const Color(0xFF26A69A),
-          width: 1.5,
+          color: isExpiringSoon ? AppColors.error : AppColors.lineColor,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.textDark.withValues(alpha: 0.045),
+            blurRadius: 14,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2358,32 +2414,26 @@ class _SubscriptionsModalContentState
           Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: isExpiringSoon
-                      ? const Color(0xFFE65100)
-                      : const Color(0xFF00695C),
-                  borderRadius: BorderRadius.circular(12),
+                  color: statusColor.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(11),
                 ),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      width: 7,
-                      height: 7,
-                      decoration: const BoxDecoration(
-                          color: Colors.greenAccent, shape: BoxShape.circle),
-                    ),
+                    Icon(Icons.circle, color: statusColor, size: 7),
                     const SizedBox(width: 6),
                     Text(
                       widget.isArabic
-                          ? 'اشتراكك الحالي نشط 🟢'
-                          : 'Active Subscription 🟢',
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Cairo'),
+                          ? 'اشتراكك الحالي نشط'
+                          : 'Your subscription is active',
+                      style: TextStyle(
+                        color: statusColor,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Cairo',
+                      ),
                     ),
                   ],
                 ),
@@ -2391,47 +2441,52 @@ class _SubscriptionsModalContentState
               const Spacer(),
               if (isExpiringSoon)
                 const Icon(Icons.warning_amber_rounded,
-                    color: Color(0xFFFFB74D), size: 20),
+                    color: AppColors.warning, size: 19),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 13),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _getTranslatedPackageName(
-                        _activePackageName, widget.isArabic),
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 17,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _getTranslatedPackageName(
+                          _activePackageName, widget.isArabic),
+                      style: const TextStyle(
+                        color: AppColors.textDark,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        fontFamily: 'Cairo'),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    widget.isArabic
-                        ? 'ينتهي بتاريخ: $_expiryDateStr'
-                        : 'Expires on: $_expiryDateStr',
-                    style: const TextStyle(
-                        color: Colors.white60,
-                        fontSize: 11.5,
-                        fontFamily: 'Cairo'),
-                  ),
-                ],
+                        fontFamily: 'Cairo',
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      widget.isArabic
+                          ? 'تاريخ الانتهاء: $_expiryDateStr'
+                          : 'Expires on: $_expiryDateStr',
+                      style: const TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 11,
+                        fontFamily: 'Cairo',
+                      ),
+                    ),
+                  ],
+                ),
               ),
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.35),
-                  borderRadius: BorderRadius.circular(16),
+                  color: isExpiringSoon
+                      ? AppColors.error.withValues(alpha: 0.08)
+                      : AppColors.accentLight.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(15),
                   border: Border.all(
                     color: isExpiringSoon
-                        ? Colors.redAccent.withValues(alpha: 0.6)
-                        : AppColors.accentLight.withValues(alpha: 0.5),
+                        ? AppColors.error.withValues(alpha: 0.35)
+                        : AppColors.accentLight,
                   ),
                 ),
                 child: Column(
@@ -2439,20 +2494,18 @@ class _SubscriptionsModalContentState
                     Text(
                       '$_remainingDays',
                       style: TextStyle(
-                        color: isExpiringSoon
-                            ? const Color(0xFFFF7043)
-                            : const Color(0xFF81D4FA),
+                        color: statusColor,
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                         fontFamily: 'Cairo',
-                        height: 1.0,
+                        height: 1,
                       ),
                     ),
                     Text(
-                      widget.isArabic ? 'أيام متبقية' : 'Days Left',
+                      widget.isArabic ? 'يوماً متبقياً' : 'Days left',
                       style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 10,
+                        color: AppColors.textMuted,
+                        fontSize: 9.5,
                         fontFamily: 'Cairo',
                       ),
                     ),
@@ -2467,15 +2520,11 @@ class _SubscriptionsModalContentState
             child: LinearProgressIndicator(
               value: progressRatio,
               minHeight: 6,
-              backgroundColor: Colors.white12,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                isExpiringSoon
-                    ? const Color(0xFFFF5252)
-                    : const Color(0xFF26A69A),
-              ),
+              backgroundColor: AppColors.lineColor,
+              valueColor: AlwaysStoppedAnimation<Color>(statusColor),
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 13),
           Row(
             children: [
               if (_remainingViewersQuota > 0)
@@ -2483,16 +2532,19 @@ class _SubscriptionsModalContentState
                   child: Row(
                     children: [
                       const Icon(Icons.visibility_rounded,
-                          color: Color(0xFF81D4FA), size: 16),
+                          color: AppColors.primaryTeal, size: 16),
                       const SizedBox(width: 6),
-                      Text(
-                        widget.isArabic
-                            ? '$_remainingViewersQuota مشاهدات زوار'
-                            : '$_remainingViewersQuota profile visitors',
-                        style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 11.5,
-                            fontFamily: 'Cairo'),
+                      Flexible(
+                        child: Text(
+                          widget.isArabic
+                              ? '$_remainingViewersQuota مشاهدات زوار'
+                              : '$_remainingViewersQuota profile visitors',
+                          style: const TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 10.5,
+                            fontFamily: 'Cairo',
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -2500,23 +2552,26 @@ class _SubscriptionsModalContentState
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: isExpiringSoon
-                      ? const Color(0xFFE65100)
+                      ? AppColors.error
                       : AppColors.primaryTeal,
+                  foregroundColor: Colors.white,
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  elevation: 4,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
                 ),
                 icon: const Icon(Icons.autorenew_rounded,
-                    color: Colors.white, size: 18),
+                    color: Colors.white, size: 17),
                 label: Text(
-                  widget.isArabic ? 'تجديد الاشتراك 🔄' : 'Renew Subscription',
+                  widget.isArabic ? 'تجديد الاشتراك' : 'Renew',
                   style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Cairo'),
+                    color: Colors.white,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Cairo',
+                  ),
                 ),
                 onPressed: _isSubmitting ? null : _handleRenewPackage,
               ),
@@ -2538,7 +2593,7 @@ class _SubscriptionsModalContentState
                   ? 'انقر على الباقة المناسبة لاختيارها أو التجديد:'
                   : 'Tap to select or renew a subscription package:',
               style: const TextStyle(
-                  color: Colors.white,
+                  color: AppColors.textDark,
                   fontSize: 13,
                   fontFamily: 'Cairo',
                   fontWeight: FontWeight.bold)),
@@ -2582,27 +2637,27 @@ class _SubscriptionsModalContentState
                 rawPkgName.contains('3') ||
                 rawPkgName.contains('VIP') ||
                 rawPkgName.contains('ملكي')) {
-              themeColor = const Color(0xFFAB47BC);
+              themeColor = AppColors.primaryTeal;
               gradientColors = [
-                const Color(0xFF8E24AA),
-                const Color(0xFF4A148C)
+                AppColors.primaryTeal,
+                AppColors.secondaryTeal,
               ];
               badgeTag =
                   widget.isArabic ? 'باقة VIP الملكية 👑' : 'Royal VIP Package';
               badgeIcon = Icons.workspace_premium_rounded;
             } else if (validity >= 30 || rawPkgName.contains('شهري')) {
-              themeColor = Colors.amber;
+              themeColor = const Color(0xFF8A5A12);
               gradientColors = [
-                const Color(0xFFFFB300),
-                const Color(0xFFF57C00)
+                const Color(0xFF9A650B),
+                const Color(0xFF6E4808),
               ];
               badgeTag = widget.isArabic ? 'الباقة الذهبية 🥇' : 'Gold Package';
               badgeIcon = Icons.stars_rounded;
             } else {
-              themeColor = AppColors.accentLight;
+              themeColor = const Color(0xFF9D4A37);
               gradientColors = [
-                AppColors.primaryTeal,
-                const Color(0xFF005691)
+                const Color(0xFF9D4A37),
+                const Color(0xFF773526),
               ];
               badgeTag =
                   widget.isArabic ? 'الباقة الفضية 🥈' : 'Silver Package';
@@ -2623,11 +2678,11 @@ class _SubscriptionsModalContentState
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? themeColor.withValues(alpha: 0.18)
-                      : Colors.white.withValues(alpha: 0.05),
+                      ? themeColor.withValues(alpha: 0.09)
+                      : AppColors.cardColor,
                   borderRadius: BorderRadius.circular(22),
                   border: Border.all(
-                    color: isSelected ? themeColor : Colors.white12,
+                    color: isSelected ? themeColor : AppColors.lineColor,
                     width: isSelected ? 2.2 : 1,
                   ),
                   boxShadow: isSelected
@@ -2686,7 +2741,7 @@ class _SubscriptionsModalContentState
                                 : Icons.radio_button_off_rounded,
                             color: isSelected
                                 ? themeColor
-                                : const Color.fromARGB(236, 255, 250, 250),
+                                : AppColors.textLight,
                             size: 22),
                         const SizedBox(width: 10),
                         Expanded(
@@ -2695,8 +2750,8 @@ class _SubscriptionsModalContentState
                             children: [
                               Text(name,
                                   style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
+                                      color: AppColors.textDark,
+                                      fontSize: 15,
                                       fontWeight: FontWeight.bold,
                                       fontFamily: 'Cairo')),
                               Text(
@@ -2704,8 +2759,8 @@ class _SubscriptionsModalContentState
                                     ? 'صلاحية $validity يوم من تاريخ التفعيل'
                                     : 'Valid for $validity days',
                                 style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 11.5,
+                                    color: AppColors.textMuted,
+                                    fontSize: 11,
                                     fontFamily: 'Cairo'),
                               ),
                             ],
@@ -2714,7 +2769,7 @@ class _SubscriptionsModalContentState
                       ],
                     ),
                     const Divider(
-                        color: Color.fromARGB(85, 255, 254, 254), height: 20),
+                        color: AppColors.lineColor, height: 20),
                     _buildPackageFeatureRow(
                       widget.isArabic
                           ? 'محادثات وإعجابات غير محدودة'
@@ -3225,13 +3280,13 @@ class _SubscriptionsModalContentState
       child: Row(
         children: [
           const Icon(Icons.check_circle_outline_rounded,
-              color: Color(0xFF34D399), size: 16),
+              color: AppColors.success, size: 16),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               featureText,
               style: const TextStyle(
-                  color: Colors.white,
+                  color: AppColors.textDark,
                   fontSize: 12,
                   fontFamily: 'Cairo',
                   fontWeight: FontWeight.w600,

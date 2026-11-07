@@ -8,6 +8,7 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../constants/colors.dart';
 import 'package:flutter/services.dart';
 import '../services/api_service.dart';
 import '../widgets/app_snackbar.dart';
@@ -593,11 +594,11 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20, vertical: 16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF01579B).withValues(alpha: 0.96),
+                      color: AppColors.cardColor,
                       borderRadius:
                           const BorderRadius.vertical(top: Radius.circular(32)),
                       border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.2),
+                          color: AppColors.accentLight.withValues(alpha: 0.28),
                           width: 1.5),
                     ),
                     child: Column(
@@ -606,7 +607,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                           width: 48,
                           height: 5,
                           decoration: BoxDecoration(
-                            color: Colors.white38,
+                            color: AppColors.textLight,
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
@@ -614,7 +615,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                         Text(
                           title,
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: AppColors.textDark,
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'Cairo',
@@ -633,19 +634,19 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                               });
                             },
                             style: const TextStyle(
-                                color: Colors.white,
+                                color: AppColors.textDark,
                                 fontSize: 14,
                                 fontFamily: 'Cairo'),
                             decoration: InputDecoration(
                               hintText: isAr ? 'ابحث هنا...' : 'Search...',
                               hintStyle: const TextStyle(
-                                  color: Colors.white60,
+                                  color: AppColors.textMuted,
                                   fontSize: 14,
                                   fontFamily: 'Cairo'),
                               prefixIcon: const Icon(Icons.search_rounded,
-                                  color: Colors.white70, size: 20),
+                                  color: AppColors.textMuted, size: 20),
                               filled: true,
-                              fillColor: Colors.white.withValues(alpha: 0.12),
+                              fillColor: AppColors.sectionBackground,
                               contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 14, vertical: 12),
                               border: OutlineInputBorder(
@@ -662,7 +663,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                   child: Text(
                                     isAr ? 'لا توجد نتائج' : 'No results found',
                                     style: const TextStyle(
-                                      color: Colors.white70,
+                                      color: AppColors.textMuted,
                                       fontFamily: 'Cairo',
                                       fontSize: 14,
                                     ),
@@ -701,7 +702,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                       vertical: 14),
                                               decoration: BoxDecoration(
                                                 color: isSelected
-                                                    ? Colors.white
+                                                    ? AppColors.textDark
                                                         .withValues(alpha: 0.2)
                                                     : Colors.transparent,
                                                 borderRadius:
@@ -719,7 +720,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                           ? TextDirection.rtl
                                                           : TextDirection.ltr,
                                                       style: TextStyle(
-                                                        color: Colors.white,
+                                                        color: AppColors.textDark,
                                                         fontSize: 15,
                                                         fontFamily: 'Cairo',
                                                         fontWeight: isSelected
@@ -733,7 +734,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                         Icons
                                                             .check_circle_rounded,
                                                         color:
-                                                            Colors.amberAccent,
+                                                            AppColors.primaryTeal,
                                                         size: 22),
                                                 ],
                                               ),
@@ -741,7 +742,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                           ),
                                         ),
                                         Divider(
-                                            color: Colors.white
+                                            color: AppColors.textDark
                                                 .withValues(alpha: 0.12),
                                             height: 1),
                                       ],
@@ -770,19 +771,21 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.18),
+              color: AppColors.accentLight.withValues(alpha: 0.30),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: Colors.white, size: 20),
+            child: Icon(icon, color: AppColors.primaryTeal, size: 20),
           ),
           const SizedBox(width: 10),
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Cairo',
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(
+                color: AppColors.textDark,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Cairo',
+              ),
             ),
           ),
         ],
@@ -803,33 +806,37 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
       children: [
         _buildSectionHeader(title, icon),
         Wrap(
-          spacing: 8.0,
-          runSpacing: 10.0,
+          spacing: 8,
+          runSpacing: 9,
           children: options.map((opt) {
             final bool isSelected = selectedValue == opt['id'];
             return ChoiceChip(
               label: Text(
                 opt['name']!,
                 style: TextStyle(
-                  color: isSelected ? const Color(0xFF01579B) : Colors.white,
+                  color: isSelected ? Colors.white : AppColors.textDark,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                   fontFamily: 'Cairo',
-                  fontSize: 14,
+                  fontSize: 12.5,
                 ),
               ),
               selected: isSelected,
-              selectedColor: Colors.white,
-              backgroundColor: const Color(0xFF013966).withValues(alpha: 0.7),
-              showCheckmark: isSelected,
-              checkmarkColor: const Color(0xFF01579B),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              selectedColor: AppColors.primaryTeal,
+              backgroundColor: AppColors.sectionBackground,
+              showCheckmark: true,
+              checkmarkColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: BorderSide.none,
+                borderRadius: BorderRadius.circular(15),
+                side: BorderSide(
+                  color: isSelected
+                      ? AppColors.primaryTeal
+                      : AppColors.lineColor,
+                ),
               ),
-              onSelected: (bool sel) {
+              onSelected: (bool selected) {
                 FocusScope.of(context).unfocus();
-                if (sel) onSelected(opt['id']!);
+                if (selected) onSelected(opt['id']!);
               },
             );
           }).toList(),
@@ -844,48 +851,49 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
     required IconData icon,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-        onTap();
-      },
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(16),
-          border:
-              Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: Colors.white70, size: 22),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                displayValue != null && displayValue.isNotEmpty
-                    ? displayValue
-                    : label,
-                textAlign: TextAlign.start,
-                textDirection: widget.currentLanguage == 'ar'
-                    ? TextDirection.rtl
-                    : TextDirection.ltr,
-                style: TextStyle(
-                  color: displayValue != null && displayValue.isNotEmpty
-                      ? Colors.white
-                      : Colors.white70,
-                  fontSize: 15,
-                  fontFamily: 'Cairo',
-                  fontWeight: displayValue != null && displayValue.isNotEmpty
-                      ? FontWeight.bold
-                      : FontWeight.normal,
+    final bool hasValue = displayValue != null && displayValue.isNotEmpty;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          FocusScope.of(context).unfocus();
+          onTap();
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+          decoration: BoxDecoration(
+            color: AppColors.cardColor,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.lineColor),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: AppColors.primaryTeal, size: 21),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  hasValue ? displayValue : label,
+                  textAlign: TextAlign.start,
+                  textDirection: widget.currentLanguage == 'ar'
+                      ? TextDirection.rtl
+                      : TextDirection.ltr,
+                  style: TextStyle(
+                    color: hasValue ? AppColors.textDark : AppColors.textMuted,
+                    fontSize: 14,
+                    fontFamily: 'Cairo',
+                    fontWeight:
+                        hasValue ? FontWeight.bold : FontWeight.normal,
+                  ),
                 ),
               ),
-            ),
-            const Icon(Icons.keyboard_arrow_down_rounded,
-                color: Colors.white70, size: 24),
-          ],
+              const Icon(
+                Icons.keyboard_arrow_down_rounded,
+                color: AppColors.textMuted,
+                size: 23,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -895,26 +903,25 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
     return InputDecoration(
       labelText: label,
       labelStyle: const TextStyle(
-        color: Colors.white70,
-        fontSize: 14,
+        color: AppColors.textMuted,
+        fontSize: 13,
         fontFamily: 'Cairo',
       ),
-      prefixIcon: Icon(icon, color: Colors.white70, size: 22),
+      prefixIcon: Icon(icon, color: AppColors.primaryTeal, size: 21),
       filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.12),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      fillColor: AppColors.sectionBackground,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide:
-            BorderSide(color: Colors.white.withValues(alpha: 0.15), width: 1),
+        borderSide: const BorderSide(color: AppColors.lineColor),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Colors.white, width: 1.5),
+        borderSide: const BorderSide(color: AppColors.primaryTeal, width: 1.5),
       ),
     );
   }
@@ -922,8 +929,8 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
   @override
   Widget build(BuildContext context) {
     final isAr = widget.currentLanguage == 'ar';
-    const primaryColor = Color(0xFF0288D1);
-    const darkBgColor = Color(0xFF01579B);
+    const primaryColor = AppColors.primaryTeal;
+    const darkBgColor = AppColors.backgroundColor;
 
     final double bottomInset = MediaQuery.of(context).padding.bottom;
     final double saveButtonBottom = bottomInset > 0 ? bottomInset + 12 : 16;
@@ -977,9 +984,9 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
+        statusBarIconBrightness: Brightness.dark,
         systemNavigationBarColor: darkBgColor,
-        systemNavigationBarIconBrightness: Brightness.light,
+        systemNavigationBarIconBrightness: Brightness.dark,
         systemNavigationBarDividerColor: Colors.transparent,
       ),
       child: Directionality(
@@ -990,17 +997,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
             body: Container(
               width: double.infinity,
               height: double.infinity,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Color(0xFF01579B),
-                    Color(0xFF0288D1),
-                    Color(0xFF4FC3F7)
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
+              decoration: const BoxDecoration(color: AppColors.backgroundColor),
               child: SafeArea(
                 child: Stack(
                   children: [
@@ -1016,7 +1013,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                   isAr
                                       ? Icons.arrow_back_ios_rounded
                                       : Icons.arrow_back_ios_new_rounded,
-                                  color: Colors.white,
+                                  color: AppColors.textDark,
                                   size: 20,
                                 ),
                                 onPressed: () => Navigator.pop(context),
@@ -1028,7 +1025,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                       : 'Partner Expectations',
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
-                                    color: Colors.white,
+                                    color: AppColors.textDark,
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
                                     fontFamily: 'Cairo',
@@ -1043,7 +1040,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                           child: _isLoading
                               ? const Center(
                                   child: CircularProgressIndicator(
-                                      color: Colors.white))
+                                      color: AppColors.primaryTeal))
                               : SingleChildScrollView(
                                   physics: const BouncingScrollPhysics(),
                                   padding: const EdgeInsets.all(18),
@@ -1059,13 +1056,11 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                             top: 18,
                                             bottom: scrollBottomPadding),
                                         decoration: BoxDecoration(
-                                          color: Colors.white
-                                              .withValues(alpha: 0.18),
+                                          color: AppColors.cardColor,
                                           borderRadius:
                                               BorderRadius.circular(28),
                                           border: Border.all(
-                                              color: Colors.white
-                                                  .withValues(alpha: 0.2),
+                                              color: AppColors.lineColor,
                                               width: 1.5),
                                         ),
                                         child: Column(
@@ -1081,7 +1076,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                               controller: _generalCtrl,
                                               maxLines: 3,
                                               style: const TextStyle(
-                                                  color: Colors.white,
+                                                  color: AppColors.textDark,
                                                   fontSize: 15,
                                                   fontFamily: 'Cairo'),
                                               decoration: _buildInputDecoration(
@@ -1097,9 +1092,9 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                             Container(
                                               padding: const EdgeInsets.all(12),
                                               decoration: BoxDecoration(
-                                                color: Colors.black.withValues(alpha: 0.2),
+                                                color: AppColors.sectionBackground,
                                                 borderRadius: BorderRadius.circular(16),
-                                                border: Border.all(color: Colors.white24),
+                                                border: Border.all(color: AppColors.lineColor),
                                               ),
                                               child: Column(
                                                 children: [
@@ -1110,13 +1105,13 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                         isAr
                                                             ? 'من: ${_partnerAgeRange.start.round()} سنة'
                                                             : 'From: ${_partnerAgeRange.start.round()} yrs',
-                                                        style: const TextStyle(color: Colors.amberAccent, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+                                                        style: const TextStyle(color: AppColors.primaryTeal, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
                                                       ),
                                                       Text(
                                                         isAr
                                                             ? 'إلى: ${_partnerAgeRange.end.round()} سنة'
                                                             : 'To: ${_partnerAgeRange.end.round()} yrs',
-                                                        style: const TextStyle(color: Colors.amberAccent, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+                                                        style: const TextStyle(color: AppColors.primaryTeal, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
                                                       ),
                                                     ],
                                                   ),
@@ -1125,8 +1120,8 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                     min: 18,
                                                     max: 80,
                                                     divisions: 62,
-                                                    activeColor: Colors.amberAccent,
-                                                    inactiveColor: Colors.white24,
+                                                    activeColor: AppColors.primaryTeal,
+                                                    inactiveColor: AppColors.lineColor,
                                                     onChanged: (newRange) {
                                                       setState(() {
                                                         _partnerAgeRange = newRange;
@@ -1149,10 +1144,10 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                     _ageRangeCleared = true;
                                                   });
                                                 },
-                                                icon: const Icon(Icons.clear_rounded, color: Colors.white70),
+                                                icon: const Icon(Icons.clear_rounded, color: AppColors.textMuted),
                                                 label: Text(
                                                   isAr ? 'لا يهم العمر / إلغاء التفضيل' : 'No age preference',
-                                                  style: const TextStyle(color: Colors.white70, fontFamily: 'Cairo'),
+                                                  style: const TextStyle(color: AppColors.textMuted, fontFamily: 'Cairo'),
                                                 ),
                                               ),
                                             ),
@@ -1212,10 +1207,10 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                           _locationPreferenceEdited = true;
                                                         });
                                                       },
-                                                icon: const Icon(Icons.clear_rounded, color: Colors.white70),
+                                                icon: const Icon(Icons.clear_rounded, color: AppColors.textMuted),
                                                 label: Text(
                                                   isAr ? 'إلغاء تفضيل البلد والمحافظة' : 'Clear country and governorate preference',
-                                                  style: const TextStyle(color: Colors.white70, fontFamily: 'Cairo'),
+                                                  style: const TextStyle(color: AppColors.textMuted, fontFamily: 'Cairo'),
                                                 ),
                                               ),
                                             ),
@@ -1226,12 +1221,12 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                         horizontal: 16,
                                                         vertical: 14),
                                                 decoration: BoxDecoration(
-                                                  color: Colors.white
+                                                  color: AppColors.textDark
                                                       .withValues(alpha: 0.12),
                                                   borderRadius:
                                                       BorderRadius.circular(16),
                                                   border: Border.all(
-                                                      color: Colors.white
+                                                      color: AppColors.textDark
                                                           .withValues(
                                                               alpha: 0.15),
                                                       width: 1),
@@ -1245,7 +1240,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                           CircularProgressIndicator(
                                                               strokeWidth: 2,
                                                               color:
-                                                                  Colors.white),
+                                                                  AppColors.textDark),
                                                     ),
                                                     const SizedBox(width: 12),
                                                     Text(
@@ -1253,7 +1248,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                           ? 'جاري تحميل المحافظات...'
                                                           : 'Loading governorates...',
                                                       style: const TextStyle(
-                                                        color: Colors.white70,
+                                                        color: AppColors.textMuted,
                                                         fontSize: 14,
                                                         fontFamily: 'Cairo',
                                                       ),
@@ -1344,7 +1339,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                             const Text(
                                               'نطاق الطول المطلوب للشريك (سم):',
                                               style: TextStyle(
-                                                  color: Colors.white,
+                                                  color: AppColors.textDark,
                                                   fontSize: 14,
                                                   fontWeight: FontWeight.bold,
                                                   fontFamily: 'Cairo'),
@@ -1358,7 +1353,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                   borderRadius:
                                                       BorderRadius.circular(16),
                                                   border: Border.all(
-                                                      color: Colors.white24)),
+                                                      color: AppColors.lineColor)),
                                               child: Column(
                                                 children: [
                                                   Row(
@@ -1397,9 +1392,9 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                       max: 210,
                                                       divisions: 70,
                                                       activeColor:
-                                                          Colors.amberAccent,
+                                                          AppColors.primaryTeal,
                                                       inactiveColor:
-                                                          Colors.white24,
+                                                          AppColors.lineColor,
                                                       onChanged: (newRange) {
                                                         setState(() {
                                                           _partnerHeightRange = newRange;
@@ -1413,7 +1408,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                             const Text(
                                               'نطاق الوزن المطلوب للشريك (كغ):',
                                               style: TextStyle(
-                                                  color: Colors.white,
+                                                  color: AppColors.textDark,
                                                   fontSize: 14,
                                                   fontWeight: FontWeight.bold,
                                                   fontFamily: 'Cairo'),
@@ -1427,7 +1422,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                   borderRadius:
                                                       BorderRadius.circular(16),
                                                   border: Border.all(
-                                                      color: Colors.white24)),
+                                                      color: AppColors.lineColor)),
                                               child: Column(
                                                 children: [
                                                   Row(
@@ -1466,9 +1461,9 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                       max: 140,
                                                       divisions: 100,
                                                       activeColor:
-                                                          Colors.amberAccent,
+                                                          AppColors.primaryTeal,
                                                       inactiveColor:
-                                                          Colors.white24,
+                                                          AppColors.lineColor,
                                                       onChanged: (newRange) {
                                                         setState(() {
                                                           _partnerWeightRange = newRange;
@@ -1674,7 +1669,7 @@ _buildSectionHeader(
                                             TextFormField(
                                               controller: _professionCtrl,
                                               style: const TextStyle(
-                                                  color: Colors.white,
+                                                  color: AppColors.textDark,
                                                   fontSize: 15,
                                                   fontFamily: 'Cairo'),
                                               decoration: _buildInputDecoration(
@@ -1766,17 +1761,17 @@ _buildSectionHeader(
                           child: Container(
                             height: 54,
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.25),
+                              color: AppColors.sectionBackground,
                               borderRadius: BorderRadius.circular(30),
                               border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.4),
+                                  color: AppColors.lineColor,
                                   width: 1.5),
                             ),
                             child: ElevatedButton(
                               onPressed: _isSaving ? null : _saveExpectations,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: primaryColor,
+                                backgroundColor: AppColors.primaryTeal,
+                                foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(30),
                                 ),
@@ -1787,7 +1782,7 @@ _buildSectionHeader(
                                       width: 22,
                                       height: 22,
                                       child: CircularProgressIndicator(
-                                        color: primaryColor,
+                                        color: Colors.white,
                                         strokeWidth: 2.5,
                                       ),
                                     )
@@ -1796,12 +1791,12 @@ _buildSectionHeader(
                                           MainAxisAlignment.center,
                                       children: [
                                         const Icon(Icons.check_circle_rounded,
-                                            color: primaryColor, size: 22),
+                                            color: Colors.white, size: 22),
                                         const SizedBox(width: 8),
                                         Text(
                                           isAr ? 'حفظ وإنهاء' : 'Save & Finish',
                                           style: const TextStyle(
-                                            color: primaryColor,
+                                            color: Colors.white,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,
                                             fontFamily: 'Cairo',
