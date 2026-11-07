@@ -714,8 +714,8 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                     const SizedBox(width: 8),
                     Text(
                       _isAr
-                          ? 'تفعيل البحث حسب التطابق'
-                          : 'Enable Profile Matching',
+                          ? 'ترتيب حسب نسبة التوافق'
+                          : 'Sort by compatibility score',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 13,
