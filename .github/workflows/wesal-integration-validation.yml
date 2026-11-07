@@ -3,6 +3,7 @@ name: Validate Wesal integration
 on:
   push:
     branches:
+      - main
       - integration/wesal-final-consolidated-2026-11-06
   pull_request:
     branches:
@@ -43,6 +44,7 @@ jobs:
             "المشروع/WESAL/tests/Unit/SmartMatchingServiceTest.php"
             "المشروع/WESAL/app/Http/Controllers/Api/ProfileController.php"
             "المشروع/WESAL/app/Http/Controllers/Api/ProfileDropdownController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/ProfileViewerController.php"
             "المشروع/WESAL/app/Http/Controllers/CareerController.php"
             "المشروع/WESAL/app/Http/Controllers/EducationController.php"
             "المشروع/WESAL/app/Http/Middleware/EmailVerifiedApi.php"
