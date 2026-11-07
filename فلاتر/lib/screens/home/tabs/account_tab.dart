@@ -219,7 +219,7 @@ class AccountTab extends StatefulWidget {
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.96),
+            color: AppColors.cardColor.withValues(alpha: 0.96),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
             border: Border.all(
                 color: AppColors.accentLight.withValues(alpha: 0.4)),
@@ -231,7 +231,7 @@ class AccountTab extends StatefulWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white30,
+                  color: AppColors.lineColor,
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -253,7 +253,7 @@ class AccountTab extends StatefulWidget {
                     : 'Free Likes Limit Reached! 🎯',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: AppColors.textDark,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Cairo',
@@ -266,7 +266,7 @@ class AccountTab extends StatefulWidget {
                     : 'You have used all 5 free likes. Upgrade to premium package to keep sending interest requests!',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  color: Colors.white70,
+                  color: AppColors.textMuted,
                   fontSize: 13.5,
                   fontFamily: 'Cairo',
                   height: 1.5,
@@ -289,7 +289,7 @@ class AccountTab extends StatefulWidget {
                         ? 'ترقية الحساب والاشتراك الآن 🚀'
                         : 'Upgrade Account Now 🚀',
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: AppColors.textDark,
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Cairo',
@@ -428,17 +428,17 @@ class AccountTabState extends State<AccountTab> {
       builder: (context) => Directionality(
         textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
         child: AlertDialog(
-          backgroundColor: const Color(0xFF013B5E),
+          backgroundColor: AppColors.cardColor,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Row(
             children: [
               const Icon(Icons.warning_amber_rounded,
-                  color: Colors.redAccent, size: 28),
+                  color: AppColors.error, size: 28),
               const SizedBox(width: 10),
               Text(_isAr ? 'تأكيد حذف الحساب' : 'Confirm Deletion',
                   style: const TextStyle(
-                      color: Colors.white,
+                      color: AppColors.textDark,
                       fontSize: 18,
                       fontFamily: 'Cairo',
                       fontWeight: FontWeight.bold)),
@@ -449,18 +449,18 @@ class AccountTabState extends State<AccountTab> {
                 ? 'هل أنت متأكد من رغبتك في حذف حسابك نهائياً؟ هذا الإجراء غير قابل للتراجع وسيقوم بمسح كافة بياناتك من النظام.'
                 : 'Are you sure you want to delete your account permanently? This action cannot be undone.',
             style: const TextStyle(
-                color: Colors.white70, fontSize: 14, fontFamily: 'Cairo'),
+                color: AppColors.textMuted, fontSize: 14, fontFamily: 'Cairo'),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
               child: Text(_isAr ? 'إلغاء' : 'Cancel',
                   style: const TextStyle(
-                      color: Colors.white70, fontFamily: 'Cairo')),
+                      color: AppColors.textMuted, fontFamily: 'Cairo')),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
+                  backgroundColor: AppColors.error,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12))),
               onPressed: () => Navigator.pop(context, true),
@@ -483,20 +483,20 @@ class AccountTabState extends State<AccountTab> {
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFF0F172A),
+              color: AppColors.cardColor,
               borderRadius: BorderRadius.circular(18),
               border:
-                  Border.all(color: Colors.redAccent.withValues(alpha: 0.5)),
+                  Border.all(color: AppColors.error.withValues(alpha: 0.5)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const CircularProgressIndicator(color: Colors.redAccent),
+                const CircularProgressIndicator(color: AppColors.error),
                 const SizedBox(height: 16),
                 Text(
                   _isAr ? 'جاري حذف الحساب...' : 'Deleting account...',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textDark,
                     fontFamily: 'Cairo',
                     fontSize: 14,
                     decoration: TextDecoration.none,
@@ -1667,10 +1667,10 @@ class _SubscriptionsModalContentState
               child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0F172A).withValues(alpha: 0.95),
+                  color: AppColors.cardColor.withValues(alpha: 0.95),
                   borderRadius: BorderRadius.circular(28),
                   border: Border.all(
-                    color: const Color(0xFFF59E0B).withValues(alpha: 0.5),
+                    color: AppColors.warning.withValues(alpha: 0.5),
                     width: 1.5,
                   ),
                 ),
@@ -1680,15 +1680,15 @@ class _SubscriptionsModalContentState
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF59E0B).withValues(alpha: 0.18),
+                        color: AppColors.warning.withValues(alpha: 0.18),
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: const Color(0xFFF59E0B).withValues(alpha: 0.5),
+                          color: AppColors.warning.withValues(alpha: 0.5),
                         ),
                       ),
                       child: const Icon(
                         Icons.access_time_filled_rounded,
-                        color: Color(0xFFF59E0B),
+                        color: AppColors.warning,
                         size: 48,
                       ),
                     ),
@@ -1699,7 +1699,7 @@ class _SubscriptionsModalContentState
                           : 'Request Received! ✨',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppColors.textDark,
                         fontSize: 19,
                         fontWeight: FontWeight.bold,
                         fontFamily: 'Cairo',
@@ -1712,7 +1712,7 @@ class _SubscriptionsModalContentState
                           : 'Your subscription will be activated within 24 hours after verifying the transfer.',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        color: Colors.white70,
+                        color: AppColors.textMuted,
                         fontSize: 14,
                         fontFamily: 'Cairo',
                         height: 1.5,
@@ -1723,7 +1723,7 @@ class _SubscriptionsModalContentState
                       width: double.infinity,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFF59E0B),
+                          backgroundColor: AppColors.warning,
                           padding: const EdgeInsets.symmetric(vertical: 13),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
@@ -1781,10 +1781,10 @@ class _SubscriptionsModalContentState
               child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0F172A).withValues(alpha: 0.96),
+                  color: AppColors.cardColor.withValues(alpha: 0.96),
                   borderRadius: BorderRadius.circular(28),
                   border: Border.all(
-                    color: const Color(0xFF10B981).withValues(alpha: 0.6),
+                    color: AppColors.success.withValues(alpha: 0.6),
                     width: 1.8,
                   ),
                 ),
@@ -1794,16 +1794,16 @@ class _SubscriptionsModalContentState
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                        color: AppColors.success.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: const Color(0xFF10B981),
+                          color: AppColors.success,
                           width: 1.5,
                         ),
                       ),
                       child: const Icon(
                         Icons.verified_rounded,
-                        color: Color(0xFF10B981),
+                        color: AppColors.success,
                         size: 52,
                       ),
                     ),
@@ -1814,7 +1814,7 @@ class _SubscriptionsModalContentState
                           : 'Subscription Activated Instantly! 🎉',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppColors.textDark,
                         fontSize: 19,
                         fontWeight: FontWeight.bold,
                         fontFamily: 'Cairo',
@@ -1827,7 +1827,7 @@ class _SubscriptionsModalContentState
                           : 'Payment successful! ($_selectedPackageName) has been activated for your account.',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        color: Colors.white70,
+                        color: AppColors.textMuted,
                         fontSize: 14,
                         fontFamily: 'Cairo',
                         height: 1.5,
@@ -1838,7 +1838,7 @@ class _SubscriptionsModalContentState
                       width: double.infinity,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF10B981),
+                          backgroundColor: AppColors.success,
                           padding: const EdgeInsets.symmetric(vertical: 13),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
@@ -2007,18 +2007,18 @@ class _SubscriptionsModalContentState
         paymentSheetParameters: SetupPaymentSheetParameters(
           paymentIntentClientSecret: clientSecret,
           merchantDisplayName: 'تطبيق وصال - Wesal',
-          style: ThemeMode.dark,
+          style: ThemeMode.light,
           appearance: const PaymentSheetAppearance(
             colors: PaymentSheetAppearanceColors(
               primary: AppColors.primaryTeal,
-              background: Color(0xFF0F172A),
-              componentBackground: Color(0xFF1E293B),
-              componentText: Colors.white,
-              primaryText: Colors.white,
-              secondaryText: Colors.white70,
-              placeholderText: Colors.white38,
-              icon: AppColors.accentLight,
-              error: Colors.redAccent,
+              background: AppColors.cardColor,
+              componentBackground: AppColors.sectionBackground,
+              componentText: AppColors.textDark,
+              primaryText: AppColors.textDark,
+              secondaryText: AppColors.textMuted,
+              placeholderText: AppColors.textLight,
+              icon: AppColors.primaryTeal,
+              error: AppColors.error,
             ),
             shapes: PaymentSheetShape(
               borderRadius: 16.0,
@@ -2125,8 +2125,7 @@ class _SubscriptionsModalContentState
     final double bottomInset = MediaQuery.viewInsetsOf(context).bottom;
     final double screenHeight = MediaQuery.sizeOf(context).height;
     final bool isPaymentStep = _showPaymentStep;
-    final Color headingColor =
-        isPaymentStep ? Colors.white : AppColors.textDark;
+    const Color headingColor = AppColors.textDark;
 
     return Directionality(
       textDirection: widget.isArabic ? TextDirection.rtl : TextDirection.ltr,
@@ -2137,15 +2136,11 @@ class _SubscriptionsModalContentState
           child: Container(
             height: screenHeight * 0.88,
             decoration: BoxDecoration(
-              color: isPaymentStep
-                  ? const Color(0xFF0F172A).withValues(alpha: 0.98)
-                  : AppColors.backgroundColor,
+              color: AppColors.backgroundColor,
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(30)),
               border: Border.all(
-                color: isPaymentStep
-                    ? AppColors.accentLight.withValues(alpha: 0.35)
-                    : AppColors.lineColor,
+                color: AppColors.lineColor,
               ),
             ),
             padding: const EdgeInsets.fromLTRB(18, 12, 18, 18),
@@ -2155,7 +2150,7 @@ class _SubscriptionsModalContentState
                   width: 42,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: isPaymentStep ? Colors.white30 : AppColors.lineColor,
+                    color: AppColors.lineColor,
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
@@ -2168,7 +2163,7 @@ class _SubscriptionsModalContentState
                           widget.isArabic
                               ? Icons.arrow_forward_ios_rounded
                               : Icons.arrow_back_ios_rounded,
-                          color: Colors.white,
+                          color: AppColors.textDark,
                           size: 19,
                         ),
                         onPressed: _isSubmitting
@@ -2237,9 +2232,7 @@ class _SubscriptionsModalContentState
                   child: _isLoading
                       ? Center(
                           child: CircularProgressIndicator(
-                            color: isPaymentStep
-                                ? Colors.white
-                                : AppColors.primaryTeal,
+                            color: AppColors.primaryTeal,
                           ),
                         )
                       : _isFreeFemale
@@ -2810,7 +2803,7 @@ class _SubscriptionsModalContentState
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.08),
+              color: AppColors.sectionBackground,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                   color: AppColors.accentLight.withValues(alpha: 0.3)),
@@ -2826,7 +2819,7 @@ class _SubscriptionsModalContentState
                         ? 'الباقة المختارة للتجديد/الدفع: $_selectedPackageName ($_currencySymbol$selectedAmountClean)'
                         : 'Selected: $_selectedPackageName ($_currencySymbol$selectedAmountClean)',
                     style: const TextStyle(
-                        color: Colors.white,
+                        color: AppColors.textDark,
                         fontSize: 13.5,
                         fontWeight: FontWeight.bold,
                         fontFamily: 'Cairo'),
@@ -2841,7 +2834,7 @@ class _SubscriptionsModalContentState
                   ? 'اختر طريقة الدفع المناسبة لك:'
                   : 'Select payment method:',
               style: const TextStyle(
-                  color: Colors.white70,
+                  color: AppColors.textMuted,
                   fontSize: 13,
                   fontFamily: 'Cairo',
                   fontWeight: FontWeight.bold)),
@@ -2861,20 +2854,20 @@ class _SubscriptionsModalContentState
                     decoration: BoxDecoration(
                       color: _selectedPaymentCategory == 2
                           ? AppColors.primaryTeal.withValues(alpha: 0.2)
-                          : Colors.white.withValues(alpha: 0.05),
+                          : AppColors.sectionBackground,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: _selectedPaymentCategory == 2
                             ? AppColors.accentLight
-                            : Colors.white12,
+                            : AppColors.lineColor,
                       ),
                     ),
                     child: Column(
                       children: [
                         Icon(Icons.credit_card_rounded,
                             color: _selectedPaymentCategory == 2
-                                ? AppColors.accentLight
-                                : Colors.white54,
+                                ? AppColors.primaryTeal
+                                : AppColors.textMuted,
                             size: 24),
                         const SizedBox(height: 4),
                         Text(
@@ -2883,8 +2876,8 @@ class _SubscriptionsModalContentState
                               : 'Visa / Credit Card',
                           style: TextStyle(
                               color: _selectedPaymentCategory == 2
-                                  ? AppColors.accentLight
-                                  : Colors.white70,
+                                  ? AppColors.primaryTeal
+                                  : AppColors.textMuted,
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
                               fontFamily: 'Cairo'),
@@ -2908,28 +2901,28 @@ class _SubscriptionsModalContentState
                     decoration: BoxDecoration(
                       color: _selectedPaymentCategory == 1
                           ? Colors.amber.withValues(alpha: 0.2)
-                          : Colors.white.withValues(alpha: 0.05),
+                          : AppColors.sectionBackground,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: _selectedPaymentCategory == 1
                             ? Colors.amber
-                            : Colors.white12,
+                            : AppColors.lineColor,
                       ),
                     ),
                     child: Column(
                       children: [
                         Icon(Icons.account_balance_wallet_rounded,
                             color: _selectedPaymentCategory == 1
-                                ? Colors.amber
-                                : Colors.white54,
+                                ? AppColors.warning
+                                : AppColors.textMuted,
                             size: 24),
                         const SizedBox(height: 4),
                         Text(
                           widget.isArabic ? 'شام كاش' : 'Sham Cash',
                           style: TextStyle(
                               color: _selectedPaymentCategory == 1
-                                  ? Colors.amber
-                                  : Colors.white70,
+                                  ? AppColors.textDark
+                                  : AppColors.textMuted,
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
                               fontFamily: 'Cairo'),
@@ -2946,7 +2939,7 @@ class _SubscriptionsModalContentState
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.06),
+                color: AppColors.sectionBackground,
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(
                     color: AppColors.accentLight.withValues(alpha: 0.35)),
@@ -2987,7 +2980,7 @@ class _SubscriptionsModalContentState
                                   ? 'ستفتح نافذة أصلية سلسة ومباشرة من أسفل الشاشة لإدخال بيانات بطاقتك وتأكيد الدفع.'
                                   : 'A native bottom sheet will pop up directly in-app.',
                               style: const TextStyle(
-                                  color: Colors.white60,
+                                  color: AppColors.textMuted,
                                   fontSize: 11.5,
                                   fontFamily: 'Cairo',
                                   height: 1.3),
@@ -3003,20 +2996,20 @@ class _SubscriptionsModalContentState
                       margin: const EdgeInsets.only(bottom: 14),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.redAccent.withValues(alpha: 0.18),
+                        color: AppColors.error.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.redAccent, width: 1.2),
+                        border: Border.all(color: AppColors.error, width: 1.2),
                       ),
                       child: Row(
                         children: [
                           const Icon(Icons.error_outline_rounded,
-                              color: Colors.redAccent, size: 22),
+                              color: AppColors.error, size: 22),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
                               _cardErrorMessage!,
                               style: const TextStyle(
-                                  color: Colors.white,
+                                  color: AppColors.textDark,
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.bold,
                                   fontFamily: 'Cairo'),
@@ -3052,7 +3045,7 @@ class _SubscriptionsModalContentState
                                   ? 'الانتقال للدفع السريع ($_currencySymbol$selectedAmountClean)'
                                   : 'Proceed to Payment ($_currencySymbol$selectedAmountClean)',
                               style: const TextStyle(
-                                  color: Colors.white,
+                                  color: AppColors.textDark,
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
                                   fontFamily: 'Cairo'),
@@ -3073,7 +3066,7 @@ class _SubscriptionsModalContentState
                             ? 'حماية أصلية 256-bit SSL بدون مغادرة التطبيق'
                             : '256-bit SSL In-App Payment Protection',
                         style: const TextStyle(
-                            color: Colors.white54,
+                            color: AppColors.textMuted,
                             fontSize: 11,
                             fontFamily: 'Cairo'),
                       ),
@@ -3088,7 +3081,7 @@ class _SubscriptionsModalContentState
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.06),
+                color: AppColors.sectionBackground,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
               ),
@@ -3105,7 +3098,7 @@ class _SubscriptionsModalContentState
                             ? 'الدفع عبر شام كاش'
                             : 'Sham Cash Payment',
                         style: const TextStyle(
-                            color: Colors.white,
+                            color: AppColors.textDark,
                             fontSize: 16,
                             fontFamily: 'Cairo',
                             fontWeight: FontWeight.bold),
@@ -3118,7 +3111,7 @@ class _SubscriptionsModalContentState
                         ? 'يرجى إرسال قيمة الباقة تحويلاً عبر شام كاش إلى الكود المخصص أدناه وارفاق صورة اشعار التحويل في الحقل المخصص:'
                         : 'Please transfer the package amount via Sham Cash to the code below:',
                     style: const TextStyle(
-                        color: Colors.white,
+                        color: AppColors.textDark,
                         fontSize: 14,
                         fontFamily: 'Cairo',
                         fontWeight: FontWeight.w600,
@@ -3129,7 +3122,7 @@ class _SubscriptionsModalContentState
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.45),
+                      color: AppColors.sectionBackground,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                           color: Colors.amber.withValues(alpha: 0.5)),
@@ -3188,19 +3181,19 @@ class _SubscriptionsModalContentState
             TextField(
               controller: _accountNameController,
               enabled: !_isSubmitting,
-              style: const TextStyle(color: Colors.white, fontFamily: 'Cairo'),
+              style: const TextStyle(color: AppColors.textDark, fontFamily: 'Cairo'),
               decoration: InputDecoration(
                 hintText: widget.isArabic
                     ? 'اسم حسابك على تطبيق وصال...'
                     : 'Your account name on Wesal app...',
                 hintStyle: const TextStyle(
-                    color: Colors.white54, fontFamily: 'Cairo', fontSize: 13.5),
+                    color: AppColors.textMuted, fontFamily: 'Cairo', fontSize: 13.5),
                 filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.08),
+                fillColor: AppColors.sectionBackground,
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide:
-                        BorderSide(color: Colors.white.withValues(alpha: 0.2))),
+                        BorderSide(color: AppColors.lineColor)),
                 focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: const BorderSide(color: AppColors.accentLight)),
@@ -3213,9 +3206,9 @@ class _SubscriptionsModalContentState
                 padding:
                     const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.08),
+                  color: AppColors.sectionBackground,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white24),
+                  border: Border.all(color: AppColors.lineColor),
                 ),
                 child: Row(
                   children: [
@@ -3230,7 +3223,7 @@ class _SubscriptionsModalContentState
                                 ? 'إرفاق صورة إشعار التحويل (اختياري)'
                                 : 'Upload payment receipt (Optional)'),
                         style: const TextStyle(
-                            color: Colors.white70,
+                            color: AppColors.textMuted,
                             fontSize: 12,
                             fontFamily: 'Cairo'),
                         overflow: TextOverflow.ellipsis,
@@ -3256,7 +3249,7 @@ class _SubscriptionsModalContentState
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2))
+                            color: AppColors.textDark, strokeWidth: 2))
                     : Text(
                         widget.isArabic
                             ? 'تأكيد وإرسال الإشعار'
