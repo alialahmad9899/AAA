@@ -38,10 +38,14 @@ class SmartMatchingService
                 'member.marital_status',
                 'member.mothereTongue',
                 'addresses.country',
+                'addresses.state',
+                'addresses.city',
                 'recidency',
                 'physical_attributes',
                 'spiritual_backgrounds.religion',
                 'spiritual_backgrounds.caste',
+                'spiritual_backgrounds.sub_caste',
+                'spiritual_backgrounds.family_value',
                 'lifestyles',
                 'education',
                 'career',
@@ -53,13 +57,11 @@ class SmartMatchingService
             ->whereHas('member', function ($query) use ($oppositeGender) {
                 $query->where('gender', $oppositeGender);
             })
-            // تجاهل من تجاهلهم المستخدم.
             ->whereNotIn('id', function ($query) use ($viewerId) {
                 $query->select('user_id')
                     ->from('ignored_users')
                     ->where('ignored_by', $viewerId);
             })
-            // وتجاهل من قاموا بتجاهل المستخدم أيضاً.
             ->whereNotIn('id', function ($query) use ($viewerId) {
                 $query->select('ignored_by')
                     ->from('ignored_users')
@@ -67,31 +69,86 @@ class SmartMatchingService
             })
             ->get();
 
-        return $candidates->map(function (User $candidate) use ($expectations) {
-            $result = $this->scoreData(
-                $expectations->getAttributes(),
-                $this->candidateData($candidate)
-            );
+        return $this->scoreCandidates($viewer, $candidates, true);
+    }
+
+    /**
+     * إرفاق نتيجة الحساب بكل مرشح ظاهر، مع إبقاء ترتيب القائمة عند إيقاف
+     * مفتاح المطابقة، أو ترتيبها تنازلياً عند تشغيله.
+     */
+    public function scoreCandidates(User $viewer, Collection $candidates, bool $sortByMatch = false): Collection
+    {
+        $viewer->loadMissing(['member', 'partner_expectations']);
+
+        $relations = [
+            'member.marital_status',
+            'member.mothereTongue',
+            'addresses.country',
+            'addresses.state',
+            'addresses.city',
+            'recidency',
+            'physical_attributes',
+            'spiritual_backgrounds.religion',
+            'spiritual_backgrounds.caste',
+            'spiritual_backgrounds.sub_caste',
+            'spiritual_backgrounds.family_value',
+            'lifestyles',
+            'education',
+            'career',
+        ];
+
+        // Eloquent Collection loads all missing relations in batches, avoiding
+        // per-candidate queries while the home list is scored.
+        if (method_exists($candidates, 'loadMissing')) {
+            $candidates->loadMissing($relations);
+        }
+
+        $expectations = $viewer->partner_expectations;
+        $preferenceData = $expectations ? $expectations->getAttributes() : [];
+        $hasPreferences = $this->hasPreferences($preferenceData);
+
+        $scored = $candidates->map(function (User $candidate) use ($preferenceData, $hasPreferences) {
+            $result = $hasPreferences
+                ? $this->scoreData($preferenceData, $this->candidateData($candidate))
+                : $this->emptyScore('no_preferences');
 
             $candidate->setAttribute('profile_match_percentage', $result['percentage']);
             $candidate->setAttribute('match_details', $result['details']);
             $candidate->setAttribute('match_criteria_count', $result['criteria_count']);
+            $candidate->setAttribute('match_evaluated_criteria_count', $result['evaluated_criteria_count']);
+            $candidate->setAttribute('match_status', $result['status']);
 
             return $candidate;
-        })->sort(function (User $left, User $right) {
-            $scoreOrder = (int) $right->profile_match_percentage <=> (int) $left->profile_match_percentage;
-            if ($scoreOrder !== 0) {
-                return $scoreOrder;
+        });
+
+        if (!$sortByMatch) {
+            return $scored->values();
+        }
+
+        return $scored->sort(function (User $left, User $right) {
+            $leftScore = $left->profile_match_percentage;
+            $rightScore = $right->profile_match_percentage;
+
+            // Profiles with an actual score come first. Uncalculated scores
+            // remain visible at the bottom and are never represented as zero.
+            if ($leftScore === null && $rightScore !== null) return 1;
+            if ($leftScore !== null && $rightScore === null) return -1;
+
+            if ($leftScore !== null && $rightScore !== null) {
+                $scoreOrder = (int) $rightScore <=> (int) $leftScore;
+                if ($scoreOrder !== 0) return $scoreOrder;
             }
 
-            return strcmp(
+            $dateOrder = strcmp(
                 (string) ($right->created_at ?? ''),
                 (string) ($left->created_at ?? '')
             );
+            return $dateOrder !== 0 ? $dateOrder : ((int) $right->id <=> (int) $left->id);
         })->values();
     }
 
     /**
+     * حساب توافق مرشح واحد    /**
      * حساب توافق مرشح واحد، ويُستخدم أيضاً في شاشة الملف الشخصي.
      */
     public function scoreFor(User $viewer, User $candidate): ?array
@@ -100,29 +157,45 @@ class SmartMatchingService
         $candidate->loadMissing([
             'member.marital_status',
             'member.mothereTongue',
-            'addresses',
+            'addresses.country',
+            'addresses.state',
+            'addresses.city',
             'recidency',
             'physical_attributes',
             'spiritual_backgrounds.religion',
             'spiritual_backgrounds.caste',
+            'spiritual_backgrounds.sub_caste',
+            'spiritual_backgrounds.family_value',
             'lifestyles',
             'education',
             'career',
         ]);
 
-        if (!$viewer->member || !$candidate->member ||
+        if ((int) $viewer->id === (int) $candidate->id ||
+            !$viewer->member || !$candidate->member ||
             (int) $viewer->member->gender === (int) $candidate->member->gender ||
             !in_array((int) $viewer->member->gender, [1, 2], true) ||
             !in_array((int) $candidate->member->gender, [1, 2], true) ||
             $candidate->user_type !== 'member' ||
             (int) $candidate->blocked === 1 ||
             (int) $candidate->deactivated === 1) {
-            return null;
+            return $this->emptyScore('not_eligible');
+        }
+
+        $isIgnoredByViewer = \App\Models\IgnoredUser::where('user_id', $candidate->id)
+            ->where('ignored_by', $viewer->id)
+            ->exists();
+        $hasIgnoredViewer = \App\Models\IgnoredUser::where('user_id', $viewer->id)
+            ->where('ignored_by', $candidate->id)
+            ->exists();
+
+        if ($isIgnoredByViewer || $hasIgnoredViewer) {
+            return $this->emptyScore('not_eligible');
         }
 
         $expectations = $viewer->partner_expectations;
         if (!$expectations || !$this->hasPreferences($expectations->getAttributes())) {
-            return null;
+            return $this->emptyScore('no_preferences');
         }
 
         return $this->scoreData(
@@ -132,26 +205,33 @@ class SmartMatchingService
     }
 
     /**
+     * دالة حساب نقية قابلة للاختبار دون قاعدة بيانات.    /**
      * دالة حساب نقية قابلة للاختبار دون قاعدة بيانات.
      *
      * @param array<string, mixed> $expectations
      * @param array<string, mixed> $candidate
-     * @return array{percentage:int,criteria_count:int,details:array<int,array<string,mixed>>}
+     * @return array{percentage:?int,criteria_count:int,evaluated_criteria_count:int,status:string,details:array<int,array<string,mixed>>}
      */
     public function scoreData(array $expectations, array $candidate): array
     {
         $weightedScore = 0.0;
         $totalWeight = 0.0;
         $details = [];
+        $evaluatedCriteriaCount = 0;
 
-        $add = function (string $key, float $weight, float $score) use (&$weightedScore, &$totalWeight, &$details) {
-            $score = max(0.0, min(1.0, $score));
-            $weightedScore += $weight * $score;
-            $totalWeight += $weight;
+        $add = function (string $key, float $weight, ?float $score) use (&$weightedScore, &$totalWeight, &$details, &$evaluatedCriteriaCount) {
+            if ($score !== null) {
+                $score = max(0.0, min(1.0, $score));
+                $weightedScore += $weight * $score;
+                $totalWeight += $weight;
+                $evaluatedCriteriaCount++;
+            }
+
             $details[] = [
                 'key' => $key,
-                'score' => (int) round($score * 100),
+                'score' => $score === null ? null : (int) round($score * 100),
                 'weight' => $weight,
+                'evaluated' => $score !== null,
             ];
         };
 
@@ -159,7 +239,7 @@ class SmartMatchingService
         if ($this->hasValue($countryId)) {
             $candidateCountry = $candidate['country_id'] ?? null;
             $score = !$this->hasValue($candidateCountry)
-                ? 0.5
+                ? null
                 : ((string) $candidateCountry === (string) $countryId ? 1.0 : 0.25);
             $add('country', 18, $score);
         }
@@ -173,7 +253,7 @@ class SmartMatchingService
                 && (string) $candidateCountry === (string) $countryId;
 
             if (!$this->hasValue($candidateState)) {
-                $score = 0.5;
+                $score = null;
             } elseif ((string) $candidateState === (string) $stateId) {
                 $score = 1.0;
             } else {
@@ -186,7 +266,7 @@ class SmartMatchingService
         $maxAge = $this->numericOrNull($expectations['max_age'] ?? $expectations['partner_max_age'] ?? null);
         if ($minAge !== null || $maxAge !== null) {
             $age = $this->numericOrNull($candidate['age'] ?? null);
-            $score = $age === null ? 0.5 : $this->rangeScore($age, $minAge, $maxAge, 2, 5);
+            $score = $age === null ? null : $this->rangeScore($age, $minAge, $maxAge, 2, 5);
             $add('age', 12, $score);
         }
 
@@ -194,7 +274,7 @@ class SmartMatchingService
         if ($this->hasValue($maritalStatus)) {
             $candidateStatus = $candidate['marital_status_id'] ?? null;
             $score = !$this->hasValue($candidateStatus)
-                ? 0.5
+                ? null
                 : ((string) $candidateStatus === (string) $maritalStatus ? 1.0 : 0.0);
             $add('marital_status', 10, $score);
         }
@@ -203,7 +283,7 @@ class SmartMatchingService
         if ($this->hasValue($religionId)) {
             $candidateReligion = $candidate['religion_id'] ?? null;
             $score = !$this->hasValue($candidateReligion)
-                ? 0.5
+                ? null
                 : ((string) $candidateReligion === (string) $religionId ? 1.0 : 0.0);
             $add('religion', 10, $score);
         }
@@ -219,7 +299,7 @@ class SmartMatchingService
         }
         if ($minHeight !== null || $maxHeight !== null) {
             $height = $this->normaliseHeight($candidate['height'] ?? null);
-            $score = $height === null ? 0.5 : $this->rangeScore($height, $minHeight, $maxHeight, 5, 10);
+            $score = $height === null ? null : $this->rangeScore($height, $minHeight, $maxHeight, 5, 10);
             $add('height', 8, $score);
         }
 
@@ -234,7 +314,7 @@ class SmartMatchingService
         }
         if ($minWeight !== null || $maxWeight !== null) {
             $weight = $this->numericOrNull($candidate['weight'] ?? null);
-            $score = $weight === null ? 0.5 : $this->rangeScore($weight, $minWeight, $maxWeight, 5, 10);
+            $score = $weight === null ? null : $this->rangeScore($weight, $minWeight, $maxWeight, 5, 10);
             $add('weight', 7, $score);
         }
 
@@ -243,16 +323,22 @@ class SmartMatchingService
             $candidateDegrees = $candidate['education'] ?? [];
             $candidateDegrees = is_array($candidateDegrees) ? $candidateDegrees : [$candidateDegrees];
             $levels = array_filter(array_map([$this, 'educationLevel'], $candidateDegrees));
-            if (empty($levels)) {
-                $score = 0.5;
+            if (empty($candidateDegrees)) {
+                $score = null;
             } else {
                 $preferredLevel = $this->educationLevel($education);
-                $bestLevel = max($levels);
-                $score = $preferredLevel === 0
-                    ? ($this->textSimilarity($education, $candidateDegrees) ?? 0.5)
-                    : ($bestLevel >= $preferredLevel
+                if ($preferredLevel === 0) {
+                    $score = $this->textSimilarity($education, $candidateDegrees);
+                } elseif (!empty($levels)) {
+                    $bestLevel = max($levels);
+                    $score = $bestLevel >= $preferredLevel
                         ? 1.0
-                        : ($bestLevel === $preferredLevel - 1 ? 0.6 : 0.2));
+                        : ($bestLevel === $preferredLevel - 1 ? 0.6 : 0.2);
+                } else {
+                    // Custom/unmapped candidate degree is unknown for a ranked-level
+                    // preference; do not invent a neutral 50% result.
+                    $score = null;
+                }
             }
             $add('education', 8, $score);
         }
@@ -261,7 +347,7 @@ class SmartMatchingService
         if ($this->hasMeaningfulPreference($profession)) {
             $candidateProfessions = $candidate['professions'] ?? [];
             $similarity = $this->textSimilarity($profession, is_array($candidateProfessions) ? $candidateProfessions : [$candidateProfessions]);
-            $add('profession', 5, $similarity ?? 0.5);
+            $add('profession', 5, $similarity);
         }
 
         $languageId = $expectations['language_id'] ?? null;
@@ -270,7 +356,7 @@ class SmartMatchingService
             $candidateLanguages = is_array($candidateLanguages) ? $candidateLanguages : [$candidateLanguages];
             $candidateLanguages = array_map('strval', $candidateLanguages);
             $score = empty($candidateLanguages)
-                ? 0.5
+                ? null
                 : (in_array((string) $languageId, $candidateLanguages, true) ? 1.0 : 0.0);
             $add('language', 7, $score);
         }
@@ -279,19 +365,19 @@ class SmartMatchingService
         if ($childrenPreference === 'no') {
             $children = $candidate['children'] ?? null;
             $hasChildren = $this->booleanOrCount($children);
-            $add('children', 4, $hasChildren === null ? 0.5 : ($hasChildren ? 0.0 : 1.0));
+            $add('children', 4, $hasChildren === null ? null : ($hasChildren ? 0.0 : 1.0));
         }
 
         $smokingPreference = $this->normaliseAcceptability($expectations['smoking_acceptable'] ?? null);
         if ($smokingPreference === 'no') {
             $smokes = $this->yesNoValue($candidate['smoke'] ?? null);
-            $add('smoking', 4, $smokes === null ? 0.5 : ($smokes ? 0.0 : 1.0));
+            $add('smoking', 4, $smokes === null ? null : ($smokes ? 0.0 : 1.0));
         }
 
         $drinkingPreference = $this->normaliseAcceptability($expectations['drinking_acceptable'] ?? null);
         if ($drinkingPreference === 'no') {
             $drinks = $this->yesNoValue($candidate['drink'] ?? null);
-            $add('drinking', 4, $drinks === null ? 0.5 : ($drinks ? 0.0 : 1.0));
+            $add('drinking', 4, $drinks === null ? null : ($drinks ? 0.0 : 1.0));
         }
 
         foreach ([
@@ -306,22 +392,63 @@ class SmartMatchingService
 
             $actual = $candidate[$mapping['candidate']] ?? null;
             $score = !$this->hasValue($actual)
-                ? 0.5
+                ? null
                 : ($this->normaliseText($expected) === $this->normaliseText($actual) ? 1.0 : 0.0);
             $add($key, (float) $mapping['weight'], $score);
         }
 
-        if ($totalWeight <= 0) {
-            return [
-                'percentage' => 0,
-                'criteria_count' => 0,
-                'details' => [],
-            ];
+        $casteId = $expectations['caste_id'] ?? null;
+        if ($this->hasValue($casteId)) {
+            $candidateCasteId = $candidate['caste_id'] ?? null;
+            $add('caste', 4, !$this->hasValue($candidateCasteId)
+                ? null
+                : ((string) $candidateCasteId === (string) $casteId ? 1.0 : 0.0));
         }
 
+        $subCasteId = $expectations['sub_caste_id'] ?? null;
+        if ($this->hasValue($subCasteId)) {
+            $candidateSubCasteId = $candidate['sub_caste_id'] ?? null;
+            $add('sub_caste', 2, !$this->hasValue($candidateSubCasteId)
+                ? null
+                : ((string) $candidateSubCasteId === (string) $subCasteId ? 1.0 : 0.0));
+        }
+
+        $familyValueId = $expectations['family_value_id'] ?? null;
+        if ($this->hasValue($familyValueId)) {
+            $candidateFamilyValueId = $candidate['family_value_id'] ?? null;
+            $add('family_value', 3, !$this->hasValue($candidateFamilyValueId)
+                ? null
+                : ((string) $candidateFamilyValueId === (string) $familyValueId ? 1.0 : 0.0));
+        }
+
+        $personalValue = $expectations['personal_value'] ?? null;
+        if ($this->hasMeaningfulPreference($personalValue)) {
+            $actualPersonalValue = $candidate['personal_value'] ?? null;
+            $add('personal_value', 3, !$this->hasValue($actualPersonalValue)
+                ? null
+                : $this->textSimilarity($personalValue, [$actualPersonalValue]));
+        }
+
+        $bodyType = $expectations['body_type'] ?? null;
+        if ($this->hasMeaningfulPreference($bodyType)) {
+            $actualBodyType = $candidate['body_type'] ?? null;
+            $add('body_type', 4, !$this->hasValue($actualBodyType)
+                ? null
+                : $this->textSimilarity($bodyType, [$actualBodyType]));
+        }
+
+        $criteriaCount = count($details);
+        $status = $criteriaCount === 0
+            ? 'no_preferences'
+            : ($evaluatedCriteriaCount === 0 ? 'insufficient_data' : 'calculated');
+
         return [
-            'percentage' => (int) round(($weightedScore / $totalWeight) * 100),
-            'criteria_count' => count($details),
+            'percentage' => $totalWeight > 0
+                ? (int) round(($weightedScore / $totalWeight) * 100)
+                : null,
+            'criteria_count' => $criteriaCount,
+            'evaluated_criteria_count' => $evaluatedCriteriaCount,
+            'status' => $status,
             'details' => $details,
         ];
     }
@@ -367,6 +494,11 @@ class SmartMatchingService
             'country_id' => $residency->recidency_country_id ?? $presentAddress->country_id ?? null,
             'state_id' => $residency->recidency_state_id ?? $presentAddress->state_id ?? null,
             'religion_id' => $spiritual->religion_id ?? null,
+            'caste_id' => $spiritual->caste_id ?? null,
+            'sub_caste_id' => $spiritual->sub_caste_id ?? null,
+            'family_value_id' => $spiritual->family_value_id ?? null,
+            'personal_value' => $spiritual->personal_value ?? null,
+            'body_type' => $physical->body_type ?? null,
             'height' => $physical->height ?? null,
             'weight' => $physical->weight ?? null,
             'complexion' => $physical->complexion ?? null,
@@ -404,6 +536,17 @@ class SmartMatchingService
         } catch (\Throwable $exception) {
             return null;
         }
+    }
+
+    private function emptyScore(string $status): array
+    {
+        return [
+            'percentage' => null,
+            'criteria_count' => 0,
+            'evaluated_criteria_count' => 0,
+            'status' => $status,
+            'details' => [],
+        ];
     }
 
     private function hasPreferences(array $expectations): bool
@@ -525,15 +668,10 @@ class SmartMatchingService
             if ($actualText === $expectedText) {
                 return 1.0;
             }
-            if (str_contains($actualText, $expectedText) || str_contains($expectedText, $actualText)) {
-                $best = max($best ?? 0.0, 0.85);
-                continue;
-            }
-
-            $actualTokens = array_values(array_filter(explode(' ', $actualText)));
+            $actualTokens = array_values(array_unique(array_filter(explode(' ', $actualText))));
             $intersection = count(array_intersect($expectedTokens, $actualTokens));
-            $denominator = max(1, min(count($expectedTokens), count($actualTokens)));
-            $similarity = $intersection / $denominator;
+            $union = count(array_unique(array_merge($expectedTokens, $actualTokens)));
+            $similarity = $union > 0 ? $intersection / $union : 0.0;
             $best = max($best ?? 0.0, $similarity);
         }
 
