@@ -2806,12 +2806,12 @@ class _SubscriptionsModalContentState
               color: AppColors.sectionBackground,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                  color: AppColors.accentLight.withValues(alpha: 0.3)),
+                  color: AppColors.lineColor),
             ),
             child: Row(
               children: [
                 const Icon(Icons.check_circle,
-                    color: AppColors.accentLight, size: 20),
+                    color: AppColors.primaryTeal, size: 20),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -2957,7 +2957,7 @@ class _SubscriptionsModalContentState
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.shield_outlined,
-                            color: AppColors.accentLight, size: 26),
+                            color: AppColors.primaryTeal, size: 26),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -3045,7 +3045,7 @@ class _SubscriptionsModalContentState
                                   ? 'الانتقال للدفع السريع ($_currencySymbol$selectedAmountClean)'
                                   : 'Proceed to Payment ($_currencySymbol$selectedAmountClean)',
                               style: const TextStyle(
-                                  color: AppColors.textDark,
+                                  color: Colors.white,
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
                                   fontFamily: 'Cairo'),
@@ -3136,7 +3136,7 @@ class _SubscriptionsModalContentState
                           child: SelectableText(
                             _officialShamCashCode,
                             style: TextStyle(
-                                color: Colors.amber,
+                                color: AppColors.textDark,
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 0.8),
@@ -3249,7 +3249,7 @@ class _SubscriptionsModalContentState
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
-                            color: AppColors.textDark, strokeWidth: 2))
+                            color: Colors.white, strokeWidth: 2))
                     : Text(
                         widget.isArabic
                             ? 'تأكيد وإرسال الإشعار'
