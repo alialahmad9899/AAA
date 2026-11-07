@@ -372,7 +372,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const Color primarySkyBlue = AppColors.primaryTeal;
+    const Color primaryTeal = AppColors.primaryTeal;
 
     return Scaffold(
       body: Directionality(
@@ -418,6 +418,59 @@ class _LoginScreenState extends State<LoginScreen> {
                         key: _formKey,
                         child: Column(
                           children: [
+                            Container(
+                              width: 76,
+                              height: 76,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    AppColors.primaryTeal,
+                                    AppColors.secondaryTeal,
+                                  ],
+                                  begin: Alignment.topRight,
+                                  end: Alignment.bottomLeft,
+                                ),
+                                borderRadius: BorderRadius.circular(25),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.primaryTeal
+                                        .withValues(alpha: 0.18),
+                                    blurRadius: 18,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.favorite_rounded,
+                                color: AppColors.accentLight,
+                                size: 38,
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            Text(
+                              _isArabic ? 'أهلاً بعودتك' : 'Welcome Back',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: AppColors.primaryTeal,
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                fontFamily: 'Cairo',
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              _isArabic
+                                  ? 'سجّل دخولك لمتابعة رحلتك والتواصل بثقة.'
+                                  : 'Sign in to continue your journey with confidence.',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: AppColors.textMuted,
+                                fontSize: 12.5,
+                                height: 1.5,
+                                fontFamily: 'Cairo',
+                              ),
+                            ),
+                            const SizedBox(height: 20),
                             ClipRRect(
                               borderRadius: BorderRadius.circular(28),
                               child: BackdropFilter(
@@ -544,7 +597,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                           onPressed:
                                               _isLoading ? null : _handleLogin,
                                           style: ElevatedButton.styleFrom(
-                                            backgroundColor: primarySkyBlue,
+                                            backgroundColor: primaryTeal,
                                             foregroundColor: Colors.white,
                                             shape: RoundedRectangleBorder(
                                               borderRadius:
@@ -686,7 +739,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                                 style: const TextStyle(
                                                   fontSize: 15,
                                                   fontWeight: FontWeight.bold,
-                                                  color: primarySkyBlue,
+                                                  color: primaryTeal,
                                                   fontFamily: 'Cairo',
                                                 ),
                                               ),
