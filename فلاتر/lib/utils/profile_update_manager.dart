@@ -139,7 +139,7 @@ class ProfileUpdateManager {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
                 decoration: BoxDecoration(
-                  color: const AppColors.cardColor.withValues(alpha: 0.98),
+                  color: AppColors.cardColor.withValues(alpha: 0.98),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: AppColors.lineColor,

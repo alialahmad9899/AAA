@@ -499,7 +499,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
             color: AppColors.cardColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(36)),
             border: Border.all(
-                color: const AppColors.premiumGold.withValues(alpha: 0.4),
+                color: AppColors.premiumGold.withValues(alpha: 0.4),
                 width: 1.5),
             boxShadow: [
               BoxShadow(

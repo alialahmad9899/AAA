@@ -64,7 +64,7 @@ class SenderMessageBubble extends StatelessWidget {
             Text(
               message.time,
               style: const TextStyle(
-                color: Colors.white.withValues(alpha: 0.86),
+                color: Colors.white,
                 fontSize: 10,
                 fontFamily: 'Cairo',
               ),
