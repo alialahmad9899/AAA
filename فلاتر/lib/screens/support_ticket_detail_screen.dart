@@ -246,7 +246,7 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                       ? (_isAr ? 'تم الرد (مغلقة)' : 'Closed')
                       : (_isAr ? 'قيد المتابعة' : 'In Progress'),
                   style: TextStyle(
-                    color: isClosed ? AppColors.success : AppColors.warning,
+                    color: AppColors.textDark,
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Cairo',
