@@ -189,8 +189,7 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
       labelText: labelText,
       labelStyle: const TextStyle(
         fontSize: 13.5,
-        color: Color(
-            0xE6FFFFFF), // 🟢 تم الإصلاح: درجة الأبيض بشفافية 90% مقبولة كـ const
+        color: AppColors.textDark,
         fontFamily: 'Cairo',
         fontWeight: FontWeight.w600,
       ),
