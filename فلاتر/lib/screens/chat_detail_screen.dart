@@ -525,7 +525,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       setState(() {
         _messages = displayedMessages;
         _chatRules = rules;
-        _hasMoreOldMessages = res['has_more_old_messages'] == true;
+        _hasMoreOldMessages = preserveHistory
+            ? (_hasMoreOldMessages && res['has_more_old_messages'] == true)
+            : res['has_more_old_messages'] == true;
         _isLoading = false;
         _hasMessageLoadError = false;
         _messageLoadError = '';
