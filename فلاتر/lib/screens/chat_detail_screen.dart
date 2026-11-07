@@ -1015,7 +1015,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                           },
                         ),
                       ),
-                      const Divider(color: AppColors.textDark12, height: 24),
+                      const Divider(color: AppColors.lineColor, height: 24),
                       Material(
                         color: Colors.transparent,
                         child: ListTile(
@@ -1058,7 +1058,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                           },
                         ),
                       ),
-                      const Divider(color: AppColors.textDark12, height: 24),
+                      const Divider(color: AppColors.lineColor, height: 24),
                       Material(
                         color: Colors.transparent,
                         child: ListTile(
@@ -1101,7 +1101,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                           },
                         ),
                       ),
-                      const Divider(color: AppColors.textDark12, height: 24),
+                      const Divider(color: AppColors.lineColor, height: 24),
                       Material(
                         color: Colors.transparent,
                         child: ListTile(
