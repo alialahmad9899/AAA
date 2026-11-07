@@ -218,7 +218,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                       Border.all(color: AppColors.warning, width: 1.5),
                 ),
                 child: const Icon(Icons.mark_chat_unread_rounded,
-                    color: Color(0xFFFFB300), size: 48),
+                    color: AppColors.warning, size: 48),
               ),
               const SizedBox(height: 16),
               Text(
@@ -927,12 +927,11 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                                                 : 'About Me',
                                             icon: Icons.format_quote_rounded,
                                             accentColor:
-                                                const Color(0xFF38BDF8),
+                                                const AppColors.primaryTeal,
                                             content: Text(
                                               _profile!.introduction,
                                               style: TextStyle(
-                                                  color: Colors.white
-                                                      .withValues(alpha: 0.9),
+                                                  color: AppColors.textDark,
                                                   fontSize: 14,
                                                   height: 1.6,
                                                   fontFamily: 'Cairo'),
@@ -1130,7 +1129,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                 color: Colors.black.withValues(alpha: 0.3),
                 child: IconButton(
                   icon: const Icon(Icons.report_problem_outlined,
-                      color: Colors.amberAccent, size: 20),
+                      color: AppColors.warning, size: 20),
                   onPressed: _showReportDialog,
                 ),
               ),
@@ -1664,7 +1663,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
             Text(
               pe.getLocalizedGeneral(isArabic: _isArabic),
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.textDark,
                 fontSize: 13.5,
                 height: 1.5,
                 fontFamily: 'Cairo',
@@ -1962,7 +1961,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _isInterestSent
                               ? AppColors.success
-                              : const Color(0xFF0288D1),
+                              : const AppColors.primaryTeal,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(18),
                           ),
@@ -2013,7 +2012,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                       child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.sectionBackground,
-                          foregroundColor: const Color(0xFF38BDF8),
+                          foregroundColor: const AppColors.primaryTeal,
                           side: const BorderSide(
                             color: Color(0xFF38BDF8),
                             width: 1.2,
@@ -2150,7 +2149,7 @@ class __CustomProfileReportDialogState
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(color: AppColors.accentWarm),
+                      borderSide: const BorderSide(color: AppColors.primaryTeal),
                     ),
                   ),
                 ),
