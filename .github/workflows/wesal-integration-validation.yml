@@ -130,28 +130,28 @@ jobs:
           fi
 
           zip_path="$GITHUB_WORKSPACE/WESAL_SESSION_FIXES.zip"
-           python3 - "$package_dir" "$zip_path" <<'PY'
-           import os
-           import sys
-           import zipfile
+          python3 - "$package_dir" "$zip_path" <<'PY'
+          import os
+          import sys
+          import zipfile
 
-           source_dir, archive_path = sys.argv[1:]
-           with zipfile.ZipFile(
-               archive_path,
-               mode="w",
-               compression=zipfile.ZIP_DEFLATED,
-               compresslevel=6,
-           ) as archive:
-               for root, dirs, filenames in os.walk(source_dir):
-                   dirs.sort()
-                   for filename in sorted(filenames):
-                       file_path = os.path.join(root, filename)
-                       archive_name = os.path.relpath(
-                           file_path, source_dir
-                       ).replace(os.sep, "/")
-                       archive.write(file_path, arcname=archive_name)
-           PY
-           unzip -tq "$zip_path"
+          source_dir, archive_path = sys.argv[1:]
+          with zipfile.ZipFile(
+              archive_path,
+              mode="w",
+              compression=zipfile.ZIP_DEFLATED,
+              compresslevel=6,
+          ) as archive:
+              for root, dirs, filenames in os.walk(source_dir):
+                  dirs.sort()
+                  for filename in sorted(filenames):
+                      file_path = os.path.join(root, filename)
+                      archive_name = os.path.relpath(
+                          file_path, source_dir
+                      ).replace(os.sep, "/")
+                      archive.write(file_path, arcname=archive_name)
+          PY
+          unzip -tq "$zip_path"
           echo "Packaged $copied changed files."
           sha256sum "$zip_path"
           unzip -Z1 "$zip_path"
