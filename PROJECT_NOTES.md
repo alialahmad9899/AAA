@@ -852,3 +852,61 @@
   - `فلاتر/lib/screens/home/tabs/account_tab.dart`
 - تمت مقارنة Git Blob SHA لكل ملف في الحزمة الموحّدة مع الملفات الحالية في `main`، وتطابقت جميع الملفات. SHA-256 للحزمة الموحّدة: `b472f5f0f669310f1c20b2dfebbbd96914ccfa28ddd373414ac85cac76dc4986`.
 - لم يتم تعديل API أو Laravel أو قاعدة البيانات أو الموقع العام. لا يوجد اختبار بصري على أجهزة Android/iOS فعلية أو صور شاشة لأحجام متعددة؛ هذه الخطوة ما زالت مطلوبة قبل الاعتماد البصري النهائي أو النشر.
+
+
+## 2026-11-08 — مراجعة الواجهات والإشعارات السفلية والمساحات الآمنة
+
+### نطاق العمل
+- نُفذت التعديلات على تطبيق Flutter داخل `فلاتر/` فقط. لم يتم تعديل واجهة الموقع العام، أو صفحات Blade، أو قاعدة البيانات، أو نقاط Laravel API.
+- تم تحديث الملفات الأصلية مباشرة على `main`، مع الحفاظ على وظائف الطلبات والاشتراكات والحظر والمحادثات كما هي.
+
+### ما تم تنفيذه
+- توحيد كل رسائل التطبيق الداخلية السفلية في `فلاتر/lib/widgets/app_snackbar.dart`: حالات نجاح/خطأ/تنبيه/معلومة، عنوان واضح، نص رئيسي، وتفصيل إرشادي اختياري، مع دعم RTL/LTR، وإعلان الإشعار لقارئات الشاشة، وزر إغلاق، واحتساب المساحة السفلية الآمنة.
+- تحويل الرسائل القديمة المتفرقة في تسجيل الدخول وتعديل الملف الشخصي وحفظ البيانات والتسجيل والحظر والتطابق الذكي إلى المكوّن المركزي. أصبح `PremiumToast` واجهة توافق تمرر رسائله إلى المكوّن نفسه بدلاً من إنشاء شكل إشعار ثانٍ.
+- تحسين صياغة الرسائل المهمة لتوضح ما الذي نجح أو تعذّر، وما الذي ينبغي للمستخدم فعله تالياً، دون عرض تفاصيل استثناءات أو أخطاء تقنية خام.
+- مراجعة ملفات Flutter الـ55: لا توجد استدعاءات SnackBar مباشرة خارج المكوّن المركزي؛ كما أن جميع نوافذ `showModalBottomSheet` التي جرى فحصها تضبط `useSafeArea: true`.
+- نقل شريط التنقل السفلي للشاشة الرئيسية إلى `Scaffold.bottomNavigationBar` بدلاً من تراكبه داخل Stack في محتوى الصفحة، حتى تُحسب مساحة الإشعار العائم فوق شريط التنقل.
+- تطبيق `WesalBottomInsets` في النوافذ التي كانت تعتمد على مساحة لوحة المفاتيح فقط أو لا تحتسب المساحة السفلية للنظام، بما فيها معاينة الصورة في المحادثة، اختيار الدول، نوافذ العضو، وتوقعات الشريك والحساب.
+- جعل عدّاد الإشعارات غير المقروءة يتحدث عند وصول إشعار أثناء استخدام التطبيق، وعند العودة إلى التطبيق، وبعد الرجوع من الوجهة التي فُتحت مباشرة من إشعار النظام.
+- إصلاح تباين أزرار الإجراء في التطابق وتذاكر الدعم، وأيقونة نافذة «حول التطبيق»، وتغميق الذهبي في شارة الباقة حتى يبقى النص الأبيض مقروءاً، وتوحيد شارة نتائج البحث مع `PackageBadgeWidget` المشتركة. كما أزيل آخر حد سماوي قديم من معاينة الصورة في المحادثة.
+- إضافة اختبار ويدجت جديد `فلاتر/test/app_snackbar_test.dart` للتحقق من ظهور العنوان والرسالة والتوضيح العربي ومن هامش المساحة السفلية.
+
+### الملفات التشغيلية المعدلة
+- `فلاتر/lib/widgets/app_snackbar.dart`
+- `فلاتر/lib/widgets/premium_toast.dart`
+- `فلاتر/lib/screens/home/tabs/auto_matching_tab.dart`
+- `فلاتر/lib/screens/blocked_accounts_screen.dart`
+- `فلاتر/lib/screens/widgets/step3_residency_religion.dart`
+- `فلاتر/lib/screens/widgets/step1_basic_info.dart`
+- `فلاتر/lib/screens/login_screen.dart`
+- `فلاتر/lib/screens/edit_profile_screen.dart`
+- `فلاتر/lib/utils/profile_update_manager.dart`
+- `فلاتر/lib/screens/main_home_screen.dart`
+- `فلاتر/lib/services/notification_service.dart`
+- `فلاتر/lib/screens/member_profile_screen.dart`
+- `فلاتر/lib/screens/partner_expectations_screen.dart`
+- `فلاتر/lib/screens/home/tabs/account_tab.dart`
+- `فلاتر/lib/screens/edit_profile/widgets/profile_pickers.dart`
+- `فلاتر/lib/screens/widgets/step3_residency_religion.dart`
+- `فلاتر/lib/widgets/about_app_dialog.dart`
+- `فلاتر/lib/screens/support_tickets_screen.dart`
+- `فلاتر/lib/screens/chat_detail_screen.dart`
+- `فلاتر/lib/widgets/package_badge_widget.dart`
+- `فلاتر/lib/screens/home/search_results_screen.dart`
+- `فلاتر/lib/screens/home/tabs/search_tab.dart`
+- `فلاتر/lib/screens/vip_services_screen.dart`
+- `فلاتر/test/app_snackbar_test.dart` (ملف اختبار جديد)
+
+### التحقق
+- GitHub Actions #194 على commit `3d0ef23a155ca44e15dcc9f8bb98acfa3d0f9160` نجح في جميع الوظائف:
+  - `dart analyze --fatal-infos`: لا توجد أخطاء أو ملاحظات.
+  - اختبارات Flutter: 54 اختباراً ناجحاً.
+  - فحص PHP syntax: 30 ملفاً دون أخطاء.
+  - PHPUnit: 16 اختباراً و47 assertion ناجحة.
+  - إنشاء حزمة CI وفحص سلامة ZIP: نجاح.
+- لم يتم إجراء اختبار بصري على هاتف Android أو iPhone حقيقي، ولم يتم نشر نسخة إنتاجية. يلزم اختبار عملي على أحجام أجهزة مختلفة قبل الاعتماد البصري النهائي.
+- إشعارات Firebase/النظام بقيت منفصلة وظيفياً عن رسائل AppSnackBar الداخلية؛ الذي تغيّر هنا هو مزامنة عدّاد غير المقروء عند وصول الإشعار والعودة من وجهته.
+
+### مراجع التنفيذ
+- بداية هذه الدفعة: `0945513f9f92602bd16b797e30c94131b2ac70bd`.
+- آخر commit تشغيلي اجتاز الفحص الكامل: `3d0ef23a155ca44e15dcc9f8bb98acfa3d0f9160`.
