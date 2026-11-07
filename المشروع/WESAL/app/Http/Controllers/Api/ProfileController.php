@@ -1338,11 +1338,13 @@ class ProfileController extends Controller
                 }
             }
 
-            $data['profile_match'] = null;
-            if (MemberUtility::can_auto_match($auth_user->id)) {
-                $matchResult = app(SmartMatchingService::class)->scoreFor($auth_user, $user);
-                $data['profile_match'] = $matchResult['percentage'] ?? null;
-            }
+            // Display the compatibility calculation independently from the
+            // paid smart-sort entitlement. The entitlement still gates sorting.
+            $matchResult = app(SmartMatchingService::class)->scoreFor($auth_user, $user);
+            $data['profile_match'] = $matchResult['percentage'] ?? null;
+            $data['profile_match_criteria_count'] = $matchResult['criteria_count'] ?? 0;
+            $data['profile_match_evaluated_criteria_count'] = $matchResult['evaluated_criteria_count'] ?? 0;
+            $data['profile_match_status'] = $matchResult['status'] ?? 'not_eligible';
             $data['view_contact_check'] = ViewContact::where('user_id', $user->id)->where('viewed_by', auth()->id())->first() ? true : false;
 
             if ($user->id != $auth_user->id) {
