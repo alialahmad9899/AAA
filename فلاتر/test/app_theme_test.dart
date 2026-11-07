@@ -18,3 +18,15 @@ void main() {
         const Color(0xFFFFFFFF));
   });
 }
+
+  test('interactive controls keep strong contrast on light surfaces', () {
+    final theme = AppTheme.light;
+    expect(theme.appBarTheme.foregroundColor, AppColors.textDark);
+    expect(theme.inputDecorationTheme.labelStyle?.color, AppColors.textMuted);
+    expect(theme.inputDecorationTheme.floatingLabelStyle?.color,
+        AppColors.primaryTeal);
+    expect(theme.elevatedButtonTheme.style?.backgroundColor?.resolve({}),
+        AppColors.primaryTeal);
+    expect(theme.outlinedButtonTheme.style?.foregroundColor?.resolve({}),
+        AppColors.primaryTeal);
+  });
