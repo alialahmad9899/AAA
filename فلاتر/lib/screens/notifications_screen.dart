@@ -717,14 +717,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           placeholder: (context, url) => Container(
             width: radius * 2,
             height: radius * 2,
-            color: Colors.white10,
+            color: AppColors.sectionBackground,
             child: Center(
               child: SizedBox(
                 width: radius,
                 height: radius,
                 child: const CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Color(0xFF38BDF8),
+                  color: AppColors.primaryTeal,
                 ),
               ),
             ),
