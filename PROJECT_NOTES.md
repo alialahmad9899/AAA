@@ -535,3 +535,6 @@
   - `flutter test`: 46 اختباراً ناجحاً.
   - `php -l`: اجتاز `ProfileViewerController.php` إضافة إلى بقية ملفات قائمة فحص PHP.
 - رأس `main` عند إعداد هذا التحديث: Merge PR #13 ثم تحديث Workflow، ويُحدّث هذا السجل في Commit منفصل؛ لم يتم نشر التطبيق أو API إلى الاستضافة.
+
+
+- حزمة الملفات المحلية الجاهزة للنسخ من هذه الدفعة: `WESAL_REPAIR_SOURCE_FILES_2026-11-07.zip`، 23 ملفاً بمساراتها الأصلية. استُبعد منها ملف Workflow عمداً لأن نسخته الأحدث أُضيفت مباشرة إلى `main` بعد إنشاء Artifact PR #13؛ المرجع المعتمد لذلك الملف هو `.github/workflows/wesal-integration-validation.yml` على `main`. SHA-256 للحزمة المحلية: `d778bfd8cdd7ef056b244382c8716fc4c59c8a49914b57cbb32e296f4eb081bc`. 
