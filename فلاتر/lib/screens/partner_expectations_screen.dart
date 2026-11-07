@@ -12,6 +12,7 @@ import '../constants/colors.dart';
 import 'package:flutter/services.dart';
 import '../services/api_service.dart';
 import '../widgets/app_snackbar.dart';
+import '../widgets/bottom_system_inset.dart';
 
 /// 1️⃣ كلاس مخصص للحد من تكرار استدعاءات البحث أثناء الكتابة (Debouncer)
 class Debouncer {
@@ -568,6 +569,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
         String searchQuery = '';
@@ -582,7 +584,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
 
             return Padding(
               padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
+                bottom: WesalBottomInsets.of(context),
               ),
               child: ClipRRect(
                 borderRadius:

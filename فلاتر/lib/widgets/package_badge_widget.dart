@@ -34,10 +34,10 @@ class PackageBadgeWidget extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    const Color primaryColor = Color(0xFFFFB300);
+    const Color primaryColor = Color(0xFF805600);
     const List<Color> gradientColors = [
-      Color(0xFFFFB300),
-      Color(0xFFF57C00),
+      Color(0xFF805600),
+      Color(0xFF6C4800),
     ];
     final String badgeTitle = canonicalName;
 

@@ -158,6 +158,7 @@ class ProfilePickers {
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.65),
       builder: (context) => CountryPickerBottomSheetContent(
@@ -476,7 +477,7 @@ class _CountryPickerBottomSheetContentState
 
   @override
   Widget build(BuildContext context) {
-    final double bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final double bottomInset = WesalBottomInsets.of(context);
 
     return Directionality(
       textDirection: widget.isAr ? TextDirection.rtl : TextDirection.ltr,

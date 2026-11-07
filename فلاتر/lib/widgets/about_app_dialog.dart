@@ -26,6 +26,7 @@ class AboutAppDialog extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.65),
       builder: (context) => AboutAppDialog(currentLanguage: currentLanguage),
@@ -107,7 +108,7 @@ class AboutAppDialog extends StatelessWidget {
                         ),
                         child: const Icon(
                           Icons.favorite_rounded,
-                          color: AppColors.textDark,
+                          color: Colors.white,
                           size: 26,
                         ),
                       ),

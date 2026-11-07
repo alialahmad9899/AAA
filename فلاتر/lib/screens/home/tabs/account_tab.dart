@@ -22,6 +22,7 @@ import '../../../services/notification_service.dart';
 import '../../../models/member_profile_model.dart';
 import '../../../widgets/about_app_dialog.dart';
 import '../../../widgets/app_snackbar.dart';
+import '../../../widgets/bottom_system_inset.dart';
 import '../../../widgets/package_badge_widget.dart';
 import '../../../widgets/vip_survey_wizard_dialog.dart';
 import '../../welcome_screen.dart';
@@ -158,6 +159,7 @@ class AccountTab extends StatefulWidget {
     final result = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (subContext) => _SubscriptionsModalContent(
         isArabic: isArabic,
@@ -213,11 +215,14 @@ class AccountTab extends StatefulWidget {
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (modalContext) => Directionality(
         textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
         child: Container(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.fromLTRB(
+            24, 24, 24, 24 + WesalBottomInsets.of(modalContext),
+          ),
           decoration: BoxDecoration(
             color: AppColors.cardColor.withValues(alpha: 0.96),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -2122,7 +2127,7 @@ class _SubscriptionsModalContentState
 
   @override
   Widget build(BuildContext context) {
-    final double bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    final double bottomInset = WesalBottomInsets.of(context);
     final double screenHeight = MediaQuery.sizeOf(context).height;
     final bool isPaymentStep = _showPaymentStep;
     const Color headingColor = AppColors.textDark;

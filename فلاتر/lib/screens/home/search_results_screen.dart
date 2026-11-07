@@ -10,6 +10,7 @@ import '../../constants/colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/api_service.dart';
 import '../../models/member_model.dart';
+import '../../widgets/package_badge_widget.dart';
 import '../member_profile_screen.dart';
 
 class SearchResultsScreen extends StatefulWidget {
@@ -207,71 +208,13 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     );
   }
 
-  /// ودجت بناء شارة الباقة المخصصة للعضو داخل الكروت المصغرة
+  /// شارة موحدة تعرض اسم الباقة الحقيقي الذي وصل من API.
   Widget _buildPackageBadge(String rawPackageName) {
-    final String cleanName = rawPackageName.trim().toLowerCase();
-    if (cleanName.isEmpty) return const SizedBox.shrink();
-
-    Color primaryColor;
-    List<Color> gradientColors;
-    IconData badgeIcon;
-    String badgeTitle;
-
-    if (cleanName.contains('ملكي') ||
-        cleanName.contains('royal') ||
-        cleanName.contains('3')) {
-      primaryColor = const Color(0xFFAB47BC);
-      gradientColors = [const Color(0xFF8E24AA), const Color(0xFF4A148C)];
-      badgeIcon = Icons.workspace_premium_rounded;
-      badgeTitle = _isAr ? 'ملكية 👑' : 'Royal 👑';
-    } else if (cleanName.contains('ذهبي') ||
-        cleanName.contains('gold') ||
-        cleanName.contains('شهر') ||
-        cleanName.contains('month')) {
-      primaryColor = const Color(0xFFFFB300);
-      gradientColors = [const Color(0xFFFFB300), const Color(0xFFF57C00)];
-      badgeIcon = Icons.stars_rounded;
-      badgeTitle = _isAr ? 'ذهبية 🥇' : 'Gold 🥇';
-    } else {
-      primaryColor = const Color(0xFF38BDF8);
-      gradientColors = [const Color(0xFF0288D1), const Color(0xFF005691)];
-      badgeIcon = Icons.verified_rounded;
-      badgeTitle = _isAr ? 'مميزة 🥈' : 'Silver 🥈';
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(colors: gradientColors),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.35),
-          width: 0.8,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: primaryColor.withValues(alpha: 0.3),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(badgeIcon, color: Colors.white, size: 10),
-          const SizedBox(width: 3),
-          Text(
-            badgeTitle,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 9.5,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Cairo',
-            ),
-          ),
-        ],
-      ),
+    if (rawPackageName.trim().isEmpty) return const SizedBox.shrink();
+    return PackageBadgeWidget(
+      packageName: rawPackageName,
+      compact: true,
+      isArabic: _isAr,
     );
   }
 

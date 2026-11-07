@@ -107,7 +107,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
           label: Text(
             _isAr ? 'تذكرة جديدة' : 'New Ticket',
             style: const TextStyle(
-              color: AppColors.textDark,
+              color: Colors.white,
               fontWeight: FontWeight.bold,
               fontFamily: 'Cairo',
             ),
@@ -153,12 +153,12 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                                   borderRadius: BorderRadius.circular(16)),
                             ),
                             icon: const Icon(Icons.add_rounded,
-                                color: AppColors.textDark),
+                                color: Colors.white),
                             onPressed: _showCreateTicketBottomSheet,
                             label: Text(
                               _isAr ? 'افتح تذكرة الآن' : 'Open Ticket Now',
                               style: const TextStyle(
-                                  color: AppColors.textDark,
+                                  color: Colors.white,
                                   fontFamily: 'Cairo',
                                   fontWeight: FontWeight.bold),
                             ),

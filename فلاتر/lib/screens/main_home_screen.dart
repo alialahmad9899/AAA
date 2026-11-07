@@ -12,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/colors.dart';
 
 import '../services/api_service.dart';
+import '../services/notification_service.dart';
 import 'notifications_screen.dart';
 import 'my_profile_viewers_screen.dart';
 
@@ -32,7 +33,8 @@ class MainHomeScreen extends StatefulWidget {
   State<MainHomeScreen> createState() => _MainHomeScreenState();
 }
 
-class _MainHomeScreenState extends State<MainHomeScreen> {
+class _MainHomeScreenState extends State<MainHomeScreen>
+    with WidgetsBindingObserver {
   int _currentIndex = 0;
   late String _currentLanguage;
   int _unreadNotificationCount = 0;
@@ -189,12 +191,34 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
   void initState() {
     super.initState();
     _currentLanguage = widget.currentLanguage;
+    WidgetsBinding.instance.addObserver(this);
+    NotificationService.foregroundMessageVersion
+        .addListener(_onForegroundNotificationReceived);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _loadSavedLanguage();
       if (mounted) {
         _fetchNotificationsCount();
       }
     });
+  }
+
+  void _onForegroundNotificationReceived() {
+    if (mounted) _fetchNotificationsCount();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _fetchNotificationsCount();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    NotificationService.foregroundMessageVersion
+        .removeListener(_onForegroundNotificationReceived);
+    super.dispose();
   }
 
   @override
@@ -421,7 +445,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
     final List<Widget> pages = [
       AutoMatchingTab(
         currentLanguage: _currentLanguage,
@@ -481,11 +505,11 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
           SystemNavigator.pop();
         }
       },
-      child: Scaffold(
-        body: Directionality(
-          textDirection:
-              _currentLanguage == 'ar' ? TextDirection.rtl : TextDirection.ltr,
-          child: Container(
+      child: Directionality(
+        textDirection:
+            _currentLanguage == 'ar' ? TextDirection.rtl : TextDirection.ltr,
+        child: Scaffold(
+          body: Container(
             width: double.infinity,
             height: double.infinity,
             decoration: const BoxDecoration(
@@ -499,23 +523,18 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
               ),
             ),
             child: SafeArea(
-              child: Stack(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 96.0),
-                    child: IndexedStack(
-                      index: _currentIndex,
-                      children: pages,
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 12,
-                    left: 16,
-                    right: 16,
-                    child: _buildGlassBottomNavigationBar(),
-                  ),
-                ],
+              bottom: false,
+              child: IndexedStack(
+                index: _currentIndex,
+                children: pages,
               ),
+            ),
+          ),
+          bottomNavigationBar: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: _buildGlassBottomNavigationBar(),
             ),
           ),
         ),

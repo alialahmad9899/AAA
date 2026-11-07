@@ -105,6 +105,9 @@ class NotificationService {
   static final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
 
+  /// يتغير عند وصول إشعار أثناء فتح التطبيق كي تحدّث الواجهة عدّاد غير المقروء.
+  static final ValueNotifier<int> foregroundMessageVersion = ValueNotifier<int>(0);
+
   static bool _initialized = false;
   static bool _initializing = false;
   static bool _localNotificationsInitialized = false;
@@ -240,6 +243,7 @@ class NotificationService {
     final String? messageId = message.messageId;
     if (messageId != null && !_processedMessageIds.add(messageId)) return;
     _trimProcessedMessageIds();
+    foregroundMessageVersion.value++;
 
     final String title = (message.notification?.title ??
             message.data['title']?.toString() ??
