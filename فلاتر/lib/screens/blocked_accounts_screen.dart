@@ -350,7 +350,7 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
         color: AppColors.cardColor,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: AppColors.textDark.withValues(alpha: 0.08),
+          color: AppColors.lineColor,
           width: 1,
         ),
         boxShadow: [
