@@ -735,7 +735,6 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
     final String locationText = member.getFormattedLocation(isArabic: _isAr);
     final String maritalStatusText =
         member.getLocalizedMaritalStatus(isArabic: _isAr);
-    final String religionText = member.getLocalizedReligion(isArabic: _isAr);
     final String occupationText =
         member.getLocalizedOccupation(isArabic: _isAr);
 
@@ -809,7 +808,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                     ),
                   ),
                 ),
-                if (member.matchPercentage > 0)
+                if (member.matchStatus != 'not_eligible')
                   Positioned(
                     top: 16,
                     left: _isAr ? null : 16,
@@ -820,36 +819,87 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
+                            horizontal: 12,
+                            vertical: 7,
+                          ),
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF00E5FF), Color(0xFF0288D1)],
-                            ),
+                            color: member.matchPercentage == null
+                                ? const Color(0xFF263449).withValues(alpha: 0.88)
+                                : null,
+                            gradient: member.matchPercentage == null
+                                ? null
+                                : const LinearGradient(
+                                    colors: [
+                                      Color(0xFF00E5FF),
+                                      Color(0xFF0288D1),
+                                    ],
+                                  ),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.white, width: 1.2),
+                            border: Border.all(
+                              color: member.matchPercentage == null
+                                  ? Colors.white24
+                                  : Colors.white,
+                              width: 1.2,
+                            ),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF00E5FF)
-                                    .withValues(alpha: 0.5),
+                                color: (member.matchPercentage == null
+                                        ? Colors.black
+                                        : const Color(0xFF00E5FF))
+                                    .withValues(alpha: 0.35),
                                 blurRadius: 10,
-                              )
+                              ),
                             ],
                           ),
-                          child: Row(
+                          child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.auto_awesome_rounded,
-                                  color: Colors.amberAccent, size: 15),
-                              const SizedBox(width: 5),
-                              Text(
-                                '${member.matchPercentage}% ${_isAr ? 'تطابق' : 'Match'}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'Cairo',
-                                ),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    member.matchPercentage == null
+                                        ? Icons.info_outline_rounded
+                                        : Icons.auto_awesome_rounded,
+                                    color: member.matchPercentage == null
+                                        ? Colors.white70
+                                        : Colors.amberAccent,
+                                    size: 15,
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    member.matchPercentage != null
+                                        ? '${member.matchPercentage}% ${_isAr ? 'توافق' : 'Match'}'
+                                        : (member.matchStatus == 'no_preferences'
+                                            ? (_isAr
+                                                ? 'أكمل تفضيلاتك'
+                                                : 'Complete preferences')
+                                            : (_isAr
+                                                ? 'غير محسوبة'
+                                                : 'Not calculated')),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'Cairo',
+                                    ),
+                                  ),
+                                ],
                               ),
+                              if (member.matchCriteriaCount > 0) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  _isAr
+                                      ? 'المعايير ${member.matchEvaluatedCriteriaCount}/${member.matchCriteriaCount}'
+                                      : 'Criteria ${member.matchEvaluatedCriteriaCount}/${member.matchCriteriaCount}',
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: 'Cairo',
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -911,12 +961,6 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                               icon: Icons.location_on_rounded,
                               label: locationText,
                               iconColor: const Color(0xFF81D4FA),
-                            ),
-                          if (religionText.isNotEmpty)
-                            _buildInfoPillChip(
-                              icon: Icons.auto_awesome_rounded,
-                              label: religionText,
-                              iconColor: const Color(0xFFFFD54F),
                             ),
                           if (occupationText.isNotEmpty &&
                               occupationText != 'غير محدد' &&
