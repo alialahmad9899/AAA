@@ -1000,117 +1000,178 @@ class _SignupScreenState extends State<SignupScreen> {
             child: SafeArea(
               child: Column(
                 children: [
-                  // رأس التسجيل: عنوان واضح ومؤشر تقدم داخل بطاقة موحدة.
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
                     child: Container(
-                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
+                      padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
                       decoration: BoxDecoration(
-                        color: AppColors.cardColor,
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(color: AppColors.lineColor),
+                        gradient: const LinearGradient(
+                          colors: [
+                            AppColors.primaryTeal,
+                            AppColors.secondaryTeal,
+                          ],
+                          begin: Alignment.topRight,
+                          end: Alignment.bottomLeft,
+                        ),
+                        borderRadius: BorderRadius.circular(28),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.textDark.withValues(alpha: 0.045),
-                            blurRadius: 16,
-                            offset: const Offset(0, 6),
+                            color: AppColors.primaryTeal
+                                .withValues(alpha: 0.16),
+                            blurRadius: 20,
+                            offset: const Offset(0, 9),
                           ),
                         ],
                       ),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Row(
                             children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: AppColors.sectionBackground,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: AppColors.lineColor),
-                                ),
+                              Material(
+                                color: Colors.white.withValues(alpha: 0.13),
+                                shape: const CircleBorder(),
                                 child: IconButton(
                                   tooltip: isAr ? 'العودة' : 'Back',
+                                  onPressed: _goToPreviousPage,
                                   icon: Icon(
                                     isAr
-                                        ? Icons.arrow_back_ios_new_rounded
+                                        ? Icons.arrow_forward_rounded
                                         : Icons.arrow_back_rounded,
-                                    color: AppColors.primaryTeal,
-                                    size: 18,
+                                    color: Colors.white,
+                                    size: 20,
                                   ),
-                                  onPressed: _goToPreviousPage,
                                 ),
                               ),
                               const SizedBox(width: 10),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      isAr
-                                          ? 'إنشاء حسابك في وصال'
-                                          : 'Create your Wesal account',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: AppColors.textDark,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w800,
-                                        fontFamily: 'Cairo',
-                                      ),
-                                    ),
-                                    const SizedBox(height: 3),
-                                    Text(
-                                      isAr
-                                          ? 'أكمل بياناتك خطوة بخطوة'
-                                          : 'Complete your details step by step',
-                                      style: const TextStyle(
-                                        color: AppColors.textMuted,
-                                        fontSize: 11,
-                                        fontFamily: 'Cairo',
-                                      ),
-                                    ),
-                                  ],
+                              const Icon(
+                                Icons.favorite_rounded,
+                                color: AppColors.accentLight,
+                                size: 21,
+                              ),
+                              const SizedBox(width: 7),
+                              Text(
+                                isAr ? 'وصال' : 'Wesal',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w900,
+                                  fontFamily: 'Cairo',
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const Spacer(),
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 12,
                                   vertical: 7,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.accentLight.withValues(alpha: 0.35),
-                                  borderRadius: BorderRadius.circular(14),
+                                  color: Colors.white.withValues(alpha: 0.14),
+                                  borderRadius: BorderRadius.circular(30),
                                   border: Border.all(
-                                    color: AppColors.accentWarm.withValues(alpha: 0.55),
+                                    color: Colors.white.withValues(alpha: 0.20),
                                   ),
                                 ),
                                 child: Text(
-                                  '${_currentStep + 1}/4',
-                                  textDirection: TextDirection.ltr,
+                                  isAr
+                                      ? 'الخطوة ${_currentStep + 1} من 4'
+                                      : 'Step ${_currentStep + 1} of 4',
                                   style: const TextStyle(
-                                    color: AppColors.primaryTeal,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.bold,
                                     fontFamily: 'Cairo',
                                   ),
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 17),
+                          Text(
+                            isAr ? 'لنبدأ رحلتك مع وصال' : 'Let’s begin with Wesal',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 23,
+                              fontWeight: FontWeight.w900,
+                              fontFamily: 'Cairo',
+                              height: 1.35,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            isAr
+                                ? 'أكمل بياناتك بهدوء، وكل خطوة تقرّبنا من ملف متكامل يعكسك.'
+                                : 'Complete your details at your pace. Each step helps build a profile that represents you.',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.86),
+                              fontSize: 12,
+                              height: 1.6,
+                              fontFamily: 'Cairo',
+                            ),
+                          ),
+                          const SizedBox(height: 18),
                           Row(
                             children: List.generate(4, (index) {
+                              final bool completed = index < _currentStep;
+                              final bool active = index == _currentStep;
                               return Expanded(
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                                  height: 7,
-                                  decoration: BoxDecoration(
-                                    color: index <= _currentStep
-                                        ? AppColors.primaryTeal
-                                        : AppColors.lineColor,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
+                                child: Row(
+                                  children: [
+                                    AnimatedContainer(
+                                      duration:
+                                          const Duration(milliseconds: 250),
+                                      width: active ? 34 : 28,
+                                      height: active ? 34 : 28,
+                                      decoration: BoxDecoration(
+                                        color: completed || active
+                                            ? AppColors.accentLight
+                                            : Colors.white.withValues(alpha: 0.13),
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: completed || active
+                                              ? AppColors.accentLight
+                                              : Colors.white.withValues(alpha: 0.34),
+                                          width: 1.2,
+                                        ),
+                                      ),
+                                      child: Center(
+                                        child: completed
+                                            ? const Icon(
+                                                Icons.check_rounded,
+                                                color: AppColors.primaryTeal,
+                                                size: 18,
+                                              )
+                                            : Text(
+                                                '${index + 1}',
+                                                style: TextStyle(
+                                                  color: active
+                                                      ? AppColors.primaryTeal
+                                                      : Colors.white,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w900,
+                                                  fontFamily: 'Cairo',
+                                                ),
+                                              ),
+                                      ),
+                                    ),
+                                    if (index < 3)
+                                      Expanded(
+                                        child: Container(
+                                          height: 2,
+                                          margin: const EdgeInsets.symmetric(
+                                              horizontal: 5),
+                                          decoration: BoxDecoration(
+                                            color: index < _currentStep
+                                                ? AppColors.accentLight
+                                                : Colors.white.withValues(
+                                                    alpha: 0.22,
+                                                  ),
+                                            borderRadius:
+                                                BorderRadius.circular(3),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
                                 ),
                               );
                             }),
@@ -1119,7 +1180,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 4),
 
                   // 3️⃣ منطقة عرض محتوى الخطوات (PageView)
                   Expanded(
@@ -1299,47 +1360,83 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                   ),
 
-                  // 4️⃣ الزر السفلي للانتقال للخطوة التالية أو الإنهاء
                   Padding(
                     padding: EdgeInsets.fromLTRB(
-                        16.0, 8.0, 16.0, bottomButtonPadding),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 54,
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _handleNextStep,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(28),
+                      16,
+                      8,
+                      16,
+                      bottomButtonPadding,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          isAr
+                              ? 'الخطوة ${_currentStep + 1} من 4 • بياناتك محفوظة أثناء التنقل'
+                              : 'Step ${_currentStep + 1} of 4 • Your details stay with you',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 10.5,
+                            fontFamily: 'Cairo',
                           ),
-                          elevation: 6,
                         ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                   strokeWidth: 3,
-                                ),
-                              )
-                            : Text(
-                                _currentStep == 3
-                                    ? (isAr
-                                        ? 'إتمام وحفظ الحساب النهائي ✨'
-                                        : 'Complete Registration ✨')
-                                    : (isAr
-                                        ? 'المتابعة للخطوة التالية 👈'
-                                        : 'Continue to Next Step 👈'),
-                                style: const TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'Cairo',
-                                ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: ElevatedButton(
+                            onPressed: _isLoading ? null : _handleNextStep,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primaryTeal,
+                              foregroundColor: Colors.white,
+                              disabledBackgroundColor: AppColors.lineColor,
+                              disabledForegroundColor: AppColors.textMuted,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18),
                               ),
-                      ),
+                            ),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    width: 23,
+                                    height: 23,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2.4,
+                                    ),
+                                  )
+                                : Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        _currentStep == 3
+                                            ? (isAr
+                                                ? 'إتمام إنشاء الحساب'
+                                                : 'Complete registration')
+                                            : (isAr
+                                                ? 'متابعة إلى الخطوة التالية'
+                                                : 'Continue to next step'),
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w900,
+                                          fontFamily: 'Cairo',
+                                        ),
+                                      ),
+                                      const SizedBox(width: 9),
+                                      Icon(
+                                        _currentStep == 3
+                                            ? Icons.check_circle_outline_rounded
+                                            : (isAr
+                                                ? Icons.arrow_back_rounded
+                                                : Icons.arrow_forward_rounded),
+                                        size: 19,
+                                      ),
+                                    ],
+                                  ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
