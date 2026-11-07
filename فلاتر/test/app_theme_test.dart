@@ -12,7 +12,7 @@ void main() {
     expect(theme.cardColor, AppColors.cardColor);
     expect(theme.textTheme.bodyMedium?.color, AppColors.textDark);
     expect(theme.textTheme.displayLarge?.color, AppColors.textDark);
-    expect(theme.inputDecorationTheme.textStyle?.color, AppColors.textDark);
+    expect(theme.textTheme.bodyLarge?.color, AppColors.textDark);
     expect(theme.inputDecorationTheme.hintStyle?.color, AppColors.textMuted);
     expect(theme.elevatedButtonTheme.style?.foregroundColor?.resolve({}),
         const Color(0xFFFFFFFF));
