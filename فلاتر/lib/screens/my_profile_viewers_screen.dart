@@ -137,7 +137,7 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
       child: Scaffold(
         backgroundColor: AppColors.backgroundColor,
         appBar: AppBar(
-          backgroundColor: AppColors.primaryTeal,
+          backgroundColor: AppColors.cardColor,
           elevation: 0,
           leading: IconButton(
             icon: Icon(
@@ -208,7 +208,7 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppColors.textDark.withValues(alpha: 0.12),
+              color: AppColors.cardColor,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
                 color: AppColors.warning.withValues(alpha: 0.5),
@@ -312,7 +312,7 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppColors.textDark.withValues(alpha: 0.12),
+                color: AppColors.cardColor,
                 borderRadius: BorderRadius.circular(28),
                 border: Border.all(
                   color: AppColors.warning.withValues(alpha: 0.5),
@@ -434,7 +434,7 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppColors.textDark.withValues(alpha: 0.1),
+              color: AppColors.sectionBackground,
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -483,10 +483,10 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppColors.textDark.withValues(alpha: 0.12),
+        color: AppColors.cardColor,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppColors.textDark.withValues(alpha: 0.25),
+          color: AppColors.lineColor,
         ),
       ),
       child: Material(
