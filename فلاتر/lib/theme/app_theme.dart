@@ -57,11 +57,6 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.cardColor,
-        textStyle: const TextStyle(
-          color: AppColors.textDark,
-          fontFamily: 'Cairo',
-          fontSize: 14,
-        ),
         labelStyle: const TextStyle(
           color: AppColors.textMuted,
           fontFamily: 'Cairo',
