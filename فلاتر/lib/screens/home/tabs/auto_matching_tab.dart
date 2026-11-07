@@ -581,7 +581,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                       label: Text(
                         _isAr ? 'تفعيل الباقة الآن 🚀' : 'Activate Plan Now 🚀',
                         style: const TextStyle(
-                          color: AppColors.textDark,
+                          color: Colors.white,
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                           fontFamily: 'Cairo',
