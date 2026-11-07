@@ -14,6 +14,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 
+import '../../../constants/colors.dart';
+
 import '../../../services/api_service.dart';
 import '../../../services/profile_cache_service.dart';
 import '../../../services/notification_service.dart';
