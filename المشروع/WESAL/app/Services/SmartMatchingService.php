@@ -386,7 +386,7 @@ class SmartMatchingService
             $actual = $candidate[$mapping['candidate']] ?? null;
             $score = !$this->hasValue($actual)
                 ? null
-                : ($this->normaliseText($expected) === $this->normaliseText($actual) ? 1.0 : 0.0);
+                : ($this->normaliseComparableText($expected) === $this->normaliseComparableText($actual) ? 1.0 : 0.0);
             $add($key, (float) $mapping['weight'], $score);
         }
 
@@ -646,7 +646,7 @@ class SmartMatchingService
 
     private function textSimilarity($expected, array $actualValues): ?float
     {
-        $expectedText = $this->normaliseText($expected);
+        $expectedText = $this->normaliseComparableText($expected);
         if ($expectedText === '') {
             return null;
         }
@@ -654,7 +654,7 @@ class SmartMatchingService
         $best = null;
         $expectedTokens = array_values(array_filter(explode(' ', $expectedText)));
         foreach ($actualValues as $actual) {
-            $actualText = $this->normaliseText($actual);
+            $actualText = $this->normaliseComparableText($actual);
             if ($actualText === '') {
                 continue;
             }
@@ -692,6 +692,95 @@ class SmartMatchingService
         $text = preg_replace('/[^\p{L}\p{N}]+/u', ' ', $text) ?? $text;
 
         return trim(preg_replace('/\s+/u', ' ', $text) ?? $text);
+    }
+
+    /**
+     * Normalize known Arabic/English options to one canonical comparison value.
+     * Free-form values remain unchanged; only documented option labels are mapped.
+     */
+    private function normaliseComparableText($value): string
+    {
+        $text = $this->normaliseText($value);
+        $aliases = [
+            // Complexion.
+            'ابيض' => 'fair white',
+            'fair white' => 'fair white',
+            'حنطي فاتح' => 'light tan',
+            'light tan' => 'light tan',
+            'حنطي' => 'wheat tan',
+            'wheat tan' => 'wheat tan',
+            'اسمر' => 'dark tan',
+            'dark tan' => 'dark tan',
+            'اسمر داكن' => 'dark',
+            'dark' => 'dark',
+            // Eye colours.
+            'بني' => 'brown',
+            'brown' => 'brown',
+            'اسود' => 'black',
+            'black' => 'black',
+            'ازرق' => 'blue',
+            'blue' => 'blue',
+            'اخضر' => 'green',
+            'green' => 'green',
+            'عسلي' => 'hazel',
+            'hazel' => 'hazel',
+            'رمادي' => 'grey',
+            'grey' => 'grey',
+            'gray' => 'grey',
+            // Hair colours.
+            'بني داكن' => 'dark brown',
+            'dark brown' => 'dark brown',
+            'بني فاتح' => 'light brown',
+            'light brown' => 'light brown',
+            'اشقر' => 'blonde',
+            'blonde' => 'blonde',
+            'احمر' => 'red',
+            'red' => 'red',
+            'رمادي شيب' => 'grey white',
+            'grey white' => 'grey white',
+            // Body types.
+            'نحيف رشيق' => 'slim',
+            'نحيف' => 'slim',
+            'رشيق' => 'slim',
+            'slim' => 'slim',
+            'متوسط متناسق' => 'average',
+            'متوسط' => 'average',
+            'average' => 'average',
+            'ممتلئ ضخم' => 'heavy',
+            'ممتلئ' => 'heavy',
+            'heavy' => 'heavy',
+            'رياضي متناسق' => 'athletic',
+            'رياضي' => 'athletic',
+            'athletic' => 'athletic',
+            // Personal values.
+            'ملتزم جدا' => 'very religious',
+            'very religious' => 'very religious',
+            'ملتزم' => 'religious',
+            'religious' => 'religious',
+            'متوسط معتدل' => 'moderate',
+            'معتدل' => 'moderate',
+            'moderate' => 'moderate',
+            'غير ملتزم' => 'not practicing',
+            'not practicing' => 'not practicing',
+            // Common occupation labels currently offered in the app.
+            'مهندس' => 'engineer',
+            'engineer' => 'engineer',
+            'مهندس برمجيات' => 'software engineer',
+            'software engineer' => 'software engineer',
+            'طبيب طبيبة' => 'doctor',
+            'طبيب' => 'doctor',
+            'طبيبة' => 'doctor',
+            'doctor' => 'doctor',
+            'معلم معلمة' => 'teacher',
+            'معلم' => 'teacher',
+            'معلمة' => 'teacher',
+            'teacher' => 'teacher',
+            'مستقل' => 'freelancer',
+            'freelancer' => 'freelancer',
+            'freelancer independent' => 'freelancer',
+        ];
+
+        return $aliases[$text] ?? $text;
     }
 
     private function booleanOrCount($value): ?bool
