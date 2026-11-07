@@ -40,17 +40,17 @@ String formatChatMessageTime(String rawTime, {required bool isArabic, DateTime? 
   final parsed = DateTime.tryParse(raw)?.toLocal();
   if (parsed != null) {
     final reference = (now ?? DateTime.now()).toLocal();
-    final clock = parsed.hour.toString().padLeft(2, '0') + ':' +
-        parsed.minute.toString().padLeft(2, '0');
+    final clock = '${parsed.hour.toString().padLeft(2, '0')}:${parsed.minute.toString().padLeft(2, '0')}';
     if (parsed.year == reference.year && parsed.month == reference.month && parsed.day == reference.day) return clock;
     final yesterday = reference.subtract(const Duration(days: 1));
     if (parsed.year == yesterday.year && parsed.month == yesterday.month && parsed.day == yesterday.day) {
-      return (isArabic ? 'أمس ' : 'Yesterday ') + clock;
+      return "${isArabic ? 'أمس' : 'Yesterday'} $clock";
     }
-    final date = parsed.day.toString().padLeft(2, '0') + '/' +
-        parsed.month.toString().padLeft(2, '0') +
-        (parsed.year == reference.year ? '' : '/' + parsed.year.toString());
-    return date + ' ' + clock;
+    final day = parsed.day.toString().padLeft(2, '0');
+    final month = parsed.month.toString().padLeft(2, '0');
+    final yearPart = parsed.year == reference.year ? '' : '/${parsed.year}';
+    final date = '$day/$month$yearPart';
+    return '$date $clock';
   }
   if (isArabic) return raw.replaceAll('Now', 'الآن').replaceAll('Yesterday', 'أمس');
   return raw.replaceAll('الآن', 'Now').replaceAll('الان', 'Now')
