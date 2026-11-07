@@ -967,6 +967,66 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
     );
   }
 
+  Widget _buildActionItem({
+    required IconData icon,
+    required String label,
+    required Color backgroundColor,
+    required Color iconColor,
+    required VoidCallback? onTap,
+    Color borderColor = AppColors.lineColor,
+    bool prominent = false,
+  }) {
+    final double size = prominent ? 62 : 56;
+
+    return Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(size),
+              child: Ink(
+                width: size,
+                height: size,
+                decoration: BoxDecoration(
+                  color: backgroundColor,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: borderColor, width: 1.2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.textDark.withValues(alpha: 0.07),
+                      blurRadius: 12,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Icon(icon, color: iconColor, size: prominent ? 25 : 22),
+              ),
+            ),
+          ),
+          const SizedBox(height: 7),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 3),
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: AppColors.textDark,
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                fontFamily: 'Cairo',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDirectActionButtons() {
     if (_matchedMembers.isEmpty ||
         _currentProfileIndex < 0 ||
@@ -978,12 +1038,18 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
     final bool isLiked = _likedUserIds.contains(member.id);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      padding: const EdgeInsets.fromLTRB(18, 4, 18, 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          InkWell(
+          _buildActionItem(
+            icon: _isAr
+                ? Icons.arrow_back_ios_new_rounded
+                : Icons.arrow_forward_ios_rounded,
+            label: widget.txt('next'),
+            backgroundColor: AppColors.sectionBackground,
+            iconColor: AppColors.primaryTeal,
+            borderColor: AppColors.lineColor,
             onTap: () {
               if (!_pageController.hasClients) return;
               if (_currentProfileIndex < _matchedMembers.length - 1) {
@@ -999,109 +1065,28 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                 );
               }
             },
-            borderRadius: BorderRadius.circular(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.18),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.45),
-                      width: 1.2,
-                    ),
-                  ),
-                  child: Icon(
-                    _isAr
-                        ? Icons.arrow_back_ios_new_rounded
-                        : Icons.arrow_forward_ios_rounded,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  widget.txt('next'),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Cairo',
-                  ),
-                ),
-              ],
-            ),
           ),
-          InkWell(
-            onTap: isLiked
-                ? null
-                : () {
-                    if (_matchedMembers.isNotEmpty) {
-                      _triggerLikeAnimation(member);
-                    }
-                  },
-            borderRadius: BorderRadius.circular(26),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: isLiked
-                          ? [Colors.grey.shade600, Colors.grey.shade800]
-                          : const [AppColors.accentWarm, AppColors.accentLight],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(26),
-                    border: Border.all(
-                      color:
-                          Colors.white.withValues(alpha: isLiked ? 0.3 : 0.85),
-                      width: 1.2,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        isLiked
-                            ? Icons.how_to_reg_rounded
-                            : Icons.favorite_rounded,
-                        color: isLiked ? Colors.white70 : Colors.redAccent,
-                        size: 22,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        isLiked
-                            ? widget.txt('liked_already')
-                            : widget.txt('express_interest'),
-                        style: TextStyle(
-                          color: isLiked ? Colors.white70 : Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                          fontFamily: 'Cairo',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  widget.txt('like_btn'),
-                  style: TextStyle(
-                    color: isLiked ? Colors.transparent : Colors.white70,
-                    fontSize: 11,
-                    fontFamily: 'Cairo',
-                  ),
-                ),
-              ],
-            ),
+          _buildActionItem(
+            icon: isLiked
+                ? Icons.check_circle_rounded
+                : Icons.favorite_rounded,
+            label: isLiked
+                ? widget.txt('liked_already')
+                : widget.txt('express_interest'),
+            backgroundColor: isLiked
+                ? AppColors.sectionBackground
+                : AppColors.accentLight.withValues(alpha: 0.42),
+            iconColor: isLiked ? AppColors.textMuted : AppColors.accentWarm,
+            borderColor: isLiked ? AppColors.lineColor : AppColors.accentWarm,
+            prominent: true,
+            onTap: isLiked ? null : () => _triggerLikeAnimation(member),
           ),
-          InkWell(
+          _buildActionItem(
+            icon: Icons.chat_bubble_rounded,
+            label: widget.txt('message_btn'),
+            backgroundColor: AppColors.primaryTeal,
+            iconColor: Colors.white,
+            borderColor: AppColors.primaryTeal,
             onTap: () {
               if (!_isSubscribedOrFemale) {
                 _showMessageModal();
@@ -1109,38 +1094,6 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                 _startDirectChat(member);
               }
             },
-            borderRadius: BorderRadius.circular(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.18),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: AppColors.accentLight.withValues(alpha: 0.85),
-                      width: 1.2,
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.chat_bubble_rounded,
-                    color: AppColors.accentLight,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  widget.txt('message_btn'),
-                  style: const TextStyle(
-                    color: Colors.amberAccent,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Cairo',
-                  ),
-                ),
-              ],
-            ),
           ),
         ],
       ),
@@ -1208,17 +1161,14 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                               children: [
                                 Text(
                                   _errorMessage!,
-                                  style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 15,
-                                      fontFamily: 'Cairo'),
+                                  style: const TextStyle(color: AppColors.textDark, fontSize: 15, fontFamily: 'Cairo'),
                                   textAlign: TextAlign.center,
                                 ),
                                 const SizedBox(height: 12),
                                 ElevatedButton(
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    foregroundColor: const Color(0xFF0288D1),
+                                    backgroundColor: AppColors.primaryTeal,
+                                    foregroundColor: Colors.white,
                                     shape: RoundedRectangleBorder(
                                         borderRadius:
                                             BorderRadius.circular(16)),
@@ -1244,10 +1194,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                                         child: Center(
                                           child: Text(
                                             widget.txt(_isMatchFilterEnabled ? 'no_smart_matches' : 'no_data'),
-                                            style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 16,
-                                                fontFamily: 'Cairo'),
+                                            style: const TextStyle(color: AppColors.textMuted, fontSize: 16, fontFamily: 'Cairo'),
                                           ),
                                         ),
                                       ),
