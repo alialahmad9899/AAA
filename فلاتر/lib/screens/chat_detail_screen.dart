@@ -589,11 +589,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: const Color(0xFF0F172A).withValues(alpha: 0.95),
+                color: AppColors.cardColor.withValues(alpha: 0.95),
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(32)),
                 border: Border.all(
-                    color: const Color(0xFF38BDF8).withValues(alpha: 0.4)),
+                    color: AppColors.primaryTeal.withValues(alpha: 0.4)),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -601,7 +601,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   Text(
                     _isArabic ? 'إرسال صورة' : 'Send Image',
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: AppColors.textDark,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Cairo',
@@ -622,19 +622,19 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   TextField(
                     controller: _captionController,
                     style: const TextStyle(
-                        color: Colors.white, fontFamily: 'Cairo'),
+                        color: AppColors.textDark, fontFamily: 'Cairo'),
                     decoration: InputDecoration(
                       hintText: _isArabic
                           ? 'اكتب وصفاً للصورة (اختياري)...'
                           : 'Add a caption (optional)...',
                       hintStyle: const TextStyle(
-                          color: Colors.white54, fontFamily: 'Cairo'),
+                          color: AppColors.textMuted, fontFamily: 'Cairo'),
                       filled: true,
-                      fillColor: Colors.white.withValues(alpha: 0.08),
+                      fillColor: AppColors.sectionBackground,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide(
-                            color: Colors.white.withValues(alpha: 0.2)),
+                            color: AppColors.lineColor),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -653,14 +653,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                           },
                           child: Text(_isArabic ? 'إلغاء' : 'Cancel',
                               style: const TextStyle(
-                                  color: Colors.white60, fontFamily: 'Cairo')),
+                                  color: AppColors.textMuted, fontFamily: 'Cairo')),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0288D1),
+                            backgroundColor: AppColors.primaryTeal,
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16)),
                           ),
