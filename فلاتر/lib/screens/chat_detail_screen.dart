@@ -295,15 +295,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0F172A).withValues(alpha: 0.96),
+                  color: AppColors.cardColor.withValues(alpha: 0.96),
                   borderRadius: BorderRadius.circular(28),
                   border: Border.all(
-                    color: const Color(0xFFEF4444).withValues(alpha: 0.6),
+                    color: AppColors.error.withValues(alpha: 0.6),
                     width: 1.8,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFEF4444).withValues(alpha: 0.25),
+                      color: AppColors.error.withValues(alpha: 0.25),
                       blurRadius: 25,
                       offset: const Offset(0, 8),
                     )
@@ -315,16 +315,16 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEF4444).withValues(alpha: 0.15),
+                        color: AppColors.error.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: const Color(0xFFEF4444),
+                          color: AppColors.error,
                           width: 1.5,
                         ),
                       ),
                       child: const Icon(
                         Icons.gavel_rounded,
-                        color: Color(0xFFEF4444),
+                        color: AppColors.error,
                         size: 42,
                       ),
                     ),
@@ -335,7 +335,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                           : 'Important Security & Legal Notice ⚖️',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppColors.textDark,
                         fontSize: 18.5,
                         fontWeight: FontWeight.bold,
                         fontFamily: 'Cairo',
@@ -345,10 +345,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.05),
+                        color: AppColors.sectionBackground,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.1)),
+                            color: AppColors.lineColor),
                       ),
                       child: Text(
                         _isArabic
@@ -356,7 +356,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                             : 'Please maintain maximum respect and professional behavior. Sending inappropriate messages or media will lead to immediate permanent ban and direct legal prosecution under cybercrime laws.',
                         textAlign: TextAlign.center,
                         style: const TextStyle(
-                          color: Colors.white70,
+                          color: AppColors.textMuted,
                           fontSize: 13,
                           fontFamily: 'Cairo',
                           height: 1.6,
@@ -368,7 +368,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                       width: double.infinity,
                       child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFDC2626),
+                          backgroundColor: AppColors.error,
                           padding: const EdgeInsets.symmetric(vertical: 13),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
@@ -376,7 +376,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                           elevation: 6,
                         ),
                         icon: const Icon(Icons.check_circle_rounded,
-                            color: Colors.white, size: 20),
+                            color: AppColors.textDark, size: 20),
                         label: Text(
                           _isArabic
                               ? 'أقر بالالتزام والمتابعة'
@@ -793,7 +793,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       builder: (context) => Directionality(
         textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
         child: AlertDialog(
-          backgroundColor: const Color(0xFF0F172A),
+          backgroundColor: AppColors.cardColor,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           title: Row(
@@ -804,7 +804,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               Text(
                 _isArabic ? 'تجديد الاشتراك' : 'Renew Subscription',
                 style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textDark,
                     fontFamily: 'Cairo',
                     fontSize: 18,
                     fontWeight: FontWeight.bold),
@@ -814,7 +814,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           content: Text(
             message,
             style: const TextStyle(
-                color: Colors.white70, fontFamily: 'Cairo', fontSize: 14),
+                color: AppColors.textMuted, fontFamily: 'Cairo', fontSize: 14),
           ),
           actions: [
             TextButton(
@@ -822,12 +822,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               child: Text(
                 _isArabic ? 'إلغاء' : 'Cancel',
                 style:
-                    const TextStyle(color: Colors.white54, fontFamily: 'Cairo'),
+                    const TextStyle(color: AppColors.textMuted, fontFamily: 'Cairo'),
               ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.amber[700],
+                backgroundColor: AppColors.primaryTeal,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
               ),
@@ -855,18 +855,18 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       builder: (context) => Directionality(
         textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
         child: AlertDialog(
-          backgroundColor: const Color(0xFF0F172A),
+          backgroundColor: AppColors.cardColor,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           title: Row(
             children: [
               const Icon(Icons.mark_chat_read_rounded,
-                  color: Color(0xFF38BDF8), size: 28),
+                  color: AppColors.primaryTeal, size: 28),
               const SizedBox(width: 10),
               Text(
                 _isArabic ? 'في انتظار الرد' : 'Waiting for Reply',
                 style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textDark,
                     fontFamily: 'Cairo',
                     fontSize: 18,
                     fontWeight: FontWeight.bold),
@@ -876,7 +876,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           content: Text(
             message,
             style: const TextStyle(
-                color: Colors.white70,
+                color: AppColors.textMuted,
                 fontFamily: 'Cairo',
                 fontSize: 14,
                 height: 1.4),
@@ -884,7 +884,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           actions: [
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0288D1),
+                backgroundColor: AppColors.primaryTeal,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
               ),
@@ -892,7 +892,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               child: Text(
                 _isArabic ? 'حسناً، فهمت' : 'OK, Got it',
                 style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textDark,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Cairo'),
               ),
@@ -926,11 +926,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   24 + MediaQuery.of(context).padding.bottom,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0F172A).withValues(alpha: 0.92),
+                  color: AppColors.cardColor.withValues(alpha: 0.92),
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(32)),
                   border:
-                      Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                      Border.all(color: AppColors.lineColor),
                 ),
                 child: SingleChildScrollView(
                   child: Column(
@@ -942,7 +942,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                           width: 42,
                           height: 4.5,
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.3),
+                            color: AppColors.lineColor,
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
@@ -953,12 +953,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF38BDF8)
+                              color: AppColors.primaryTeal
                                   .withValues(alpha: 0.15),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(Icons.shield_outlined,
-                                color: Color(0xFF38BDF8), size: 22),
+                                color: AppColors.primaryTeal, size: 22),
                           ),
                           const SizedBox(width: 12),
                           Text(
@@ -966,7 +966,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                                 ? 'خيارات الحماية والتواصل'
                                 : 'Safety & Chat Options',
                             style: const TextStyle(
-                                color: Colors.white,
+                                color: AppColors.textDark,
                                 fontSize: 17,
                                 fontWeight: FontWeight.bold,
                                 fontFamily: 'Cairo'),
@@ -981,17 +981,17 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                           leading: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF38BDF8)
+                              color: AppColors.primaryTeal
                                   .withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: const Icon(Icons.person_outline_rounded,
-                                color: Color(0xFF38BDF8), size: 22),
+                                color: AppColors.primaryTeal, size: 22),
                           ),
                           title: Text(
                               _isArabic ? 'عرض الملف الشخصي' : 'View Profile',
                               style: const TextStyle(
-                                  color: Colors.white,
+                                  color: AppColors.textDark,
                                   fontFamily: 'Cairo',
                                   fontWeight: FontWeight.bold,
                                   fontSize: 15)),
@@ -1000,14 +1000,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                                   ? 'الاطلاع على تفاصيل ومعلومات العضو'
                                   : 'View member profile details',
                               style: const TextStyle(
-                                  color: Colors.white60,
+                                  color: AppColors.textMuted,
                                   fontSize: 12,
                                   fontFamily: 'Cairo')),
                           trailing: Icon(
                               _isArabic
                                   ? Icons.arrow_back_ios_rounded
                                   : Icons.arrow_forward_ios_rounded,
-                              color: Colors.white38,
+                              color: AppColors.textMuted,
                               size: 16),
                           onTap: () {
                             Navigator.pop(context);
@@ -1015,7 +1015,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                           },
                         ),
                       ),
-                      const Divider(color: Colors.white12, height: 24),
+                      const Divider(color: AppColors.textDark12, height: 24),
                       Material(
                         color: Colors.transparent,
                         child: ListTile(
@@ -1034,7 +1034,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                                   ? 'الإبلاغ عن الحساب'
                                   : 'Report Account',
                               style: const TextStyle(
-                                  color: Colors.white,
+                                  color: AppColors.textDark,
                                   fontFamily: 'Cairo',
                                   fontWeight: FontWeight.bold,
                                   fontSize: 15)),
@@ -1043,14 +1043,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                                   ? 'إرسال بلاغ لفريق الإدارة لمراجعته'
                                   : 'Submit a report to moderation team',
                               style: const TextStyle(
-                                  color: Colors.white60,
+                                  color: AppColors.textMuted,
                                   fontSize: 12,
                                   fontFamily: 'Cairo')),
                           trailing: Icon(
                               _isArabic
                                   ? Icons.arrow_back_ios_rounded
                                   : Icons.arrow_forward_ios_rounded,
-                              color: Colors.white38,
+                              color: AppColors.textMuted,
                               size: 16),
                           onTap: () {
                             Navigator.pop(context);
@@ -1058,7 +1058,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                           },
                         ),
                       ),
-                      const Divider(color: Colors.white12, height: 24),
+                      const Divider(color: AppColors.textDark12, height: 24),
                       Material(
                         color: Colors.transparent,
                         child: ListTile(
@@ -1066,18 +1066,18 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                           leading: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Colors.redAccent.withValues(alpha: 0.15),
+                              color: AppColors.error.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: const Icon(Icons.block_rounded,
-                                color: Colors.redAccent, size: 22),
+                                color: AppColors.error, size: 22),
                           ),
                           title: Text(
                               _isArabic
                                   ? 'حظر العضو (إضافة للتجاهل)'
                                   : 'Block Member',
                               style: const TextStyle(
-                                  color: Colors.redAccent,
+                                  color: AppColors.error,
                                   fontFamily: 'Cairo',
                                   fontWeight: FontWeight.bold,
                                   fontSize: 15)),
@@ -1086,14 +1086,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                                   ? 'منع العضو من مراسلتك وإغلاق المحادثة فوراً'
                                   : 'Block member and remove chat thread',
                               style: const TextStyle(
-                                  color: Colors.white60,
+                                  color: AppColors.textMuted,
                                   fontSize: 12,
                                   fontFamily: 'Cairo')),
                           trailing: Icon(
                               _isArabic
                                   ? Icons.arrow_back_ios_rounded
                                   : Icons.arrow_forward_ios_rounded,
-                              color: Colors.redAccent,
+                              color: AppColors.error,
                               size: 16),
                           onTap: () {
                             Navigator.pop(context);
@@ -1101,7 +1101,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                           },
                         ),
                       ),
-                      const Divider(color: Colors.white12, height: 24),
+                      const Divider(color: AppColors.textDark12, height: 24),
                       Material(
                         color: Colors.transparent,
                         child: ListTile(
@@ -1109,16 +1109,16 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                           leading: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.08),
+                              color: AppColors.sectionBackground,
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: const Icon(Icons.delete_outline_rounded,
-                                color: Colors.white70, size: 22),
+                                color: AppColors.textMuted, size: 22),
                           ),
                           title: Text(
                               _isArabic ? 'حذف المحادثة' : 'Delete Chat',
                               style: const TextStyle(
-                                  color: Colors.white70,
+                                  color: AppColors.textMuted,
                                   fontFamily: 'Cairo',
                                   fontWeight: FontWeight.bold,
                                   fontSize: 15)),
@@ -1127,7 +1127,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                                   ? 'حذف سجل الرسائل الحالي من التطبيق والسيرفر'
                                   : 'Remove chat history from app and server',
                               style: const TextStyle(
-                                  color: Colors.white38,
+                                  color: AppColors.textMuted,
                                   fontSize: 12,
                                   fontFamily: 'Cairo')),
                           onTap: () {
@@ -1170,7 +1170,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   22 + MediaQuery.of(context).padding.bottom,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0F172A).withValues(alpha: 0.95),
+                  color: AppColors.cardColor.withValues(alpha: 0.95),
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(32)),
                   border:
@@ -1186,7 +1186,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                               ? 'اختر سبب الإبلاغ'
                               : 'Select Report Reason',
                           style: const TextStyle(
-                              color: Colors.white,
+                              color: AppColors.textDark,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               fontFamily: 'Cairo')),
@@ -1196,7 +1196,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                               ? 'ساعدنا في الحفاظ على بيئة آمنة ومحترمة داخل وصال'
                               : 'Help us maintain a safe community in Wesal',
                           style: const TextStyle(
-                              color: Colors.white60,
+                              color: AppColors.textMuted,
                               fontSize: 12,
                               fontFamily: 'Cairo')),
                       const SizedBox(height: 16),
@@ -1204,10 +1204,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                         return Container(
                           margin: const EdgeInsets.only(bottom: 10),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.06),
+                            color: AppColors.sectionBackground,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.12)),
+                                color: AppColors.lineColor),
                           ),
                           child: Material(
                             color: Colors.transparent,
@@ -1215,14 +1215,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                             child: ListTile(
                               title: Text(reason,
                                   style: const TextStyle(
-                                      color: Colors.white,
+                                      color: AppColors.textDark,
                                       fontSize: 14,
                                       fontFamily: 'Cairo')),
                               trailing: Icon(
                                   _isArabic
                                       ? Icons.chevron_left_rounded
                                       : Icons.chevron_right_rounded,
-                                  color: Colors.white54),
+                                  color: AppColors.textMuted),
                               onTap: () {
                                 Navigator.pop(context);
                                 _executeReport(reason);
@@ -1260,10 +1260,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               child: Container(
                 padding: const EdgeInsets.all(22),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0F172A).withValues(alpha: 0.92),
+                  color: AppColors.cardColor.withValues(alpha: 0.92),
                   borderRadius: BorderRadius.circular(28),
                   border: Border.all(
-                      color: Colors.redAccent.withValues(alpha: 0.4),
+                      color: AppColors.error.withValues(alpha: 0.4),
                       width: 1.5),
                 ),
                 child: Column(
@@ -1272,13 +1272,13 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: Colors.redAccent.withValues(alpha: 0.15),
+                        color: AppColors.error.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                         border: Border.all(
-                            color: Colors.redAccent.withValues(alpha: 0.3)),
+                            color: AppColors.error.withValues(alpha: 0.3)),
                       ),
                       child: const Icon(Icons.block_rounded,
-                          color: Colors.redAccent, size: 32),
+                          color: AppColors.error, size: 32),
                     ),
                     const SizedBox(height: 14),
                     Text(
@@ -1286,7 +1286,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                             ? 'حظر ${widget.thread.name}؟'
                             : 'Block ${widget.thread.name}?',
                         style: const TextStyle(
-                            color: Colors.white,
+                            color: AppColors.textDark,
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'Cairo')),
@@ -1297,7 +1297,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                             : 'Member will be blocked and chat removed permanently.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.8),
+                            color: AppColors.textMuted,
                             fontSize: 13,
                             height: 1.4,
                             fontFamily: 'Cairo')),
@@ -1309,7 +1309,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                             onPressed: () => Navigator.pop(context),
                             child: Text(_isArabic ? 'إلغاء' : 'Cancel',
                                 style: const TextStyle(
-                                    color: Colors.white70,
+                                    color: AppColors.textMuted,
                                     fontFamily: 'Cairo')),
                           ),
                         ),
@@ -1317,7 +1317,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                         Expanded(
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.redAccent,
+                                backgroundColor: AppColors.error,
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(14)),
                                 padding:

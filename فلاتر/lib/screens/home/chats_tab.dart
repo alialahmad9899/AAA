@@ -417,10 +417,10 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
               child: Container(
                 padding: const EdgeInsets.all(22),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0F172A).withValues(alpha: 0.92),
+                  color: AppColors.cardColor.withValues(alpha: 0.92),
                   borderRadius: BorderRadius.circular(28),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: AppColors.lineColor,
                     width: 1.5,
                   ),
                 ),
@@ -430,14 +430,14 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: Colors.redAccent.withValues(alpha: 0.15),
+                        color: AppColors.error.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                         border: Border.all(
-                            color: Colors.redAccent.withValues(alpha: 0.3)),
+                            color: AppColors.error.withValues(alpha: 0.3)),
                       ),
                       child: const Icon(
                         Icons.delete_forever_rounded,
-                        color: Colors.redAccent,
+                        color: AppColors.error,
                         size: 32,
                       ),
                     ),
@@ -445,7 +445,7 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
                     Text(
                       widget.txt('delete_chat'),
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppColors.textDark,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         fontFamily: 'Cairo',
@@ -456,7 +456,7 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
                       '${widget.txt('delete_confirm')}\n(${chat.name})',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.85),
+                        color: AppColors.textDark.withValues(alpha: 0.85),
                         fontSize: 14,
                         height: 1.4,
                         fontFamily: 'Cairo',
@@ -471,7 +471,7 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
                             child: Text(
                               widget.txt('cancel'),
                               style: const TextStyle(
-                                  color: Colors.white70, fontFamily: 'Cairo'),
+                                  color: AppColors.primaryTeal, fontFamily: 'Cairo'),
                             ),
                           ),
                         ),
@@ -479,10 +479,10 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
                         Expanded(
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.redAccent,
+                              backgroundColor: AppColors.error,
                               elevation: 4,
                               shadowColor:
-                                  Colors.redAccent.withValues(alpha: 0.4),
+                                  AppColors.error.withValues(alpha: 0.4),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
                               ),
