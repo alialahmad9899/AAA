@@ -6,6 +6,7 @@
 // ============================================================================
 
 import 'package:flutter/material.dart';
+import '../../../constants/colors.dart';
 
 class Step3LifestyleHobbiesTab extends StatelessWidget {
   final bool isAr;
@@ -139,17 +140,17 @@ class Step3LifestyleHobbiesTab extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.18),
+              color: AppColors.cardColor,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: Colors.white, size: 22),
+            child: Icon(icon, color: AppColors.textDark, size: 22),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               title,
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.textDark,
                 fontSize: 17,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Cairo',
@@ -184,7 +185,7 @@ class Step3LifestyleHobbiesTab extends StatelessWidget {
                 label: Text(
                   option,
                   style: TextStyle(
-                    color: isSelected ? const Color(0xFF01579B) : Colors.white,
+                    color: isSelected ? AppColors.primaryTeal : AppColors.textDark,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                     fontFamily: 'Cairo',
                     fontSize: 14,
@@ -193,15 +194,15 @@ class Step3LifestyleHobbiesTab extends StatelessWidget {
                 selected: isSelected,
                 color: WidgetStateProperty.resolveWith<Color?>((states) {
                   if (states.contains(WidgetState.selected)) {
-                    return Colors.white;
+                    return AppColors.accentLight.withValues(alpha: 0.42);
                   }
-                  return const Color(0xFF013966).withValues(alpha: 0.7);
+                  return AppColors.sectionBackground;
                 }),
                 elevation: isSelected ? 2 : 0,
                 pressElevation: 1,
                 shadowColor: Colors.black26,
                 showCheckmark: isSelected,
-                checkmarkColor: const Color(0xFF01579B),
+                checkmarkColor: AppColors.primaryTeal,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 shape: RoundedRectangleBorder(
@@ -230,8 +231,9 @@ class Step3LifestyleHobbiesTab extends StatelessWidget {
         padding: const EdgeInsets.only(
             left: 20.0, right: 20.0, top: 20.0, bottom: 80.0),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.18),
+          color: AppColors.cardColor,
           borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: AppColors.lineColor),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
