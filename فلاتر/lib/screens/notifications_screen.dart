@@ -465,7 +465,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           ),
           child: IconButton(
             icon: Icon(icon,
-                color: onPressed != null ? AppColors.textDark : AppColors.textDark24,
+                color: onPressed != null ? AppColors.textDark : AppColors.lineColor,
                 size: 18),
             tooltip: tooltip,
             onPressed: onPressed,
@@ -533,7 +533,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 border: Border.all(color: AppColors.lineColor),
               ),
               child: const Icon(Icons.notifications_off_outlined,
-                  color: AppColors.textDark24, size: 48),
+                  color: AppColors.lineColor, size: 48),
             ),
             const SizedBox(height: 16),
             Text(
