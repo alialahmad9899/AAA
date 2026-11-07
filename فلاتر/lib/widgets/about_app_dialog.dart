@@ -7,6 +7,7 @@
 
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../constants/colors.dart';
 import 'package:wesal_app/widgets/bottom_system_inset.dart';
 
 class AboutAppDialog extends StatelessWidget {
@@ -49,16 +50,16 @@ class AboutAppDialog extends StatelessWidget {
               maxHeight: screenHeight * 0.85,
             ),
             decoration: BoxDecoration(
-              color: const Color(0xFF161626).withValues(alpha: 0.92),
+              color: AppColors.cardColor.withValues(alpha: 0.92),
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(32)),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.18),
+                color: AppColors.textDark.withValues(alpha: 0.18),
                 width: 1.2,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF00ACC1).withValues(alpha: 0.2),
+                  color: AppColors.primaryTeal.withValues(alpha: 0.2),
                   blurRadius: 25,
                   spreadRadius: 2,
                   offset: const Offset(0, -5),
@@ -74,7 +75,7 @@ class AboutAppDialog extends StatelessWidget {
                   width: 48,
                   height: 5,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.3),
+                    color: AppColors.textDark.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
@@ -90,14 +91,14 @@ class AboutAppDialog extends StatelessWidget {
                         height: 48,
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
-                            colors: [Color(0xFF00ACC1), Color(0xFF26C6DA)],
+                            colors: [AppColors.primaryTeal, AppColors.secondaryTeal],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF00ACC1)
+                              color: AppColors.primaryTeal
                                   .withValues(alpha: 0.4),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
@@ -106,7 +107,7 @@ class AboutAppDialog extends StatelessWidget {
                         ),
                         child: const Icon(
                           Icons.favorite_rounded,
-                          color: Colors.white,
+                          color: AppColors.textDark,
                           size: 26,
                         ),
                       ),
@@ -121,7 +122,7 @@ class AboutAppDialog extends StatelessWidget {
                                   child: Text(
                                     isAr ? 'وصال – WESAL' : 'Wesal – WESAL',
                                     style: const TextStyle(
-                                      color: Colors.white,
+                                      color: AppColors.textDark,
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
                                       fontFamily: 'Cairo',
@@ -134,18 +135,18 @@ class AboutAppDialog extends StatelessWidget {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 8, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF00ACC1)
+                                    color: AppColors.primaryTeal
                                         .withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
-                                      color: const Color(0xFF26C6DA)
+                                      color: AppColors.secondaryTeal
                                           .withValues(alpha: 0.4),
                                     ),
                                   ),
                                   child: Text(
                                     isAr ? 'الإصدار 2026' : 'Version 2026',
                                     style: const TextStyle(
-                                      color: Color(0xFF80DEEA),
+                                      color: AppColors.accentLight,
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
                                       fontFamily: 'Cairo',
@@ -160,7 +161,7 @@ class AboutAppDialog extends StatelessWidget {
                                   ? 'منصة للزواج الجاد حول العالم'
                                   : 'Syrian platform for serious marriage worldwide',
                               style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.65),
+                                color: AppColors.textDark.withValues(alpha: 0.65),
                                 fontSize: 12,
                                 fontFamily: 'Cairo',
                               ),
@@ -175,12 +176,12 @@ class AboutAppDialog extends StatelessWidget {
                         icon: Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.08),
+                            color: AppColors.textDark.withValues(alpha: 0.08),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
                             Icons.close_rounded,
-                            color: Colors.white70,
+                            color: AppColors.textMuted,
                             size: 20,
                           ),
                         ),
@@ -190,7 +191,7 @@ class AboutAppDialog extends StatelessWidget {
                 ),
 
                 const SizedBox(height: 16),
-                Divider(color: Colors.white.withValues(alpha: 0.1), height: 1),
+                Divider(color: AppColors.textDark.withValues(alpha: 0.1), height: 1),
 
                 // 3. محتوى النقاط الملخصة (Scrollable Content)
                 Flexible(
@@ -202,7 +203,7 @@ class AboutAppDialog extends StatelessWidget {
                       children: [
                         _buildFeatureCard(
                           icon: Icons.verified_user_rounded,
-                          iconColor: const Color(0xFF42A5F5),
+                          iconColor: AppColors.primaryTeal,
                           title: isAr
                               ? 'زواج جاد وليست مواعدة'
                               : 'Serious Marriage, Not Dating',
@@ -212,7 +213,7 @@ class AboutAppDialog extends StatelessWidget {
                         ),
                         _buildFeatureCard(
                           icon: Icons.public_rounded,
-                          iconColor: const Color(0xFF26A69A),
+                          iconColor: AppColors.secondaryTeal,
                           title: isAr
                               ? 'شبكة زواج حول العالم'
                               : 'Syrian Network Worldwide',
@@ -222,7 +223,7 @@ class AboutAppDialog extends StatelessWidget {
                         ),
                         _buildFeatureCard(
                           icon: Icons.shield_rounded,
-                          iconColor: const Color(0xFFAB47BC),
+                          iconColor: AppColors.accentWarm,
                           title: isAr
                               ? 'خصوصية وأمان تام'
                               : 'Total Privacy & Security',
@@ -232,7 +233,7 @@ class AboutAppDialog extends StatelessWidget {
                         ),
                         _buildFeatureCard(
                           icon: Icons.auto_awesome_rounded,
-                          iconColor: const Color(0xFFFFA726),
+                          iconColor: AppColors.warning,
                           title: isAr
                               ? 'نظام مطابقة وتوافق ذكي'
                               : 'Smart Matching System',
@@ -242,7 +243,7 @@ class AboutAppDialog extends StatelessWidget {
                         ),
                         _buildFeatureCard(
                           icon: Icons.mark_email_read_rounded,
-                          iconColor: const Color(0xFFEC407A),
+                          iconColor: AppColors.accentWarm,
                           title: isAr
                               ? 'تواصل محترم ومباشر'
                               : 'Respectful Communication',
@@ -252,7 +253,7 @@ class AboutAppDialog extends StatelessWidget {
                         ),
                         _buildFeatureCard(
                           icon: Icons.workspace_premium_rounded,
-                          iconColor: const Color(0xFFFFD54F),
+                          iconColor: AppColors.accentLight,
                           title: isAr
                               ? 'عضوية وصال Premium'
                               : 'Wesal Premium Membership',
@@ -274,7 +275,7 @@ class AboutAppDialog extends StatelessWidget {
                     child: Container(
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [Color(0xFF00ACC1), Color(0xFF00838F)],
+                          colors: [AppColors.primaryTeal, AppColors.primaryTeal],
                           begin: Alignment.centerRight,
                           end: Alignment.centerLeft,
                         ),
@@ -282,7 +283,7 @@ class AboutAppDialog extends StatelessWidget {
                         boxShadow: [
                           BoxShadow(
                             color:
-                                const Color(0xFF00ACC1).withValues(alpha: 0.35),
+                                AppColors.primaryTeal.withValues(alpha: 0.35),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -302,7 +303,7 @@ class AboutAppDialog extends StatelessWidget {
                         child: Text(
                           isAr ? 'حسناً، فهمت' : 'Okay, I understand',
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: AppColors.textDark,
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'Cairo',
@@ -331,10 +332,10 @@ class AboutAppDialog extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: AppColors.textDark.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
+          color: AppColors.textDark.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -365,7 +366,7 @@ class AboutAppDialog extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textDark,
                     fontSize: 14.5,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Cairo',
@@ -375,7 +376,7 @@ class AboutAppDialog extends StatelessWidget {
                 Text(
                   description,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.7),
+                    color: AppColors.textDark.withValues(alpha: 0.7),
                     fontSize: 12.5,
                     fontFamily: 'Cairo',
                     height: 1.5,
