@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wesal_app/services/api_service.dart';
 import 'package:wesal_app/models/member_profile_model.dart';
+import 'package:wesal_app/models/member_model.dart';
 
 void main() {
   group('AttributeTranslator Tests', () {
@@ -556,5 +557,58 @@ void main() {
       expect(profile.career?.company, isEmpty);
     });
   });
+
+
+  group('Compatibility score model and card data', () {
+    test('keeps a calculated zero score and reports how many criteria were evaluated', () {
+      final member = MemberModel.fromJson({
+        'user_id': 42,
+        'first_name': 'سارة',
+        'country': 'سوريا',
+        'residence': 'حمص',
+        'profile_match_percentage': 0,
+        'match_criteria_count': 4,
+        'match_evaluated_criteria_count': 4,
+        'match_status': 'calculated',
+      });
+
+      expect(member.matchPercentage, 0);
+      expect(member.matchStatus, 'calculated');
+      expect(member.matchCriteriaCount, 4);
+      expect(member.matchEvaluatedCriteriaCount, 4);
+      expect(member.getFormattedLocation(isArabic: true), 'حمص، سوريا');
+    });
+
+    test('keeps an uncalculated score null instead of converting it to zero', () {
+      final member = MemberModel.fromJson({
+        'user_id': 43,
+        'profile_match_percentage': null,
+        'match_criteria_count': 3,
+        'match_evaluated_criteria_count': 0,
+        'match_status': 'insufficient_data',
+      });
+
+      expect(member.matchPercentage, isNull);
+      expect(member.matchStatus, 'insufficient_data');
+      expect(member.matchCriteriaCount, 3);
+      expect(member.matchEvaluatedCriteriaCount, 0);
+    });
+
+    test('parses profile detail zero scores and criteria coverage', () {
+      final profile = MemberProfileModel.fromJson({
+        'profile_match': 0,
+        'profile_match_status': 'calculated',
+        'profile_match_criteria_count': 5,
+        'profile_match_evaluated_criteria_count': 5,
+        'basic_info': {'gender': '1'},
+      });
+
+      expect(profile.profileMatchPercentage, 0);
+      expect(profile.profileMatchStatus, 'calculated');
+      expect(profile.profileMatchCriteriaCount, 5);
+      expect(profile.profileMatchEvaluatedCriteriaCount, 5);
+    });
+  });
+
 
 }
