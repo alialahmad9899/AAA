@@ -9,9 +9,17 @@ void main() {
       expect(parsed, isNotNull);
       expect(parsed!.isUtc, isFalse);
     });
-    test('parses Arabic minute values', () {
+    test('parses Arabic plural minutes', () {
       expect(parseChatTimestamp('منذ ٥ دقائق', now: now),
           now.subtract(const Duration(minutes: 5)));
+    });
+    test('parses Arabic plural seconds, days and weeks', () {
+      expect(parseChatTimestamp('منذ ٣ ثواني', now: now),
+          now.subtract(const Duration(seconds: 3)));
+      expect(parseChatTimestamp('منذ ٢ أيام', now: now),
+          now.subtract(const Duration(days: 2)));
+      expect(parseChatTimestamp('منذ ٣ أسابيع', now: now),
+          now.subtract(const Duration(days: 21)));
     });
     test('parses second-level labels', () {
       expect(parseChatTimestamp('3 seconds ago', now: now),
