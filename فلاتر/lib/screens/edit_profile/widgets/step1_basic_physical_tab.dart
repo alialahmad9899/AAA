@@ -307,7 +307,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                       width: 115,
                       height: 115,
                       decoration: const BoxDecoration(
-                          shape: BoxShape.circle, color: Color(0xFF01579B)),
+                          shape: BoxShape.circle, color: AppColors.sectionBackground),
                       child: CircleAvatar(
                         backgroundColor: AppColors.sectionBackground,
                         child: pickedImageFile != null
@@ -333,12 +333,12 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                            color: AppColors.textDark,
+                            color: AppColors.accentLight,
                             shape: BoxShape.circle,
                             border: Border.all(
-                                color: AppColors.primaryTeal, width: 2)),
+                                color: AppColors.cardColor, width: 2)),
                         child: const Icon(Icons.camera_alt_rounded,
-                            color: Color(0xFF0288D1), size: 16),
+                            color: AppColors.primaryTeal, size: 16),
                       ),
                     ),
                   ],
@@ -385,9 +385,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                     const SizedBox(width: 10),
                     Text(genderText,
                         style: TextStyle(
-                            color: isFemale
-                                ? const Color(0xFFF48FB1)
-                                : Colors.amberAccent,
+                            color: AppColors.primaryTeal,
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'Cairo'))
@@ -472,10 +470,10 @@ class Step1BasicPhysicalTab extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color: const Color(0xFF0288D1).withValues(alpha: 0.18),
+                color: AppColors.accentLight.withValues(alpha: 0.24),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: const Color(0xFF38BDF8).withValues(alpha: 0.4),
+                  color: AppColors.accentWarm.withValues(alpha: 0.32),
                   width: 1,
                 ),
               ),
@@ -485,12 +483,12 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.amberAccent.withValues(alpha: 0.2),
+                      color: AppColors.accentLight.withValues(alpha: 0.40),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
                       Icons.shield_outlined,
-                      color: Colors.amberAccent,
+                      color: AppColors.primaryTeal,
                       size: 20,
                     ),
                   ),
@@ -580,7 +578,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                       Row(
                         children: [
                           const Icon(Icons.height_rounded,
-                              color: Colors.amberAccent, size: 22),
+                              color: AppColors.accentWarm, size: 22),
                           const SizedBox(width: 8),
                           Text(isAr ? 'الطول:' : 'Height:',
                               style: const TextStyle(
@@ -594,7 +592,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.amberAccent,
+                          color: AppColors.accentLight,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -685,10 +683,10 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                   ),
                   SliderTheme(
                     data: SliderThemeData(
-                      activeTrackColor: Colors.amberAccent,
+                      activeTrackColor: AppColors.accentWarm,
                       inactiveTrackColor: AppColors.lineColor,
                       thumbColor: AppColors.textDark,
-                      overlayColor: Colors.amberAccent.withValues(alpha: 0.2),
+                      overlayColor: AppColors.accentWarm.withValues(alpha: 0.18),
                     ),
                     child: Slider(
                       value: currentWeightVal,
