@@ -7,6 +7,7 @@
 
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../constants/colors.dart';
 import 'package:flutter/services.dart';
 
 /// نموذج بيانات عنصر السؤال والجواب مع دعم التصنيف المزدوج
@@ -343,14 +344,14 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const Color darkBgColor = Color(0xFF0F0F1A);
+    const Color darkBgColor = AppColors.backgroundColor;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
+        statusBarIconBrightness: Brightness.dark,
         systemNavigationBarColor: darkBgColor,
-        systemNavigationBarIconBrightness: Brightness.light,
+        systemNavigationBarIconBrightness: Brightness.dark,
         systemNavigationBarDividerColor: Colors.transparent,
       ),
       child: Directionality(
@@ -358,7 +359,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
         child: Scaffold(
           backgroundColor: darkBgColor,
           appBar: AppBar(
-            backgroundColor: const Color(0xFF161626),
+            backgroundColor: AppColors.cardColor,
             elevation: 0,
             centerTitle: true,
             leading: IconButton(
@@ -366,7 +367,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                 _isAr
                     ? Icons.arrow_back_ios_rounded
                     : Icons.arrow_back_ios_new_rounded,
-                color: Colors.white,
+                color: AppColors.textDark,
                 size: 20,
               ),
               onPressed: () => Navigator.pop(context),
@@ -374,7 +375,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
             title: Text(
               _isAr ? 'دليل الاستخدام والأسئلة الشائعة' : 'User Guide & FAQ',
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.textDark,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Cairo',
@@ -412,10 +413,10 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
       decoration: BoxDecoration(
-        color: const Color(0xFF161626).withValues(alpha: 0.8),
+        color: AppColors.cardColor.withValues(alpha: 0.8),
         border: Border(
           bottom: BorderSide(
-            color: Colors.white.withValues(alpha: 0.08),
+            color: AppColors.textDark.withValues(alpha: 0.08),
             width: 1,
           ),
         ),
@@ -428,17 +429,17 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.08),
+                  color: AppColors.textDark.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: const Color(0xFF8E24AA).withValues(alpha: 0.4),
+                    color: AppColors.primaryTeal.withValues(alpha: 0.4),
                     width: 1.2,
                   ),
                 ),
                 child: TextField(
                   controller: _searchController,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textDark,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     fontFamily: 'Cairo',
@@ -453,19 +454,19 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                         ? 'ابحث عن سؤال، ميزة، أو خدمة...'
                         : 'Search question, feature or service...',
                     hintStyle: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.5),
+                      color: AppColors.textDark.withValues(alpha: 0.5),
                       fontSize: 13,
                       fontFamily: 'Cairo',
                     ),
                     prefixIcon: const Icon(
                       Icons.search_rounded,
-                      color: Color(0xFFE040FB),
+                      color: AppColors.accentWarm,
                       size: 22,
                     ),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
                             icon: const Icon(Icons.clear_rounded,
-                                color: Colors.white70, size: 18),
+                                color: AppColors.textMuted, size: 18),
                             onPressed: () {
                               _searchController.clear();
                               setState(() => _searchQuery = '');
@@ -505,25 +506,25 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                       decoration: BoxDecoration(
                         gradient: isSelected
                             ? const LinearGradient(
-                                colors: [Color(0xFF8E24AA), Color(0xFF00B0FF)],
+                                colors: [AppColors.primaryTeal, AppColors.secondaryTeal],
                                 begin: Alignment.topRight,
                                 end: Alignment.bottomLeft,
                               )
                             : null,
                         color: isSelected
                             ? null
-                            : Colors.white.withValues(alpha: 0.08),
+                            : AppColors.textDark.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: isSelected
-                              ? const Color(0xFFE040FB)
-                              : Colors.white.withValues(alpha: 0.15),
+                              ? AppColors.accentWarm
+                              : AppColors.textDark.withValues(alpha: 0.15),
                           width: 1,
                         ),
                         boxShadow: isSelected
                             ? [
                                 BoxShadow(
-                                  color: const Color(0xFF8E24AA)
+                                  color: AppColors.primaryTeal
                                       .withValues(alpha: 0.4),
                                   blurRadius: 10,
                                   offset: const Offset(0, 3),
@@ -534,7 +535,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                       child: Text(
                         category,
                         style: TextStyle(
-                          color: Colors.white,
+                          color: AppColors.textDark,
                           fontSize: 12.5,
                           fontWeight:
                               isSelected ? FontWeight.bold : FontWeight.w600,
@@ -559,18 +560,18 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF181828),
+        color: AppColors.sectionBackground,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: isExpanded
-              ? const Color(0xFFE040FB).withValues(alpha: 0.7)
-              : Colors.white.withValues(alpha: 0.1),
+              ? AppColors.accentWarm.withValues(alpha: 0.7)
+              : AppColors.textDark.withValues(alpha: 0.1),
           width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
             color: isExpanded
-                ? const Color(0xFF8E24AA).withValues(alpha: 0.2)
+                ? AppColors.primaryTeal.withValues(alpha: 0.2)
                 : Colors.black.withValues(alpha: 0.25),
             blurRadius: 12,
             offset: const Offset(0, 4),
@@ -605,8 +606,8 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              const Color(0xFF8E24AA).withValues(alpha: 0.35),
-                              const Color(0xFF00B0FF).withValues(alpha: 0.35),
+                              AppColors.primaryTeal.withValues(alpha: 0.35),
+                              AppColors.secondaryTeal.withValues(alpha: 0.35),
                             ],
                             begin: Alignment.topRight,
                             end: Alignment.bottomLeft,
@@ -615,7 +616,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                         ),
                         child: const Icon(
                           Icons.help_outline_rounded,
-                          color: Color(0xFFE040FB),
+                          color: AppColors.accentWarm,
                           size: 20,
                         ),
                       ),
@@ -624,7 +625,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                         child: Text(
                           item.question,
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: AppColors.textDark,
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'Cairo',
@@ -639,8 +640,8 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                         child: Icon(
                           Icons.keyboard_arrow_down_rounded,
                           color: isExpanded
-                              ? const Color(0xFFE040FB)
-                              : Colors.white70,
+                              ? AppColors.accentWarm
+                              : AppColors.textMuted,
                           size: 26,
                         ),
                       ),
@@ -655,14 +656,14 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Divider(
-                            color: Colors.white.withValues(alpha: 0.12),
+                            color: AppColors.textDark.withValues(alpha: 0.12),
                             height: 1,
                           ),
                           const SizedBox(height: 12),
                           Text(
                             item.answer,
                             style: const TextStyle(
-                              color: Colors.white,
+                              color: AppColors.textDark,
                               fontSize: 13.5,
                               fontFamily: 'Cairo',
                               height: 1.65,
@@ -697,22 +698,22 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF1E1E2C),
+                color: AppColors.sectionBackground,
                 border: Border.all(
-                    color: const Color(0xFF8E24AA).withValues(alpha: 0.4),
+                    color: AppColors.primaryTeal.withValues(alpha: 0.4),
                     width: 1.5),
               ),
               child: const Icon(
                 Icons.search_off_rounded,
                 size: 54,
-                color: Color(0xFFE040FB),
+                color: AppColors.accentWarm,
               ),
             ),
             const SizedBox(height: 20),
             Text(
               _isAr ? 'لم نجد نتيجة مطابقة' : 'No Matching Results Found',
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.textDark,
                 fontSize: 17,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Cairo',
@@ -725,7 +726,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                   : 'Try searching with other keywords or choose a different category.',
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: Colors.white70,
+                color: AppColors.textMuted,
                 fontSize: 13,
                 fontFamily: 'Cairo',
               ),
