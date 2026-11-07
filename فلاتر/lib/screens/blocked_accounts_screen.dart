@@ -101,7 +101,7 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.error,
+                backgroundColor: AppColors.error.withValues(alpha: 0.12),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
                 padding:
@@ -249,7 +249,7 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
               ? const Center(
                   child: CircularProgressIndicator(
                     valueColor:
-                        AlwaysStoppedAnimation<Color>(AppColors.accentWarm),
+                        AlwaysStoppedAnimation<Color>(AppColors.primaryTeal),
                   ),
                 )
               : _blockedUsers.isEmpty
@@ -355,7 +355,7 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.25),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
