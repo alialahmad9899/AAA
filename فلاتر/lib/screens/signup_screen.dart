@@ -968,7 +968,6 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     final bool isAr = widget.currentLanguage == 'ar';
-    const primaryColor = AppColors.primaryTeal;
     const darkBgColor = AppColors.backgroundColor;
 
     final double bottomInset = MediaQuery.of(context).padding.bottom;
