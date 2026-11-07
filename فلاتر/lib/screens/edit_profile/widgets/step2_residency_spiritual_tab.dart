@@ -7,6 +7,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../../constants/colors.dart';
 
 class Step2ResidencySpiritualTab extends StatelessWidget {
   final bool isAr;
@@ -68,17 +69,17 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.18),
+              color: AppColors.cardColor,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: Colors.white, size: 22),
+            child: Icon(icon, color: AppColors.textDark, size: 22),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               title,
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.textDark,
                 fontSize: 17,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Cairo',
@@ -102,12 +103,12 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.12),
+          color: AppColors.sectionBackground,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
           children: [
-            Icon(icon, color: Colors.white70, size: 22),
+            Icon(icon, color: AppColors.textMuted, size: 22),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -116,8 +117,8 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
                     : label,
                 style: TextStyle(
                   color: displayValue != null && displayValue.isNotEmpty
-                      ? Colors.white
-                      : Colors.white70,
+                      ? AppColors.textDark
+                      : AppColors.textMuted,
                   fontSize: 16,
                   fontFamily: 'Cairo',
                   fontWeight: displayValue != null && displayValue.isNotEmpty
@@ -127,7 +128,7 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
               ),
             ),
             const Icon(Icons.keyboard_arrow_down_rounded,
-                color: Colors.white70, size: 24),
+                color: AppColors.textMuted, size: 24),
           ],
         ),
       ),
@@ -158,9 +159,9 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
           fit: BoxFit.cover,
           memCacheWidth: 80,
           memCacheHeight: 60,
-          placeholder: (context, url) => Container(color: Colors.white12),
+          placeholder: (context, url) => Container(color: AppColors.sectionBackground),
           errorWidget: (context, url, error) =>
-              Container(color: Colors.white24),
+              Container(color: AppColors.lineColor),
         ),
       ),
     );
@@ -200,7 +201,7 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
                 label: Text(
                   option,
                   style: TextStyle(
-                    color: isSelected ? const Color(0xFF01579B) : Colors.white,
+                    color: isSelected ? AppColors.primaryTeal : AppColors.textDark,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                     fontFamily: 'Cairo',
                     fontSize: 14,
@@ -209,7 +210,7 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
                 selected: isSelected,
                 color: WidgetStateProperty.resolveWith<Color?>((states) {
                   if (states.contains(WidgetState.selected)) {
-                    return Colors.white;
+                    return AppColors.textDark;
                   }
                   return const Color(0xFF013966).withValues(alpha: 0.7);
                 }),
@@ -217,7 +218,7 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
                 pressElevation: 1,
                 shadowColor: Colors.black26,
                 showCheckmark: isSelected,
-                checkmarkColor: const Color(0xFF01579B),
+                checkmarkColor: AppColors.primaryTeal,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 shape: RoundedRectangleBorder(
@@ -332,7 +333,7 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
         padding: const EdgeInsets.only(
             left: 20.0, right: 20.0, top: 20.0, bottom: 80.0),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.18),
+          color: AppColors.cardColor,
           borderRadius: BorderRadius.circular(28),
         ),
         child: Column(
@@ -348,7 +349,7 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.12),
+                  color: AppColors.sectionBackground,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
@@ -356,13 +357,13 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
                     selectedBirthFlagUrl != null
                         ? _buildFlagWidget(selectedBirthFlagUrl)
                         : const Icon(Icons.flag_rounded,
-                            color: Colors.white70, size: 22),
+                            color: AppColors.textMuted, size: 22),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         selectedBirthCountryName,
                         style: TextStyle(
-                          color: Colors.white,
+                          color: AppColors.textDark,
                           fontSize: 16,
                           fontFamily: 'Cairo',
                           fontWeight: selectedBirthCountryId != null
@@ -372,7 +373,7 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
                       ),
                     ),
                     const Icon(Icons.search_rounded,
-                        color: Colors.white70, size: 22),
+                        color: AppColors.textMuted, size: 22),
                   ],
                 ),
               ),
@@ -388,7 +389,7 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.12),
+                  color: AppColors.sectionBackground,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
@@ -396,13 +397,13 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
                     selectedResidencyFlagUrl != null
                         ? _buildFlagWidget(selectedResidencyFlagUrl)
                         : const Icon(Icons.language_rounded,
-                            color: Colors.white70, size: 22),
+                            color: AppColors.textMuted, size: 22),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         selectedResidencyCountryName,
                         style: TextStyle(
-                          color: Colors.white,
+                          color: AppColors.textDark,
                           fontSize: 16,
                           fontFamily: 'Cairo',
                           fontWeight: selectedResidencyCountryId != null
@@ -412,7 +413,7 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
                       ),
                     ),
                     const Icon(Icons.search_rounded,
-                        color: Colors.white70, size: 22),
+                        color: AppColors.textMuted, size: 22),
                   ],
                 ),
               ),
@@ -423,7 +424,7 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.12),
+                  color: AppColors.sectionBackground,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
@@ -432,7 +433,7 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
+                          strokeWidth: 2, color: AppColors.textDark),
                     ),
                     const SizedBox(width: 12),
                     Text(
@@ -440,7 +441,7 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
                           ? 'جاري جلب المحافظات...'
                           : 'Loading governorates...',
                       style: const TextStyle(
-                          color: Colors.white,
+                          color: AppColors.textDark,
                           fontSize: 14,
                           fontFamily: 'Cairo'),
                     ),
@@ -461,7 +462,7 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.12),
+                  color: AppColors.sectionBackground,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
@@ -470,13 +471,13 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
+                          strokeWidth: 2, color: AppColors.textDark),
                     ),
                     const SizedBox(width: 12),
                     Text(
                       isAr ? 'جاري جلب المدن...' : 'Loading cities...',
                       style: const TextStyle(
-                          color: Colors.white,
+                          color: AppColors.textDark,
                           fontSize: 14,
                           fontFamily: 'Cairo'),
                     ),
