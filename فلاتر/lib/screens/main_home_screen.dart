@@ -421,9 +421,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    const Color primarySkyBlue = AppColors.primaryTeal;
-
+  Widget build(BuildContext context) {
     final List<Widget> pages = [
       AutoMatchingTab(
         currentLanguage: _currentLanguage,
