@@ -376,7 +376,7 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
                             ? 'ترقية الحساب والاشتراك الآن 🚀'
                             : 'Upgrade Account Now 🚀',
                         style: const TextStyle(
-                          color: AppColors.textDark,
+                          color: Colors.white,
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                           fontFamily: 'Cairo',
