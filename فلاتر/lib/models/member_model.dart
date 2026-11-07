@@ -19,7 +19,10 @@ class MemberModel {
   final String rawOccupation;
   final String rawMaritalStatus;
   final String rawReligion;
-  final int matchPercentage;
+  final int? matchPercentage;
+  final int matchCriteriaCount;
+  final int matchEvaluatedCriteriaCount;
+  final String matchStatus;
   final String packageName;
 
   MemberModel({
@@ -33,7 +36,10 @@ class MemberModel {
     required this.rawOccupation,
     required this.rawMaritalStatus,
     required this.rawReligion,
-    required this.matchPercentage,
+    this.matchPercentage,
+    this.matchCriteriaCount = 0,
+    this.matchEvaluatedCriteriaCount = 0,
+    this.matchStatus = 'not_calculated',
     this.packageName = '',
   });
 
@@ -241,7 +247,7 @@ class MemberModel {
       parsedAge = int.tryParse(rawAge.toString()) ?? 0;
     }
 
-    int parsedMatch = 0;
+    int? parsedMatch;
     final rawMatch = json['profile_match_percentage'] ??
         json['match_percentage'] ??
         json['matching_percentage'] ??
@@ -250,12 +256,37 @@ class MemberModel {
         json['percentage'];
 
     if (rawMatch != null) {
-      String cleanStr = rawMatch.toString().replaceAll('%', '').trim();
-      double? doubleVal = double.tryParse(cleanStr);
-      if (doubleVal != null) {
-        parsedMatch = doubleVal.round();
+      final cleanStr = rawMatch.toString().replaceAll('%', '').trim();
+      final doubleVal = double.tryParse(cleanStr);
+      if (doubleVal != null && doubleVal.isFinite) {
+        parsedMatch = doubleVal.round().clamp(0, 100).toInt();
       }
     }
+
+    int parseMatchCount(dynamic value) {
+      final parsed = int.tryParse(value?.toString() ?? '');
+      return parsed == null ? 0 : parsed.clamp(0, 1000).toInt();
+    }
+
+    final parsedMatchCriteriaCount = parseMatchCount(
+      json['match_criteria_count'] ?? json['profile_match_criteria_count'],
+    );
+    final parsedMatchEvaluatedCriteriaCount = parseMatchCount(
+      json['match_evaluated_criteria_count'] ??
+          json['profile_match_evaluated_criteria_count'],
+    );
+    final rawMatchStatus = (json['match_status'] ??
+            json['profile_match_status'] ??
+            '')
+        .toString()
+        .trim();
+    final parsedMatchStatus = rawMatchStatus.isNotEmpty
+        ? rawMatchStatus
+        : (parsedMatch != null
+            ? 'calculated'
+            : (parsedMatchCriteriaCount > 0
+                ? 'insufficient_data'
+                : 'no_preferences'));
 
     // 🟢 استخراج اسم الباقة الموحد والتأكد من قراءة كافة الاستجابات الممكنة
     final String parsedPackageName = _extractPackageName(json, basicInfo);
@@ -281,6 +312,9 @@ class MemberModel {
       rawMaritalStatus: parsedRawMarital,
       rawReligion: parsedRawReligion,
       matchPercentage: parsedMatch,
+      matchCriteriaCount: parsedMatchCriteriaCount,
+      matchEvaluatedCriteriaCount: parsedMatchEvaluatedCriteriaCount,
+      matchStatus: parsedMatchStatus,
       packageName: parsedPackageName,
     );
   }
