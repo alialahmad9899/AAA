@@ -704,24 +704,24 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(32),
             border: Border.all(
-              color: AppColors.primaryTeal,
-              width: 1.5,
+              color: AppColors.lineColor,
+              width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primaryTeal.withValues(alpha: 0.16),
-                blurRadius: 20,
-                spreadRadius: 2,
+                color: AppColors.primaryTeal.withValues(alpha: 0.09),
+                blurRadius: 18,
+                spreadRadius: 0,
               ),
               BoxShadow(
-                color: AppColors.accentWarm.withValues(alpha: 0.12),
-                blurRadius: 30,
-                spreadRadius: 4,
+                color: AppColors.accentWarm.withValues(alpha: 0.07),
+                blurRadius: 22,
+                spreadRadius: 0,
               ),
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.5),
-                blurRadius: 16,
-                offset: const Offset(0, 8),
+                color: AppColors.textDark.withValues(alpha: 0.12),
+                blurRadius: 22,
+                offset: const Offset(0, 7),
               ),
             ],
           ),
@@ -734,18 +734,18 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                     imageUrl: member.image,
                     fit: BoxFit.cover,
                     placeholder: (context, url) => Container(
-                      color: Colors.white10,
+                      color: AppColors.sectionBackground,
                       child: const Center(
                         child: CircularProgressIndicator(
-                          color: Colors.white,
+                          color: AppColors.accentWarm,
                           strokeWidth: 2,
                         ),
                       ),
                     ),
                     errorWidget: (context, url, error) => Container(
-                      color: Colors.white24,
+                      color: AppColors.sectionBackground,
                       child: const Icon(Icons.person,
-                          size: 110, color: Colors.white54),
+                          size: 110, color: AppColors.primaryTeal),
                     ),
                   ),
                 ),
@@ -820,7 +820,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                                         : Icons.auto_awesome_rounded,
                                     color: member.matchPercentage == null
                                         ? Colors.white70
-                                        : Colors.amberAccent,
+                                         : AppColors.accentLight,
                                     size: 15,
                                   ),
                                   const SizedBox(width: 5),
