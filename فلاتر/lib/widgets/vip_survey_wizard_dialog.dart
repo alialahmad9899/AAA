@@ -6,6 +6,7 @@
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import '../constants/colors.dart';
 import 'package:http/http.dart' as http;
 import 'app_snackbar.dart';
 
@@ -196,23 +197,23 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
       hintText: hintText,
       hintStyle: const TextStyle(
         fontSize: 12,
-        color: Colors.white60,
+        color: AppColors.textMuted,
         fontFamily: 'Cairo',
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.08),
+      fillColor: AppColors.sectionBackground,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Colors.white24),
+        borderSide: const BorderSide(color: AppColors.lineColor),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+        borderSide: BorderSide(color: AppColors.lineColor),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Color(0xFF38BDF8), width: 1.5),
+        borderSide: const BorderSide(color: AppColors.primaryTeal, width: 1.5),
       ),
     );
   }
@@ -227,9 +228,9 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
       margin: const EdgeInsets.symmetric(vertical: 10),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: AppColors.sectionBackground,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: AppColors.lineColor),
       ),
       child: Row(
         children: List.generate(steps.length, (index) {
@@ -248,13 +249,13 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: isCurrent
-                          ? const Color(0xFF0288D1)
+                          ? AppColors.primaryTeal
                           : (isActive
-                              ? const Color(0xFF0288D1).withValues(alpha: 0.4)
-                              : Colors.white12),
+                              ? AppColors.primaryTeal.withValues(alpha: 0.4)
+                              : AppColors.lineColor),
                       border: Border.all(
                         color:
-                            isActive ? const Color(0xFF38BDF8) : Colors.white24,
+                            isActive ? AppColors.primaryTeal : AppColors.lineColor,
                         width: 1.5,
                       ),
                     ),
@@ -262,7 +263,7 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
                       child: Text(
                         '${index + 1}',
                         style: TextStyle(
-                          color: isActive ? Colors.white : Colors.white54,
+                          color: isActive ? Colors.white : AppColors.textMuted,
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
                           fontFamily: 'Cairo',
@@ -281,8 +282,8 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
                         steps[index],
                         style: TextStyle(
                           color: isCurrent
-                              ? Colors.white
-                              : (isActive ? Colors.white70 : Colors.white38),
+                              ? AppColors.textDark
+                              : (isActive ? AppColors.textMuted : AppColors.textMuted),
                           fontWeight:
                               isCurrent ? FontWeight.bold : FontWeight.normal,
                           fontSize: 12,
@@ -297,8 +298,8 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
                       height: 1.5,
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       color: index < _currentStep
-                          ? const Color(0xFF38BDF8)
-                          : Colors.white12,
+                          ? AppColors.primaryTeal
+                          : AppColors.lineColor,
                     ),
                 ],
               ),
@@ -335,7 +336,7 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
         child: Dialog(
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          backgroundColor: const Color(0xFF0F172A),
+          backgroundColor: AppColors.cardColor,
           insetPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           child: AnimatedContainer(
@@ -360,7 +361,7 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
                     Row(
                       children: [
                         const Icon(Icons.workspace_premium_rounded,
-                            color: Colors.amber, size: 26),
+                            color: AppColors.warning, size: 26),
                         const SizedBox(width: 8),
                         Text(
                           widget.isArabic
@@ -369,14 +370,14 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
                           style: const TextStyle(
                               fontSize: 17,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: AppColors.textDark,
                               fontFamily: 'Cairo'),
                         ),
                       ],
                     ),
                     IconButton(
                       icon: const Icon(Icons.close_rounded,
-                          color: Colors.white70),
+                          color: AppColors.textMuted),
                       onPressed: _isLoading
                           ? null
                           : () {
@@ -388,7 +389,7 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
 
                 // 2️⃣ شريط الخطوات المخصص
                 _buildStepHeader(),
-                const Divider(color: Colors.white24, height: 1),
+                const Divider(color: AppColors.lineColor, height: 1),
                 const SizedBox(height: 12),
 
                 // 3️⃣ المحتوى المتغير للخطوات مع إمكانية التمرير الخالي من الأخطاء
@@ -415,7 +416,7 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
                                 }
                               },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0288D1),
+                          backgroundColor: AppColors.primaryTeal,
                           padding: const EdgeInsets.symmetric(vertical: 13),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12)),
@@ -429,7 +430,7 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
                           style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
-                              color: Colors.white,
+                              color: AppColors.textDark,
                               fontFamily: 'Cairo'),
                         ),
                       ),
@@ -444,7 +445,7 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
                                   setState(() => _currentStep--);
                                 },
                           style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Colors.white38),
+                            side: const BorderSide(color: AppColors.textMuted),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12)),
                             padding: const EdgeInsets.symmetric(vertical: 13),
@@ -452,7 +453,7 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
                           child: Text(
                             widget.isArabic ? 'السابق' : 'Back',
                             style: const TextStyle(
-                                color: Colors.white,
+                                color: AppColors.textDark,
                                 fontSize: 14,
                                 fontFamily: 'Cairo'),
                           ),
@@ -465,7 +466,7 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
                 if (_isLoading)
                   const Padding(
                     padding: EdgeInsets.only(top: 8.0),
-                    child: CircularProgressIndicator(color: Color(0xFF0288D1)),
+                    child: CircularProgressIndicator(color: AppColors.primaryTeal),
                   ),
               ],
             ),
@@ -485,7 +486,7 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
             controller: _aboutMeController,
             enabled: !_isLoading,
             maxLines: 3,
-            style: const TextStyle(color: Colors.white, fontFamily: 'Cairo'),
+            style: const TextStyle(color: AppColors.textDark, fontFamily: 'Cairo'),
             decoration: _inputDecoration(
               widget.isArabic ? 'نبذة عني *' : 'About me *',
               hintText: widget.isArabic
@@ -502,7 +503,7 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
                   enabled: !_isLoading,
                   keyboardType: TextInputType.number,
                   style:
-                      const TextStyle(color: Colors.white, fontFamily: 'Cairo'),
+                      const TextStyle(color: AppColors.textDark, fontFamily: 'Cairo'),
                   decoration:
                       _inputDecoration(widget.isArabic ? 'العمر *' : 'Age *'),
                 ),
@@ -513,7 +514,7 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
                   controller: _nationalityController,
                   enabled: !_isLoading,
                   style:
-                      const TextStyle(color: Colors.white, fontFamily: 'Cairo'),
+                      const TextStyle(color: AppColors.textDark, fontFamily: 'Cairo'),
                   decoration: _inputDecoration(
                       widget.isArabic ? 'الجنسية *' : 'Nationality *'),
                 ),
@@ -524,7 +525,7 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
           TextField(
             controller: _originCountryCityController,
             enabled: !_isLoading,
-            style: const TextStyle(color: Colors.white, fontFamily: 'Cairo'),
+            style: const TextStyle(color: AppColors.textDark, fontFamily: 'Cairo'),
             decoration: _inputDecoration(widget.isArabic
                 ? 'بلد الأصل والمدينة *'
                 : 'Origin Country/City *'),
@@ -533,7 +534,7 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
           TextField(
             controller: _residenceCountryCityController,
             enabled: !_isLoading,
-            style: const TextStyle(color: Colors.white, fontFamily: 'Cairo'),
+            style: const TextStyle(color: AppColors.textDark, fontFamily: 'Cairo'),
             decoration: _inputDecoration(widget.isArabic
                 ? 'بلد الإقامة والمدينة *'
                 : 'Residence Country/City *'),
@@ -545,9 +546,9 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
                 child: DropdownButtonFormField<String>(
                   isExpanded: true, // 💡 توسعة الخيارات لمنع اقتطاع النص
                   initialValue: _maritalStatus,
-                  dropdownColor: const Color(0xFF1E293B),
+                  dropdownColor: AppColors.cardColor,
                   style: const TextStyle(
-                      color: Colors.white, fontFamily: 'Cairo', fontSize: 13),
+                      color: AppColors.textDark, fontFamily: 'Cairo', fontSize: 13),
                   decoration: _inputDecoration(widget.isArabic
                       ? 'الحالة الاجتماعية *'
                       : 'Marital Status *'),
@@ -568,9 +569,9 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
                 child: DropdownButtonFormField<String>(
                   isExpanded: true,
                   initialValue: _financialStatus,
-                  dropdownColor: const Color(0xFF1E293B),
+                  dropdownColor: AppColors.cardColor,
                   style: const TextStyle(
-                      color: Colors.white, fontFamily: 'Cairo', fontSize: 13),
+                      color: AppColors.textDark, fontFamily: 'Cairo', fontSize: 13),
                   decoration: _inputDecoration(widget.isArabic
                       ? 'الوضع المادي *'
                       : 'Financial Status *'),
@@ -594,7 +595,7 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
           TextField(
             controller: _occupationController,
             enabled: !_isLoading,
-            style: const TextStyle(color: Colors.white, fontFamily: 'Cairo'),
+            style: const TextStyle(color: AppColors.textDark, fontFamily: 'Cairo'),
             decoration: _inputDecoration(
                 widget.isArabic ? 'العمل والمهنة *' : 'Occupation *'),
           ),
@@ -607,7 +608,7 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
             controller: _partnerExpectationsController,
             enabled: !_isLoading,
             maxLines: 5,
-            style: const TextStyle(color: Colors.white, fontFamily: 'Cairo'),
+            style: const TextStyle(color: AppColors.textDark, fontFamily: 'Cairo'),
             decoration: _inputDecoration(
               widget.isArabic
                   ? 'مواصفات شريك الحياة المطلوبة (العمر، الإقامة، الصفات...) *'
@@ -624,13 +625,13 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           SizedBox(height: 12),
-          Icon(Icons.stars_rounded, size: 64, color: Colors.amber),
+          Icon(Icons.stars_rounded, size: 64, color: AppColors.warning),
           SizedBox(height: 12),
           Text(
             'جميع البيانات جاهزة ومكتملة. عند الضغط على إرسال، سيتم إنشاء بطاقة العرض الخاصة بك ونشرها على فيسبوك بعد مراجعة الإدارة.',
             textAlign: TextAlign.center,
             style: TextStyle(
-                color: Colors.white70,
+                color: AppColors.textMuted,
                 fontFamily: 'Cairo',
                 fontSize: 13.5,
                 height: 1.5),
