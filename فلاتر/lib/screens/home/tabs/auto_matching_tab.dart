@@ -9,7 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../constants/colors.dart';
 import '../../../widgets/app_snackbar.dart';
-import '../../../widgets/bottom_system_inset.dart';
+import '../../../widgets/app_action_bottom_sheet.dart';
+import '../../../widgets/app_empty_state.dart';
 
 import '../../../models/member_model.dart';
 import '../../../models/chat_model.dart';
@@ -131,103 +132,21 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
   }) async {
     if (_isModalActive || !mounted) return;
     _isModalActive = true;
-
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      builder: (modalContext) => Directionality(
-        textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
-        child: Container(
-          padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + WesalBottomInsets.of(modalContext)),
-          decoration: BoxDecoration(
-            color: AppColors.cardColor,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-            border: Border.all(
-                color: AppColors.lineColor),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.lineColor,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: iconColor, width: 1.5),
-                ),
-                child: Icon(icon, color: iconColor, size: 48),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _isAr ? titleAr : titleEn,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppColors.textDark,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Cairo',
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                _isAr ? messageAr : messageEn,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppColors.textMuted,
-                  fontSize: 13.5,
-                  fontFamily: 'Cairo',
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryTeal,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                  ),
-                  icon: const Icon(Icons.workspace_premium_rounded,
-                      color: AppColors.accentLight, size: 22),
-                  label: Text(
-                    _isAr
-                        ? 'ترقية الحساب والاشتراك الآن 🚀'
-                        : 'Upgrade Account Now 🚀',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Cairo',
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.pop(modalContext);
-                    onUpgradePressed();
-                  },
-                ),
-              ),
-              const SizedBox(height: 10),
-            ],
-          ),
-        ),
-      ),
-    );
-
-    _isModalActive = false;
+    try {
+      await AppActionBottomSheet.show(
+        context: context,
+        isArabic: _isAr,
+        title: _isAr ? titleAr : titleEn,
+        message: _isAr ? messageAr : messageEn,
+        icon: icon,
+        accentColor: iconColor,
+        primaryLabel: _isAr ? 'عرض الباقات' : 'View plans',
+        primaryIcon: Icons.workspace_premium_rounded,
+        onPrimaryPressed: onUpgradePressed,
+      );
+    } finally {
+      _isModalActive = false;
+    }
   }
 
   void _showMatchFilterModal() {
@@ -713,57 +632,6 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
             ],
           ),
           const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-            decoration: BoxDecoration(
-              color: AppColors.cardColor,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: AppColors.lineColor),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: AppColors.accentLight.withValues(alpha: 0.30),
-                    borderRadius: BorderRadius.circular(11),
-                  ),
-                  child: const Icon(Icons.auto_awesome_rounded,
-                      color: AppColors.primaryTeal, size: 18),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          color: AppColors.textDark,
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Cairo',
-                        ),
-                      ),
-                      Text(
-                        _isAr
-                            ? 'تعرّف على ملفات جديدة تم اختيارها لك'
-                            : 'Explore new profiles selected for you',
-                        style: const TextStyle(
-                          color: AppColors.textMuted,
-                          fontSize: 10,
-                          fontFamily: 'Cairo',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.favorite_border_rounded,
-                    color: AppColors.accentWarm, size: 20),
-              ],
-            ),
-          ),
           const SizedBox(height: 9),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 5),
@@ -826,8 +694,6 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
     final String locationText = member.getFormattedLocation(isArabic: _isAr);
     final String maritalStatusText =
         member.getLocalizedMaritalStatus(isArabic: _isAr);
-    final String occupationText =
-        member.getLocalizedOccupation(isArabic: _isAr);
 
     final bool hasMatchBadge = member.matchStatus != 'not_eligible';
     final String matchLabel = member.matchPercentage != null
@@ -1010,20 +876,6 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                         ],
                       ],
                     ),
-                    if (member.matchCriteriaCount > 0 &&
-                        member.matchPercentage != null) ...[
-                      const SizedBox(height: 3),
-                      Text(
-                        _isAr
-                            ? 'تم تقييم ${member.matchEvaluatedCriteriaCount} من ${member.matchCriteriaCount} معياراً'
-                            : '${member.matchEvaluatedCriteriaCount} of ${member.matchCriteriaCount} criteria evaluated',
-                        style: const TextStyle(
-                          color: AppColors.textMuted,
-                          fontSize: 10,
-                          fontFamily: 'Cairo',
-                        ),
-                      ),
-                    ],
                     const SizedBox(height: 10),
                     Wrap(
                       spacing: 7,
@@ -1044,14 +896,6 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                           _buildInfoPillChip(
                             icon: Icons.location_on_rounded,
                             label: locationText,
-                          ),
-                        if (occupationText.isNotEmpty &&
-                            occupationText != 'غير محدد' &&
-                            occupationText != 'Unspecified' &&
-                            occupationText != 'Not Specified')
-                          _buildInfoPillChip(
-                            icon: Icons.work_rounded,
-                            label: occupationText,
                           ),
                       ],
                     ),
@@ -1277,16 +1121,20 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                             color: AppColors.accentWarm,
                             child: _matchedMembers.isEmpty
                                 ? ListView(
-                                    physics:
-                                        const AlwaysScrollableScrollPhysics(),
+                                    physics: const AlwaysScrollableScrollPhysics(),
                                     children: [
                                       SizedBox(
                                         height: screenHeight * 0.5,
-                                        child: Center(
-                                          child: Text(
-                                            widget.txt(_isMatchFilterEnabled ? 'no_smart_matches' : 'no_data'),
-                                            style: const TextStyle(color: AppColors.textMuted, fontSize: 16, fontFamily: 'Cairo'),
+                                        child: AppEmptyState(
+                                          icon: Icons.favorite_outline_rounded,
+                                          title: widget.txt(
+                                            _isMatchFilterEnabled
+                                                ? 'no_smart_matches'
+                                                : 'no_data',
                                           ),
+                                          message: _isAr
+                                              ? 'جرّب تعديل تفضيلات الشريك أو ارجع لاحقاً لاكتشاف أعضاء جدد.'
+                                              : 'Try adjusting your partner preferences or come back later to discover new members.',
                                         ),
                                       ),
                                     ],

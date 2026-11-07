@@ -16,6 +16,7 @@ import '../models/member_profile_model.dart';
 import '../services/api_service.dart';
 import '../services/profile_cache_service.dart';
 import '../widgets/app_snackbar.dart';
+import '../widgets/app_action_bottom_sheet.dart';
 import '../widgets/bottom_system_inset.dart';
 import '../widgets/package_badge_widget.dart';
 import 'chat_detail_screen.dart';
@@ -138,26 +139,6 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
     }
   }
 
-  Future<void> _openSubscriptionAndRefresh() async {
-    if (_isModalActive || !mounted) return;
-    _isModalActive = true;
-
-    try {
-      await AccountTab.showSubscriptionsModalDirectly(
-        context,
-        isArabic: _isArabic,
-        onSubscriptionUpdated: () async {
-          await ProfileCacheService.clearCache();
-          if (mounted) {
-            await _fetchProfileData();
-          }
-        },
-      );
-    } finally {
-      _isModalActive = false;
-    }
-  }
-
   void _showLikesQuotaModal([String? customMessage]) async {
     if (_isModalActive || !mounted) return;
     _isModalActive = true;
@@ -181,117 +162,36 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
   void _showMessageFeatureModal() async {
     if (_isModalActive || !mounted) return;
     _isModalActive = true;
-
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      builder: (modalContext) => Directionality(
-        textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
-        child: Container(
-          padding: EdgeInsets.fromLTRB(
-            24, 24, 24, 24 + WesalBottomInsets.of(modalContext),
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.cardColor.withValues(alpha: 0.96),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-            border: Border.all(
-              color: AppColors.warning.withValues(alpha: 0.5),
-              width: 1.5,
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.lineColor,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.warning.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                  border:
-                      Border.all(color: AppColors.warning, width: 1.5),
-                ),
-                child: const Icon(Icons.mark_chat_unread_rounded,
-                    color: AppColors.warning, size: 48),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _isArabic
-                    ? 'المراسلة المباشرة ميزة مدفوعة 💬'
-                    : 'Direct Messaging is Premium 💬',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppColors.textDark,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Cairo',
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                _isArabic
-                    ? 'لتتمكن من فتح المحادثة الفورية والدردشة المباشرة مع هذا العضو، يرجى الاشتراك في إحدى باقات وصال المميزة.'
-                    : 'To unlock direct chat and message this member, please subscribe to one of Wesal\'s premium packages.',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppColors.textMuted,
-                  fontSize: 13.5,
-                  fontFamily: 'Cairo',
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryTeal,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                    elevation: 6,
-                  ),
-                  icon: const Icon(Icons.workspace_premium_rounded,
-                      color: AppColors.warning, size: 22),
-                  label: Text(
-                    _isArabic
-                        ? 'فتح المراسلة والاشتراك الآن 🚀'
-                        : 'Unlock Messaging & Subscribe 🚀',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Cairo',
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.of(modalContext).pop();
-                    if (widget.onUpgradeRequested != null) {
-                      widget.onUpgradeRequested!();
-                    } else {
-                      _openSubscriptionAndRefresh();
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(height: 10),
-            ],
-          ),
-        ),
-      ),
-    );
-
-    _isModalActive = false;
+    try {
+      await AppActionBottomSheet.show(
+        context: context,
+        isArabic: _isArabic,
+        title: _isArabic ? 'المراسلة المباشرة' : 'Direct messaging',
+        message: _isArabic
+            ? 'المراسلة المباشرة متاحة ضمن باقات وصال. يمكنك عرض الباقات لمعرفة الخيارات المتاحة.'
+            : 'Direct messaging is available with Wesal plans. View the available options to continue.',
+        icon: Icons.mark_chat_unread_rounded,
+        accentColor: AppColors.warning,
+        primaryLabel: _isArabic ? 'عرض الباقات' : 'View plans',
+        primaryIcon: Icons.workspace_premium_rounded,
+        onPrimaryPressed: () {
+          if (widget.onUpgradeRequested != null) {
+            widget.onUpgradeRequested!();
+          } else if (mounted) {
+            AccountTab.showSubscriptionsModalDirectly(
+              context,
+              isArabic: _isArabic,
+              onSubscriptionUpdated: () async {
+                await ProfileCacheService.clearCache();
+                if (mounted) await _fetchProfileData();
+              },
+            );
+          }
+        },
+      );
+    } finally {
+      _isModalActive = false;
+    }
   }
 
   Future<void> _sendExpressInterest() async {
@@ -924,7 +824,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                                         16, 16, 16, 24),
                                     child: Column(
                                       children: [
-                                        _buildVerifiedIdentityBadge(),
+                                        _buildProfileOverviewNote(),
                                         const SizedBox(height: 16),
                                         if (_profile!
                                             .introduction.isNotEmpty) ...[
@@ -935,6 +835,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                                             icon: Icons.format_quote_rounded,
                                             accentColor:
                                                 AppColors.primaryTeal,
+                                            initiallyExpanded: true,
                                             content: Text(
                                               _profile!.introduction,
                                               style: TextStyle(
@@ -989,61 +890,30 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
     );
   }
 
-  Widget _buildVerifiedIdentityBadge() {
+  Widget _buildProfileOverviewNote() {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.primaryTeal.withValues(alpha: 0.18),
-            AppColors.accentLight.withValues(alpha: 0.12),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(22),
-        border:
-            Border.all(color: AppColors.primaryTeal.withValues(alpha: 0.35)),
+        color: AppColors.sectionBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.lineColor),
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: AppColors.primaryTeal.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.verified_rounded,
-                color: AppColors.primaryTeal, size: 24),
-          ),
-          const SizedBox(width: 12),
+          const Icon(Icons.person_outline_rounded,
+              color: AppColors.primaryTeal, size: 22),
+          const SizedBox(width: 10),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _isArabic
-                      ? 'بطاقة عضوية مكتملة وموثقة'
-                      : 'Verified Member Profile',
-                  style: const TextStyle(
-                    color: AppColors.textDark,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Cairo',
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  _isArabic
-                      ? 'تمت مراجعة واستيفاء البيانات الأساسية والشخصية بالكامل'
-                      : 'All personal specifications have been verified',
-                  style: TextStyle(
-                    color: AppColors.textMuted,
-                    fontSize: 11.5,
-                    fontFamily: 'Cairo',
-                  ),
-                ),
-              ],
+            child: Text(
+              _isArabic
+                  ? 'تفاصيل العضو ومعلوماته الشخصية'
+                  : 'Member details and personal information',
+              style: const TextStyle(
+                color: AppColors.textDark,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                fontFamily: 'Cairo',
+              ),
             ),
           ),
         ],
@@ -1373,6 +1243,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
       title: _isArabic ? 'المعلومات الأساسية' : 'Basic Details',
       icon: Icons.person_outline_rounded,
       accentColor: AppColors.primaryTeal,
+      initiallyExpanded: true,
       content: Wrap(
         spacing: 10,
         runSpacing: 10,
@@ -1779,55 +1650,59 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
     );
   }
 
-  Widget _buildSectionCard(
-      {required String title,
-      required IconData icon,
-      required Color accentColor,
-      required Widget content}) {
+  Widget _buildSectionCard({
+    required String title,
+    required IconData icon,
+    required Color accentColor,
+    required Widget content,
+    bool initiallyExpanded = false,
+  }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.cardColor.withValues(alpha: 0.65),
-        borderRadius: BorderRadius.circular(24),
-        border:
-            Border.all(color: accentColor.withValues(alpha: 0.25), width: 1.2),
+        color: AppColors.cardColor.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: accentColor.withValues(alpha: 0.22)),
         boxShadow: [
           BoxShadow(
-            color: accentColor.withValues(alpha: 0.06),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
-          )
+            color: AppColors.textDark.withValues(alpha: 0.025),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
+          ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(9),
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: accentColor.withValues(alpha: 0.4)),
-                ),
-                child: Icon(icon, color: accentColor, size: 21),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                title,
-                style: const TextStyle(
-                    color: AppColors.textDark,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Cairo'),
-              ),
-            ],
+      clipBehavior: Clip.antiAlias,
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          dividerColor: Colors.transparent,
+          splashColor: AppColors.accentLight.withValues(alpha: 0.12),
+          highlightColor: AppColors.accentLight.withValues(alpha: 0.08),
+        ),
+        child: ExpansionTile(
+          initiallyExpanded: initiallyExpanded,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 3),
+          childrenPadding: const EdgeInsets.fromLTRB(15, 0, 15, 17),
+          leading: Container(
+            width: 38, height: 38,
+            decoration: BoxDecoration(
+              color: accentColor.withValues(alpha: 0.13),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: accentColor, size: 20),
           ),
-          const SizedBox(height: 14),
-          content,
-        ],
+          title: Text(
+            title,
+            style: const TextStyle(
+              color: AppColors.textDark,
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              fontFamily: 'Cairo',
+            ),
+          ),
+          iconColor: AppColors.primaryTeal,
+          collapsedIconColor: AppColors.textMuted,
+          children: [content],
+        ),
       ),
     );
   }

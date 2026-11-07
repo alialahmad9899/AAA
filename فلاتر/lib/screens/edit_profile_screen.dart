@@ -1880,7 +1880,6 @@ class _EditProfileScreenState extends State<EditProfileScreen>
 
   @override
   Widget build(BuildContext context) {
-    const Color primarySkyBlue = AppColors.primaryTeal;
     final double completionRatio = _calculateProfileCompletion();
 
     return GestureDetector(
@@ -1983,7 +1982,73 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  AnimatedBuilder(
+                    animation: _tabController,
+                    builder: (context, child) {
+                      final int activeStep = _tabController.index;
+                      final List<String> stepNames = _isArabic
+                          ? ['البيانات الشخصية', 'الإقامة والدين', 'نمط الحياة']
+                          : ['Personal details', 'Residence & religion', 'Lifestyle'];
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 2, 20, 4),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    _isArabic
+                                        ? 'المرحلة ${activeStep + 1} من 3 · ${stepNames[activeStep]}'
+                                        : 'Step ${activeStep + 1} of 3 · ${stepNames[activeStep]}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: AppColors.textDark,
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w700,
+                                      fontFamily: 'Cairo',
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  '${activeStep + 1}/3',
+                                  style: const TextStyle(
+                                    color: AppColors.primaryTeal,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Cairo',
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 7),
+                            Row(
+                              children: List.generate(
+                                3,
+                                (index) => Expanded(
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 180),
+                                    height: 4,
+                                    margin: EdgeInsetsDirectional.only(
+                                      end: index == 2 ? 0 : 5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: index <= activeStep
+                                          ? AppColors.primaryTeal
+                                          : AppColors.lineColor,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 5),
                   Container(
                     margin:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -2450,24 +2515,24 @@ class _EditProfileScreenState extends State<EditProfileScreen>
               ),
             ),
           ),
-          floatingActionButtonLocation:
-              FloatingActionButtonLocation.centerFloat,
-          floatingActionButton: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 24),
+          bottomNavigationBar: SafeArea(
+            top: false,
+            child: Container(
+              color: AppColors.backgroundColor,
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+              child: SizedBox(
                 height: 52,
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _isSaving ? null : _saveCurrentSection,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    foregroundColor: primarySkyBlue,
-                    elevation: 10,
-                    shadowColor: Colors.black45,
+                    foregroundColor: AppColors.primaryTeal,
+                    elevation: 4,
+                    shadowColor: AppColors.textDark.withValues(alpha: 0.10),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
+                      borderRadius: BorderRadius.circular(18),
+                      side: const BorderSide(color: AppColors.lineColor),
                     ),
                   ),
                   child: _isSaving
@@ -2475,20 +2540,24 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                           width: 22,
                           height: 22,
                           child: CircularProgressIndicator(
-                              color: primarySkyBlue, strokeWidth: 2.5))
+                            color: AppColors.primaryTeal,
+                            strokeWidth: 2.5,
+                          ),
+                        )
                       : Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const Icon(Icons.save_rounded,
-                                color: primarySkyBlue, size: 22),
+                                color: AppColors.primaryTeal, size: 21),
                             const SizedBox(width: 8),
                             Text(
-                              _isArabic ? 'حفظ هذا القسم' : 'Save Section',
+                              _isArabic ? 'حفظ هذا القسم' : 'Save section',
                               style: const TextStyle(
-                                  color: primarySkyBlue,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16.5,
-                                  fontFamily: 'Cairo'),
+                                color: AppColors.primaryTeal,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                fontFamily: 'Cairo',
+                              ),
                             ),
                           ],
                         ),

@@ -13,6 +13,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../models/chat_model.dart';
 import '../../services/api_service.dart';
 import '../../widgets/app_snackbar.dart';
+import '../../widgets/app_empty_state.dart';
 import '../../widgets/package_badge_widget.dart';
 import '../chat_detail_screen.dart';
 
@@ -538,75 +539,53 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
   /// شريط ترقية اختياري يظهر من دون أن يعيق الوصول إلى المحادثات.
   Widget _buildOptionalUpgradeBanner() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
       decoration: BoxDecoration(
         color: AppColors.sectionBackground,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.accentLight.withValues(alpha: 0.65)),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.lineColor),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(9),
-            decoration: const BoxDecoration(
-              color: Color(0xFFECE7DE),
+            width: 32, height: 32,
+            decoration: BoxDecoration(
+              color: AppColors.accentLight.withValues(alpha: 0.35),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.workspace_premium_rounded,
-              color: AppColors.primaryTeal,
-              size: 21,
-            ),
+            child: const Icon(Icons.workspace_premium_rounded,
+                color: AppColors.primaryTeal, size: 18),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 9),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  isArabicLocale ? 'ارتقِ بتجربتك مع وصال' : 'Make more of Wesal',
-                  style: const TextStyle(
-                    color: AppColors.textDark,
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Cairo',
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  isArabicLocale
-                      ? 'ميزات إضافية وظهور أفضل لملفك الشخصي'
-                      : 'Extra benefits and better profile visibility',
-                  style: const TextStyle(
-                    color: AppColors.textMuted,
-                    fontSize: 11,
-                    fontFamily: 'Cairo',
-                  ),
-                ),
-              ],
+            child: Text(
+              isArabicLocale
+                  ? 'اكتشف مزايا وصال الإضافية'
+                  : 'Discover more Wesal benefits',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.textDark,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                fontFamily: 'Cairo',
+              ),
             ),
           ),
           const SizedBox(width: 8),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryTeal,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
+          TextButton(
             onPressed: widget.onUpgradeRequested,
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.primaryTeal,
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+              minimumSize: const Size(0, 32),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
             child: Text(
               isArabicLocale ? 'ترقية' : 'Upgrade',
               style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
+                fontSize: 11.5,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Cairo',
               ),
@@ -700,102 +679,81 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
 
   Widget _buildSearchAndFilterSection() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.cardColor,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.lineColor),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.textDark.withValues(alpha: 0.04),
-              blurRadius: 14,
-              offset: const Offset(0, 5),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 5),
+      child: Column(
+        children: [
+          TextField(
+            controller: _searchController,
+            onChanged: (val) => setState(() => _searchQuery = val),
+            style: const TextStyle(
+              color: AppColors.textDark,
+              fontSize: 13.5,
+              fontFamily: 'Cairo',
+              fontWeight: FontWeight.w500,
             ),
-          ],
-        ),
-        child: Column(
-          children: [
-            TextField(
-              controller: _searchController,
-              onChanged: (val) => setState(() => _searchQuery = val),
-              style: const TextStyle(
-                color: AppColors.textDark,
-                fontSize: 14,
+            decoration: InputDecoration(
+              hintText: _labels['search_hint'],
+              hintStyle: const TextStyle(
+                color: AppColors.textMuted,
+                fontSize: 12,
                 fontFamily: 'Cairo',
-                fontWeight: FontWeight.w500,
               ),
-              decoration: InputDecoration(
-                hintText: _labels['search_hint'],
-                hintStyle: const TextStyle(
-                  color: AppColors.textMuted,
-                  fontSize: 12.5,
-                  fontFamily: 'Cairo',
-                ),
-                prefixIcon: const Icon(
-                  Icons.search_rounded,
+              prefixIcon: const Icon(Icons.search_rounded,
+                  color: AppColors.primaryTeal, size: 21),
+              suffixIcon: _searchQuery.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.close_rounded,
+                          color: AppColors.textMuted, size: 18),
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() => _searchQuery = '');
+                      },
+                    )
+                  : null,
+              filled: true,
+              fillColor: AppColors.cardColor,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: AppColors.lineColor),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: AppColors.lineColor),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(
                   color: AppColors.primaryTeal,
-                  size: 22,
-                ),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(
-                          Icons.close_rounded,
-                          color: AppColors.textMuted,
-                          size: 18,
-                        ),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() => _searchQuery = '');
-                        },
-                      )
-                    : null,
-                filled: true,
-                fillColor: AppColors.sectionBackground,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: AppColors.lineColor),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(
-                    color: AppColors.primaryTeal,
-                    width: 1.3,
-                  ),
+                  width: 1.2,
                 ),
               ),
             ),
-            const SizedBox(height: 11),
-            Row(
-              children: [
-                _buildFilterPill(
-                  id: 'all',
-                  label: _labels['all_chats']!,
-                  icon: Icons.chat_bubble_outline_rounded,
-                ),
-                const SizedBox(width: 8),
-                _buildFilterPill(
-                  id: 'unread',
-                  label: _labels['unread']!,
-                  icon: Icons.mark_chat_unread_outlined,
-                ),
-                const SizedBox(width: 8),
-                _buildFilterPill(
-                  id: 'online',
-                  label: _labels['online']!,
-                  icon: Icons.sensors_rounded,
-                ),
-              ],
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              _buildFilterPill(
+                id: 'all',
+                label: _labels['all_chats']!,
+                icon: Icons.chat_bubble_outline_rounded,
+              ),
+              const SizedBox(width: 7),
+              _buildFilterPill(
+                id: 'unread',
+                label: _labels['unread']!,
+                icon: Icons.mark_chat_unread_outlined,
+              ),
+              const SizedBox(width: 7),
+              _buildFilterPill(
+                id: 'online',
+                label: _labels['online']!,
+                icon: Icons.sensors_rounded,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -1019,33 +977,19 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
                                 children: [
                                   SizedBox(
                                     height:
-                                        MediaQuery.of(context).size.height *
-                                            0.35,
-                                    child: Center(
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          const Icon(
-                                            Icons.chat_bubble_outline_rounded,
-                                            color: AppColors.textLight,
-                                            size: 54,
-                                          ),
-                                          const SizedBox(height: 12),
-                                          Text(
-                                            _searchQuery.isNotEmpty
-                                                ? _labels['no_search_results']!
-                                                : widget.txt('no_chats'),
-                                            textAlign: TextAlign.center,
-                                            style: const TextStyle(
-                                              color: AppColors.textMuted,
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w600,
-                                              fontFamily: 'Cairo',
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                                        MediaQuery.of(context).size.height * 0.38,
+                                    child: AppEmptyState(
+                                      icon: Icons.chat_bubble_outline_rounded,
+                                      title: _searchQuery.isNotEmpty
+                                          ? _labels['no_search_results']!
+                                          : widget.txt('no_chats'),
+                                      message: _searchQuery.isNotEmpty
+                                          ? (isArabicLocale
+                                              ? 'جرّب كتابة اسم آخر أو حذف كلمات البحث.'
+                                              : 'Try another name or clear your search.')
+                                          : (isArabicLocale
+                                              ? 'ستظهر محادثاتك هنا عندما تبدأ التواصل مع الأعضاء.'
+                                              : 'Your conversations will appear here when you start chatting with members.'),
                                     ),
                                   ),
                                 ],

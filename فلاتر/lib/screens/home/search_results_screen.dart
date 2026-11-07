@@ -249,71 +249,64 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
 
   /// بطاقة عضو واضحة ومتناسقة مع شاشة البحث.
   Widget _buildMemberCard(MemberModel member) {
-    final String maritalStatusText = _translateMaritalStatus(member.maritalStatus);
+    final String maritalStatusText =
+        _translateMaritalStatus(member.maritalStatus);
     final String religionText = _translateReligion(member.religion);
     final String residenceText = _translateResidence(member.residence);
     final String occupationText = _translateOccupation(member.occupation);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 10),
       child: Material(
         color: AppColors.cardColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         child: InkWell(
           onTap: () => _openMemberProfile(member.id),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(18),
           child: Container(
-            padding: const EdgeInsets.all(13),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: AppColors.cardColor,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(18),
               border: Border.all(color: AppColors.lineColor),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.textDark.withValues(alpha: 0.045),
-                  blurRadius: 14,
-                  offset: const Offset(0, 5),
+                  color: AppColors.textDark.withValues(alpha: 0.035),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
                 ),
               ],
             ),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
                   padding: const EdgeInsets.all(2),
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.accentLight, width: 1.5),
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: AppColors.accentLight, width: 1.4),
                   ),
-                  child: Container(
-                    width: 66,
-                    height: 66,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(13),
+                    child: Container(
+                      width: 76,
+                      height: 82,
                       color: AppColors.sectionBackground,
-                    ),
-                    child: ClipOval(
                       child: member.image.isNotEmpty
                           ? CachedNetworkImage(
                               imageUrl: member.image,
-                              width: 66,
-                              height: 66,
+                              width: 76,
+                              height: 82,
                               fit: BoxFit.cover,
                               placeholder: (context, url) => Container(
                                 color: AppColors.sectionBackground,
                               ),
                               errorWidget: (context, url, error) =>
-                                  const Icon(
-                                Icons.person_rounded,
-                                color: AppColors.textLight,
-                                size: 31,
-                              ),
+                                  const Icon(Icons.person_rounded,
+                                      color: AppColors.textLight, size: 36),
                             )
-                          : const Icon(
-                              Icons.person_rounded,
-                              color: AppColors.textLight,
-                              size: 31,
-                            ),
+                          : const Icon(Icons.person_rounded,
+                              color: AppColors.textLight, size: 36),
                     ),
                   ),
                 ),
@@ -321,10 +314,11 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Row(
                         children: [
-                          Flexible(
+                          Expanded(
                             child: Text(
                               member.name,
                               maxLines: 1,
@@ -332,13 +326,13 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                               style: const TextStyle(
                                 color: AppColors.textDark,
                                 fontSize: 15,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w800,
                                 fontFamily: 'Cairo',
                               ),
                             ),
                           ),
                           if (member.packageName.isNotEmpty) ...[
-                            const SizedBox(width: 6),
+                            const SizedBox(width: 5),
                             _buildPackageBadge(member.packageName),
                           ],
                         ],
@@ -350,7 +344,9 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                         children: [
                           _buildInfoBadge(
                             icon: Icons.cake_rounded,
-                            text: _isAr ? '${member.age} سنة' : '${member.age} yrs',
+                            text: _isAr
+                                ? '${member.age} سنة'
+                                : '${member.age} yrs',
                             color: AppColors.primaryTeal,
                           ),
                           if (maritalStatusText.isNotEmpty)
@@ -359,65 +355,51 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                               text: maritalStatusText,
                               color: AppColors.accentWarm,
                             ),
-                          if (religionText.isNotEmpty)
-                            _buildInfoBadge(
-                              icon: Icons.auto_awesome_rounded,
-                              text: religionText,
-                              color: AppColors.premiumGold,
-                            ),
-                          if (residenceText.isNotEmpty)
-                            _buildInfoBadge(
-                              icon: Icons.location_on_rounded,
-                              text: residenceText,
-                              color: AppColors.secondaryTeal,
-                            ),
                         ],
                       ),
-                      if (occupationText.isNotEmpty &&
-                          occupationText != 'غير محدد' &&
-                          occupationText != 'Unspecified') ...[
-                        const SizedBox(height: 8),
-                        Row(
+                      if (residenceText.isNotEmpty ||
+                          religionText.isNotEmpty ||
+                          (occupationText.isNotEmpty &&
+                              occupationText != 'غير محدد' &&
+                              occupationText != 'Unspecified')) ...[
+                        const SizedBox(height: 7),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 5,
                           children: [
-                            const Icon(
-                              Icons.work_outline_rounded,
-                              color: AppColors.primaryTeal,
-                              size: 14,
-                            ),
-                            const SizedBox(width: 5),
-                            Expanded(
-                              child: Text(
-                                occupationText,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: AppColors.textMuted,
-                                  fontSize: 11,
-                                  fontFamily: 'Cairo',
-                                ),
+                            if (residenceText.isNotEmpty)
+                              _buildInfoBadge(
+                                icon: Icons.location_on_rounded,
+                                text: residenceText,
+                                color: AppColors.secondaryTeal,
                               ),
-                            ),
+                            if (religionText.isNotEmpty)
+                              _buildInfoBadge(
+                                icon: Icons.auto_awesome_rounded,
+                                text: religionText,
+                                color: AppColors.premiumGold,
+                              ),
+                            if (occupationText.isNotEmpty &&
+                                occupationText != 'غير محدد' &&
+                                occupationText != 'Unspecified')
+                              _buildInfoBadge(
+                                icon: Icons.work_outline_rounded,
+                                text: occupationText,
+                                color: AppColors.primaryTeal,
+                              ),
                           ],
                         ),
                       ],
                     ],
                   ),
                 ),
-                const SizedBox(width: 6),
-                Container(
-                  margin: const EdgeInsets.only(top: 2),
-                  padding: const EdgeInsets.all(7),
-                  decoration: const BoxDecoration(
-                    color: AppColors.sectionBackground,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    _isAr
-                        ? Icons.arrow_back_ios_new_rounded
-                        : Icons.arrow_forward_ios_rounded,
-                    color: AppColors.textMuted,
-                    size: 12,
-                  ),
+                const SizedBox(width: 5),
+                Icon(
+                  _isAr
+                      ? Icons.arrow_back_ios_new_rounded
+                      : Icons.arrow_forward_ios_rounded,
+                  color: AppColors.textMuted,
+                  size: 15,
                 ),
               ],
             ),
