@@ -651,7 +651,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                       Row(
                         children: [
                           const Icon(Icons.monitor_weight_rounded,
-                              color: Colors.amberAccent, size: 22),
+                              color: AppColors.accentWarm, size: 22),
                           const SizedBox(width: 8),
                           Text(isAr ? 'الوزن:' : 'Weight:',
                               style: const TextStyle(
@@ -665,7 +665,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.amberAccent,
+                          color: AppColors.accentLight,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
