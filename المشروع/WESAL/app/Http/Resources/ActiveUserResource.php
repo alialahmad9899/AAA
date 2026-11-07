@@ -23,10 +23,18 @@ class ActiveUserResource extends JsonResource
         $package_update_alert = (get_setting('full_profile_show_according_to_membership') == 1 && optional(auth()->user())->membership == 1);
 
         // 2. جلب أسماء النصوص المباشرة
+        $showPresentAddress = get_setting('member_present_address_section') == 'on';
+        // Only use the explicit present address; never expose a permanent address
+        // as though it were the member's current city or country.
         $presentAddress = $this->addresses
-            ? ($this->addresses->firstWhere('type', 'present') ?? $this->addresses->first())
+            ? $this->addresses->firstWhere('type', 'present')
             : null;
-        $countryName = optional(optional($presentAddress)->country)->name ?? '';
+        $countryName = $showPresentAddress
+            ? (optional(optional($presentAddress)->country)->name ?? '')
+            : '';
+        $residenceName = $showPresentAddress
+            ? (optional(optional($presentAddress)->city)->name ?? '')
+            : '';
         $occupation = '';
         $careers = $this->career;
         if ($careers) {
@@ -53,6 +61,9 @@ class ActiveUserResource extends JsonResource
             ? max(0, min(100, (int) $this->profile_match_percentage))
             : null;
         $matchDetails = isset($this->match_details) ? $this->match_details : null;
+        $matchCriteriaCount = max(0, (int) ($this->match_criteria_count ?? 0));
+        $matchEvaluatedCriteriaCount = max(0, (int) ($this->match_evaluated_criteria_count ?? 0));
+        $matchStatus = $this->match_status ?? 'not_calculated';
 
         return [
             'user_id'                  => $this->id,
@@ -63,6 +74,7 @@ class ActiveUserResource extends JsonResource
             'photo'                    => $profile_picture_show && !empty($this->photo) ? uploaded_asset($this->photo) : static_asset($avatar_image),
             'age'                      => $age ?? 0,
             'country'                  => $countryName,
+            'residence'                => $residenceName,
             'occupation'               => $occupation,
             'profession'               => $occupation,
             'height'                   => optional($this->physical_attributes)->height ?? '',
@@ -73,6 +85,9 @@ class ActiveUserResource extends JsonResource
             'package_update_alert'     => $package_update_alert,
             'profile_match_percentage' => $matchPercentage,
             'match_details'            => $matchDetails,
+            'match_criteria_count'     => $matchCriteriaCount,
+            'match_evaluated_criteria_count' => $matchEvaluatedCriteriaCount,
+            'match_status'             => $matchStatus,
             'interest_status'          => 0,
             'interest_text'            => 'اهتمام',
             'shortlist_status'         => 0,
