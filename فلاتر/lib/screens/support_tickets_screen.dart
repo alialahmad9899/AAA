@@ -76,9 +76,9 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
     return Directionality(
       textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: const AppColors.backgroundColor,
+        backgroundColor: AppColors.backgroundColor,
         appBar: AppBar(
-          backgroundColor: const AppColors.cardColor,
+          backgroundColor: AppColors.cardColor,
           elevation: 0,
           leading: IconButton(
             icon: Icon(
@@ -102,7 +102,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _showCreateTicketBottomSheet,
-          backgroundColor: const AppColors.primaryTeal,
+          backgroundColor: AppColors.primaryTeal,
           icon: const Icon(Icons.add_rounded, color: Colors.white),
           label: Text(
             _isAr ? 'تذكرة جديدة' : 'New Ticket',
@@ -146,7 +146,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                           const SizedBox(height: 16),
                           ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const AppColors.primaryTeal,
+                              backgroundColor: AppColors.primaryTeal,
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 24, vertical: 12),
                               shape: RoundedRectangleBorder(
@@ -185,7 +185,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: const AppColors.cardColor.withValues(alpha: 0.6),
+        color: AppColors.cardColor.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.textDark.withValues(alpha: 0.12)),
       ),
@@ -218,7 +218,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: const AppColors.primaryTeal.withValues(alpha: 0.15),
+                        color: AppColors.primaryTeal.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
@@ -385,7 +385,7 @@ class _CreateTicketModalState extends State<_CreateTicketModal> {
         child: Container(
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
-            color: const AppColors.cardColor.withValues(alpha: 0.98),
+            color: AppColors.cardColor.withValues(alpha: 0.98),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             border: Border.all(color: AppColors.textDark.withValues(alpha: 0.2)),
           ),
@@ -440,7 +440,7 @@ class _CreateTicketModalState extends State<_CreateTicketModal> {
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: _selectedSubject,
-                      dropdownColor: const AppColors.cardColor,
+                      dropdownColor: AppColors.cardColor,
                       isExpanded: true,
                       icon: const Icon(Icons.keyboard_arrow_down_rounded,
                           color: AppColors.primaryTeal),
@@ -516,7 +516,7 @@ class _CreateTicketModalState extends State<_CreateTicketModal> {
                   height: 52,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const AppColors.primaryTeal,
+                      backgroundColor: AppColors.primaryTeal,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16)),
                       elevation: 4,
