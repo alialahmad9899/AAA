@@ -680,5 +680,7 @@
   - `فلاتر/lib/screens/home/search_results_screen.dart`
   - `فلاتر/lib/screens/partner_expectations_screen.dart`
   - `فلاتر/lib/screens/home/tabs/account_tab.dart`
-- نتيجة التحليل والاختبارات الآلية قيد التحقق عبر GitHub Actions بعد الدمج. لم يُجرَ اختبار بصري على جهاز Android أو iOS فعلي في هذه الدفعة.
+- نتيجة التحقق النهائية عبر GitHub Actions التشغيل #141: نجح `dart analyze --fatal-infos` من دون أي مشكلة (`No issues found`)، ونجحت اختبارات Flutter وعددها 52. نجح أيضاً فحص PHP syntax لجميع الملفات الثلاثين المحددة، واجتاز PHPUnit عدد 16 اختباراً و47 assertion. المحاولة الأولى كشفت مرجع لون بصيغة `const` ومتغيراً محلياً غير مستخدم؛ صُحّحا في commit تصحيحي قبل نجاح التشغيل #141.
+- نجح إنشاء ZIP من ستة ملفات تشغيلية فقط بالمسارات الأصلية؛ اختُبرت سلامة CRC وتطابقت Git Blob SHA لكل ملف مع نسخته في `main` بعد الإصلاحات. اسم الحزمة `WESAL_CHAT_SEARCH_SUBSCRIPTIONS.zip`.
+- لم يُجرَ اختبار بصري على جهاز Android أو iOS فعلي في هذه الدفعة، ولم يتم نشر التطبيق أو Backend إلى الاستضافة أو المتاجر.
 - بداية حزمة التسليم لهذه الدفعة: `f266d09b23718e79e98c72aecc08c6334dfc7efb`؛ يجب أن تتضمن ZIP ملفات Flutter التشغيلية المعدلة أعلاه فقط وبمساراتها الأصلية، من دون ملفات التوثيق أو إعدادات CI.
