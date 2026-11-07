@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Api\Controller;
 use App\Http\Requests\ChatRequest;
 use App\Http\Resources\ChatResource;
+use App\Http\Resources\Chat\ChatViewResource;
 use App\Http\Resources\ChatThreadResource;
 use App\Models\Chat;
 use App\Models\ChatThread;
@@ -199,7 +200,7 @@ class ChatController extends Controller
         if ($chats->isNotEmpty()) {
             return response()->json([
                 'result' => true,
-                'messages' => $chats,
+                'messages' => ChatViewResource::collection($chats),
                 'first_message_id' => $chats->last()->id,
                 'has_more' => $hasMore,
             ]);            
