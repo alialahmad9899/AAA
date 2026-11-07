@@ -148,7 +148,6 @@ class SmartMatchingService
     }
 
     /**
-     * حساب توافق مرشح واحد    /**
      * حساب توافق مرشح واحد، ويُستخدم أيضاً في شاشة الملف الشخصي.
      */
     public function scoreFor(User $viewer, User $candidate): ?array
@@ -205,7 +204,6 @@ class SmartMatchingService
     }
 
     /**
-     * دالة حساب نقية قابلة للاختبار دون قاعدة بيانات.    /**
      * دالة حساب نقية قابلة للاختبار دون قاعدة بيانات.
      *
      * @param array<string, mixed> $expectations
