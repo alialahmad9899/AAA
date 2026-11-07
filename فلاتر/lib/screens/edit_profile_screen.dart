@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../constants/colors.dart';
 
 import '../services/api_service.dart';
 import '../models/member_profile_model.dart';
@@ -1583,7 +1584,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
           AndroidUiSettings(
             toolbarTitle:
                 _isArabic ? 'اقتصاص الصورة الشخصية' : 'Crop Profile Photo',
-            toolbarColor: const Color(0xFF01579B),
+            toolbarColor: AppColors.primaryTeal,
             toolbarWidgetColor: Colors.white,
             activeControlsWidgetColor: Colors.amberAccent,
             initAspectRatio: CropAspectRatioPreset.original,
@@ -1617,11 +1618,11 @@ class _EditProfileScreenState extends State<EditProfileScreen>
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: Color(0xFF0288D1),
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.primaryTeal,
               onPrimary: Colors.white,
-              surface: Color(0xFF01579B),
-              onSurface: Colors.white,
+              surface: AppColors.cardColor,
+              onSurface: AppColors.textDark,
             ),
           ),
           child: child!,
@@ -1898,7 +1899,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
 
   @override
   Widget build(BuildContext context) {
-    const Color primarySkyBlue = Color(0xFF0288D1);
+    const Color primarySkyBlue = AppColors.primaryTeal;
     final double completionRatio = _calculateProfileCompletion();
 
     return GestureDetector(
@@ -1912,9 +1913,8 @@ class _EditProfileScreenState extends State<EditProfileScreen>
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Color(0xFF01579B),
-                  Color(0xFF0288D1),
-                  Color(0xFF4FC3F7)
+                  AppColors.backgroundColor,
+                  AppColors.sectionBackground,
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -1933,7 +1933,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                               _isArabic
                                   ? Icons.arrow_back_ios_new_rounded
                                   : Icons.arrow_back_rounded,
-                              color: Colors.white,
+                              color: AppColors.textDark,
                               size: 20),
                           onPressed: () => Navigator.pop(context, true),
                         ),
@@ -1942,7 +1942,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                             _isArabic ? 'تعديل الملف الشخصي' : 'Edit Profile',
                             textAlign: TextAlign.center,
                             style: const TextStyle(
-                                color: Colors.white,
+                                color: AppColors.textDark,
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                                 fontFamily: 'Cairo'),
@@ -1959,8 +1959,9 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 10),
                       decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(18)),
+                          color: AppColors.cardColor,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: AppColors.lineColor)),
                       child: Column(
                         children: [
                           Row(
@@ -1971,7 +1972,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                                     ? 'اكتمال الملف الشخصي ✨'
                                     : 'Profile Completion ✨',
                                 style: const TextStyle(
-                                    color: Colors.white,
+                                    color: AppColors.textDark,
                                     fontSize: 13,
                                     fontWeight: FontWeight.bold,
                                     fontFamily: 'Cairo'),
@@ -1979,7 +1980,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                               Text(
                                 '${(completionRatio * 100).toInt()}%',
                                 style: const TextStyle(
-                                    color: Colors.amberAccent,
+                                    color: AppColors.primaryTeal,
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
                                     fontFamily: 'Cairo'),
@@ -1992,9 +1993,9 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                             child: LinearProgressIndicator(
                               value: completionRatio,
                               minHeight: 6,
-                              backgroundColor: Colors.white24,
+                              backgroundColor: AppColors.lineColor,
                               valueColor: const AlwaysStoppedAnimation<Color>(
-                                  Colors.amberAccent),
+                                  AppColors.accentWarm),
                             ),
                           ),
                         ],
@@ -2010,10 +2011,10 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                       child: Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
+                          color: AppColors.cardColor,
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.3),
+                              color: AppColors.lineColor,
                               width: 1.1),
                         ),
                         child: TabBar(
@@ -2024,7 +2025,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                           indicatorPadding: const EdgeInsets.all(2),
                           indicator: BoxDecoration(
                             borderRadius: BorderRadius.circular(20),
-                            color: Colors.white,
+                            color: AppColors.accentLight.withValues(alpha: 0.35),
                             boxShadow: [
                               BoxShadow(
                                   color: Colors.black.withValues(alpha: 0.12),
@@ -2032,9 +2033,8 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                                   offset: const Offset(0, 3)),
                             ],
                           ),
-                          labelColor: primarySkyBlue,
-                          unselectedLabelColor:
-                              Colors.white.withValues(alpha: 0.85),
+                          labelColor: AppColors.primaryTeal,
+                          unselectedLabelColor: AppColors.textMuted,
                           labelStyle: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
@@ -2074,7 +2074,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                     child: _isLoading
                         ? const Center(
                             child:
-                                CircularProgressIndicator(color: Colors.white))
+                                CircularProgressIndicator(color: AppColors.primaryTeal))
                         : TabBarView(
                             controller: _tabController,
                             children: [
