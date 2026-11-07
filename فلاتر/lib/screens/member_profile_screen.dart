@@ -1264,7 +1264,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
       icon: Icons.person_outline_rounded,
       accentColor: AppColors.primaryTeal,
       initiallyExpanded: true,
-      content: Wrap,
+      content: Wrap(
         spacing: 10,
         runSpacing: 10,
         children: [
