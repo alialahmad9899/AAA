@@ -86,10 +86,7 @@ class AppSnackBar {
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      AppColors.primaryTeal.withValues(alpha: 0.90),
-                      AppColors.primaryTeal.withValues(alpha: 0.85),
-                    ],
+                    colors: [AppColors.cardColor, AppColors.sectionBackground],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -146,7 +143,7 @@ class AppSnackBar {
                           Text(
                             displayMessage,
                             style: const TextStyle(
-                              color: Colors.white,
+                              color: AppColors.textDark,
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                               fontFamily: 'Cairo',
