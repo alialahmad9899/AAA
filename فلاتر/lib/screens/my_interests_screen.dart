@@ -303,10 +303,10 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  color: AppColors.textDark.withValues(alpha: 0.05),
+                  color: AppColors.sectionBackground,
                   borderRadius: BorderRadius.circular(14),
                   border:
-                      Border.all(color: AppColors.textDark.withValues(alpha: 0.1)),
+                      Border.all(color: AppColors.lineColor),
                 ),
                 child: TabBar(
                   controller: _tabController,
@@ -542,10 +542,10 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.cardColor.withValues(alpha: 0.7),
+                      color: AppColors.cardColor,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: AppColors.textDark.withValues(alpha: 0.12),
+                        color: AppColors.lineColor,
                         width: 1,
                       ),
                     ),
@@ -558,7 +558,7 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                             gradient: LinearGradient(
                               colors: [
                                 AppColors.primaryTeal.withValues(alpha: 0.6),
-                                AppColors.textDark.withValues(alpha: 0.2),
+                                AppColors.accentLight,
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -765,9 +765,7 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                                       ? (isAr ? 'مقبول' : 'Accepted')
                                       : (isAr ? 'قيد الانتظار' : 'Pending'),
                                   style: TextStyle(
-                                    color: isApproved
-                                        ? AppColors.success
-                                        : AppColors.warning,
+                                    color: AppColors.textDark,
                                     fontSize: 11,
                                     fontWeight: FontWeight.bold,
                                     fontFamily: 'Cairo',
