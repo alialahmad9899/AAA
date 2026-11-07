@@ -210,4 +210,42 @@ class SmartMatchingServiceTest extends TestCase
         $this->assertSame(50, $result['percentage']);
     }
 
+
+    public function test_arabic_and_english_hair_colour_labels_resolve_to_the_same_value(): void
+    {
+        $result = $this->service->scoreData([
+            'hair_color' => 'أشقر',
+        ], [
+            'hair_color' => 'Blonde',
+        ]);
+
+        $this->assertSame(100, $result['percentage']);
+        $this->assertSame(1, $result['evaluated_criteria_count']);
+    }
+
+    public function test_arabic_and_english_profession_labels_resolve_to_the_same_value(): void
+    {
+        $result = $this->service->scoreData([
+            'profession' => 'Engineer',
+        ], [
+            'professions' => ['مهندس'],
+        ]);
+
+        $this->assertSame(100, $result['percentage']);
+    }
+
+    public function test_arabic_personal_value_and_body_type_match_english_preferences(): void
+    {
+        $result = $this->service->scoreData([
+            'personal_value' => 'Very Religious',
+            'body_type' => 'Athletic',
+        ], [
+            'personal_value' => 'ملتزم جداً',
+            'body_type' => 'رياضي / متناسق',
+        ]);
+
+        $this->assertSame(100, $result['percentage']);
+        $this->assertSame(2, $result['evaluated_criteria_count']);
+    }
+
 }
