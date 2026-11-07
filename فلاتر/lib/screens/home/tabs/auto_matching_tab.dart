@@ -337,10 +337,14 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
         final matchingLocked = e.toString().contains('smart_matching_locked');
         setState(() {
           if (matchingLocked) {
+            // The server is authoritative: a paid package may still lack the
+            // smart-sort entitlement. Revert the switch instead of leaving it on.
             _isSubscribedOrFemale = false;
-            _isMatchFilterEnabled = true;
+            _isMatchFilterEnabled = false;
             _matchedMembers = [];
-            _errorMessage = null;
+            _errorMessage = _isAr
+                ? 'ترتيب الأعضاء حسب التوافق غير مفعّل ضمن صلاحية حسابك الحالية.'
+                : 'Compatibility sorting is not enabled for your current account.';
           } else {
             _errorMessage = widget.txt('matches_fetch_failed');
           }
