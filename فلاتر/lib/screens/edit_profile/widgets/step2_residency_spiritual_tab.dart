@@ -212,7 +212,7 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
                   if (states.contains(WidgetState.selected)) {
                     return AppColors.textDark;
                   }
-                  return const Color(0xFF013966).withValues(alpha: 0.7);
+                  return const AppColors.primaryTeal.withValues(alpha: 0.7);
                 }),
                 elevation: isSelected ? 2 : 0,
                 pressElevation: 1,
