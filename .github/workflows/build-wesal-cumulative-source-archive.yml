@@ -1,0 +1,158 @@
+name: Build cumulative Wesal final source archive
+
+on:
+  push:
+    branches:
+      - archive/wesal-final-source-2026-11-07
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  package-canonical-source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout canonical main snapshot
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Package latest canonical version of every repaired file
+        shell: bash
+        env:
+          EXPECTED_MAIN_SHA: a5916d33f96374c888f8f675685ae54ac5165efa
+        run: |
+          set -euo pipefail
+          source_parent="$(git rev-parse HEAD^)"
+          if [ "$source_parent" != "$EXPECTED_MAIN_SHA" ]; then
+            echo "Unexpected archive source parent: $source_parent"
+            exit 1
+          fi
+
+          files=(
+            ".github/workflows/wesal-integration-validation.yml"
+            "المشروع/WESAL/app/Http/Controllers/Api/AuthController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/ChatController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/HomeController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/MemberController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/PackageController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/Payment/PaymentTypesController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/Payment/StripeController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/ProfileController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/ProfileDropdownController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/ProfileViewerController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/VipServiceApiController.php"
+            "المشروع/WESAL/app/Http/Controllers/CareerController.php"
+            "المشروع/WESAL/app/Http/Controllers/EducationController.php"
+            "المشروع/WESAL/app/Http/Middleware/EmailVerifiedApi.php"
+            "المشروع/WESAL/app/Http/Middleware/IsApiMember.php"
+            "المشروع/WESAL/app/Http/Requests/PartnerExpectationRequest.php"
+            "المشروع/WESAL/app/Http/Resources/ActiveUserResource.php"
+            "المشروع/WESAL/app/Http/Resources/Profile/OnBehalfResource.php"
+            "المشروع/WESAL/app/Http/Resources/PublicProfile/AboutUser.php"
+            "المشروع/WESAL/app/Http/Resources/PublicProfile/BasicInformation.php"
+            "المشروع/WESAL/app/Http/Resources/PublicProfile/PhysicalAttributes.php"
+            "المشروع/WESAL/app/Models/Astrology.php"
+            "المشروع/WESAL/app/Models/Attitude.php"
+            "المشروع/WESAL/app/Models/Hobby.php"
+            "المشروع/WESAL/app/Models/PartnerExpectation.php"
+            "المشروع/WESAL/app/Services/SmartMatchingService.php"
+            "المشروع/WESAL/app/Utility/SubscriptionUtility.php"
+            "المشروع/WESAL/database/migrations/2026_11_05_000001_convert_attitudes_table_to_utf8mb4.php"
+            "المشروع/WESAL/routes/api.php"
+            "المشروع/WESAL/tests/Unit/SmartMatchingServiceTest.php"
+            "فلاتر/ios/Runner/Info.plist"
+            "فلاتر/lib/main.dart"
+            "فلاتر/lib/models/member_profile_model.dart"
+            "فلاتر/lib/screens/blocked_accounts_screen.dart"
+            "فلاتر/lib/screens/edit_profile/widgets/profile_pickers.dart"
+            "فلاتر/lib/screens/edit_profile_screen.dart"
+            "فلاتر/lib/screens/home/search_results_screen.dart"
+            "فلاتر/lib/screens/home/tabs/account_tab.dart"
+            "فلاتر/lib/screens/home/tabs/auto_matching_tab.dart"
+            "فلاتر/lib/screens/home/tabs/search_tab.dart"
+            "فلاتر/lib/screens/main_home_screen.dart"
+            "فلاتر/lib/screens/member_profile_screen.dart"
+            "فلاتر/lib/screens/partner_expectations_screen.dart"
+            "فلاتر/lib/screens/signup_screen.dart"
+            "فلاتر/lib/screens/support_ticket_detail_screen.dart"
+            "فلاتر/lib/screens/support_tickets_screen.dart"
+            "فلاتر/lib/screens/user_guide_screen.dart"
+            "فلاتر/lib/screens/vip_services_screen.dart"
+            "فلاتر/lib/screens/widgets/step1_basic_info.dart"
+            "فلاتر/lib/screens/widgets/step2_personal_details.dart"
+            "فلاتر/lib/screens/widgets/step3_residency_religion.dart"
+            "فلاتر/lib/screens/widgets/step4_partner_expectations.dart"
+            "فلاتر/lib/services/api_service.dart"
+            "فلاتر/lib/services/notification_service.dart"
+            "فلاتر/lib/widgets/about_app_dialog.dart"
+            "فلاتر/lib/widgets/bottom_system_inset.dart"
+            "فلاتر/test/bottom_system_inset_test.dart"
+            "فلاتر/test/profile_edit_unit_test.dart"
+            "فلاتر/test/smart_matching_ui_compile_test.dart"
+            "فلاتر/test/widget_test.dart"
+          )
+
+          package_dir="$RUNNER_TEMP/wesal-final-source"
+          mkdir -p "$package_dir"
+          expected_list="$RUNNER_TEMP/wesal-final-source-files.txt"
+          : > "$expected_list"
+
+          copied=0
+          for file in "${files[@]}"; do
+            if [ ! -f "$file" ]; then
+              echo "Missing canonical source file: $file"
+              exit 1
+            fi
+            mkdir -p "$package_dir/$(dirname "$file")"
+            cp -- "$file" "$package_dir/$file"
+            printf '%s\n' "$file" >> "$expected_list"
+            copied=$((copied + 1))
+          done
+
+          if [ "$copied" -ne 61 ]; then
+            echo "Expected 61 files, copied $copied"
+            exit 1
+          fi
+
+          zip_path="$GITHUB_WORKSPACE/WESAL_FINAL_ALL_REPAIRS_2026-11-07.zip"
+          (
+            cd "$package_dir"
+            zip -q -X -r "$zip_path" "${files[@]}"
+          )
+
+          python3 - "$zip_path" "$expected_list" <<'PY'
+          import sys
+          import zipfile
+
+          archive_path, expected_file = sys.argv[1:3]
+          with open(expected_file, encoding="utf-8") as handle:
+              expected = [line.rstrip("\n") for line in handle if line.rstrip("\n")]
+
+          with zipfile.ZipFile(archive_path) as archive:
+              bad = archive.testzip()
+              if bad:
+                  raise SystemExit(f"CRC failure: {bad}")
+              actual = [name for name in archive.namelist() if not name.endswith("/")]
+              if len(actual) != len(set(actual)):
+                  raise SystemExit("Duplicate paths found in ZIP")
+              if set(actual) != set(expected):
+                  missing = sorted(set(expected) - set(actual))
+                  extra = sorted(set(actual) - set(expected))
+                  raise SystemExit(f"Archive manifest mismatch. Missing={missing}; Extra={extra}")
+              print(f"VERIFIED: {len(actual)} unique files; CRC OK; all canonical paths preserved.")
+              for name in sorted(actual):
+                  print(name)
+          PY
+
+          sha256sum "$zip_path"
+          ls -lh "$zip_path"
+
+      - name: Upload cumulative final source archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: wesal-cumulative-latest-source-files
+          path: WESAL_FINAL_ALL_REPAIRS_2026-11-07.zip
+          if-no-files-found: error
+          retention-days: 30
