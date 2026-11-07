@@ -139,26 +139,6 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
     }
   }
 
-  Future<void> _openSubscriptionAndRefresh() async {
-    if (_isModalActive || !mounted) return;
-    _isModalActive = true;
-
-    try {
-      await AccountTab.showSubscriptionsModalDirectly(
-        context,
-        isArabic: _isArabic,
-        onSubscriptionUpdated: () async {
-          await ProfileCacheService.clearCache();
-          if (mounted) {
-            await _fetchProfileData();
-          }
-        },
-      );
-    } finally {
-      _isModalActive = false;
-    }
-  }
-
   void _showLikesQuotaModal([String? customMessage]) async {
     if (_isModalActive || !mounted) return;
     _isModalActive = true;
