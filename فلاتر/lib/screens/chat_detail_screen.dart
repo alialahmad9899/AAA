@@ -135,7 +135,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
 
     _inputFocusNode.addListener(_onFocusChange);
 
-    if (_globalMessagesCache.containsKey(_activeThreadId)) {
+    if (_activeThreadId > 0 && _globalMessagesCache.containsKey(_activeThreadId)) {
       _messages = List.from(_globalMessagesCache[_activeThreadId]!);
       _isLoading = false;
     } else {
@@ -473,7 +473,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     bool silent = false,
     bool preserveHistory = false,
   }) async {
-    if (!mounted || _isFetchingMessages || _activeThreadId <= 0) return;
+    if (!mounted || _isFetchingMessages) return;
     _isFetchingMessages = true;
     final requestedThreadId = _activeThreadId;
     final int previousMessageCount = _messages.length;
@@ -515,7 +515,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       final displayedMessages = preserveHistory
           ? _mergeMessageHistory(_messages, messages)
           : messages;
-      _globalMessagesCache[_activeThreadId] = List.from(displayedMessages);
+      if (_activeThreadId > 0) {
+        _globalMessagesCache[_activeThreadId] = List.from(displayedMessages);
+      }
       setState(() {
         _messages = displayedMessages;
         _chatRules = rules;
@@ -575,7 +577,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           if (result['success'] == true) {
             if (oldMsgs.isNotEmpty) {
               _messages.insertAll(0, oldMsgs);
-              _globalMessagesCache[_activeThreadId] = List.from(_messages);
+              if (_activeThreadId > 0) {
+                _globalMessagesCache[_activeThreadId] = List.from(_messages);
+              }
             }
             _hasMoreOldMessages = result['has_more'] == true;
           }
@@ -593,7 +597,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
             if (!_scrollController.hasClients) return;
             final addedExtent = _scrollController.position.maxScrollExtent - previousMax;
             final target = (previousPixels + addedExtent)
-                .clamp(0.0, _scrollController.position.maxScrollExtent);
+                .clamp(0.0, _scrollController.position.maxScrollExtent)
+                .toDouble();
             _scrollController.jumpTo(target);
           });
         }
@@ -784,7 +789,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       _isSending = true;
       _hasSentMessage = true;
       _messages.add(tempMsg);
-      _globalMessagesCache[_activeThreadId] = List.from(_messages);
+      if (_activeThreadId > 0) {
+        _globalMessagesCache[_activeThreadId] = List.from(_messages);
+      }
     });
     _scrollToBottom();
 
@@ -815,12 +822,16 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           _startMessageRefreshTimer();
         }
         _messages.removeWhere((message) => message.id == tempMsg.id);
-        _globalMessagesCache[_activeThreadId] = List.from(_messages);
+        if (_activeThreadId > 0) {
+          _globalMessagesCache[_activeThreadId] = List.from(_messages);
+        }
         _loadMessages(silent: true);
       } else {
         setState(() {
           _messages.removeWhere((m) => m.id == tempMsg.id);
-          _globalMessagesCache[_activeThreadId] = List.from(_messages);
+          if (_activeThreadId > 0) {
+            _globalMessagesCache[_activeThreadId] = List.from(_messages);
+          }
         });
 
         final String status = result['status'] ?? '';
@@ -848,7 +859,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       setState(() {
         _isSending = false;
         _messages.removeWhere((m) => m.id == tempMsg.id);
-        _globalMessagesCache[_activeThreadId] = List.from(_messages);
+        if (_activeThreadId > 0) {
+          _globalMessagesCache[_activeThreadId] = List.from(_messages);
+        }
       });
       AppSnackBar.show(
         context: context,
