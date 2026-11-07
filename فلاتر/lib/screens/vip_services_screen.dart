@@ -7,6 +7,7 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../constants/colors.dart';
 import 'package:wesal_app/widgets/bottom_system_inset.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
@@ -258,7 +259,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
           child: Container(
             padding: const EdgeInsets.all(22),
             decoration: BoxDecoration(
-              color: const Color(0xFF0D1322),
+              color: AppColors.cardColor,
               borderRadius: BorderRadius.circular(28),
               border: Border.all(color: Colors.amber, width: 1.5),
               boxShadow: [
@@ -290,7 +291,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                         : 'Order Receipt Protocol 📜',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: AppColors.textDark,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Cairo',
@@ -303,7 +304,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                         : 'Your order (VIP-$orderId) has been successfully registered.',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      color: Colors.white70,
+                      color: AppColors.textMuted,
                       fontSize: 13,
                       fontFamily: 'Cairo',
                       height: 1.4,
@@ -314,9 +315,9 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E293B),
+                      color: AppColors.sectionBackground,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white12),
+                      border: Border.all(color: AppColors.lineColor),
                     ),
                     child: Column(
                       children: [
@@ -326,7 +327,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                             Text(
                               _isAr ? 'الخدمة:' : 'Service:',
                               style: const TextStyle(
-                                  color: Colors.white60,
+                                  color: AppColors.textMuted,
                                   fontSize: 12,
                                   fontFamily: 'Cairo'),
                             ),
@@ -335,7 +336,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                                 serviceTitle,
                                 textAlign: TextAlign.end,
                                 style: const TextStyle(
-                                    color: Colors.amber,
+                                    color: AppColors.textDark,
                                     fontSize: 13,
                                     fontWeight: FontWeight.bold,
                                     fontFamily: 'Cairo'),
@@ -352,14 +353,14 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                                   ? 'طريقة التواصل المختارة:'
                                   : 'Chosen Contact:',
                               style: const TextStyle(
-                                  color: Colors.white60,
+                                  color: AppColors.textMuted,
                                   fontSize: 12,
                                   fontFamily: 'Cairo'),
                             ),
                             Text(
                               contactDisplay,
                               style: const TextStyle(
-                                  color: Color(0xFF38BDF8),
+                                  color: AppColors.primaryTeal,
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.bold,
                                   fontFamily: 'Cairo'),
@@ -376,12 +377,12 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            Colors.purple.withValues(alpha: 0.25),
-                            Colors.indigo.withValues(alpha: 0.25),
+                            AppColors.secondaryTeal.withValues(alpha: 0.25),
+                            AppColors.primaryTeal.withValues(alpha: 0.25),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.purpleAccent),
+                        border: Border.all(color: AppColors.accentWarm),
                       ),
                       child: Column(
                         children: [
@@ -393,7 +394,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                                 ? 'رسالة شكر وتقدير 👑'
                                 : 'Appreciation & Thanks 👑',
                             style: const TextStyle(
-                              color: Colors.amber,
+                              color: AppColors.textDark,
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
                               fontFamily: 'Cairo',
@@ -406,7 +407,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                                 : 'Thank you for trusting Wesal Platform. Your details have been received and our team will contact you shortly via [$contactDisplay].',
                             textAlign: TextAlign.center,
                             style: const TextStyle(
-                              color: Colors.white,
+                              color: AppColors.textDark,
                               fontSize: 12.5,
                               fontFamily: 'Cairo',
                               height: 1.45,
@@ -434,7 +435,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                           ? 'متابعة صفحتنا الرسمية على فيسبوك 🔗'
                           : 'Follow Our Facebook Page 🔗',
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppColors.textDark,
                         fontSize: 12.5,
                         fontWeight: FontWeight.bold,
                         fontFamily: 'Cairo',
@@ -492,7 +493,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
           ),
           padding: EdgeInsets.fromLTRB(22, 20, 22, 20 + WesalBottomInsets.of(ctx)),
           decoration: BoxDecoration(
-            color: const Color(0xFF0D1322),
+            color: AppColors.cardColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(36)),
             border: Border.all(
                 color: const Color(0xFFF59E0B).withValues(alpha: 0.4),
@@ -513,7 +514,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                   width: 48,
                   height: 5,
                   decoration: BoxDecoration(
-                    color: Colors.white24,
+                    color: AppColors.lineColor,
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
@@ -523,10 +524,10 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+                    colors: [AppColors.sectionBackground, AppColors.cardColor],
                   ),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white12),
+                  border: Border.all(color: AppColors.lineColor),
                 ),
                 child: Row(
                   children: [
@@ -555,7 +556,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                           Text(
                             title,
                             style: const TextStyle(
-                              color: Colors.white,
+                              color: AppColors.textDark,
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
                               fontFamily: 'Cairo',
@@ -593,7 +594,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                             gradient: LinearGradient(
                               colors: [
                                 Colors.amber.withValues(alpha: 0.12),
-                                Colors.orangeAccent.withValues(alpha: 0.05),
+                                AppColors.accentWarm.withValues(alpha: 0.05),
                               ],
                             ),
                             borderRadius: BorderRadius.circular(16),
@@ -603,7 +604,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                           child: Text(
                             promo,
                             style: const TextStyle(
-                              color: Color(0xFFFCD34D),
+                              color: AppColors.textDark,
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
                               fontFamily: 'Cairo',
@@ -617,7 +618,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                             ? '✨ المزايا المتاحة بالخدمة:'
                             : '✨ Included Features:',
                         style: const TextStyle(
-                          color: Color(0xFF38BDF8),
+                          color: AppColors.primaryTeal,
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                           fontFamily: 'Cairo',
@@ -635,10 +636,10 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
                             color:
-                                const Color(0xFF1E293B).withValues(alpha: 0.7),
+                                AppColors.sectionBackground.withValues(alpha: 0.7),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                                color: const Color(0xFF38BDF8)
+                                color: AppColors.primaryTeal
                                     .withValues(alpha: 0.2)),
                           ),
                           child: Row(
@@ -647,19 +648,19 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF0284C7)
+                                  color: AppColors.secondaryTeal
                                       .withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Icon(icon,
-                                    color: const Color(0xFF38BDF8), size: 20),
+                                    color: AppColors.primaryTeal, size: 20),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
                                   text,
                                   style: const TextStyle(
-                                    color: Colors.white,
+                                    color: AppColors.textDark,
                                     fontSize: 13,
                                     fontFamily: 'Cairo',
                                     height: 1.4,
@@ -722,14 +723,14 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
     return Directionality(
       textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: const Color(0xFF090D16),
+        backgroundColor: AppColors.backgroundColor,
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
+          backgroundColor: AppColors.cardColor,
           elevation: 0,
           title: Text(
             _isAr ? 'الخدمات الإضافية VIP' : 'VIP Extra Services',
             style: const TextStyle(
-              color: Colors.white,
+              color: AppColors.textDark,
               fontWeight: FontWeight.w800,
               fontSize: 18,
               fontFamily: 'Cairo',
@@ -738,7 +739,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
           centerTitle: true,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: Colors.white, size: 20),
+                color: AppColors.textDark, size: 20),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -748,7 +749,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                   child: CircularProgressIndicator(color: Colors.amber))
               : RefreshIndicator(
                   color: Colors.amber,
-                  backgroundColor: const Color(0xFF0F172A),
+                  backgroundColor: AppColors.cardColor,
                   onRefresh: () => _fetchVipData(isRefresh: true),
                   child: SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
@@ -761,7 +762,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [Color(0xFF2E1065), Color(0xFF1E1B4B)],
+                              colors: [AppColors.primaryTeal, AppColors.secondaryTeal],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
@@ -771,7 +772,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                                 width: 1.2),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.purple.withValues(alpha: 0.2),
+                                color: AppColors.secondaryTeal.withValues(alpha: 0.2),
                                 blurRadius: 20,
                                 offset: const Offset(0, 6),
                               ),
@@ -843,7 +844,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                             Text(
                               _isAr ? 'الخدمات المتاحة' : 'Available Services',
                               style: const TextStyle(
-                                color: Colors.amber,
+                                color: AppColors.primaryTeal,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 fontFamily: 'Cairo',
@@ -861,7 +862,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                                     ? 'لا توجد خدمات متاحة حالياً'
                                     : 'No services available',
                                 style: const TextStyle(
-                                    color: Colors.white54, fontFamily: 'Cairo'),
+                                    color: AppColors.textMuted, fontFamily: 'Cairo'),
                               ),
                             ),
                           )
@@ -875,7 +876,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                                 width: 4,
                                 height: 18,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF38BDF8),
+                                  color: AppColors.primaryTeal,
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                               ),
@@ -885,7 +886,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                                     ? 'سجل طلباتي السابقة'
                                     : 'My Orders History',
                                 style: const TextStyle(
-                                  color: Color(0xFF38BDF8),
+                                  color: AppColors.primaryTeal,
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   fontFamily: 'Cairo',
@@ -916,7 +917,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
       margin: const EdgeInsets.only(bottom: 18),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF131C2E),
+        color: AppColors.cardColor,
         borderRadius: BorderRadius.circular(26),
         border:
             Border.all(color: Colors.amber.withValues(alpha: 0.3), width: 1.2),
@@ -953,7 +954,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                     Text(
                       title,
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppColors.textDark,
                         fontSize: 14.5,
                         fontWeight: FontWeight.bold,
                         fontFamily: 'Cairo',
@@ -1000,7 +1001,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  color: Color(0xFFFCD34D),
+                  color: AppColors.textDark,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   fontFamily: 'Cairo',
@@ -1019,7 +1020,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
               padding: const EdgeInsets.only(bottom: 8),
               child: Row(
                 children: [
-                  Icon(icon, color: const Color(0xFF38BDF8), size: 18),
+                  Icon(icon, color: AppColors.primaryTeal, size: 18),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -1027,7 +1028,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.85),
+                        color: AppColors.textDark.withValues(alpha: 0.85),
                         fontSize: 12,
                         fontFamily: 'Cairo',
                       ),
@@ -1044,17 +1045,17 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                 child: OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     side:
-                        const BorderSide(color: Color(0xFF38BDF8), width: 1.2),
+                        const BorderSide(color: AppColors.primaryTeal, width: 1.2),
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
                   ),
                   icon: const Icon(Icons.list_alt_rounded,
-                      color: Color(0xFF38BDF8), size: 16),
+                      color: AppColors.primaryTeal, size: 16),
                   label: Text(
                     _isAr ? 'عرض كافة المزايا' : 'View All Features',
                     style: const TextStyle(
-                      color: Color(0xFF38BDF8),
+                      color: AppColors.primaryTeal,
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
                       fontFamily: 'Cairo',
@@ -1105,17 +1106,17 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
         : {};
     final String? rejectionReason = specs['rejection_reason'];
 
-    Color statusColor = Colors.orange;
+    Color statusColor = AppColors.warning;
     String statusText = _isAr ? 'قيد المعالجة' : 'Pending';
 
     if (status == 'completed') {
-      statusColor = Colors.green;
+      statusColor = AppColors.success;
       statusText = _isAr ? 'مكتمل' : 'Completed';
     } else if (status == 'in_progress') {
-      statusColor = Colors.blue;
+      statusColor = AppColors.primaryTeal;
       statusText = _isAr ? 'جاري التنفيذ' : 'In Progress';
     } else if (status == 'cancelled') {
-      statusColor = Colors.redAccent;
+      statusColor = AppColors.error;
       statusText = _isAr ? 'مرفوض' : 'Rejected';
     }
 
@@ -1123,7 +1124,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: const Color(0xFF131C2E),
+        color: AppColors.cardColor,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: statusColor.withValues(alpha: 0.35)),
       ),
@@ -1133,7 +1134,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
           Row(
             children: [
               const Icon(Icons.receipt_long_rounded,
-                  color: Color(0xFF38BDF8), size: 22),
+                  color: AppColors.primaryTeal, size: 22),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -1142,7 +1143,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                     Text(
                       code,
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppColors.textDark,
                         fontSize: 13.5,
                         fontWeight: FontWeight.bold,
                         fontFamily: 'Cairo',
@@ -1152,7 +1153,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                       Text(
                         order['created_at'].toString().split('T').first,
                         style: const TextStyle(
-                          color: Colors.white54,
+                          color: AppColors.textMuted,
                           fontSize: 11,
                           fontFamily: 'Cairo',
                         ),
@@ -1201,7 +1202,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                     child: Text(
                       '${_isAr ? "سبب الرفض:" : "Rejection Reason:"} $rejectionReason',
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppColors.textDark,
                         fontSize: 12,
                         fontFamily: 'Cairo',
                         height: 1.3,
@@ -1311,11 +1312,11 @@ class _VipPaymentModalSheetState extends State<_VipPaymentModalSheet> {
             style: ThemeMode.dark,
             appearance: const PaymentSheetAppearance(
               colors: PaymentSheetAppearanceColors(
-                primary: Color(0xFF0288D1),
-                background: Color(0xFF0F172A),
-                componentBackground: Color(0xFF1E293B),
-                componentText: Colors.white,
-                primaryText: Colors.white,
+                primary: AppColors.primaryTeal,
+                background: AppColors.cardColor,
+                componentBackground: AppColors.sectionBackground,
+                componentText: AppColors.textDark,
+                primaryText: AppColors.textDark,
               ),
             ),
           ),
@@ -1468,10 +1469,10 @@ class _VipPaymentModalSheetState extends State<_VipPaymentModalSheet> {
           bottom: bottomInset + 20,
         ),
         decoration: BoxDecoration(
-          color: const Color(0xFF0F172A).withValues(alpha: 0.98),
+          color: AppColors.cardColor.withValues(alpha: 0.98),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           border:
-              Border.all(color: const Color(0xFF38BDF8).withValues(alpha: 0.4)),
+              Border.all(color: AppColors.primaryTeal.withValues(alpha: 0.4)),
         ),
         child: SingleChildScrollView(
           child: Column(
@@ -1480,12 +1481,12 @@ class _VipPaymentModalSheetState extends State<_VipPaymentModalSheet> {
             children: [
               Center(
                   child:
-                      Container(width: 40, height: 4, color: Colors.white30)),
+                      Container(width: 40, height: 4, color: AppColors.lineColor)),
               const SizedBox(height: 16),
               Text(
                 widget.serviceTitle,
                 style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textDark,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Cairo'),
@@ -1511,20 +1512,20 @@ class _VipPaymentModalSheetState extends State<_VipPaymentModalSheet> {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
                           color: _selectedCategory == 2
-                              ? const Color(0xFF0288D1).withValues(alpha: 0.25)
-                              : Colors.white.withValues(alpha: 0.05),
+                              ? AppColors.primaryTeal.withValues(alpha: 0.25)
+                              : AppColors.sectionBackground,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                               color: _selectedCategory == 2
-                                  ? const Color(0xFF38BDF8)
-                                  : Colors.white12),
+                                  ? AppColors.primaryTeal
+                                  : AppColors.lineColor),
                         ),
                         child: Column(
                           children: [
                             Icon(Icons.credit_card_rounded,
                                 color: _selectedCategory == 2
-                                    ? const Color(0xFF38BDF8)
-                                    : Colors.white54,
+                                    ? AppColors.primaryTeal
+                                    : AppColors.textMuted,
                                 size: 24),
                             const SizedBox(height: 4),
                             Text(
@@ -1533,8 +1534,8 @@ class _VipPaymentModalSheetState extends State<_VipPaymentModalSheet> {
                                     : 'Visa / Credit Card',
                                 style: TextStyle(
                                     color: _selectedCategory == 2
-                                        ? const Color(0xFF38BDF8)
-                                        : Colors.white70,
+                                        ? AppColors.primaryTeal
+                                        : AppColors.textMuted,
                                     fontSize: 12.5,
                                     fontWeight: FontWeight.bold,
                                     fontFamily: 'Cairo')),
@@ -1554,26 +1555,26 @@ class _VipPaymentModalSheetState extends State<_VipPaymentModalSheet> {
                         decoration: BoxDecoration(
                           color: _selectedCategory == 1
                               ? Colors.amber.withValues(alpha: 0.25)
-                              : Colors.white.withValues(alpha: 0.05),
+                              : AppColors.sectionBackground,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                               color: _selectedCategory == 1
                                   ? Colors.amber
-                                  : Colors.white12),
+                                  : AppColors.lineColor),
                         ),
                         child: Column(
                           children: [
                             Icon(Icons.account_balance_wallet_rounded,
                                 color: _selectedCategory == 1
                                     ? Colors.amber
-                                    : Colors.white54,
+                                    : AppColors.textMuted,
                                 size: 24),
                             const SizedBox(height: 4),
                             Text(widget.isArabic ? 'شام كاش' : 'Sham Cash',
                                 style: TextStyle(
                                     color: _selectedCategory == 1
                                         ? Colors.amber
-                                        : Colors.white70,
+                                        : AppColors.textMuted,
                                     fontSize: 12.5,
                                     fontWeight: FontWeight.bold,
                                     fontFamily: 'Cairo')),
@@ -1598,7 +1599,7 @@ class _VipPaymentModalSheetState extends State<_VipPaymentModalSheet> {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0288D1),
+                      backgroundColor: AppColors.primaryTeal,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16)),
@@ -1630,7 +1631,7 @@ class _VipPaymentModalSheetState extends State<_VipPaymentModalSheet> {
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.06),
+                      color: AppColors.sectionBackground,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                           color: Colors.amber.withValues(alpha: 0.4))),
@@ -1642,7 +1643,7 @@ class _VipPaymentModalSheetState extends State<_VipPaymentModalSheet> {
                               ? 'حول قيمة الخدمة لحساب شام كاش التالي:'
                               : 'Transfer the amount to Sham Cash code:',
                           style: const TextStyle(
-                              color: Colors.white70,
+                              color: AppColors.textMuted,
                               fontSize: 12.5,
                               fontFamily: 'Cairo')),
                       const SizedBox(height: 8),
@@ -1650,7 +1651,7 @@ class _VipPaymentModalSheetState extends State<_VipPaymentModalSheet> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.45),
+                            color: AppColors.sectionBackground,
                             borderRadius: BorderRadius.circular(12)),
                         child: Row(
                           children: [
@@ -1659,7 +1660,7 @@ class _VipPaymentModalSheetState extends State<_VipPaymentModalSheet> {
                                     _VipServicesScreenState
                                         ._officialShamCashCode,
                                     style: TextStyle(
-                                        color: Colors.amber,
+                                        color: AppColors.textDark,
                                         fontSize: 12,
                                         fontWeight: FontWeight.bold))),
                             InkWell(
@@ -1699,17 +1700,17 @@ class _VipPaymentModalSheetState extends State<_VipPaymentModalSheet> {
                   controller: _accountNameController,
                   enabled: !_isSubmitting,
                   style:
-                      const TextStyle(color: Colors.white, fontFamily: 'Cairo'),
+                      const TextStyle(color: AppColors.textDark, fontFamily: 'Cairo'),
                   decoration: InputDecoration(
                     hintText: widget.isArabic
                         ? 'اسم حسابك على تطبيق وصال...'
                         : 'Your account name on Wesal...',
                     hintStyle: const TextStyle(
-                        color: Colors.white60,
+                        color: AppColors.textMuted,
                         fontSize: 12.5,
                         fontFamily: 'Cairo'),
                     filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.08),
+                    fillColor: AppColors.sectionBackground,
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14)),
                   ),
@@ -1721,13 +1722,13 @@ class _VipPaymentModalSheetState extends State<_VipPaymentModalSheet> {
                     padding: const EdgeInsets.symmetric(
                         vertical: 12, horizontal: 14),
                     decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.08),
+                        color: AppColors.sectionBackground,
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.white24)),
+                        border: Border.all(color: AppColors.lineColor)),
                     child: Row(
                       children: [
                         const Icon(Icons.cloud_upload_rounded,
-                            color: Color(0xFF38BDF8), size: 20),
+                            color: AppColors.primaryTeal, size: 20),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -1737,7 +1738,7 @@ class _VipPaymentModalSheetState extends State<_VipPaymentModalSheet> {
                                     ? 'إرفاق صورة إشعار/وصل التحويل (اختياري)'
                                     : 'Upload receipt screenshot'),
                             style: const TextStyle(
-                                color: Colors.white70,
+                                color: AppColors.textMuted,
                                 fontSize: 12,
                                 fontFamily: 'Cairo'),
                             overflow: TextOverflow.ellipsis,
@@ -1752,7 +1753,7 @@ class _VipPaymentModalSheetState extends State<_VipPaymentModalSheet> {
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0288D1),
+                      backgroundColor: AppColors.primaryTeal,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16)),
@@ -1763,7 +1764,7 @@ class _VipPaymentModalSheetState extends State<_VipPaymentModalSheet> {
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
-                                color: Colors.white, strokeWidth: 2))
+                                color: AppColors.textDark, strokeWidth: 2))
                         : Text(
                             widget.isArabic
                                 ? 'تأكيد وإرسال إشعار شام كاش'
@@ -1924,7 +1925,7 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: AppColors.cardColor,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (ctx) => StatefulBuilder(
@@ -1942,14 +1943,14 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
               children: [
                 Center(
                     child:
-                        Container(width: 40, height: 4, color: Colors.white30)),
+                        Container(width: 40, height: 4, color: AppColors.lineColor)),
                 const SizedBox(height: 14),
                 Text(
                   widget.isArabic
                       ? 'اختر رمز الدولة 🌍'
                       : 'Select Country Code 🌍',
                   style: const TextStyle(
-                      color: Colors.white,
+                      color: AppColors.textDark,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Cairo'),
@@ -1957,15 +1958,15 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
                 const SizedBox(height: 12),
                 TextField(
                   style:
-                      const TextStyle(color: Colors.white, fontFamily: 'Cairo'),
+                      const TextStyle(color: AppColors.textDark, fontFamily: 'Cairo'),
                   decoration: InputDecoration(
                     hintText: widget.isArabic
                         ? 'بحث بالاسم أو الرمز...'
                         : 'Search country...',
-                    hintStyle: const TextStyle(color: Colors.white60),
+                    hintStyle: const TextStyle(color: AppColors.textMuted),
                     prefixIcon: const Icon(Icons.search, color: Colors.amber),
                     filled: true,
-                    fillColor: Colors.white10,
+                    fillColor: AppColors.sectionBackground,
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14)),
                   ),
@@ -1983,10 +1984,10 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
                             style: const TextStyle(fontSize: 22)),
                         title: Text(item['name']!,
                             style: const TextStyle(
-                                color: Colors.white, fontFamily: 'Cairo')),
+                                color: AppColors.textDark, fontFamily: 'Cairo')),
                         trailing: Text(item['code']!,
                             style: const TextStyle(
-                                color: Colors.amber,
+                                color: AppColors.textDark,
                                 fontWeight: FontWeight.bold)),
                         onTap: () {
                           setState(() => _selectedCountryCode = item['code']!);
@@ -2103,30 +2104,30 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
       labelText: labelText,
       labelStyle: const TextStyle(
         fontSize: 13.5,
-        color: Color(0xE6FFFFFF),
+        color: AppColors.textDark,
         fontFamily: 'Cairo',
         fontWeight: FontWeight.w600,
       ),
       hintText: hintText,
       hintStyle: const TextStyle(
         fontSize: 12,
-        color: Colors.white60,
+        color: AppColors.textMuted,
         fontFamily: 'Cairo',
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.08),
+      fillColor: AppColors.sectionBackground,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Colors.white24),
+        borderSide: const BorderSide(color: AppColors.lineColor),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+        borderSide: BorderSide(color: AppColors.lineColor),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Color(0xFF38BDF8), width: 1.5),
+        borderSide: const BorderSide(color: AppColors.primaryTeal, width: 1.5),
       ),
     );
   }
@@ -2140,9 +2141,9 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
       margin: const EdgeInsets.symmetric(vertical: 10),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: AppColors.sectionBackground,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: AppColors.lineColor),
       ),
       child: Row(
         children: List.generate(steps.length, (index) {
@@ -2159,13 +2160,13 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: isCurrent
-                          ? const Color(0xFF0288D1)
+                          ? AppColors.primaryTeal
                           : (isActive
-                              ? const Color(0xFF0288D1).withValues(alpha: 0.4)
-                              : Colors.white12),
+                              ? AppColors.primaryTeal.withValues(alpha: 0.4)
+                              : AppColors.lineColor),
                       border: Border.all(
                         color:
-                            isActive ? const Color(0xFF38BDF8) : Colors.white24,
+                            isActive ? AppColors.primaryTeal : AppColors.lineColor,
                         width: 1.5,
                       ),
                     ),
@@ -2173,7 +2174,7 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
                       child: Text(
                         '${index + 1}',
                         style: TextStyle(
-                          color: isActive ? Colors.white : Colors.white54,
+                          color: isActive ? AppColors.textDark : AppColors.textMuted,
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
                           fontFamily: 'Cairo',
@@ -2192,8 +2193,8 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
                         steps[index],
                         style: TextStyle(
                           color: isCurrent
-                              ? Colors.white
-                              : (isActive ? Colors.white70 : Colors.white38),
+                              ? AppColors.textDark
+                              : (isActive ? AppColors.textMuted : AppColors.textMuted),
                           fontWeight:
                               isCurrent ? FontWeight.bold : FontWeight.normal,
                           fontSize: 12,
@@ -2208,8 +2209,8 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
                       height: 1.5,
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       color: index < _currentStep
-                          ? const Color(0xFF38BDF8)
-                          : Colors.white12,
+                          ? AppColors.primaryTeal
+                          : AppColors.lineColor,
                     ),
                 ],
               ),
@@ -2245,7 +2246,7 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
           bottom: bottomPadding + 18,
         ),
         decoration: const BoxDecoration(
-          color: Color(0xFF0F172A),
+          color: AppColors.cardColor,
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: Column(
@@ -2266,13 +2267,13 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
                       style: const TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: AppColors.textDark,
                           fontFamily: 'Cairo'),
                     ),
                   ],
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, color: Colors.white70),
+                  icon: const Icon(Icons.close_rounded, color: AppColors.textMuted),
                   onPressed: () {
                     if (context.mounted) Navigator.of(context).pop();
                   },
@@ -2280,7 +2281,7 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
               ],
             ),
             _buildStepHeader(),
-            const Divider(color: Colors.white24, height: 1),
+            const Divider(color: AppColors.lineColor, height: 1),
             const SizedBox(height: 12),
             Expanded(
               child: SingleChildScrollView(
@@ -2301,7 +2302,7 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0288D1),
+                      backgroundColor: AppColors.primaryTeal,
                       padding: const EdgeInsets.symmetric(vertical: 13),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
@@ -2328,7 +2329,7 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
                         setState(() => _currentStep--);
                       },
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.white38),
+                        side: const BorderSide(color: AppColors.textMuted),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
                         padding: const EdgeInsets.symmetric(vertical: 13),
@@ -2359,7 +2360,7 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
           TextField(
             controller: _aboutMeController,
             maxLines: 3,
-            style: const TextStyle(color: Colors.white, fontFamily: 'Cairo'),
+            style: const TextStyle(color: AppColors.textDark, fontFamily: 'Cairo'),
             decoration: _inputDecoration(
               widget.isArabic ? 'نبذة عني *' : 'About me *',
               hintText: widget.isArabic
@@ -2375,7 +2376,7 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
                   controller: _ageController,
                   keyboardType: TextInputType.number,
                   style:
-                      const TextStyle(color: Colors.white, fontFamily: 'Cairo'),
+                      const TextStyle(color: AppColors.textDark, fontFamily: 'Cairo'),
                   decoration:
                       _inputDecoration(widget.isArabic ? 'العمر *' : 'Age *'),
                 ),
@@ -2385,7 +2386,7 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
                 child: TextField(
                   controller: _nationalityController,
                   style:
-                      const TextStyle(color: Colors.white, fontFamily: 'Cairo'),
+                      const TextStyle(color: AppColors.textDark, fontFamily: 'Cairo'),
                   decoration: _inputDecoration(
                       widget.isArabic ? 'الجنسية *' : 'Nationality *'),
                 ),
@@ -2395,7 +2396,7 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
           const SizedBox(height: 10),
           TextField(
             controller: _originCountryCityController,
-            style: const TextStyle(color: Colors.white, fontFamily: 'Cairo'),
+            style: const TextStyle(color: AppColors.textDark, fontFamily: 'Cairo'),
             decoration: _inputDecoration(widget.isArabic
                 ? 'بلد الأصل والمدينة *'
                 : 'Origin Country/City *'),
@@ -2403,7 +2404,7 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
           const SizedBox(height: 10),
           TextField(
             controller: _residenceCountryCityController,
-            style: const TextStyle(color: Colors.white, fontFamily: 'Cairo'),
+            style: const TextStyle(color: AppColors.textDark, fontFamily: 'Cairo'),
             decoration: _inputDecoration(widget.isArabic
                 ? 'بلد الإقامة والمدينة *'
                 : 'Residence Country/City *'),
@@ -2415,9 +2416,9 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
                 child: DropdownButtonFormField<String>(
                   isExpanded: true,
                   initialValue: _maritalStatus,
-                  dropdownColor: const Color(0xFF1E293B),
+                  dropdownColor: AppColors.sectionBackground,
                   style: const TextStyle(
-                      color: Colors.white, fontFamily: 'Cairo', fontSize: 13),
+                      color: AppColors.textDark, fontFamily: 'Cairo', fontSize: 13),
                   decoration: _inputDecoration(widget.isArabic
                       ? 'الحالة الاجتماعية *'
                       : 'Marital Status *'),
@@ -2436,9 +2437,9 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
                 child: DropdownButtonFormField<String>(
                   isExpanded: true,
                   initialValue: _financialStatus,
-                  dropdownColor: const Color(0xFF1E293B),
+                  dropdownColor: AppColors.sectionBackground,
                   style: const TextStyle(
-                      color: Colors.white, fontFamily: 'Cairo', fontSize: 13),
+                      color: AppColors.textDark, fontFamily: 'Cairo', fontSize: 13),
                   decoration: _inputDecoration(widget.isArabic
                       ? 'الوضع المادي *'
                       : 'Financial Status *'),
@@ -2459,7 +2460,7 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
           const SizedBox(height: 10),
           TextField(
             controller: _occupationController,
-            style: const TextStyle(color: Colors.white, fontFamily: 'Cairo'),
+            style: const TextStyle(color: AppColors.textDark, fontFamily: 'Cairo'),
             decoration: _inputDecoration(
                 widget.isArabic ? 'العمل والمهنة *' : 'Occupation *'),
           ),
@@ -2471,7 +2472,7 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
           TextField(
             controller: _partnerExpectationsController,
             maxLines: 4,
-            style: const TextStyle(color: Colors.white, fontFamily: 'Cairo'),
+            style: const TextStyle(color: AppColors.textDark, fontFamily: 'Cairo'),
             decoration: _inputDecoration(
               widget.isArabic
                   ? 'مواصفات شريك الحياة المطلوبة *'
@@ -2485,7 +2486,7 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
           TextField(
             controller: _customRequirementsController,
             maxLines: 2,
-            style: const TextStyle(color: Colors.white, fontFamily: 'Cairo'),
+            style: const TextStyle(color: AppColors.textDark, fontFamily: 'Cairo'),
             decoration: _inputDecoration(
               widget.isArabic
                   ? 'تفاصيل أو شروط إضافية (اختياري)'
@@ -2520,7 +2521,7 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
                           ? '🔒 حماية وخصوصية: التواصل في هذه الخدمة يتم حصرياً وداخلياً عبر تطبيق وصال للحفاظ على الأمان المطلق للمشتركين.'
                           : '🔒 Privacy Notice: Contact for this service is handled internally via Wesal App for safety.',
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppColors.textDark,
                         fontSize: 12.5,
                         fontFamily: 'Cairo',
                         height: 1.4,
@@ -2536,7 +2537,7 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
                   ? 'اختر وسيلة التواصل المباشر المفضلة للتنسيق معكم:'
                   : 'Select preferred direct contact method:',
               style: const TextStyle(
-                  color: Colors.white70, fontSize: 12.5, fontFamily: 'Cairo'),
+                  color: AppColors.textMuted, fontSize: 12.5, fontFamily: 'Cairo'),
             ),
             const SizedBox(height: 10),
             Row(
@@ -2573,7 +2574,7 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
                     ? 'رمز الدولة ورقم الواتساب:'
                     : 'Country Code & Phone Number:',
                 style: const TextStyle(
-                    color: Colors.white70, fontSize: 12, fontFamily: 'Cairo'),
+                    color: AppColors.textMuted, fontSize: 12, fontFamily: 'Cairo'),
               ),
               const SizedBox(height: 6),
               Row(
@@ -2584,7 +2585,7 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
                       height: 48,
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
-                        color: Colors.white10,
+                        color: AppColors.sectionBackground,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                             color: Colors.amber.withValues(alpha: 0.5)),
@@ -2608,7 +2609,7 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
                       style: const TextStyle(
-                          color: Colors.white, fontFamily: 'Cairo'),
+                          color: AppColors.textDark, fontFamily: 'Cairo'),
                       decoration: _inputDecoration('912345678'),
                     ),
                   ),
@@ -2620,13 +2621,13 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
                     ? 'رابط البروفايل أو اسم المستخدم (Username):'
                     : 'Profile Link or Username:',
                 style: const TextStyle(
-                    color: Colors.white70, fontSize: 12, fontFamily: 'Cairo'),
+                    color: AppColors.textMuted, fontSize: 12, fontFamily: 'Cairo'),
               ),
               const SizedBox(height: 6),
               TextField(
                 controller: _profileLinkController,
                 style:
-                    const TextStyle(color: Colors.white, fontFamily: 'Cairo'),
+                    const TextStyle(color: AppColors.textDark, fontFamily: 'Cairo'),
                 decoration: _inputDecoration(widget.isArabic
                     ? 'https://... أو @username'
                     : 'https://... or @username'),
@@ -2639,7 +2640,7 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
               'عند النقر على متابعة والدفع، سيتم نقلكم مباشرة لاختيار طريقة الدفع ولا تُرسل البيانات إلا بعد نجاح الدفع.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                  color: Colors.white54, fontSize: 11.5, fontFamily: 'Cairo'),
+                  color: AppColors.textMuted, fontSize: 11.5, fontFamily: 'Cairo'),
             ),
           ),
         ],
@@ -2659,24 +2660,24 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
           decoration: BoxDecoration(
             color: isSelected
                 ? activeColor.withValues(alpha: 0.25)
-                : Colors.white.withValues(alpha: 0.06),
+                : AppColors.sectionBackground,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-                color: isSelected ? activeColor : Colors.white12,
+                color: isSelected ? activeColor : AppColors.lineColor,
                 width: isSelected ? 1.5 : 1),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(icon,
-                  color: isSelected ? activeColor : Colors.white54, size: 20),
+                  color: isSelected ? activeColor : AppColors.textMuted, size: 20),
               const SizedBox(height: 4),
               FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text(
                   label,
                   style: TextStyle(
-                    color: isSelected ? Colors.white : Colors.white60,
+                    color: isSelected ? AppColors.textDark : AppColors.textMuted,
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Cairo',
