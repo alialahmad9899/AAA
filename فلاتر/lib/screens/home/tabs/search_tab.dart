@@ -800,7 +800,7 @@ class _SearchTabState extends State<SearchTab> {
                                                   BorderRadius.circular(14),
                                               border: Border.all(
                                                 color: isSelected
-                                                    ? const AppColors.secondaryTeal
+                                                    ? AppColors.secondaryTeal
                                                     : AppColors.textDark.withValues(
                                                         alpha: 0.15),
                                               ),

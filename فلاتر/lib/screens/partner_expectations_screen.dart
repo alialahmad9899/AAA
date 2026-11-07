@@ -929,7 +929,6 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
   @override
   Widget build(BuildContext context) {
     final isAr = widget.currentLanguage == 'ar';
-    const primaryColor = AppColors.primaryTeal;
     const darkBgColor = AppColors.backgroundColor;
 
     final double bottomInset = MediaQuery.of(context).padding.bottom;
