@@ -1076,7 +1076,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
             backgroundColor: isLiked
                 ? AppColors.sectionBackground
                 : AppColors.accentLight.withValues(alpha: 0.42),
-            iconColor: isLiked ? AppColors.textMuted : AppColors.accentWarm,
+            iconColor: isLiked ? AppColors.textMuted : AppColors.primaryTeal,
             borderColor: isLiked ? AppColors.lineColor : AppColors.accentWarm,
             prominent: true,
             onTap: isLiked ? null : () => _triggerLikeAnimation(member),
