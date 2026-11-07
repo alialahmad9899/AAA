@@ -576,7 +576,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
         curve: Curves.easeOutCubic,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.transparent,
+          color: isSelected ? AppColors.sectionBackground : Colors.transparent,
           borderRadius: BorderRadius.circular(22),
           boxShadow: isSelected
               ? [
@@ -593,7 +593,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
           children: [
             Icon(
               isSelected ? activeIcon : icon,
-              color: isSelected ? const Color(0xFF0288D1) : Colors.white,
+              color: isSelected ? AppColors.primaryTeal : AppColors.textMuted,
               size: 20,
             ),
             if (isSelected) ...[
@@ -601,7 +601,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
               Text(
                 label,
                 style: const TextStyle(
-                  color: Color(0xFF0288D1),
+                  color: AppColors.primaryTeal,
                   fontWeight: FontWeight.bold,
                   fontSize: 13,
                   fontFamily: 'Cairo',
