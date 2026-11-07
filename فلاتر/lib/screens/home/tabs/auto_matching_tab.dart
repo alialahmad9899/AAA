@@ -633,7 +633,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
             ],
           ),
           const SizedBox(height: 12),
-          const SizedBox(height: 9),          const SizedBox(height: 9),
+          const SizedBox(height: 9),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 5),
             decoration: BoxDecoration(
@@ -695,8 +695,6 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
     final String locationText = member.getFormattedLocation(isArabic: _isAr);
     final String maritalStatusText =
         member.getLocalizedMaritalStatus(isArabic: _isAr);
-    final String occupationText =
-        member.getLocalizedOccupation(isArabic: _isAr);
 
     final bool hasMatchBadge = member.matchStatus != 'not_eligible';
     final String matchLabel = member.matchPercentage != null
