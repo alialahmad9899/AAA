@@ -6,6 +6,7 @@
 // ============================================================================
 
 import 'package:flutter/material.dart';
+import '../constants/colors.dart';
 import '../models/member_model.dart';
 import '../services/api_service.dart';
 
@@ -64,14 +65,14 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
       builder: (ctx) => Directionality(
         textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
         child: AlertDialog(
-          backgroundColor: const Color(0xFF1E1E2C),
+          backgroundColor: AppColors.cardColor,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           title: Text(
             _isArabic ? 'إلغاء الحظر' : 'Unblock Account',
             textAlign: TextAlign.center,
             style: const TextStyle(
-              color: Colors.white,
+              color: AppColors.textDark,
               fontWeight: FontWeight.bold,
               fontSize: 18,
               fontFamily: 'Cairo',
@@ -83,7 +84,7 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
                 : 'Are you sure you want to unblock (${user.name})?',
             textAlign: TextAlign.center,
             style: const TextStyle(
-              color: Colors.white70,
+              color: AppColors.textMuted,
               fontSize: 14,
               fontFamily: 'Cairo',
             ),
@@ -95,12 +96,12 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
               child: Text(
                 _isArabic ? 'إلغاء' : 'Cancel',
                 style: const TextStyle(
-                    color: Colors.grey, fontSize: 14, fontFamily: 'Cairo'),
+                    color: AppColors.textMuted, fontSize: 14, fontFamily: 'Cairo'),
               ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE53935),
+                backgroundColor: AppColors.error,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
                 padding:
@@ -110,7 +111,7 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
               child: Text(
                 _isArabic ? 'نعم، إلغاء الحظر' : 'Yes, Unblock',
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: AppColors.textDark,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Cairo',
                 ),
@@ -132,7 +133,7 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
           style: const TextStyle(fontFamily: 'Cairo'),
         ),
         duration: const Duration(seconds: 1),
-        backgroundColor: const Color(0xFF2C2C3E),
+        backgroundColor: AppColors.sectionBackground,
       ),
     );
 
@@ -159,7 +160,7 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
                       : 'User unblocked successfully'),
               style: const TextStyle(fontFamily: 'Cairo'),
             ),
-            backgroundColor: const Color(0xFF4CAF50),
+            backgroundColor: AppColors.success,
             behavior: SnackBarBehavior.floating,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -176,7 +177,7 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
                       : 'Failed to unblock user, please try again'),
               style: const TextStyle(fontFamily: 'Cairo'),
             ),
-            backgroundColor: const Color(0xFFE53935),
+            backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -194,7 +195,7 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
                 : 'Failed to unblock user, please try again',
             style: const TextStyle(fontFamily: 'Cairo'),
           ),
-          backgroundColor: const Color(0xFFE53935),
+          backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -214,9 +215,9 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
     return Directionality(
       textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: const Color(0xFF0F0F1A),
+        backgroundColor: AppColors.backgroundColor,
         appBar: AppBar(
-          backgroundColor: const Color(0xFF161626),
+          backgroundColor: AppColors.cardColor,
           elevation: 0,
           centerTitle: true,
           leading: IconButton(
@@ -224,7 +225,7 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
               _isArabic
                   ? Icons.arrow_back_ios_rounded
                   : Icons.arrow_back_rounded,
-              color: Colors.white,
+              color: AppColors.textDark,
               size: 20,
             ),
             onPressed: () => Navigator.pop(context),
@@ -232,7 +233,7 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
           title: Text(
             _isArabic ? 'الحسابات المحظورة' : 'Blocked Accounts',
             style: const TextStyle(
-              color: Colors.white,
+              color: AppColors.textDark,
               fontSize: 18,
               fontWeight: FontWeight.bold,
               fontFamily: 'Cairo',
@@ -242,13 +243,13 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
         ),
         body: SafeArea(top: false, bottom: true, child: RefreshIndicator(
           onRefresh: _loadBlockedUsers,
-          color: const Color(0xFFE91E63),
-          backgroundColor: const Color(0xFF1E1E2C),
+          color: AppColors.accentWarm,
+          backgroundColor: AppColors.cardColor,
           child: _isLoading
               ? const Center(
                   child: CircularProgressIndicator(
                     valueColor:
-                        AlwaysStoppedAnimation<Color>(Color(0xFFE91E63)),
+                        AlwaysStoppedAnimation<Color>(AppColors.accentWarm),
                   ),
                 )
               : _blockedUsers.isEmpty
@@ -283,14 +284,14 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF181828),
+                color: AppColors.cardColor,
                 border: Border.all(
-                  color: const Color(0xFF00B0FF).withValues(alpha: 0.25),
+                  color: AppColors.primaryTeal.withValues(alpha: 0.25),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF00B0FF).withValues(alpha: 0.12),
+                    color: AppColors.primaryTeal.withValues(alpha: 0.12),
                     blurRadius: 20,
                     offset: const Offset(0, 6),
                   ),
@@ -299,14 +300,14 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
               child: const Icon(
                 Icons.block_rounded,
                 size: 60,
-                color: Color(0xFF00B0FF),
+                color: AppColors.primaryTeal,
               ),
             ),
             const SizedBox(height: 24),
             Text(
               _isArabic ? 'لا توجد حسابات محظورة' : 'No Blocked Accounts',
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.textDark,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Cairo',
@@ -319,7 +320,7 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
                   : 'The list is currently empty. You can block or unblock accounts from their profile or chat.',
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: Color(0xFF8E8E93),
+                color: AppColors.textMuted,
                 fontSize: 13,
                 fontFamily: 'Cairo',
                 height: 1.5,
@@ -346,10 +347,10 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF181828),
+        color: AppColors.cardColor,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
+          color: AppColors.textDark.withValues(alpha: 0.08),
           width: 1,
         ),
         boxShadow: [
@@ -370,15 +371,15 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
               shape: BoxShape.circle,
               gradient: const LinearGradient(
                 colors: [
-                  Color(0xFFE91E63),
-                  Color(0xFF00B0FF),
+                  AppColors.accentWarm,
+                  AppColors.primaryTeal,
                 ],
                 begin: Alignment.topRight,
                 end: Alignment.bottomLeft,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF00B0FF).withValues(alpha: 0.2),
+                  color: AppColors.primaryTeal.withValues(alpha: 0.2),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -387,7 +388,7 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
             child: Container(
               decoration: const BoxDecoration(
                 shape: BoxShape.circle,
-                color: Color(0xFF181828),
+                color: AppColors.cardColor,
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(50),
@@ -398,7 +399,7 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
                   cacheHeight: 150,
                   errorBuilder: (context, error, stackTrace) => const Icon(
                     Icons.person_rounded,
-                    color: Colors.white54,
+                    color: AppColors.textMuted,
                     size: 30,
                   ),
                 ),
@@ -415,7 +416,7 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
                       ? user.name
                       : (_isArabic ? 'مستخدم' : 'User'),
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textDark,
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Cairo',
@@ -427,7 +428,7 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
                 Text(
                   ageDisplay,
                   style: const TextStyle(
-                    color: Color(0xFF8E8E93),
+                    color: AppColors.textMuted,
                     fontSize: 12,
                     fontFamily: 'Cairo',
                   ),
@@ -441,10 +442,10 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                color: const Color(0xFFE53935).withValues(alpha: 0.12),
+                color: AppColors.error.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: const Color(0xFFE53935).withValues(alpha: 0.35),
+                  color: AppColors.error.withValues(alpha: 0.35),
                   width: 1,
                 ),
               ),
@@ -455,13 +456,13 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor:
-                            AlwaysStoppedAnimation<Color>(Color(0xFFFF5252)),
+                            AlwaysStoppedAnimation<Color>(AppColors.error),
                       ),
                     )
                   : Text(
                       _isArabic ? 'إلغاء الحظر' : 'Unblock',
                       style: const TextStyle(
-                        color: Color(0xFFFF5252),
+                        color: AppColors.error,
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                         fontFamily: 'Cairo',
