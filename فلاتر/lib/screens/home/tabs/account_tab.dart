@@ -222,7 +222,7 @@ class AccountTab extends StatefulWidget {
             color: const Color(0xFF0F172A).withValues(alpha: 0.96),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
             border: Border.all(
-                color: const AppColors.accentLight.withValues(alpha: 0.4)),
+                color: AppColors.accentLight.withValues(alpha: 0.4)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -277,7 +277,7 @@ class AccountTab extends StatefulWidget {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const AppColors.primaryTeal,
+                    backgroundColor: AppColors.primaryTeal,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16)),
@@ -2138,7 +2138,7 @@ class _SubscriptionsModalContentState
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(32)),
               border: Border.all(
-                  color: const AppColors.accentLight.withValues(alpha: 0.4)),
+                  color: AppColors.accentLight.withValues(alpha: 0.4)),
             ),
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -2217,13 +2217,13 @@ class _SubscriptionsModalContentState
                     padding: const EdgeInsets.only(top: 12.0),
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const AppColors.primaryTeal,
+                        backgroundColor: AppColors.primaryTeal,
                         padding: const EdgeInsets.symmetric(vertical: 15),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(18)),
                         elevation: 8,
                         shadowColor:
-                            const AppColors.primaryTeal.withValues(alpha: 0.5),
+                            AppColors.primaryTeal.withValues(alpha: 0.5),
                       ),
                       onPressed: () {
                         setState(() {
@@ -2339,7 +2339,7 @@ class _SubscriptionsModalContentState
                 ]
               : [
                   const Color(0xFF00897B).withValues(alpha: 0.28),
-                  const AppColors.primaryTeal.withValues(alpha: 0.18)
+                  AppColors.primaryTeal.withValues(alpha: 0.18)
                 ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -2431,7 +2431,7 @@ class _SubscriptionsModalContentState
                   border: Border.all(
                     color: isExpiringSoon
                         ? Colors.redAccent.withValues(alpha: 0.6)
-                        : const AppColors.accentLight.withValues(alpha: 0.5),
+                        : AppColors.accentLight.withValues(alpha: 0.5),
                   ),
                 ),
                 child: Column(
@@ -2501,7 +2501,7 @@ class _SubscriptionsModalContentState
                 style: ElevatedButton.styleFrom(
                   backgroundColor: isExpiringSoon
                       ? const Color(0xFFE65100)
-                      : const AppColors.primaryTeal,
+                      : AppColors.primaryTeal,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   shape: RoundedRectangleBorder(
@@ -2599,9 +2599,9 @@ class _SubscriptionsModalContentState
               badgeTag = widget.isArabic ? 'الباقة الذهبية 🥇' : 'Gold Package';
               badgeIcon = Icons.stars_rounded;
             } else {
-              themeColor = const AppColors.accentLight;
+              themeColor = AppColors.accentLight;
               gradientColors = [
-                const AppColors.primaryTeal,
+                AppColors.primaryTeal,
                 const Color(0xFF005691)
               ];
               badgeTag =
@@ -2758,7 +2758,7 @@ class _SubscriptionsModalContentState
               color: Colors.white.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                  color: const AppColors.accentLight.withValues(alpha: 0.3)),
+                  color: AppColors.accentLight.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
@@ -2805,12 +2805,12 @@ class _SubscriptionsModalContentState
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
                       color: _selectedPaymentCategory == 2
-                          ? const AppColors.primaryTeal.withValues(alpha: 0.2)
+                          ? AppColors.primaryTeal.withValues(alpha: 0.2)
                           : Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: _selectedPaymentCategory == 2
-                            ? const AppColors.accentLight
+                            ? AppColors.accentLight
                             : Colors.white12,
                       ),
                     ),
@@ -2818,7 +2818,7 @@ class _SubscriptionsModalContentState
                       children: [
                         Icon(Icons.credit_card_rounded,
                             color: _selectedPaymentCategory == 2
-                                ? const AppColors.accentLight
+                                ? AppColors.accentLight
                                 : Colors.white54,
                             size: 24),
                         const SizedBox(height: 4),
@@ -2828,7 +2828,7 @@ class _SubscriptionsModalContentState
                               : 'Visa / Credit Card',
                           style: TextStyle(
                               color: _selectedPaymentCategory == 2
-                                  ? const AppColors.accentLight
+                                  ? AppColors.accentLight
                                   : Colors.white70,
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
@@ -2894,7 +2894,7 @@ class _SubscriptionsModalContentState
                 color: Colors.white.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(
-                    color: const AppColors.accentLight.withValues(alpha: 0.35)),
+                    color: AppColors.accentLight.withValues(alpha: 0.35)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -2905,7 +2905,7 @@ class _SubscriptionsModalContentState
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color:
-                              const AppColors.accentLight.withValues(alpha: 0.18),
+                              AppColors.accentLight.withValues(alpha: 0.18),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.shield_outlined,
@@ -2975,7 +2975,7 @@ class _SubscriptionsModalContentState
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const AppColors.primaryTeal,
+                        backgroundColor: AppColors.primaryTeal,
                         padding: const EdgeInsets.symmetric(vertical: 15),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16)),
@@ -3190,7 +3190,7 @@ class _SubscriptionsModalContentState
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const AppColors.primaryTeal,
+                  backgroundColor: AppColors.primaryTeal,
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16)),
