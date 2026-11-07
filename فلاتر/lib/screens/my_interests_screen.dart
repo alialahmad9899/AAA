@@ -635,7 +635,7 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                                     Icon(
                                       Icons.cake_outlined,
                                       size: 13,
-                                      color: AppColors.accentWarm.shade200,
+                                      color: AppColors.accentWarm,
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
@@ -658,7 +658,7 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                                     Icon(
                                       Icons.location_on_outlined,
                                       size: 13,
-                                      color: AppColors.accentWarm.shade200,
+                                      color: AppColors.accentWarm,
                                     ),
                                     const SizedBox(width: 3),
                                     Expanded(
