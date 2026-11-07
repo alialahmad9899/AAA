@@ -2858,7 +2858,7 @@ class _SubscriptionsModalContentState
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: _selectedPaymentCategory == 2
-                            ? AppColors.accentLight
+                            ? AppColors.primaryTeal
                             : AppColors.lineColor,
                       ),
                     ),
@@ -2969,7 +2969,7 @@ class _SubscriptionsModalContentState
                                   ? 'الدفع الإلكتروني المباشر عبر Stripe'
                                   : 'Secure Stripe Native Payment',
                               style: const TextStyle(
-                                  color: Colors.white,
+                                  color: AppColors.textDark,
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
                                   fontFamily: 'Cairo'),
@@ -3196,7 +3196,7 @@ class _SubscriptionsModalContentState
                         BorderSide(color: AppColors.lineColor)),
                 focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: AppColors.accentLight)),
+                    borderSide: const BorderSide(color: AppColors.primaryTeal)),
               ),
             ),
             const SizedBox(height: 12),
@@ -3213,7 +3213,7 @@ class _SubscriptionsModalContentState
                 child: Row(
                   children: [
                     const Icon(Icons.cloud_upload_rounded,
-                        color: AppColors.accentLight),
+                        color: AppColors.primaryTeal),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
