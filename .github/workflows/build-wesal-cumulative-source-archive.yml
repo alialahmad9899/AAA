@@ -24,13 +24,16 @@ jobs:
           EXPECTED_MAIN_SHA: a5916d33f96374c888f8f675685ae54ac5165efa
         run: |
           set -euo pipefail
-          source_parent="$(git rev-parse HEAD^)"
-          if [ "$source_parent" != "$EXPECTED_MAIN_SHA" ]; then
-            echo "Unexpected archive source parent: $source_parent"
+          if ! git merge-base --is-ancestor "$EXPECTED_MAIN_SHA" HEAD; then
+            echo "Expected canonical main snapshot is not an ancestor of archive branch."
             exit 1
           fi
 
           files=(
+            "AGENTS.md"
+            "PROJECT_NOTES.md"
+            "المشروع/تعليمات العمل.md"
+            "فلاتر/تعليمات العمل.md"
             ".github/workflows/wesal-integration-validation.yml"
             "المشروع/WESAL/app/Http/Controllers/Api/AuthController.php"
             "المشروع/WESAL/app/Http/Controllers/Api/ChatController.php"
@@ -111,8 +114,8 @@ jobs:
             copied=$((copied + 1))
           done
 
-          if [ "$copied" -ne 61 ]; then
-            echo "Expected 61 files, copied $copied"
+          if [ "$copied" -ne 65 ]; then
+            echo "Expected 65 files, copied $copied"
             exit 1
           fi
 
