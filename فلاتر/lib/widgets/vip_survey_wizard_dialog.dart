@@ -445,7 +445,7 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
                                   setState(() => _currentStep--);
                                 },
                           style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: AppColors.textMuted),
+                            side: const BorderSide(color: AppColors.lineColor),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12)),
                             padding: const EdgeInsets.symmetric(vertical: 13),
