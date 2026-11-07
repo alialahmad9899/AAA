@@ -455,6 +455,9 @@ class MemberProfileModel {
   final EducationModel? education;
   final CareerModel? career;
   final int? profileMatchPercentage;
+  final int profileMatchCriteriaCount;
+  final int profileMatchEvaluatedCriteriaCount;
+  final String profileMatchStatus;
   final bool viewContactCheck;
 
   final bool isFemale;
@@ -483,6 +486,9 @@ class MemberProfileModel {
     this.education,
     this.career,
     this.profileMatchPercentage,
+    this.profileMatchCriteriaCount = 0,
+    this.profileMatchEvaluatedCriteriaCount = 0,
+    this.profileMatchStatus = 'not_calculated',
     required this.viewContactCheck,
     this.isFemale = false,
     this.canChat = true,
@@ -592,11 +598,39 @@ class MemberProfileModel {
     }
 
     int? matchPct;
-    if (json['profile_match_percentage'] != null) {
-      matchPct = int.tryParse(json['profile_match_percentage'].toString());
-    } else if (json['profile_match'] != null) {
-      matchPct = int.tryParse(json['profile_match'].toString());
+    final rawMatchPercentage =
+        json['profile_match_percentage'] ?? json['profile_match'];
+    if (rawMatchPercentage != null) {
+      final parsed = double.tryParse(rawMatchPercentage.toString());
+      if (parsed != null && parsed.isFinite) {
+        matchPct = parsed.round().clamp(0, 100).toInt();
+      }
     }
+
+    int parseMatchCount(dynamic value) {
+      final parsed = int.tryParse(value?.toString() ?? '');
+      return parsed == null ? 0 : parsed.clamp(0, 1000).toInt();
+    }
+
+    final profileMatchCriteriaCount = parseMatchCount(
+      json['profile_match_criteria_count'] ?? json['match_criteria_count'],
+    );
+    final profileMatchEvaluatedCriteriaCount = parseMatchCount(
+      json['profile_match_evaluated_criteria_count'] ??
+          json['match_evaluated_criteria_count'],
+    );
+    final rawMatchStatus = (json['profile_match_status'] ??
+            json['match_status'] ??
+            '')
+        .toString()
+        .trim();
+    final profileMatchStatus = rawMatchStatus.isNotEmpty
+        ? rawMatchStatus
+        : (matchPct != null
+            ? 'calculated'
+            : (profileMatchCriteriaCount > 0
+                ? 'insufficient_data'
+                : 'no_preferences'));
 
     final int parsedUserId = json['user_id'] != null
         ? (int.tryParse(json['user_id'].toString()) ?? id)
@@ -731,6 +765,9 @@ class MemberProfileModel {
       education: parsedEdu,
       career: parsedCareer,
       profileMatchPercentage: matchPct,
+      profileMatchCriteriaCount: profileMatchCriteriaCount,
+      profileMatchEvaluatedCriteriaCount: profileMatchEvaluatedCriteriaCount,
+      profileMatchStatus: profileMatchStatus,
       viewContactCheck: json['view_contact_check'] == true ||
           json['view_contact_check'] == 1 ||
           json['view_contact_check'] == '1',
