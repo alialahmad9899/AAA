@@ -25,12 +25,24 @@ DateTime? parseChatTimestamp(String rawTime, {DateTime? now}) {
   if (clean.contains('دقيقتين')) return reference.subtract(const Duration(minutes: 2));
   final match = RegExp(r'\d+').firstMatch(clean);
   final value = match == null ? 1 : int.tryParse(match.group(0)!) ?? 1;
-  if (clean.contains('ثاني') || clean.contains('second') || clean.contains('sec')) return reference.subtract(Duration(seconds: value));
-  if (clean.contains('دقيق') || clean.contains('min')) return reference.subtract(Duration(minutes: value));
-  if (clean.contains('ساع') || clean.contains('hour') || clean.contains('hr')) return reference.subtract(Duration(hours: value));
-  if (clean.contains('يوم') || clean.contains('day')) return reference.subtract(Duration(days: value));
-  if (clean.contains('أسبوع') || clean.contains('اسبوع') || clean.contains('week')) return reference.subtract(Duration(days: value * 7));
-  if (clean.contains('شهر') || clean.contains('month')) return reference.subtract(Duration(days: value * 30));
+  if (clean.contains('ثاني') || clean.contains('ثواني') || clean.contains('second') || clean.contains('sec')) {
+    return reference.subtract(Duration(seconds: value));
+  }
+  if (clean.contains('دقيق') || clean.contains('دقائق') || clean.contains('minute') || clean.contains('min')) {
+    return reference.subtract(Duration(minutes: value));
+  }
+  if (clean.contains('ساع') || clean.contains('hour') || clean.contains('hr')) {
+    return reference.subtract(Duration(hours: value));
+  }
+  if (clean.contains('يوم') || clean.contains('أيام') || clean.contains('ايام') || clean.contains('day')) {
+    return reference.subtract(Duration(days: value));
+  }
+  if (clean.contains('أسبوع') || clean.contains('اسبوع') || clean.contains('أسابيع') || clean.contains('اسابيع') || clean.contains('week')) {
+    return reference.subtract(Duration(days: value * 7));
+  }
+  if (clean.contains('شهر') || clean.contains('أشهر') || clean.contains('اشهر') || clean.contains('شهور') || clean.contains('month')) {
+    return reference.subtract(Duration(days: value * 30));
+  }
   return null;
 }
 
