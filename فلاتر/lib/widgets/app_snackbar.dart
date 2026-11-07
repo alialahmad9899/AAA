@@ -5,6 +5,7 @@
 
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../constants/colors.dart';
 
 /// أنواع الإشعارات التفاعلية المتوفرة في التطبيق
 enum NotificationType { success, error, info, warning }
@@ -35,27 +36,27 @@ class AppSnackBar {
 
     switch (type) {
       case NotificationType.success:
-        primaryColor = const Color(0xFF00E676); // أخضر زاهي أنيق
-        borderColor = const Color(0xFF66BB6A);
+        primaryColor = const AppColors.success; // أخضر زاهي أنيق
+        borderColor = const AppColors.success;
         iconData = Icons.check_circle_rounded;
         defaultTitle = isArabic ? 'تم بنجاح' : 'Success';
         break;
       case NotificationType.error:
-        primaryColor = const Color(0xFFFF5252); // أحمر أنيق
-        borderColor = const Color(0xFFEF5350);
+        primaryColor = const AppColors.error; // أحمر أنيق
+        borderColor = const AppColors.error;
         iconData = Icons.error_rounded;
         defaultTitle = isArabic ? 'حدث خطأ' : 'Error';
         break;
       case NotificationType.warning:
-        primaryColor = const Color(0xFFFFAB00); // برتقالي تحذيري
-        borderColor = const Color(0xFFFFCA28);
+        primaryColor = const AppColors.warning; // برتقالي تحذيري
+        borderColor = const AppColors.warning;
         iconData = Icons.warning_rounded;
         defaultTitle = isArabic ? 'تنبيه' : 'Warning';
         break;
       case NotificationType.info:
         primaryColor =
-            const Color(0xFF0288D1); // الأزرق السماوي المعتمد بتطبيق وصال
-        borderColor = const Color(0xFF4FC3F7);
+            const AppColors.primaryTeal; // الأزرق السماوي المعتمد بتطبيق وصال
+        borderColor = const AppColors.secondaryTeal;
         iconData = Icons.info_rounded;
         defaultTitle = isArabic ? 'معلومة' : 'Info';
         break;
@@ -86,8 +87,8 @@ class AppSnackBar {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      const Color(0xFF01579B).withValues(alpha: 0.90),
-                      const Color(0xFF0288D1).withValues(alpha: 0.85),
+                      const AppColors.primaryTeal.withValues(alpha: 0.90),
+                      const AppColors.primaryTeal.withValues(alpha: 0.85),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
