@@ -19,3 +19,11 @@ class AppColors {
   static const Color textMuted = Color(0xFF6C7A89);
   static const Color textLight = Color(0xFF8D99AE);
 }
+
+
+  // الهوية الموحدة المعتمدة للموقع والتطبيق
+  static const Color sectionBackground = Color(0xFFF6F4EF);
+  static const Color lineColor = Color(0xFFE8E4DE);
+  static const Color success = Color(0xFF2F855A);
+  static const Color warning = Color(0xFFB7791F);
+  static const Color error = Color(0xFFC65353);

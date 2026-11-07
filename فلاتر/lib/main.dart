@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:app_links/app_links.dart';
+import 'theme/app_theme.dart';
 
 // استيراد الشاشات والخدمات الرئيسية للتطبيق
 import 'screens/welcome_screen.dart';
@@ -110,11 +111,7 @@ class MyApp extends StatelessWidget {
       // 🟢 مفتاح الملاحة العام الخاص بـ FCMService للتوجيه المباشر للشاشات عند النقر على الإشعارات والروابط
       navigatorKey: FCMService.navigatorKey,
 
-      theme: ThemeData(
-        fontFamily: 'Cairo',
-        primaryColor: const Color(0xFF0288D1),
-        scaffoldBackgroundColor: const Color(0xFFF8F9FA),
-      ),
+      theme: AppTheme.light,
       // 🟢 جدول المسارات المباشرة داخل التطبيق
       routes: {
         '/my-interests': (context) => const MyInterestsScreen(),
