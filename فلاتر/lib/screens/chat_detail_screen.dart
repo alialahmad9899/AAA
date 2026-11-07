@@ -56,6 +56,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   bool _isSending = false;
   bool _isLoadingMore = false;
   bool _isFetchingMessages = false;
+  bool _pendingMessageRefresh = false;
   bool _hasMoreOldMessages = true;
   Timer? _messageRefreshTimer;
   bool _showEmojiPicker = false;
@@ -477,7 +478,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     bool silent = false,
     bool preserveHistory = false,
   }) async {
-    if (!mounted || _isFetchingMessages) return;
+    if (!mounted) return;
+    if (_isFetchingMessages) {
+      _pendingMessageRefresh = true;
+      return;
+    }
     _isFetchingMessages = true;
     final requestedThreadId = _activeThreadId;
     final int previousMessageCount = _messages.length;
@@ -559,6 +564,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       }
     } finally {
       _isFetchingMessages = false;
+      if (_pendingMessageRefresh && mounted) {
+        _pendingMessageRefresh = false;
+        _loadMessages(silent: true, preserveHistory: true);
+      }
     }
   }
 
