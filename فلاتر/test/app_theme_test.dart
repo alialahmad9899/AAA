@@ -10,6 +10,7 @@ void main() {
     expect(theme.scaffoldBackgroundColor, AppColors.backgroundColor);
     expect(theme.colorScheme.secondary, AppColors.accentWarm);
     expect(theme.cardColor, AppColors.cardColor);
+    expect(AppColors.textMuted, const Color(0xFF596875));
     expect(theme.textTheme.bodyMedium?.color, AppColors.textDark);
     expect(theme.textTheme.displayLarge?.color, AppColors.textDark);
     expect(theme.textTheme.bodyLarge?.color, AppColors.textDark);

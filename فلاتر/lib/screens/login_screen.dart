@@ -670,7 +670,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                                   ? 'نسيت كلمة المرور؟'
                                                   : 'Forgot Password?',
                                               style: const TextStyle(
-                                                color: AppColors.accentWarm,
+                                                color: AppColors.primaryTeal,
                                                 fontSize: 14,
                                                 fontFamily: 'Cairo',
                                               ),

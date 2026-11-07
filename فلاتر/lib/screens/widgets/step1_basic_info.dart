@@ -831,9 +831,9 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                                   ? 'الخصوصية وشروط التسجيل'
                                   : 'Privacy Policy & Registration Terms',
                               style: const TextStyle(
-                                color: AppColors.accentWarm,
+                                color: AppColors.primaryTeal,
                                 decoration: TextDecoration.underline,
-                                decorationColor: AppColors.accentWarm,
+                                decorationColor: AppColors.primaryTeal,
                                 fontWeight: FontWeight.bold,
                               ),
                               recognizer: _termsLinkRecognizer,

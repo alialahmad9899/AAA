@@ -14,7 +14,7 @@ class AppColors {
   static const Color cardColor = Color(0xFFFFFFFF);
   static const Color lineColor = Color(0xFFE8E4DE);
   static const Color textDark = Color(0xFF1D2D44);
-  static const Color textMuted = Color(0xFF6C7A89);
+  static const Color textMuted = Color(0xFF596875);
   static const Color textLight = Color(0xFF8D99AE);
 
   static const Color success = Color(0xFF2F855A);

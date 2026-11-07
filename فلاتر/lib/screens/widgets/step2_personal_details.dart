@@ -413,7 +413,7 @@ class Step2PersonalDetails extends StatelessWidget {
                                 ? '${height.round()} ${_isAr ? 'سم' : 'cm'}'
                                 : (_isAr ? 'لم يتم التحديد بعد' : 'Not selected yet'),
                             style: const TextStyle(
-                              color: AppColors.accentWarm,
+                              color: AppColors.primaryTeal,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               fontFamily: 'Cairo',
