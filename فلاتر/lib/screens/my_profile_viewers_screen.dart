@@ -7,6 +7,7 @@
 
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../constants/colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '../models/member_profile_model.dart';
@@ -134,23 +135,23 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
     return Directionality(
       textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: const Color(0xFF0F172A),
+        backgroundColor: AppColors.backgroundColor,
         appBar: AppBar(
-          backgroundColor: const Color(0xFF01579B),
+          backgroundColor: AppColors.primaryTeal,
           elevation: 0,
           leading: IconButton(
             icon: Icon(
               _isAr
                   ? Icons.arrow_back_ios_new_rounded
                   : Icons.arrow_back_rounded,
-              color: Colors.white,
+              color: AppColors.textDark,
             ),
             onPressed: () => Navigator.pop(context),
           ),
           title: Text(
             _isAr ? 'من زار ملفي الشخصي 👁️' : 'Profile Visitors 👁️',
             style: const TextStyle(
-              color: Colors.white,
+              color: AppColors.textDark,
               fontSize: 18,
               fontWeight: FontWeight.bold,
               fontFamily: 'Cairo',
@@ -162,20 +163,12 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
           width: double.infinity,
           height: double.infinity,
           decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Color(0xFF01579B),
-                Color(0xFF0288D1),
-                Color(0xFF0F172A),
-              ],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
+            color: AppColors.backgroundColor,
           ),
           child: SafeArea(
             child: _isLoading
                 ? const Center(
-                    child: CircularProgressIndicator(color: Colors.white),
+                    child: CircularProgressIndicator(color: AppColors.primaryTeal),
                   )
                 : _hasQuotaError
                     ? _buildQuotaErrorView()
@@ -215,10 +208,10 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.12),
+              color: AppColors.textDark.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: Colors.amber.withValues(alpha: 0.5),
+                color: AppColors.warning.withValues(alpha: 0.5),
                 width: 1.5,
               ),
             ),
@@ -229,12 +222,12 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.amber.withValues(alpha: 0.2),
+                        color: AppColors.warning.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
                         Icons.lock_rounded,
-                        color: Colors.amber,
+                        color: AppColors.warning,
                         size: 28,
                       ),
                     ),
@@ -248,7 +241,7 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
                                 ? 'هناك +$lockedCount زوار آخرين! 👁️'
                                 : '+$lockedCount More Visitors! 👁️',
                             style: const TextStyle(
-                              color: Colors.white,
+                              color: AppColors.textDark,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               fontFamily: 'Cairo',
@@ -260,7 +253,7 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
                                 ? 'استنفدت المشاهدات الـ3 المجانية للشباب. اشترك الآن لرؤية جميع الزوار بدون قيود.'
                                 : 'You have reached the 3 free views limit for male accounts. Upgrade to see all visitors.',
                             style: const TextStyle(
-                              color: Colors.white70,
+                              color: AppColors.textMuted,
                               fontSize: 12.5,
                               fontFamily: 'Cairo',
                               height: 1.35,
@@ -276,7 +269,7 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0288D1),
+                      backgroundColor: AppColors.primaryTeal,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -284,7 +277,7 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
                       elevation: 4,
                     ),
                     icon: const Icon(Icons.stars_rounded,
-                        color: Colors.amber, size: 20),
+                        color: AppColors.warning, size: 20),
                     label: Text(
                       _isAr
                           ? 'ترقية الحساب وكشف كافة الزوار 🚀'
@@ -319,10 +312,10 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.12),
+                color: AppColors.textDark.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(28),
                 border: Border.all(
-                  color: Colors.amber.withValues(alpha: 0.5),
+                  color: AppColors.warning.withValues(alpha: 0.5),
                   width: 1.5,
                 ),
               ),
@@ -332,12 +325,12 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.amber.withValues(alpha: 0.2),
+                      color: AppColors.warning.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
                       Icons.workspace_premium_rounded,
-                      color: Colors.amber,
+                      color: AppColors.warning,
                       size: 48,
                     ),
                   ),
@@ -348,7 +341,7 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
                         : 'Premium Feature 💎',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: AppColors.textDark,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Cairo',
@@ -359,7 +352,7 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
                     _quotaErrorMessage,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      color: Colors.white70,
+                      color: AppColors.textMuted,
                       fontSize: 13.5,
                       fontFamily: 'Cairo',
                       height: 1.5,
@@ -370,20 +363,20 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0288D1),
+                        backgroundColor: AppColors.primaryTeal,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
                       icon: const Icon(Icons.flash_on_rounded,
-                          color: Colors.amber),
+                          color: AppColors.warning),
                       label: Text(
                         _isAr
                             ? 'ترقية الحساب والاشتراك الآن 🚀'
                             : 'Upgrade Account Now 🚀',
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: AppColors.textDark,
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                           fontFamily: 'Cairo',
@@ -409,13 +402,13 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.cloud_off_rounded,
-                color: Colors.white70, size: 48),
+                color: AppColors.textMuted, size: 48),
             const SizedBox(height: 14),
             Text(
               _loadErrorMessage,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.textDark,
                 fontSize: 14,
                 fontFamily: 'Cairo',
               ),
@@ -441,12 +434,12 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
+              color: AppColors.textDark.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: const Icon(
               Icons.visibility_off_rounded,
-              color: Colors.white54,
+              color: AppColors.textMuted,
               size: 54,
             ),
           ),
@@ -456,7 +449,7 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
                 ? 'لا يوجد زوار لملفك الشخصي مؤخراً'
                 : 'No recent profile visitors',
             style: const TextStyle(
-              color: Colors.white,
+              color: AppColors.textDark,
               fontSize: 16,
               fontWeight: FontWeight.bold,
               fontFamily: 'Cairo',
@@ -468,7 +461,7 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
                 ? 'عندما يقوم أي عضو بزيارة ملفك، سيظهر هنا فوراً'
                 : 'Visitors will appear here when they view your profile',
             style: const TextStyle(
-              color: Colors.white60,
+              color: AppColors.textMuted,
               fontSize: 13,
               fontFamily: 'Cairo',
             ),
@@ -490,10 +483,10 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
+        color: AppColors.textDark.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.25),
+          color: AppColors.textDark.withValues(alpha: 0.25),
         ),
       ),
       child: Material(
@@ -504,11 +497,11 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
               const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           leading: CircleAvatar(
             radius: 26,
-            backgroundColor: Colors.white24,
+            backgroundColor: AppColors.sectionBackground,
             backgroundImage:
                 photo.isNotEmpty ? CachedNetworkImageProvider(photo) : null,
             child: photo.isEmpty
-                ? const Icon(Icons.person, color: Colors.white, size: 28)
+                ? const Icon(Icons.person, color: AppColors.textMuted, size: 28)
                 : null,
           ),
           title: Row(
@@ -517,7 +510,7 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
                 child: Text(
                   name,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textDark,
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Cairo',
@@ -528,7 +521,7 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
                 Text(
                   '$age ${_isAr ? 'سنة' : 'yrs'}',
                   style: const TextStyle(
-                    color: Color(0xFF38BDF8),
+                    color: AppColors.primaryTeal,
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Cairo',
@@ -539,12 +532,12 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
           subtitle: Row(
             children: [
               const Icon(Icons.access_time_rounded,
-                  color: Colors.white54, size: 14),
+                  color: AppColors.textMuted, size: 14),
               const SizedBox(width: 4),
               Text(
                 timeStr,
                 style: const TextStyle(
-                  color: Colors.white60,
+                  color: AppColors.textMuted,
                   fontSize: 11.5,
                   fontFamily: 'Cairo',
                 ),
@@ -555,7 +548,7 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
             _isAr
                 ? Icons.arrow_back_ios_new_rounded
                 : Icons.arrow_forward_ios_rounded,
-            color: Colors.white54,
+            color: AppColors.textMuted,
             size: 16,
           ),
           onTap: () {
