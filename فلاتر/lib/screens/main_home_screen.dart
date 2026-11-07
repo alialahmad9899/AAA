@@ -504,7 +504,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
               child: Stack(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 76.0),
+                    padding: const EdgeInsets.only(bottom: 96.0),
                     child: IndexedStack(
                       index: _currentIndex,
                       children: pages,
@@ -514,7 +514,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                     bottom: 12,
                     left: 16,
                     right: 16,
-                    child: _buildGlassBottomNavigationBar(primarySkyBlue),
+                    child: _buildGlassBottomNavigationBar(),
                   ),
                 ],
               ),
@@ -525,38 +525,36 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
     );
   }
 
-  Widget _buildGlassBottomNavigationBar(Color primarySkyBlue) {
+  Widget _buildGlassBottomNavigationBar() {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(30),
+      borderRadius: BorderRadius.circular(28),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
         child: Container(
-          height: 62,
+          height: 78,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.96),
-            borderRadius: BorderRadius.circular(30),
-            border: Border.all(
-              color: AppColors.lineColor,
-              width: 1.5,
-            ),
+            color: AppColors.cardColor.withValues(alpha: 0.97),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: AppColors.lineColor, width: 1.2),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+                color: AppColors.textDark.withValues(alpha: 0.10),
+                blurRadius: 24,
+                offset: const Offset(0, 9),
               ),
             ],
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildNavItem(
-                  0, Icons.favorite_outline, Icons.favorite, _txt('home')),
-              _buildNavItem(1, Icons.chat_bubble_outline, Icons.chat_bubble,
-                  _txt('chats')),
-              _buildNavItem(2, Icons.search, Icons.search, _txt('search')),
-              _buildNavItem(
-                  3, Icons.person_outline, Icons.person, _txt('account')),
+              _buildNavItem(0, Icons.favorite_outline_rounded,
+                  Icons.favorite_rounded, _txt('home')),
+              _buildNavItem(1, Icons.chat_bubble_outline_rounded,
+                  Icons.chat_bubble_rounded, _txt('chats')),
+              _buildNavItem(2, Icons.search_rounded,
+                  Icons.search_rounded, _txt('search')),
+              _buildNavItem(3, Icons.person_outline_rounded,
+                  Icons.person_rounded, _txt('account')),
             ],
           ),
         ),
@@ -568,47 +566,73 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
       int index, IconData icon, IconData activeIcon, String label) {
     final bool isSelected = _currentIndex == index;
 
-    return GestureDetector(
-      onTap: () => _onTabSelected(index),
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.sectionBackground : Colors.transparent,
-          borderRadius: BorderRadius.circular(22),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  )
-                ]
-              : [],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isSelected ? activeIcon : icon,
-              color: isSelected ? AppColors.primaryTeal : AppColors.textMuted,
-              size: 20,
+    return Expanded(
+      child: Semantics(
+        button: true,
+        selected: isSelected,
+        label: label,
+        child: GestureDetector(
+          onTap: () => _onTabSelected(index),
+          behavior: HitTestBehavior.opaque,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 240),
+            curve: Curves.easeOutCubic,
+            margin: const EdgeInsets.symmetric(horizontal: 3),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? AppColors.accentLight.withValues(alpha: 0.27)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(20),
             ),
-            if (isSelected) ...[
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: AppColors.primaryTeal,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                  fontFamily: 'Cairo',
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 240),
+                  width: isSelected ? 37 : 33,
+                  height: isSelected ? 37 : 33,
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppColors.primaryTeal
+                        : AppColors.sectionBackground,
+                    shape: BoxShape.circle,
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: AppColors.primaryTeal
+                                  .withValues(alpha: 0.18),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Icon(
+                    isSelected ? activeIcon : icon,
+                    color:
+                        isSelected ? Colors.white : AppColors.textMuted,
+                    size: 19,
+                  ),
                 ),
-              ),
-            ],
-          ],
+                const SizedBox(height: 3),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: isSelected
+                        ? AppColors.primaryTeal
+                        : AppColors.textMuted,
+                    fontWeight:
+                        isSelected ? FontWeight.w900 : FontWeight.w600,
+                    fontSize: 10.5,
+                    fontFamily: 'Cairo',
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
