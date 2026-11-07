@@ -30,6 +30,11 @@ void main() {
         greaterThanOrEqualTo(4.5));
   });
 
+  test('primary teal actions remain readable with white labels', () {
+    expect(_contrastRatio(Colors.white, AppColors.primaryTeal),
+        greaterThanOrEqualTo(4.5));
+  });
+
   test('interactive controls keep strong contrast on light surfaces', () {
     final theme = AppTheme.light;
     expect(theme.appBarTheme.foregroundColor, AppColors.textDark);
