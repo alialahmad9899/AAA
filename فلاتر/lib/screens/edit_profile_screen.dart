@@ -1567,7 +1567,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                 _isArabic ? 'اقتصاص الصورة الشخصية' : 'Crop Profile Photo',
             toolbarColor: AppColors.primaryTeal,
             toolbarWidgetColor: Colors.white,
-            activeControlsWidgetColor: Colors.amberAccent,
+            activeControlsWidgetColor: AppColors.primaryTeal,
             initAspectRatio: CropAspectRatioPreset.original,
             lockAspectRatio: true,
           ),

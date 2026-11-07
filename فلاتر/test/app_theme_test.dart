@@ -10,6 +10,9 @@ void main() {
     expect(theme.scaffoldBackgroundColor, AppColors.backgroundColor);
     expect(theme.colorScheme.secondary, AppColors.accentWarm);
     expect(theme.cardColor, AppColors.cardColor);
+    expect(theme.appBarTheme.backgroundColor, AppColors.backgroundColor);
+    expect(theme.bottomSheetTheme.backgroundColor, AppColors.cardColor);
+    expect(theme.dialogTheme.backgroundColor, AppColors.cardColor);
     expect(AppColors.textMuted, const Color(0xFF596875));
     expect(theme.textTheme.bodyMedium?.color, AppColors.textDark);
     expect(theme.textTheme.displayLarge?.color, AppColors.textDark);
@@ -28,6 +31,42 @@ void main() {
         greaterThanOrEqualTo(4.5));
     expect(_contrastRatio(AppColors.textMuted, AppColors.cardColor),
         greaterThanOrEqualTo(4.5));
+  });
+
+  test('semantic and decorative colors meet contrast requirements', () {
+    const lightSurfaces = [
+      AppColors.backgroundColor,
+      AppColors.sectionBackground,
+      AppColors.cardColor,
+    ];
+
+    for (final surface in lightSurfaces) {
+      expect(
+        _contrastRatio(AppColors.success, surface),
+        greaterThanOrEqualTo(4.5),
+        reason: 'Success text must remain readable on light surfaces.',
+      );
+      expect(
+        _contrastRatio(AppColors.warning, surface),
+        greaterThanOrEqualTo(4.5),
+        reason: 'Warning text must remain readable on light surfaces.',
+      );
+      expect(
+        _contrastRatio(AppColors.error, surface),
+        greaterThanOrEqualTo(4.5),
+        reason: 'Error text must remain readable on light surfaces.',
+      );
+      expect(
+        _contrastRatio(AppColors.accentWarm, surface),
+        greaterThanOrEqualTo(3.0),
+        reason: 'Accent controls and icons need visible non-text contrast.',
+      );
+      expect(
+        _contrastRatio(AppColors.textLight, surface),
+        greaterThanOrEqualTo(3.0),
+        reason: 'Secondary controls and handles need visible contrast.',
+      );
+    }
   });
 
   test('primary teal actions remain readable with white labels', () {

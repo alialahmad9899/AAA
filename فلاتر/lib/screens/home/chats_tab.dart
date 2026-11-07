@@ -674,7 +674,7 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
                           constraints: const BoxConstraints(minWidth: 16),
                           padding: const EdgeInsets.all(3),
                           decoration: const BoxDecoration(
-                            color: AppColors.accentWarm,
+                            color: AppColors.primaryTeal,
                             shape: BoxShape.circle,
                           ),
                           child: Text(

@@ -1274,7 +1274,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                               children: [
                                 const Icon(
                                   Icons.admin_panel_settings_rounded,
-                                  color: AppColors.accentLight,
+                                  color: AppColors.warning,
                                   size: 16,
                                 ),
                                 const SizedBox(width: 6),
@@ -1284,7 +1284,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
-                                      color: AppColors.accentLight,
+                                      color: AppColors.textDark,
                                       fontSize: 11,
                                       fontWeight: FontWeight.w700,
                                       fontFamily: 'Cairo',

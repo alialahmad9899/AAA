@@ -645,7 +645,7 @@ class _CountryPickerBottomSheetContentState
                               ),
                               trailing: isSelected
                                   ? const Icon(Icons.check_circle_rounded,
-                                      color: Colors.amberAccent, size: 22)
+                                      color: AppColors.primaryTeal, size: 22)
                                   : null,
                               onTap: () {
                                 Navigator.pop(context);
