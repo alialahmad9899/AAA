@@ -19,6 +19,17 @@ void main() {
         const Color(0xFFFFFFFF));
   });
 
+  test('dark text tokens remain readable on ivory and white surfaces', () {
+    expect(_contrastRatio(AppColors.textDark, AppColors.backgroundColor),
+        greaterThanOrEqualTo(4.5));
+    expect(_contrastRatio(AppColors.textMuted, AppColors.backgroundColor),
+        greaterThanOrEqualTo(4.5));
+    expect(_contrastRatio(AppColors.textDark, AppColors.cardColor),
+        greaterThanOrEqualTo(4.5));
+    expect(_contrastRatio(AppColors.textMuted, AppColors.cardColor),
+        greaterThanOrEqualTo(4.5));
+  });
+
   test('interactive controls keep strong contrast on light surfaces', () {
     final theme = AppTheme.light;
     expect(theme.appBarTheme.foregroundColor, AppColors.textDark);
@@ -30,4 +41,16 @@ void main() {
     expect(theme.outlinedButtonTheme.style?.foregroundColor?.resolve({}),
         AppColors.primaryTeal);
   });
+}
+
+double _contrastRatio(Color foreground, Color background) {
+  final double foregroundLuminance = foreground.computeLuminance();
+  final double backgroundLuminance = background.computeLuminance();
+  final double lighter = foregroundLuminance > backgroundLuminance
+      ? foregroundLuminance
+      : backgroundLuminance;
+  final double darker = foregroundLuminance > backgroundLuminance
+      ? backgroundLuminance
+      : foregroundLuminance;
+  return (lighter + 0.05) / (darker + 0.05);
 }
