@@ -21,6 +21,7 @@ import '../../../services/profile_cache_service.dart';
 import '../../../services/notification_service.dart';
 import '../../../models/member_profile_model.dart';
 import '../../../widgets/about_app_dialog.dart';
+import '../../../widgets/app_action_bottom_sheet.dart';
 import '../../../widgets/app_snackbar.dart';
 import '../../../widgets/bottom_system_inset.dart';
 import '../../../widgets/package_badge_widget.dart';
@@ -211,111 +212,28 @@ class AccountTab extends StatefulWidget {
     BuildContext context, {
     bool isArabic = true,
     VoidCallback? onSubscriptionUpdated,
-  }) async {
-    await showModalBottomSheet(
+  }) {
+    return AppActionBottomSheet.show(
       context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      builder: (modalContext) => Directionality(
-        textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
-        child: Container(
-          padding: EdgeInsets.fromLTRB(
-            24, 24, 24, 24 + WesalBottomInsets.of(modalContext),
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.cardColor.withValues(alpha: 0.96),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-            border: Border.all(
-                color: AppColors.accentLight.withValues(alpha: 0.4)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.lineColor,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.premiumGold.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.premiumGold, width: 1.5),
-                ),
-                child: const Icon(Icons.favorite_border_rounded,
-                    color: AppColors.premiumGold, size: 48),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                isArabic
-                    ? 'استنفدت حصة الإعجابات المجانية! 🎯'
-                    : 'Free Likes Limit Reached! 🎯',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppColors.textDark,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Cairo',
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                isArabic
-                    ? 'لقد استنفدت الإعجابات المجانية الـ 5 المتاحة لك. اشترك الآن في إحدى باقات وصال المميزة لمتابعة إبداء الاهتمام ورؤية التوافق!'
-                    : 'You have used all 5 free likes. Upgrade to premium package to keep sending interest requests!',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppColors.textMuted,
-                  fontSize: 13.5,
-                  fontFamily: 'Cairo',
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryTeal,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                  ),
-                  icon: const Icon(Icons.workspace_premium_rounded,
-                      color: AppColors.accentLight, size: 22),
-                  label: Text(
-                    isArabic
-                        ? 'ترقية الحساب والاشتراك الآن 🚀'
-                        : 'Upgrade Account Now 🚀',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Cairo',
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.pop(modalContext);
-                    if (!context.mounted) return;
-                    showSubscriptionsModalDirectly(
-                      context,
-                      isArabic: isArabic,
-                      onSubscriptionUpdated: onSubscriptionUpdated,
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 10),
-            ],
-          ),
-        ),
-      ),
+      isArabic: isArabic,
+      title: isArabic
+          ? 'وصلت إلى حد الاهتمامات المجانية'
+          : 'Free interest limit reached',
+      message: isArabic
+          ? 'استخدمت جميع طلبات الاهتمام المجانية المتاحة. يمكنك متابعة إرسال الاهتمامات بعد اختيار إحدى باقات وصال.'
+          : 'You have used all available free interest requests. Choose a Wesal plan to continue expressing interest.',
+      icon: Icons.favorite_border_rounded,
+      accentColor: AppColors.premiumGold,
+      primaryLabel: isArabic ? 'عرض الباقات' : 'View plans',
+      primaryIcon: Icons.workspace_premium_rounded,
+      onPrimaryPressed: () {
+        if (!context.mounted) return;
+        showSubscriptionsModalDirectly(
+          context,
+          isArabic: isArabic,
+          onSubscriptionUpdated: onSubscriptionUpdated,
+        );
+      },
     );
   }
 
@@ -1251,7 +1169,9 @@ class AccountTabState extends State<AccountTab> {
                   children: [
                     _buildModernProfileHeader(displayName, isFemale),
                     _buildSectionTitle(
-                        _isAr ? 'إدارة الملف والشخصية' : 'Profile Management',
+                        _isAr
+                            ? 'الملف الشخصي والتفضيلات'
+                            : 'Profile & Preferences',
                         Icons.person_pin_rounded),
                     _buildGlassGroupCard(
                       children: [
@@ -1266,8 +1186,10 @@ class AccountTabState extends State<AccountTab> {
                             final updated = await Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => EditProfileScreen(
-                                      currentLanguage: widget.currentLanguage)),
+                                builder: (context) => EditProfileScreen(
+                                  currentLanguage: widget.currentLanguage,
+                                ),
+                              ),
                             );
                             if (mounted && updated == true) {
                               await ProfileCacheService.clearCache();
@@ -1282,17 +1204,25 @@ class AccountTabState extends State<AccountTab> {
                             AppColors.secondaryTeal,
                             AppColors.primaryTeal
                           ],
+                          showDivider: false,
                           onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) =>
-                                      PartnerExpectationsScreen(
-                                          currentLanguage:
-                                              widget.currentLanguage)),
+                                builder: (context) => PartnerExpectationsScreen(
+                                  currentLanguage: widget.currentLanguage,
+                                ),
+                              ),
                             );
                           },
                         ),
+                      ],
+                    ),
+                    _buildSectionTitle(
+                        _isAr ? 'العضوية والخدمات' : 'Membership & Services',
+                        Icons.workspace_premium_rounded),
+                    _buildGlassGroupCard(
+                      children: [
                         _buildMenuItem(
                           icon: Icons.workspace_premium_rounded,
                           title: widget.txt('subscriptions'),
@@ -1311,6 +1241,7 @@ class AccountTabState extends State<AccountTab> {
                             AppColors.warning,
                             AppColors.accentWarm
                           ],
+                          showDivider: false,
                           onTap: () {
                             Navigator.push(
                               context,
@@ -1322,6 +1253,13 @@ class AccountTabState extends State<AccountTab> {
                             );
                           },
                         ),
+                      ],
+                    ),
+                    _buildSectionTitle(
+                        _isAr ? 'التفاعل والخصوصية' : 'Activity & Privacy',
+                        Icons.favorite_rounded),
+                    _buildGlassGroupCard(
+                      children: [
                         _buildMenuItem(
                           icon: Icons.favorite_rounded,
                           title: _isAr ? 'طلبات الاهتمام' : 'Interest Requests',
@@ -1349,11 +1287,13 @@ class AccountTabState extends State<AccountTab> {
                           showDivider: false,
                           onTap: () {
                             Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => BlockedAccountsScreen(
-                                        currentLanguage:
-                                            widget.currentLanguage)));
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => BlockedAccountsScreen(
+                                  currentLanguage: widget.currentLanguage,
+                                ),
+                              ),
+                            );
                           },
                         ),
                       ],
