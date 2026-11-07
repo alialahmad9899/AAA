@@ -20,11 +20,6 @@ class SmartMatchingService
     {
         $viewer->loadMissing(['member', 'partner_expectations']);
 
-        $expectations = $viewer->partner_expectations;
-        if (!$expectations || !$this->hasPreferences($expectations->getAttributes())) {
-            return collect();
-        }
-
         $gender = (int) optional($viewer->member)->gender;
         if (!in_array($gender, [1, 2], true)) {
             return collect();
