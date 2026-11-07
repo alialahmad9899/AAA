@@ -430,7 +430,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     borderRadius: BorderRadius.circular(28),
                                     border: Border.all(
                                       color:
-                                          Colors.white.withValues(alpha: 0.45),
+                                          AppColors.lineColor,
                                       width: 1.5,
                                     ),
                                     boxShadow: [
@@ -588,10 +588,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                                 height: 20,
                                                 child: Checkbox(
                                                   value: _rememberMe,
-                                                  activeColor: Colors.white,
-                                                  checkColor: primarySkyBlue,
-                                                  side: const BorderSide(
-                                                      color: Colors.white),
+                                                  activeColor: AppColors.primaryTeal,
+                                                   checkColor: Colors.white,
+                                                   side: const BorderSide(
+                                                       color: AppColors.textLight),
                                                   onChanged: (v) => setState(
                                                       () => _rememberMe =
                                                           v ?? false),
@@ -617,7 +617,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                                   ? 'نسيت كلمة المرور؟'
                                                   : 'Forgot Password?',
                                               style: const TextStyle(
-                                                color: AppColors.textDark,
+                                                color: AppColors.accentWarm,
                                                 fontSize: 14,
                                                 fontFamily: 'Cairo',
                                               ),
@@ -647,7 +647,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     borderRadius: BorderRadius.circular(24),
                                     border: Border.all(
                                       color:
-                                          Colors.white.withValues(alpha: 0.45),
+                                          AppColors.lineColor,
                                       width: 1.5,
                                     ),
                                   ),
@@ -660,8 +660,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                           : _handleGoogleSignIn,
                                       style: OutlinedButton.styleFrom(
                                         backgroundColor: Colors.white,
-                                        side: const BorderSide(
-                                            color: Colors.white),
+                                        side: const BorderSide(color: AppColors.lineColor),
                                         shape: RoundedRectangleBorder(
                                           borderRadius:
                                               BorderRadius.circular(30),
