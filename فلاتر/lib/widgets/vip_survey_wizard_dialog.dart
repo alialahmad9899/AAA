@@ -429,7 +429,7 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
                           style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
-                              color: AppColors.textDark,
+                              color: Colors.white,
                               fontFamily: 'Cairo'),
                         ),
                       ),
