@@ -17,6 +17,7 @@ import '../models/chat_model.dart';
 import '../models/member_profile_model.dart';
 import '../services/api_service.dart';
 import '../widgets/app_snackbar.dart';
+import '../widgets/bottom_system_inset.dart';
 import '../widgets/package_badge_widget.dart';
 import 'member_profile_screen.dart';
 
@@ -581,7 +582,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => Padding(
         padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
+          bottom: WesalBottomInsets.of(context),
         ),
         child: Directionality(
           textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,

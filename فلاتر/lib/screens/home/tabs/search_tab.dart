@@ -563,6 +563,7 @@ class _SearchTabState extends State<SearchTab> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (context) {
         String searchQuery = '';
 

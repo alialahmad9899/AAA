@@ -52,6 +52,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) => _CreateTicketModal(
         isArabic: _isAr,

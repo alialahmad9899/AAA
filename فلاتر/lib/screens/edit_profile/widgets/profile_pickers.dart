@@ -133,6 +133,7 @@ class ProfilePickers {
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.65),
       builder: (context) => GenericPickerBottomSheetContent(

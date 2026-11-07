@@ -184,6 +184,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => _VipSpecificationsModal(
         orderId: 0,
@@ -213,6 +214,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => _VipPaymentModalSheet(
         isArabic: _isAr,
@@ -484,6 +486,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Directionality(
         textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
@@ -1925,6 +1928,7 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: AppColors.cardColor,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),

@@ -1504,6 +1504,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
         return GenericPickerBottomSheetContent(
@@ -1523,6 +1524,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
         return CountryPickerBottomSheetContent(
