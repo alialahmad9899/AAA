@@ -23,38 +23,44 @@ class ChatThreadResource extends JsonResource
     {
         $user = auth()->user();
 
-        if ($this->receiver != null && $this->sender != null) {
-            // تحديد الطرف الآخر في المحادثة (المستلم أو المرسل)
-            $user_to_show = $user->id == $this->sender->id ? 'receiver' : 'sender';
-            $target_user = $this->$user_to_show;
+        if ($user && $this->receiver != null && $this->sender != null) {
+            $userToShow = (int) $user->id === (int) $this->sender->id
+                ? 'receiver'
+                : 'sender';
+            $targetUser = $this->{$userToShow};
 
-            $member = Member::where('user_id', $target_user->id)->first();
-            $member_package = $member ? Package::find($member->current_package_id) : null;
+            $member = Member::where('user_id', $targetUser->id)->first();
+            $memberPackage = $member ? Package::find($member->current_package_id) : null;
 
-            // حساب وقت آخر ظهور حقيقي للمستخدم من سجله الخاص
-            $last_seen_time = '';
-            if (isset($target_user->last_seen) && $target_user->last_seen != null) {
-                $last_seen_time = Carbon::parse($target_user->last_seen)->diffForHumans();
-            } elseif (isset($target_user->updated_at) && $target_user->updated_at != null) {
-                $last_seen_time = Carbon::parse($target_user->updated_at)->diffForHumans();
+            $lastMessageAt = $this->last_message_created_at
+                ? Carbon::parse($this->last_message_created_at)
+                : ($this->updated_at ? Carbon::parse($this->updated_at) : null);
+
+            $lastSeenTime = '';
+            if (!empty($targetUser->last_seen)) {
+                $lastSeenTime = Carbon::parse($targetUser->last_seen)->diffForHumans();
+            } elseif (!empty($targetUser->updated_at)) {
+                $lastSeenTime = Carbon::parse($targetUser->updated_at)->diffForHumans();
             }
 
             return [
                 'id'                   => $this->id,
-                'user_id'              => $target_user->id,
-                'active'               => Cache::has('user-is-online-' . $target_user->id) ? 1 : 0,
+                'user_id'              => $targetUser->id,
+                'active'               => Cache::has('user-is-online-' . $targetUser->id) ? 1 : 0,
                 'blocked_by_user'      => $this->blocked_by_user ?? 0,
-                'unseen_message_count' => $this->chats->where('seen', 0)->whereNotIn('sender_user_id', [$user->id])->count(),
-                'member_photo'         => $target_user->photo != null ? uploaded_asset($target_user->photo) : static_asset('assets/frontend/default/img/avatar-place.png'),
-                'member_name'          => trim(($target_user->first_name ?? '') . ' ' . ($target_user->last_name ?? '')),
-                'member_gender'        => $target_user->gender ?? 'male', // تضمين جنس العضو لحل مشكلة التنسيق
-                'last_message_time'    => $this->chats->last() != null ? Carbon::parse($this->chats->last()->created_at)->diffForHumans() : '',
-                'last_message'         => $this->chats->last() ? $this->chats->last()->message : '',
-                'last_seen'            => $last_seen_time,
-                'member_package'       => $member_package ? new PackageResource($member_package) : null,
+                'unseen_message_count' => (int) ($this->unseen_message_count ?? 0),
+                'member_photo'         => $targetUser->photo != null ? uploaded_asset($targetUser->photo) : static_asset('assets/frontend/default/img/avatar-place.png'),
+                'member_name'          => trim(($targetUser->first_name ?? '') . ' ' . ($targetUser->last_name ?? '')),
+                'member_gender'        => $targetUser->gender ?? 'male',
+                'last_message_time'    => $lastMessageAt ? $lastMessageAt->diffForHumans() : '',
+                'last_message_at'      => $lastMessageAt ? $lastMessageAt->toIso8601String() : null,
+                'last_message'         => $this->last_message_text ?? '',
+                'last_seen'            => $lastSeenTime,
+                'member_package'       => $memberPackage ? new PackageResource($memberPackage) : null,
             ];
         }
 
         return [];
+    }
     }
 }

@@ -234,7 +234,8 @@ class ChatThreadModel {
         json['last_msg']?.toString() ??
         '';
 
-    final String time = json['last_message_time']?.toString() ??
+    final String time = json['last_message_at']?.toString() ??
+        json['last_message_time']?.toString() ??
         json['updated_at']?.toString() ??
         json['created_at']?.toString() ??
         json['time']?.toString() ??
@@ -389,7 +390,7 @@ class ChatMessageModel {
       id: parsedMessageId,
       senderId: parsedSenderId,
       message: json['message']?.toString() ?? '',
-      time: json['time']?.toString() ?? json['created_at']?.toString() ?? '',
+      time: json['created_at']?.toString() ?? json['time']?.toString() ?? '',
       isMe: isMyMessage,
       isSeen: parsedSeen,
       attachmentUrl: parsedAttachment,

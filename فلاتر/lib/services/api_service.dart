@@ -3218,6 +3218,7 @@ class ApiService {
           'success': true,
           'status': 'success',
           'messages': parsedMessages.reversed.toList(),
+          'has_more_old_messages': threadData['has_more_old_messages'] == true,
           'chat_rules': chatRules,
         };
       }
@@ -3296,6 +3297,7 @@ class ApiService {
       return {
         'success': true,
         'messages': parsed.reversed.toList(),
+        'has_more': decoded['has_more'] == true,
       };
     } catch (e) {
       if (kDebugMode) debugPrint('❌ [API ERROR getOldMessages]: $e');

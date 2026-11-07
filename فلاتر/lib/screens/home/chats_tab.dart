@@ -5,6 +5,7 @@
 //        مع إظهار شارات الباقات الموحدة بدقة عالية ومزامنة لحظية للغة.
 // ============================================================================
 
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../constants/colors.dart';
@@ -12,6 +13,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../models/chat_model.dart';
 import '../../services/api_service.dart';
+import '../../utils/chat_time_utils.dart';
 import '../../widgets/app_snackbar.dart';
 import '../../widgets/app_empty_state.dart';
 import '../../widgets/package_badge_widget.dart';
@@ -45,6 +47,8 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
   bool _isChatsLoading = true;
   String? _chatsErrorMessage;
   int _chatFetchCounter = 0;
+  bool _isFetchingChats = false;
+  Timer? _chatRefreshTimer;
 
   bool _isSubscribedOrFemale = true;
   bool _isCheckingSubscription = true;
@@ -53,7 +57,6 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
   String _selectedFilter = 'all';
   final TextEditingController _searchController = TextEditingController();
 
-  final Map<int, DateTime> _localActivityOverrides = {};
 
   /// التحقق من لغة التطبيق الحالية (عربي أم إنجليزي)
   bool get isArabicLocale => widget.currentLanguage == 'ar';
@@ -88,11 +91,13 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _startChatRefreshTimer();
     _checkSubscriptionAndFetch();
   }
 
   @override
   void dispose() {
+    _chatRefreshTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _searchController.dispose();
     super.dispose();
@@ -135,78 +140,9 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
     _fetchChats();
   }
 
-  /// تحويل النص الزمني القادم من السيرفر إلى كائن DateTime لترتيب وصياغة المحادثات
+  /// تحليل الطابع الزمني المطلق، مع دعم النصوص النسبية القديمة.
   DateTime _parseChatTimeToDateTime(String timeStr) {
-    if (timeStr.isEmpty) return DateTime(2000);
-
-    String clean = timeStr.trim().toLowerCase();
-
-    const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-    for (int i = 0; i < arabicNumbers.length; i++) {
-      clean = clean.replaceAll(arabicNumbers[i], i.toString());
-    }
-
-    final DateTime now = DateTime.now();
-
-    if (clean.contains('الآن') ||
-        clean.contains('now') ||
-        clean.contains('لحظات') ||
-        clean.contains('قليل')) {
-      return now;
-    }
-    if (clean.contains('أمس') ||
-        clean.contains('امس') ||
-        clean.contains('yesterday')) {
-      if (clean.contains('أول') || clean.contains('اول')) {
-        return now.subtract(const Duration(days: 2));
-      }
-      return now.subtract(const Duration(days: 1));
-    }
-
-    if (clean.contains('أسبوعين') || clean.contains('اسبوعين')) {
-      return now.subtract(const Duration(days: 14));
-    }
-    if (clean.contains('شهرين')) {
-      return now.subtract(const Duration(days: 60));
-    }
-    if (clean.contains('يومين')) {
-      return now.subtract(const Duration(days: 2));
-    }
-    if (clean.contains('ساعتين')) {
-      return now.subtract(const Duration(hours: 2));
-    }
-    if (clean.contains('دقيقتين')) {
-      return now.subtract(const Duration(minutes: 2));
-    }
-
-    final RegExp numReg = RegExp(r'\d+');
-    final match = numReg.firstMatch(clean);
-    int value = match != null ? int.parse(match.group(0)!) : 1;
-
-    if (clean.contains('دقيق') || clean.contains('min')) {
-      return now.subtract(Duration(minutes: value));
-    }
-    if (clean.contains('ساع') || clean.contains('hour')) {
-      return now.subtract(Duration(hours: value));
-    }
-    if (clean.contains('يوم') || clean.contains('day')) {
-      return now.subtract(Duration(days: value));
-    }
-    if (clean.contains('أسبوع') ||
-        clean.contains('اسبوع') ||
-        clean.contains('week')) {
-      return now.subtract(Duration(days: value * 7));
-    }
-    if (clean.contains('شهر') || clean.contains('month')) {
-      return now.subtract(Duration(days: value * 30));
-    }
-
-    final parsedDate = DateTime.tryParse(timeStr);
-    if (parsedDate != null) {
-      return parsedDate;
-    }
-
-    return DateTime(2000);
+    return parseChatTimestamp(timeStr) ?? DateTime(2000);
   }
 
   /// صياغة الوقت ديناميكياً بحسب لغة التطبيق الحالية (عربي / إنجليزي)
@@ -293,54 +229,49 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
     return clean.isNotEmpty ? '$clean ago' : rawTime;
   }
 
-  /// جلب قائمة المحادثات من الخادم وترتيبها حسب الأحدث
-  Future<void> _fetchChats() async {
-    if (!mounted) return;
+  /// تجديد قائمة المحادثات بصمت عند بقاء الشاشة مفتوحة.
+  void _startChatRefreshTimer() {
+    _chatRefreshTimer?.cancel();
+    _chatRefreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (!mounted || WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return;
+      _fetchChats(silent: true);
+    });
+  }
 
+  Future<void> _fetchChats({bool silent = false}) async {
+    if (!mounted || _isFetchingChats) return;
+    _isFetchingChats = true;
     _chatFetchCounter++;
     final int currentFetch = _chatFetchCounter;
-
-    setState(() {
-      _isChatsLoading = true;
-      _chatsErrorMessage = null;
-    });
-
+    if (!silent) {
+      setState(() {
+        _isChatsLoading = _chatThreads.isEmpty;
+        _chatsErrorMessage = null;
+      });
+    }
     try {
       final threads = await ApiService.getChatThreads();
-
-      final List<MapEntry<ChatThreadModel, DateTime>> timeMappedThreads =
-          threads.map((thread) {
-        final DateTime parsedTime =
-            _localActivityOverrides.containsKey(thread.id)
-                ? _localActivityOverrides[thread.id]!
-                : _parseChatTimeToDateTime(thread.time);
-        return MapEntry(thread, parsedTime);
-      }).toList();
-
-      timeMappedThreads.sort((a, b) {
-        int timeComp = b.value.compareTo(a.value);
-        if (timeComp == 0) {
-          return b.key.id.compareTo(a.key.id);
-        }
-        return timeComp;
+      threads.sort((a, b) {
+        final timeOrder = _parseChatTimeToDateTime(b.time)
+            .compareTo(_parseChatTimeToDateTime(a.time));
+        return timeOrder != 0 ? timeOrder : b.id.compareTo(a.id);
       });
-
-      final List<ChatThreadModel> sortedThreads =
-          timeMappedThreads.map((entry) => entry.key).toList();
-
       if (mounted && currentFetch == _chatFetchCounter) {
         setState(() {
-          _chatThreads = sortedThreads;
+          _chatThreads = threads;
           _isChatsLoading = false;
+          if (!silent) _chatsErrorMessage = null;
         });
       }
     } catch (e) {
       if (mounted && currentFetch == _chatFetchCounter) {
         setState(() {
-          _chatsErrorMessage = widget.txt('retry');
           _isChatsLoading = false;
+          if (!silent && _chatThreads.isEmpty) _chatsErrorMessage = widget.txt('retry');
         });
       }
+    } finally {
+      _isFetchingChats = false;
     }
   }
 
