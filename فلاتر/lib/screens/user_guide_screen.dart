@@ -381,7 +381,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
               ),
             ),
           ),
-          body: Column(
+          body: SafeArea(top: false, bottom: true, child: Column(
             children: [
               // 1. شريط البحث والتصنيفات الشامل
               _buildHeaderSearchAndFilters(),
@@ -401,7 +401,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                       ),
               ),
             ],
-          ),
+          )),
         ),
       ),
     );

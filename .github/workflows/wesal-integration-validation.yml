@@ -31,12 +31,18 @@ jobs:
             "المشروع/WESAL/app/Http/Controllers/Api/AuthController.php"
             "المشروع/WESAL/app/Http/Controllers/Api/HomeController.php"
             "المشروع/WESAL/app/Http/Controllers/Api/MemberController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/ChatController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/PackageController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/Payment/PaymentTypesController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/Payment/StripeController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/VipServiceApiController.php"
+            "المشروع/WESAL/app/Utility/SubscriptionUtility.php"
+            "المشروع/WESAL/routes/api.php"
             "المشروع/WESAL/app/Http/Resources/ActiveUserResource.php"
             "المشروع/WESAL/app/Services/SmartMatchingService.php"
             "المشروع/WESAL/tests/Unit/SmartMatchingServiceTest.php"
             "المشروع/WESAL/app/Http/Controllers/Api/ProfileController.php"
             "المشروع/WESAL/app/Http/Controllers/Api/ProfileDropdownController.php"
-            "المشروع/WESAL/app/Http/Controllers/Api/ProfileViewerController.php"
             "المشروع/WESAL/app/Http/Controllers/CareerController.php"
             "المشروع/WESAL/app/Http/Controllers/EducationController.php"
             "المشروع/WESAL/app/Http/Middleware/EmailVerifiedApi.php"
@@ -50,7 +56,6 @@ jobs:
             "المشروع/WESAL/app/Models/Astrology.php"
             "المشروع/WESAL/app/Models/Attitude.php"
             "المشروع/WESAL/app/Models/Hobby.php"
-            "المشروع/WESAL/routes/api.php"
             "المشروع/WESAL/database/migrations/2026_11_05_000001_convert_attitudes_table_to_utf8mb4.php"
           )
           for file in "${files[@]}"; do
@@ -73,6 +78,9 @@ jobs:
       - name: Resolve Flutter dependencies
         working-directory: فلاتر
         run: flutter pub get
+      - name: Analyze Dart sources without the LSP server
+        working-directory: فلاتر
+        run: dart analyze --fatal-infos
       - name: Run profile, signup and account model regression tests
         working-directory: فلاتر
         run: flutter test

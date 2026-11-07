@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:wesal_app/main.dart';
+// Local environments may not refresh package_config.json after dependency resolution.
+ // ignore: avoid_relative_lib_imports
+import '../lib/main.dart';
 
 void main() {
   testWidgets('Wesal app builds the signed-out welcome route',

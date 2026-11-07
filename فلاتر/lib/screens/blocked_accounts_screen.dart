@@ -240,7 +240,7 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
             ),
           ),
         ),
-        body: RefreshIndicator(
+        body: SafeArea(top: false, bottom: true, child: RefreshIndicator(
           onRefresh: _loadBlockedUsers,
           color: const Color(0xFFE91E63),
           backgroundColor: const Color(0xFF1E1E2C),
@@ -263,7 +263,7 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
                         return _buildUserCard(user);
                       },
                     ),
-        ),
+        )),
       ),
     );
   }

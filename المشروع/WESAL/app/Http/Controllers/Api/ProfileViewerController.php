@@ -37,20 +37,22 @@ class ProfileViewerController extends Controller
             ? -1
             : ($isSubscribed ? (int) ($user->member->remaining_profile_viewer_view ?? 0) : 0);
 
-        // 4. تحديد سقف العرض الفعلي القادم من الباقة المفعلة:
-        // - الإناث: مفتوح بلا حدود (9999)
-        // - الذكور المشتركون: سقف الباقة المفعلة فعلياً (أو 50 كحد افتراضي للباقات)
-        // - الذكور غير المشتركين (الحساب المجاني): 3 مشاهدات فقط
+        // The package's configured allowance is the ceiling for the list.
+        // Remaining quota counts new visits received, not visitors already earned.
+        $activePackage = $isSubscribed
+            ? SubscriptionUtility::currentActivePaidPackage($user)
+            : null;
+
         if ($isFemale) {
-            $allowedLimit = 9999;
+            $allowedLimit = -1;
         } elseif ($isSubscribed) {
-            $allowedLimit = max(0, $packageQuota);
+            $allowedLimit = (int) ($activePackage->profile_viewers_view ?? 0);
         } else {
             $allowedLimit = 3;
         }
 
         // 5. جلب قائمة الزوار النشطين والمفعلين مرتبة حسب الأحدث
-        $profileViewers = ProfileViewer::where('user_id', $user->id)
+        $profileViewersQuery = ProfileViewer::where('user_id', $user->id)
             ->whereIn("viewed_by", function ($query) {
                 $query->select('id')
                     ->from('users')
@@ -58,8 +60,13 @@ class ProfileViewerController extends Controller
                     ->where('deactivated', 0)
                     ->where('permanently_delete', 0);
             })
-            ->orderBy('updated_at', 'desc')
-            ->paginate(15);
+            ->orderBy('updated_at', 'desc');
+
+        // Apply the visitor visibility cap at the API layer as well as in Flutter.
+        if ($allowedLimit !== -1) {
+            $profileViewersQuery->limit(max(0, $allowedLimit));
+        }
+        $profileViewers = $profileViewersQuery->paginate(15);
 
         // 6. إرجاع النتيجة مع قيم السيرفر الديناميكية لتطبيق الموبايل
         return MyProfileViewerResource::collection($profileViewers)->additional([

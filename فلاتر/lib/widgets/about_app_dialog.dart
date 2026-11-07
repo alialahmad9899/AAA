@@ -7,6 +7,7 @@
 
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:wesal_app/widgets/bottom_system_inset.dart';
 
 class AboutAppDialog extends StatelessWidget {
   final String currentLanguage;
@@ -34,7 +35,7 @@ class AboutAppDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isAr = currentLanguage == 'ar';
     // 💡 تحسين الأداء: استخدام paddingOf و sizeOf لتجنب إعادة بناء الويدجت عند تغيرات الشاشة غير المباشرة
-    final double bottomInset = MediaQuery.paddingOf(context).bottom;
+    final double bottomInset = WesalBottomInsets.of(context);
     final double screenHeight = MediaQuery.sizeOf(context).height;
 
     return Directionality(
