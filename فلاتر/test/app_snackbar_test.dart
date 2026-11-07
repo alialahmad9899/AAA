@@ -50,7 +50,8 @@ void main() {
       expect(find.text('تحقق من الاتصال ثم حاول مجدداً.'), findsOneWidget);
 
       final snackBar = tester.widget<SnackBar>(find.byType(SnackBar));
-      expect(snackBar.margin?.bottom, 36);
+      final EdgeInsets safeMargin = snackBar.margin! as EdgeInsets;
+      expect(safeMargin.bottom, 36);
 
       final title = tester.widget<Text>(find.text('تعذّر حفظ التعديلات'));
       expect(title.style?.color, AppColors.textDark);
