@@ -574,7 +574,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                         ),
                         elevation: 6,
                         shadowColor:
-                            const Color(0xFF0288D1).withValues(alpha: 0.5),
+                            AppColors.primaryTeal.withValues(alpha: 0.18),
                       ),
                       icon: const Icon(Icons.workspace_premium_rounded,
                           color: Colors.amber, size: 22),
