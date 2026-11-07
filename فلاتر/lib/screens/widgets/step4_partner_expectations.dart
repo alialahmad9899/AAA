@@ -308,8 +308,8 @@ class Step4PartnerExpectations extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? Colors.amberAccent
-              : Colors.white.withValues(alpha: 0.18),
+              ? AppColors.accentLight.withValues(alpha: 0.42)
+              : AppColors.sectionBackground,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? AppColors.accentWarm : AppColors.lineColor,
@@ -486,7 +486,7 @@ class Step4PartnerExpectations extends StatelessWidget {
                                 ? 'من: ${safeAgeRange.start.round()} سنة'
                                 : 'From: ${safeAgeRange.start.round()} yrs',
                             style: const TextStyle(
-                              color: Colors.amberAccent,
+                              color: AppColors.primaryTeal,
                               fontWeight: FontWeight.bold,
                               fontFamily: 'Cairo',
                               fontSize: 12,
@@ -510,9 +510,7 @@ class Step4PartnerExpectations extends StatelessWidget {
                         min: 18,
                         max: 80,
                         divisions: 62,
-                        activeColor: ageRangeWasSelected
-                            ? Colors.amberAccent
-                            : Colors.white24,
+                        activeColor: ageRangeWasSelected ? AppColors.accentWarm : AppColors.textLight,
                         inactiveColor: AppColors.lineColor,
                         onChanged: onAgeRangeChanged,
                       ),
@@ -527,7 +525,7 @@ class Step4PartnerExpectations extends StatelessWidget {
                                   ? 'You can adjust or leave this optional range.'
                                   : 'This preference is optional.'),
                           style: const TextStyle(
-                            color: Colors.white70,
+                            color: AppColors.textMuted,
                             fontFamily: 'Cairo',
                             fontSize: 11,
                           ),
@@ -545,9 +543,9 @@ class Step4PartnerExpectations extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.2),
+                    color: AppColors.sectionBackground,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white24),
+                    border: Border.all(color: AppColors.lineColor),
                   ),
                   child: Column(
                     children: [
@@ -686,9 +684,7 @@ class Step4PartnerExpectations extends StatelessWidget {
                           min: 40,
                           max: 140,
                           divisions: 100,
-                          activeColor: weightRangeWasSelected
-                              ? Colors.amberAccent
-                              : Colors.white24,
+                          activeColor: weightRangeWasSelected ? AppColors.accentWarm : AppColors.textLight,
                           inactiveColor: Colors.white24,
                           onChanged: onWeightRangeChanged,
                         ),
