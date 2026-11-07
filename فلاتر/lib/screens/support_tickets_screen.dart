@@ -5,6 +5,7 @@
 //        بمكوّن AppSnackBar والتنقل المرن.
 // ============================================================================
 import 'package:flutter/material.dart';
+import '../constants/colors.dart';
 import 'package:wesal_app/widgets/bottom_system_inset.dart';
 import '../models/support_ticket_model.dart';
 import '../services/api_service.dart';
@@ -75,16 +76,16 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
     return Directionality(
       textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: const Color(0xFF090D16),
+        backgroundColor: AppColors.backgroundColor,
         appBar: AppBar(
-          backgroundColor: const Color(0xFF0F172A),
+          backgroundColor: AppColors.cardColor,
           elevation: 0,
           leading: IconButton(
             icon: Icon(
               _isAr
                   ? Icons.arrow_back_ios_new_rounded
                   : Icons.arrow_back_ios_rounded,
-              color: Colors.white,
+              color: AppColors.textDark,
               size: 18,
             ),
             onPressed: () => Navigator.pop(context),
@@ -92,7 +93,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
           title: Text(
             _isAr ? 'الدعم الفني والخدمات' : 'Support Tickets',
             style: const TextStyle(
-              color: Colors.white,
+              color: AppColors.textDark,
               fontSize: 18,
               fontWeight: FontWeight.bold,
               fontFamily: 'Cairo',
@@ -101,12 +102,12 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _showCreateTicketBottomSheet,
-          backgroundColor: const Color(0xFF0288D1),
+          backgroundColor: AppColors.primaryTeal,
           icon: const Icon(Icons.add_rounded, color: Colors.white),
           label: Text(
             _isAr ? 'تذكرة جديدة' : 'New Ticket',
             style: const TextStyle(
-              color: Colors.white,
+              color: AppColors.textDark,
               fontWeight: FontWeight.bold,
               fontFamily: 'Cairo',
             ),
@@ -115,14 +116,14 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
         body: SafeArea(top: false, bottom: true, child: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF081827), Color(0xFF0D233A), Color(0xFF090D16)],
+              colors: [AppColors.backgroundColor, AppColors.backgroundColor, AppColors.backgroundColor],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
           ),
           child: _isLoading
               ? const Center(
-                  child: CircularProgressIndicator(color: Color(0xFF38BDF8)))
+                  child: CircularProgressIndicator(color: AppColors.primaryTeal))
               : _tickets.isEmpty
                   ? Center(
                       child: Column(
@@ -130,14 +131,14 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                         children: [
                           Icon(Icons.headset_mic_outlined,
                               size: 70,
-                              color: Colors.white.withValues(alpha: 0.3)),
+                              color: AppColors.textDark.withValues(alpha: 0.3)),
                           const SizedBox(height: 16),
                           Text(
                             _isAr
                                 ? 'لا توجد تذاكر دعم حالياً'
                                 : 'No active support tickets',
                             style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.7),
+                              color: AppColors.textDark.withValues(alpha: 0.7),
                               fontSize: 16,
                               fontFamily: 'Cairo',
                             ),
@@ -145,19 +146,19 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                           const SizedBox(height: 16),
                           ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF0288D1),
+                              backgroundColor: AppColors.primaryTeal,
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 24, vertical: 12),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16)),
                             ),
                             icon: const Icon(Icons.add_rounded,
-                                color: Colors.white),
+                                color: AppColors.textDark),
                             onPressed: _showCreateTicketBottomSheet,
                             label: Text(
                               _isAr ? 'افتح تذكرة الآن' : 'Open Ticket Now',
                               style: const TextStyle(
-                                  color: Colors.white,
+                                  color: AppColors.textDark,
                                   fontFamily: 'Cairo',
                                   fontWeight: FontWeight.bold),
                             ),
@@ -184,9 +185,9 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B).withValues(alpha: 0.6),
+        color: AppColors.cardColor.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        border: Border.all(color: AppColors.textDark.withValues(alpha: 0.12)),
       ),
       child: Material(
         color: Colors.transparent,
@@ -217,13 +218,13 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF38BDF8).withValues(alpha: 0.15),
+                        color: AppColors.primaryTeal.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         '#${ticket.ticketId}',
                         style: const TextStyle(
-                          color: Color(0xFF38BDF8),
+                          color: AppColors.primaryTeal,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
@@ -234,8 +235,8 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                           horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: isClosed
-                            ? Colors.green.withValues(alpha: 0.2)
-                            : Colors.amber.withValues(alpha: 0.2),
+                            ? AppColors.success.withValues(alpha: 0.2)
+                            : AppColors.warning.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
@@ -243,7 +244,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                             ? (_isAr ? 'تم الرد (مغلقة)' : 'Closed')
                             : (_isAr ? 'قيد المتابعة' : 'Active'),
                         style: TextStyle(
-                          color: isClosed ? Colors.greenAccent : Colors.amber,
+                          color: AppColors.textDark,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                           fontFamily: 'Cairo',
@@ -256,7 +257,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                 Text(
                   ticket.subject,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textDark,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Cairo',
@@ -268,7 +269,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.65),
+                    color: AppColors.textDark.withValues(alpha: 0.65),
                     fontSize: 13,
                     fontFamily: 'Cairo',
                   ),
@@ -384,9 +385,9 @@ class _CreateTicketModalState extends State<_CreateTicketModal> {
         child: Container(
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.98),
+            color: AppColors.cardColor.withValues(alpha: 0.98),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+            border: Border.all(color: AppColors.textDark.withValues(alpha: 0.2)),
           ),
           child: SingleChildScrollView(
             child: Column(
@@ -399,7 +400,7 @@ class _CreateTicketModalState extends State<_CreateTicketModal> {
                     height: 4,
                     margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
-                      color: Colors.white24,
+                      color: AppColors.lineColor,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -409,7 +410,7 @@ class _CreateTicketModalState extends State<_CreateTicketModal> {
                       ? 'فتح تذكرة دعم جديدة'
                       : 'Create Support Ticket',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textDark,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Cairo',
@@ -421,7 +422,7 @@ class _CreateTicketModalState extends State<_CreateTicketModal> {
                 Text(
                   widget.isArabic ? 'اختر موضوع التذكرة' : 'Select Subject',
                   style: const TextStyle(
-                    color: Color(0xFF38BDF8),
+                    color: AppColors.primaryTeal,
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Cairo',
@@ -431,20 +432,20 @@ class _CreateTicketModalState extends State<_CreateTicketModal> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.08),
+                    color: AppColors.textDark.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(16),
                     border:
-                        Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                        Border.all(color: AppColors.lineColor),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: _selectedSubject,
-                      dropdownColor: const Color(0xFF0F172A),
+                      dropdownColor: AppColors.cardColor,
                       isExpanded: true,
                       icon: const Icon(Icons.keyboard_arrow_down_rounded,
-                          color: Color(0xFF38BDF8)),
+                          color: AppColors.primaryTeal),
                       style: const TextStyle(
-                          color: Colors.white,
+                          color: AppColors.textDark,
                           fontFamily: 'Cairo',
                           fontSize: 14),
                       items: _categories.map((cat) {
@@ -472,7 +473,7 @@ class _CreateTicketModalState extends State<_CreateTicketModal> {
                 Text(
                   widget.isArabic ? 'شرح المشكلة بالتفصيل' : 'Description',
                   style: const TextStyle(
-                    color: Color(0xFF38BDF8),
+                    color: AppColors.primaryTeal,
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Cairo',
@@ -483,27 +484,27 @@ class _CreateTicketModalState extends State<_CreateTicketModal> {
                   controller: _descriptionController,
                   maxLines: 5,
                   style:
-                      const TextStyle(color: Colors.white, fontFamily: 'Cairo'),
+                      const TextStyle(color: AppColors.textDark, fontFamily: 'Cairo'),
                   decoration: InputDecoration(
                     hintText: widget.isArabic
                         ? 'اكتب تفاصيل استفسارك أو المشكلة التي تواجهها...'
                         : 'Enter problem details...',
                     hintStyle: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.35),
+                        color: AppColors.textDark.withValues(alpha: 0.35),
                         fontFamily: 'Cairo',
                         fontSize: 13),
                     filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.08),
+                    fillColor: AppColors.textDark.withValues(alpha: 0.08),
                     contentPadding: const EdgeInsets.all(16),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.15)),
+                          color: AppColors.textDark.withValues(alpha: 0.15)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: const BorderSide(
-                          color: Color(0xFF38BDF8), width: 1.5),
+                          color: AppColors.primaryTeal, width: 1.5),
                     ),
                   ),
                 ),
@@ -515,7 +516,7 @@ class _CreateTicketModalState extends State<_CreateTicketModal> {
                   height: 52,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0288D1),
+                      backgroundColor: AppColors.primaryTeal,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16)),
                       elevation: 4,
@@ -527,7 +528,7 @@ class _CreateTicketModalState extends State<_CreateTicketModal> {
                         : Text(
                             widget.isArabic ? 'إرسال التذكرة' : 'Submit Ticket',
                             style: const TextStyle(
-                              color: Colors.white,
+                              color: AppColors.textDark,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               fontFamily: 'Cairo',
