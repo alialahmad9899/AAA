@@ -62,5 +62,4 @@ class ChatThreadResource extends JsonResource
 
         return [];
     }
-    }
 }
