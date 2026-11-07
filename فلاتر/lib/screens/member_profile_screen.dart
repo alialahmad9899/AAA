@@ -7,6 +7,7 @@
 
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../constants/colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -189,10 +190,10 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.96),
+            color: AppColors.cardColor.withValues(alpha: 0.96),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
             border: Border.all(
-              color: const Color(0xFFFFB300).withValues(alpha: 0.5),
+              color: AppColors.warning.withValues(alpha: 0.5),
               width: 1.5,
             ),
           ),
@@ -203,7 +204,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white30,
+                  color: AppColors.lineColor,
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -211,10 +212,10 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFB300).withValues(alpha: 0.15),
+                  color: AppColors.warning.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                   border:
-                      Border.all(color: const Color(0xFFFFB300), width: 1.5),
+                      Border.all(color: AppColors.warning, width: 1.5),
                 ),
                 child: const Icon(Icons.mark_chat_unread_rounded,
                     color: Color(0xFFFFB300), size: 48),
@@ -226,7 +227,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                     : 'Direct Messaging is Premium 💬',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: AppColors.textDark,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Cairo',
@@ -239,7 +240,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                     : 'To unlock direct chat and message this member, please subscribe to one of Wesal\'s premium packages.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  color: Colors.white70,
+                  color: AppColors.textMuted,
                   fontSize: 13.5,
                   fontFamily: 'Cairo',
                   height: 1.5,
@@ -250,14 +251,14 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0288D1),
+                    backgroundColor: AppColors.primaryTeal,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16)),
                     elevation: 6,
                   ),
                   icon: const Icon(Icons.workspace_premium_rounded,
-                      color: Colors.amber, size: 22),
+                      color: AppColors.warning, size: 22),
                   label: Text(
                     _isArabic
                         ? 'فتح المراسلة والاشتراك الآن 🚀'
@@ -527,10 +528,10 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
             child: Container(
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
-                color: const Color(0xFF0F172A).withValues(alpha: 0.95),
+                color: AppColors.cardColor.withValues(alpha: 0.95),
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(32)),
-                border: Border.all(color: Colors.amber.withValues(alpha: 0.35)),
+                border: Border.all(color: AppColors.warning.withValues(alpha: 0.35)),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -541,7 +542,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                       width: 42,
                       height: 4.5,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.3),
+                        color: AppColors.lineColor,
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
@@ -552,11 +553,11 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.amber.withValues(alpha: 0.15),
+                          color: AppColors.warning.withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.report_problem_rounded,
-                            color: Colors.amber, size: 24),
+                            color: AppColors.warning, size: 24),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -568,7 +569,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                                   ? 'الإبلاغ عن هذا البروفايل'
                                   : 'Report this profile',
                               style: const TextStyle(
-                                color: Colors.white,
+                                color: AppColors.textDark,
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 fontFamily: 'Cairo',
@@ -579,7 +580,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                                   ? 'اختر سبب الإبلاغ لمراجعته من قبل الإدارة'
                                   : 'Select reason for admin review',
                               style: const TextStyle(
-                                color: Colors.white60,
+                                color: AppColors.textMuted,
                                 fontSize: 12,
                                 fontFamily: 'Cairo',
                               ),
@@ -596,10 +597,10 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                     return Container(
                       margin: const EdgeInsets.only(bottom: 10),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.06),
+                        color: AppColors.sectionBackground,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.12)),
+                            color: AppColors.lineColor),
                       ),
                       child: Material(
                         color: Colors.transparent,
@@ -609,7 +610,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                           title: Text(
                             reasonTitle,
                             style: const TextStyle(
-                              color: Colors.white,
+                              color: AppColors.textDark,
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               fontFamily: 'Cairo',
@@ -619,7 +620,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                             _isArabic
                                 ? Icons.arrow_back_ios_rounded
                                 : Icons.arrow_forward_ios_rounded,
-                            color: Colors.white38,
+                            color: AppColors.textMuted,
                             size: 16,
                           ),
                           onTap: () {
@@ -652,23 +653,23 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
     switch (type) {
       case 'photo':
         iconData = Icons.no_photography_rounded;
-        iconColor = Colors.orangeAccent;
+        iconColor = AppColors.warning;
         break;
       case 'person':
         iconData = Icons.person_off_rounded;
-        iconColor = Colors.redAccent;
+        iconColor = AppColors.error;
         break;
       case 'bio':
         iconData = Icons.article_rounded;
-        iconColor = Colors.lightBlueAccent;
+        iconColor = AppColors.primaryTeal;
         break;
       case 'warning':
         iconData = Icons.warning_amber_rounded;
-        iconColor = Colors.amber;
+        iconColor = AppColors.warning;
         break;
       default:
         iconData = Icons.edit_note_rounded;
-        iconColor = Colors.purpleAccent;
+        iconColor = AppColors.accentWarm;
     }
 
     return Container(
@@ -840,29 +841,21 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF070A11),
+      backgroundColor: AppColors.backgroundColor,
       body: Directionality(
         textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
         child: Container(
           width: double.infinity,
           height: double.infinity,
           decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Color(0xFF0D1527),
-                Color(0xFF090E1A),
-                Color(0xFF05070C),
-              ],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
+            color: AppColors.backgroundColor,
           ),
           child: SafeArea(
             bottom: false,
             child: _isLoading
                 ? const Center(
                     child: CircularProgressIndicator(
-                      color: Color(0xFF38BDF8),
+                      color: AppColors.primaryTeal,
                       strokeWidth: 2.5,
                     ),
                   )
@@ -874,11 +867,11 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                             Container(
                               padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.05),
+                                color: AppColors.sectionBackground,
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(Icons.error_outline_rounded,
-                                  color: Colors.white38, size: 54),
+                                  color: AppColors.error, size: 54),
                             ),
                             const SizedBox(height: 16),
                             Text(
@@ -886,7 +879,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                                   ? 'تعذر تحميل بيانات العضو'
                                   : 'Failed to load member profile',
                               style: const TextStyle(
-                                  color: Colors.white,
+                                  color: AppColors.textDark,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
                                   fontFamily: 'Cairo'),
@@ -894,7 +887,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                             const SizedBox(height: 20),
                             ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF0288D1),
+                                backgroundColor: AppColors.primaryTeal,
                                 foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 28, vertical: 12),
@@ -996,26 +989,26 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF0EA5E9).withValues(alpha: 0.18),
-            const Color(0xFF6366F1).withValues(alpha: 0.12),
+            AppColors.primaryTeal.withValues(alpha: 0.18),
+            AppColors.accentLight.withValues(alpha: 0.12),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(22),
         border:
-            Border.all(color: const Color(0xFF38BDF8).withValues(alpha: 0.35)),
+            Border.all(color: AppColors.primaryTeal.withValues(alpha: 0.35)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFF38BDF8).withValues(alpha: 0.2),
+              color: AppColors.primaryTeal.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.verified_rounded,
-                color: Color(0xFF38BDF8), size: 24),
+                color: AppColors.primaryTeal, size: 24),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1027,7 +1020,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                       ? 'بطاقة عضوية مكتملة وموثقة'
                       : 'Verified Member Profile',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textDark,
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Cairo',
@@ -1039,7 +1032,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                       ? 'تمت مراجعة واستيفاء البيانات الأساسية والشخصية بالكامل'
                       : 'All personal specifications have been verified',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.65),
+                    color: AppColors.textMuted,
                     fontSize: 11.5,
                     fontFamily: 'Cairo',
                   ),
@@ -1085,7 +1078,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
       floating: false,
       pinned: true,
       elevation: 0,
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: AppColors.backgroundColor,
       leading: Padding(
         padding: const EdgeInsets.all(8.0),
         child: ClipRRect(
@@ -1119,7 +1112,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                 color: Colors.black.withValues(alpha: 0.3),
                 child: IconButton(
                   icon: const Icon(Icons.share_rounded,
-                      color: Color(0xFF38BDF8), size: 20),
+                      color: AppColors.primaryTeal, size: 20),
                   onPressed: _shareProfileLink,
                 ),
               ),
@@ -1154,17 +1147,17 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                 imageUrl: info.photo,
                 fit: BoxFit.cover,
                 placeholder: (context, url) =>
-                    Container(color: const Color(0xFF0F172A)),
+                    Container(color: AppColors.sectionBackground),
                 errorWidget: (context, url, error) =>
-                    Container(color: const Color(0xFF1E293B)),
+                    Container(color: AppColors.sectionBackground),
               )
             else
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: isFemale
-                        ? [const Color(0xFFD81B60), const Color(0xFF880E4F)]
-                        : [const Color(0xFF0288D1), const Color(0xFF01579B)],
+                        ? [AppColors.accentWarm, AppColors.primaryTeal]
+                        : [AppColors.primaryTeal, AppColors.secondaryTeal],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -1229,16 +1222,16 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 10, vertical: 3),
                                 decoration: BoxDecoration(
-                                    color: const Color(0xFF38BDF8)
+                                    color: AppColors.primaryTeal
                                         .withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                        color: const Color(0xFF38BDF8)
+                                        color: AppColors.primaryTeal
                                             .withValues(alpha: 0.6))),
                                 child: Text(
                                     '${info.age} ${_isArabic ? 'سنة' : 'yrs'}',
                                     style: const TextStyle(
-                                        color: Color(0xFF38BDF8),
+                                        color: AppColors.primaryTeal,
                                         fontSize: 12,
                                         fontWeight: FontWeight.bold,
                                         fontFamily: 'Cairo')),
@@ -1262,11 +1255,11 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 6),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF59E0B)
+                              color: AppColors.warning
                                   .withValues(alpha: 0.16),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: const Color(0xFFFBBF24)
+                                color: AppColors.accentLight
                                     .withValues(alpha: 0.65),
                               ),
                             ),
@@ -1275,7 +1268,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                               children: [
                                 const Icon(
                                   Icons.admin_panel_settings_rounded,
-                                  color: Color(0xFFFBBF24),
+                                  color: AppColors.accentLight,
                                   size: 16,
                                 ),
                                 const SizedBox(width: 6),
@@ -1285,7 +1278,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
-                                      color: Color(0xFFFFE7A3),
+                                      color: AppColors.accentLight,
                                       fontSize: 11,
                                       fontWeight: FontWeight.w700,
                                       fontFamily: 'Cairo',
@@ -1305,12 +1298,12 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                           horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
                         color: _profile!.profileMatchPercentage == null
-                            ? const Color(0xFF334155)
+                            ? AppColors.textMuted
                             : null,
                         gradient: _profile!.profileMatchPercentage == null
                             ? null
                             : const LinearGradient(
-                                colors: [Color(0xFF10B981), Color(0xFF059669)]),
+                                colors: [AppColors.success, AppColors.success]),
                         borderRadius: BorderRadius.circular(18),
                         border: Border.all(
                             color: Colors.white.withValues(alpha: 0.2)),
@@ -1318,7 +1311,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                           BoxShadow(
                               color: (_profile!.profileMatchPercentage == null
                                       ? Colors.black
-                                      : const Color(0xFF10B981))
+                                      : AppColors.success)
                                   .withValues(alpha: 0.25),
                               blurRadius: 12)
                         ],
@@ -1373,7 +1366,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
     return _buildSectionCard(
       title: _isArabic ? 'المعلومات الأساسية' : 'Basic Details',
       icon: Icons.person_outline_rounded,
-      accentColor: const Color(0xFF38BDF8),
+      accentColor: AppColors.primaryTeal,
       content: Wrap(
         spacing: 10,
         runSpacing: 10,
@@ -1403,7 +1396,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
     return _buildSectionCard(
       title: _isArabic ? 'التعليم والعمل' : 'Education & Career',
       icon: Icons.school_outlined,
-      accentColor: const Color(0xFF818CF8),
+      accentColor: AppColors.secondaryTeal,
       content: Wrap(
         spacing: 10,
         runSpacing: 10,
@@ -1438,7 +1431,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
     return _buildSectionCard(
       title: _isArabic ? 'المواصفات الجسدية' : 'Physical Attributes',
       icon: Icons.accessibility_new_rounded,
-      accentColor: const Color(0xFFF43F5E),
+      accentColor: AppColors.accentWarm,
       content: Wrap(
         spacing: 10,
         runSpacing: 10,
@@ -1486,7 +1479,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
     return _buildSectionCard(
       title: _isArabic ? 'الخلفية الدينية والاجتماعية' : 'Spiritual & Social',
       icon: Icons.mosque_rounded,
-      accentColor: const Color(0xFFF59E0B),
+      accentColor: AppColors.warning,
       content: Wrap(
         spacing: 10,
         runSpacing: 10,
@@ -1512,7 +1505,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
     return _buildSectionCard(
       title: _isArabic ? 'أسلوب الحياة والاهتمامات' : 'Lifestyle & Interests',
       icon: Icons.local_activity_rounded,
-      accentColor: const Color(0xFF10B981),
+      accentColor: AppColors.success,
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1615,7 +1608,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
     return _buildSectionCard(
       title: _isArabic ? 'الإقامة' : 'Residence',
       icon: Icons.location_on_rounded,
-      accentColor: const Color(0xFFEC4899),
+      accentColor: AppColors.accentWarm,
       content: Wrap(
         spacing: 10,
         runSpacing: 10,
@@ -1663,7 +1656,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
     return _buildSectionCard(
       title: _isArabic ? 'توقعات شريك الحياة' : 'Partner Expectations',
       icon: Icons.favorite_rounded,
-      accentColor: const Color(0xFFA855F7),
+      accentColor: AppColors.secondaryTeal,
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1789,7 +1782,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF131C2E).withValues(alpha: 0.65),
+        color: AppColors.cardColor.withValues(alpha: 0.65),
         borderRadius: BorderRadius.circular(24),
         border:
             Border.all(color: accentColor.withValues(alpha: 0.25), width: 1.2),
@@ -1819,7 +1812,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
               Text(
                 title,
                 style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textDark,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Cairo'),
@@ -1843,11 +1836,11 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: AppColors.sectionBackground,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isWhiteColor
-              ? Colors.white.withValues(alpha: 0.8)
+              ? AppColors.lineColor
               : sampleColor.withValues(alpha: 0.5),
           width: 1.2,
         ),
@@ -1864,7 +1857,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
               border: Border.all(
                 color: isWhiteColor
                     ? const Color(0xFF94A3B8)
-                    : Colors.white.withValues(alpha: 0.9),
+                    : AppColors.lineColor,
                 width: 1.5,
               ),
               boxShadow: [
@@ -1884,7 +1877,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.textDark,
                 fontSize: 12.5,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Cairo',
@@ -1902,14 +1895,14 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
+        color: AppColors.sectionBackground,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: AppColors.lineColor),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: const Color(0xFF38BDF8), size: 15),
+          Icon(icon, color: AppColors.primaryTeal, size: 15),
           const SizedBox(width: 6),
           Flexible(
             child: Text(
@@ -1917,7 +1910,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.textDark,
                 fontSize: 12.5,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Cairo',
@@ -1932,10 +1925,10 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
   Widget _buildBottomActionBar() {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A).withValues(alpha: 0.85),
+        color: AppColors.cardColor.withValues(alpha: 0.85),
         border: Border(
           top: BorderSide(
-            color: Colors.white.withValues(alpha: 0.12),
+            color: AppColors.lineColor,
             width: 1,
           ),
         ),
@@ -1958,7 +1951,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                         boxShadow: [
                           if (!_isInterestSent)
                             BoxShadow(
-                              color: const Color(0xFF0288D1)
+                              color: AppColors.primaryTeal
                                   .withValues(alpha: 0.35),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
@@ -1968,7 +1961,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                       child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _isInterestSent
-                              ? const Color(0xFF10B981)
+                              ? AppColors.success
                               : const Color(0xFF0288D1),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(18),
@@ -2011,7 +2004,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                         boxShadow: [
                           BoxShadow(
                             color:
-                                const Color(0xFF38BDF8).withValues(alpha: 0.2),
+                                AppColors.primaryTeal.withValues(alpha: 0.2),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -2019,7 +2012,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                       ),
                       child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1E293B),
+                          backgroundColor: AppColors.sectionBackground,
                           foregroundColor: const Color(0xFF38BDF8),
                           side: const BorderSide(
                             color: Color(0xFF38BDF8),
@@ -2104,10 +2097,10 @@ class __CustomProfileReportDialogState
           child: Container(
             padding: const EdgeInsets.all(22),
             decoration: BoxDecoration(
-              color: const Color(0xFF0F172A).withValues(alpha: 0.95),
+              color: AppColors.cardColor.withValues(alpha: 0.95),
               borderRadius: BorderRadius.circular(28),
               border: Border.all(
-                color: Colors.amber.withValues(alpha: 0.4),
+                color: AppColors.accentWarm.withValues(alpha: 0.4),
                 width: 1.5,
               ),
             ),
@@ -2119,7 +2112,7 @@ class __CustomProfileReportDialogState
                       ? 'كتابة سبب الإبلاغ'
                       : 'Specify Report Reason',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textDark,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Cairo',
@@ -2130,7 +2123,7 @@ class __CustomProfileReportDialogState
                   controller: _customController,
                   maxLines: 3,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textDark,
                     fontFamily: 'Cairo',
                     fontSize: 14,
                   ),
@@ -2139,25 +2132,25 @@ class __CustomProfileReportDialogState
                         ? 'اكتب التفاصيل هنا لمساعدة الإدارة في التحقق...'
                         : 'Type details here to help review...',
                     hintStyle: const TextStyle(
-                      color: Colors.white54,
+                      color: AppColors.textMuted,
                       fontFamily: 'Cairo',
                       fontSize: 13,
                     ),
                     filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.08),
+                    fillColor: AppColors.sectionBackground,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.2)),
+                          color: AppColors.lineColor),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.2)),
+                          color: AppColors.lineColor),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(color: Colors.amber),
+                      borderSide: const BorderSide(color: AppColors.accentWarm),
                     ),
                   ),
                 ),
@@ -2170,7 +2163,7 @@ class __CustomProfileReportDialogState
                         child: Text(
                           widget.isArabic ? 'إلغاء' : 'Cancel',
                           style: const TextStyle(
-                              color: Colors.white70, fontFamily: 'Cairo'),
+                              color: AppColors.textMuted, fontFamily: 'Cairo'),
                         ),
                       ),
                     ),
@@ -2178,7 +2171,7 @@ class __CustomProfileReportDialogState
                     Expanded(
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.amber[700],
+                          backgroundColor: AppColors.primaryTeal,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
