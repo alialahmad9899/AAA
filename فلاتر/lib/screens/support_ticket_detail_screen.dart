@@ -6,6 +6,7 @@
 // ============================================================================
 
 import 'package:flutter/material.dart';
+import '../constants/colors.dart';
 import '../models/support_ticket_model.dart';
 import '../services/api_service.dart';
 
@@ -56,16 +57,16 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
     return Directionality(
       textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: const Color(0xFF090D16),
+        backgroundColor: AppColors.backgroundColor,
         appBar: AppBar(
-          backgroundColor: const Color(0xFF0F172A),
+          backgroundColor: AppColors.cardColor,
           elevation: 0,
           leading: IconButton(
             icon: Icon(
               _isAr
                   ? Icons.arrow_back_ios_new_rounded
                   : Icons.arrow_back_ios_rounded,
-              color: Colors.white,
+              color: AppColors.textDark,
               size: 18,
             ),
             onPressed: () => Navigator.pop(context),
@@ -73,7 +74,7 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
           title: Text(
             _isAr ? 'تفاصيل التذكرة' : 'Ticket Details',
             style: const TextStyle(
-              color: Colors.white,
+              color: AppColors.textDark,
               fontSize: 18,
               fontWeight: FontWeight.bold,
               fontFamily: 'Cairo',
@@ -83,14 +84,14 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
         body: SafeArea(top: false, bottom: true, child: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF081827), Color(0xFF0D233A), Color(0xFF090D16)],
+              colors: [AppColors.backgroundColor, AppColors.backgroundColor, AppColors.backgroundColor],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
           ),
           child: _isLoading
               ? const Center(
-                  child: CircularProgressIndicator(color: Color(0xFF38BDF8)))
+                  child: CircularProgressIndicator(color: AppColors.primaryTeal))
               : _ticket == null
                   ? Center(
                       child: Text(
@@ -98,7 +99,7 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                             ? 'تعذر تحميل بيانات التذكرة'
                             : 'Failed to load ticket details',
                         style: const TextStyle(
-                            color: Colors.white70, fontFamily: 'Cairo'),
+                            color: AppColors.textMuted, fontFamily: 'Cairo'),
                       ),
                     )
                   : SingleChildScrollView(
@@ -115,14 +116,14 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                           Row(
                             children: [
                               const Icon(Icons.forum_rounded,
-                                  color: Color(0xFF38BDF8), size: 20),
+                                  color: AppColors.primaryTeal, size: 20),
                               const SizedBox(width: 8),
                               Text(
                                 _isAr
                                     ? 'ردود فريق الدعم الفني'
                                     : 'Support Team Replies',
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: AppColors.textDark,
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   fontFamily: 'Cairo',
@@ -138,18 +139,18 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                               width: double.infinity,
                               padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF1E293B)
+                                color: AppColors.cardColor
                                     .withValues(alpha: 0.5),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
                                     color:
-                                        Colors.white.withValues(alpha: 0.08)),
+                                        AppColors.textDark.withValues(alpha: 0.08)),
                               ),
                               child: Column(
                                 children: [
                                   Icon(Icons.hourglass_empty_rounded,
                                       color:
-                                          Colors.amber.withValues(alpha: 0.7),
+                                          AppColors.warning.withValues(alpha: 0.7),
                                       size: 36),
                                   const SizedBox(height: 10),
                                   Text(
@@ -159,7 +160,7 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       color:
-                                          Colors.white.withValues(alpha: 0.7),
+                                          AppColors.textDark.withValues(alpha: 0.7),
                                       fontSize: 13,
                                       fontFamily: 'Cairo',
                                     ),
@@ -192,9 +193,9 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A).withValues(alpha: 0.85),
+        color: AppColors.cardColor.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+        border: Border.all(color: AppColors.textDark.withValues(alpha: 0.15)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.3),
@@ -213,15 +214,15 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF38BDF8).withValues(alpha: 0.15),
+                  color: AppColors.primaryTeal.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                      color: const Color(0xFF38BDF8).withValues(alpha: 0.3)),
+                      color: AppColors.primaryTeal.withValues(alpha: 0.3)),
                 ),
                 child: Text(
                   '#${ticket.ticketId}',
                   style: const TextStyle(
-                    color: Color(0xFF38BDF8),
+                    color: AppColors.primaryTeal,
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                   ),
@@ -232,20 +233,20 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: isClosed
-                      ? Colors.green.withValues(alpha: 0.2)
-                      : Colors.amber.withValues(alpha: 0.2),
+                      ? AppColors.success.withValues(alpha: 0.2)
+                      : AppColors.warning.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                       color: isClosed
-                          ? Colors.greenAccent.withValues(alpha: 0.4)
-                          : Colors.amber.withValues(alpha: 0.4)),
+                          ? AppColors.success.withValues(alpha: 0.4)
+                          : AppColors.warning.withValues(alpha: 0.4)),
                 ),
                 child: Text(
                   isClosed
                       ? (_isAr ? 'تم الرد (مغلقة)' : 'Closed')
                       : (_isAr ? 'قيد المتابعة' : 'In Progress'),
                   style: TextStyle(
-                    color: isClosed ? Colors.greenAccent : Colors.amber,
+                    color: AppColors.textDark,
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Cairo',
@@ -258,7 +259,7 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
           Text(
             ticket.subject,
             style: const TextStyle(
-              color: Colors.white,
+              color: AppColors.textDark,
               fontSize: 18,
               fontWeight: FontWeight.bold,
               fontFamily: 'Cairo',
@@ -268,7 +269,7 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.06),
+              color: AppColors.textDark.withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
@@ -276,17 +277,17 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                   ? 'القسم: ${ticket.categoryName}'
                   : 'Category: ${ticket.categoryName}',
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.6),
+                color: AppColors.textDark.withValues(alpha: 0.6),
                 fontSize: 12,
                 fontFamily: 'Cairo',
               ),
             ),
           ),
-          const Divider(height: 24, color: Colors.white12),
+          const Divider(height: 24, color: AppColors.lineColor),
           Text(
             _isAr ? 'تفاصيل الاستفسار:' : 'Description:',
             style: const TextStyle(
-              color: Color(0xFF38BDF8),
+              color: AppColors.primaryTeal,
               fontSize: 12,
               fontWeight: FontWeight.bold,
               fontFamily: 'Cairo',
@@ -296,7 +297,7 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
           Text(
             ticket.description,
             style: const TextStyle(
-              color: Color(0xE6FFFFFF),
+              color: AppColors.textDark,
               fontSize: 14,
               height: 1.5,
               fontFamily: 'Cairo',
@@ -313,10 +314,10 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B).withValues(alpha: 0.8),
+        color: AppColors.cardColor.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(20),
         border:
-            Border.all(color: const Color(0xFF38BDF8).withValues(alpha: 0.3)),
+            Border.all(color: AppColors.primaryTeal.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -325,7 +326,7 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
             children: [
               const CircleAvatar(
                 radius: 18,
-                backgroundColor: Color(0xFF0288D1),
+                backgroundColor: AppColors.primaryTeal,
                 child: Icon(Icons.support_agent_rounded,
                     color: Colors.white, size: 20),
               ),
@@ -337,7 +338,7 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                     Text(
                       reply.repliedUserName,
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppColors.textDark,
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                         fontFamily: 'Cairo',
@@ -346,7 +347,7 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                     Text(
                       reply.createdAt,
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.45),
+                        color: AppColors.textDark.withValues(alpha: 0.45),
                         fontSize: 11,
                       ),
                     ),
@@ -356,13 +357,13 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                  color: AppColors.success.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   _isAr ? 'إجابة الإدارة' : 'Admin Reply',
                   style: const TextStyle(
-                    color: Color(0xFF10B981),
+                    color: AppColors.success,
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Cairo',
@@ -371,11 +372,11 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
               ),
             ],
           ),
-          const Divider(height: 20, color: Colors.white10),
+          const Divider(height: 20, color: AppColors.lineColor),
           Text(
             reply.reply,
             style: const TextStyle(
-              color: Colors.white,
+              color: AppColors.textDark,
               fontSize: 14,
               height: 1.5,
               fontFamily: 'Cairo',
