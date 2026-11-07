@@ -36,27 +36,27 @@ class AppSnackBar {
 
     switch (type) {
       case NotificationType.success:
-        primaryColor = const AppColors.success; // أخضر زاهي أنيق
-        borderColor = const AppColors.success;
+        primaryColor = AppColors.success; // أخضر زاهي أنيق
+        borderColor = AppColors.success;
         iconData = Icons.check_circle_rounded;
         defaultTitle = isArabic ? 'تم بنجاح' : 'Success';
         break;
       case NotificationType.error:
-        primaryColor = const AppColors.error; // أحمر أنيق
-        borderColor = const AppColors.error;
+        primaryColor = AppColors.error; // أحمر أنيق
+        borderColor = AppColors.error;
         iconData = Icons.error_rounded;
         defaultTitle = isArabic ? 'حدث خطأ' : 'Error';
         break;
       case NotificationType.warning:
-        primaryColor = const AppColors.warning; // برتقالي تحذيري
-        borderColor = const AppColors.warning;
+        primaryColor = AppColors.warning; // برتقالي تحذيري
+        borderColor = AppColors.warning;
         iconData = Icons.warning_rounded;
         defaultTitle = isArabic ? 'تنبيه' : 'Warning';
         break;
       case NotificationType.info:
         primaryColor =
-            const AppColors.primaryTeal; // الأزرق السماوي المعتمد بتطبيق وصال
-        borderColor = const AppColors.secondaryTeal;
+            AppColors.primaryTeal; // الأزرق السماوي المعتمد بتطبيق وصال
+        borderColor = AppColors.secondaryTeal;
         iconData = Icons.info_rounded;
         defaultTitle = isArabic ? 'معلومة' : 'Info';
         break;
@@ -87,8 +87,8 @@ class AppSnackBar {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      const AppColors.primaryTeal.withValues(alpha: 0.90),
-                      const AppColors.primaryTeal.withValues(alpha: 0.85),
+                      AppColors.primaryTeal.withValues(alpha: 0.90),
+                      AppColors.primaryTeal.withValues(alpha: 0.85),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -168,7 +168,7 @@ class AppSnackBar {
                         padding: const EdgeInsets.all(8.0),
                         child: Icon(
                           Icons.close_rounded,
-                          color: Colors.white.withValues(alpha: 0.7),
+                          color: AppColors.textMuted,
                           size: 18,
                         ),
                       ),
