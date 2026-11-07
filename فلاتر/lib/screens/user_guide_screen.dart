@@ -349,9 +349,9 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
+        statusBarIconBrightness: Brightness.dark,
         systemNavigationBarColor: darkBgColor,
-        systemNavigationBarIconBrightness: Brightness.light,
+        systemNavigationBarIconBrightness: Brightness.dark,
         systemNavigationBarDividerColor: Colors.transparent,
       ),
       child: Directionality(
@@ -359,7 +359,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
         child: Scaffold(
           backgroundColor: darkBgColor,
           appBar: AppBar(
-            backgroundColor: const AppColors.cardColor,
+            backgroundColor: AppColors.cardColor,
             elevation: 0,
             centerTitle: true,
             leading: IconButton(
@@ -413,7 +413,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
       decoration: BoxDecoration(
-        color: const AppColors.cardColor.withValues(alpha: 0.8),
+        color: AppColors.cardColor.withValues(alpha: 0.8),
         border: Border(
           bottom: BorderSide(
             color: AppColors.textDark.withValues(alpha: 0.08),
@@ -432,7 +432,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                   color: AppColors.textDark.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: const AppColors.primaryTeal.withValues(alpha: 0.4),
+                    color: AppColors.primaryTeal.withValues(alpha: 0.4),
                     width: 1.2,
                   ),
                 ),
@@ -517,14 +517,14 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: isSelected
-                              ? const AppColors.accentWarm
+                              ? AppColors.accentWarm
                               : AppColors.textDark.withValues(alpha: 0.15),
                           width: 1,
                         ),
                         boxShadow: isSelected
                             ? [
                                 BoxShadow(
-                                  color: const AppColors.primaryTeal
+                                  color: AppColors.primaryTeal
                                       .withValues(alpha: 0.4),
                                   blurRadius: 10,
                                   offset: const Offset(0, 3),
@@ -560,18 +560,18 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: const AppColors.sectionBackground,
+        color: AppColors.sectionBackground,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: isExpanded
-              ? const AppColors.accentWarm.withValues(alpha: 0.7)
+              ? AppColors.accentWarm.withValues(alpha: 0.7)
               : AppColors.textDark.withValues(alpha: 0.1),
           width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
             color: isExpanded
-                ? const AppColors.primaryTeal.withValues(alpha: 0.2)
+                ? AppColors.primaryTeal.withValues(alpha: 0.2)
                 : Colors.black.withValues(alpha: 0.25),
             blurRadius: 12,
             offset: const Offset(0, 4),
@@ -606,8 +606,8 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              const AppColors.primaryTeal.withValues(alpha: 0.35),
-                              const AppColors.secondaryTeal.withValues(alpha: 0.35),
+                              AppColors.primaryTeal.withValues(alpha: 0.35),
+                              AppColors.secondaryTeal.withValues(alpha: 0.35),
                             ],
                             begin: Alignment.topRight,
                             end: Alignment.bottomLeft,
@@ -640,7 +640,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                         child: Icon(
                           Icons.keyboard_arrow_down_rounded,
                           color: isExpanded
-                              ? const AppColors.accentWarm
+                              ? AppColors.accentWarm
                               : AppColors.textMuted,
                           size: 26,
                         ),
@@ -698,9 +698,9 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const AppColors.sectionBackground,
+                color: AppColors.sectionBackground,
                 border: Border.all(
-                    color: const AppColors.primaryTeal.withValues(alpha: 0.4),
+                    color: AppColors.primaryTeal.withValues(alpha: 0.4),
                     width: 1.5),
               ),
               child: const Icon(
