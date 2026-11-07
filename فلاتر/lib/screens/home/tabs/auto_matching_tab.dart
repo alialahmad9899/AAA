@@ -755,8 +755,8 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                       gradient: LinearGradient(
                         colors: [
                           Colors.transparent,
-                          Colors.black.withValues(alpha: 0.15),
-                          Colors.black.withValues(alpha: 0.90),
+                          AppColors.primaryTeal.withValues(alpha: 0.18),
+                          AppColors.primaryTeal.withValues(alpha: 0.94),
                         ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
@@ -787,8 +787,8 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                                 ? null
                                 : const LinearGradient(
                                     colors: [
-                                      AppColors.accentWarm,
                                       AppColors.primaryTeal,
+                                      AppColors.secondaryTeal,
                                     ],
                                   ),
                             borderRadius: BorderRadius.circular(20),
@@ -1120,7 +1120,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: iconColor ?? const Color(0xFF4FC3F7), size: 14),
+              Icon(icon, color: iconColor ?? AppColors.accentLight, size: 14),
               const SizedBox(width: 5),
               Text(
                 label,
