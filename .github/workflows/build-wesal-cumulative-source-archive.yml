@@ -16,7 +16,7 @@ jobs:
       - name: Checkout canonical main snapshot
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
       - name: Package latest canonical version of every repaired file
         shell: bash
