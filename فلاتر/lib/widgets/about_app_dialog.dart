@@ -50,7 +50,7 @@ class AboutAppDialog extends StatelessWidget {
               maxHeight: screenHeight * 0.85,
             ),
             decoration: BoxDecoration(
-              color: const AppColors.cardColor.withValues(alpha: 0.92),
+              color: AppColors.cardColor.withValues(alpha: 0.92),
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(32)),
               border: Border.all(
@@ -59,7 +59,7 @@ class AboutAppDialog extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const AppColors.primaryTeal.withValues(alpha: 0.2),
+                  color: AppColors.primaryTeal.withValues(alpha: 0.2),
                   blurRadius: 25,
                   spreadRadius: 2,
                   offset: const Offset(0, -5),
@@ -98,7 +98,7 @@ class AboutAppDialog extends StatelessWidget {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: const AppColors.primaryTeal
+                              color: AppColors.primaryTeal
                                   .withValues(alpha: 0.4),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
@@ -135,11 +135,11 @@ class AboutAppDialog extends StatelessWidget {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 8, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: const AppColors.primaryTeal
+                                    color: AppColors.primaryTeal
                                         .withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
-                                      color: const AppColors.secondaryTeal
+                                      color: AppColors.secondaryTeal
                                           .withValues(alpha: 0.4),
                                     ),
                                   ),
@@ -203,7 +203,7 @@ class AboutAppDialog extends StatelessWidget {
                       children: [
                         _buildFeatureCard(
                           icon: Icons.verified_user_rounded,
-                          iconColor: const AppColors.primaryTeal,
+                          iconColor: AppColors.primaryTeal,
                           title: isAr
                               ? 'زواج جاد وليست مواعدة'
                               : 'Serious Marriage, Not Dating',
@@ -213,7 +213,7 @@ class AboutAppDialog extends StatelessWidget {
                         ),
                         _buildFeatureCard(
                           icon: Icons.public_rounded,
-                          iconColor: const AppColors.secondaryTeal,
+                          iconColor: AppColors.secondaryTeal,
                           title: isAr
                               ? 'شبكة زواج حول العالم'
                               : 'Syrian Network Worldwide',
@@ -223,7 +223,7 @@ class AboutAppDialog extends StatelessWidget {
                         ),
                         _buildFeatureCard(
                           icon: Icons.shield_rounded,
-                          iconColor: const AppColors.accentWarm,
+                          iconColor: AppColors.accentWarm,
                           title: isAr
                               ? 'خصوصية وأمان تام'
                               : 'Total Privacy & Security',
@@ -233,7 +233,7 @@ class AboutAppDialog extends StatelessWidget {
                         ),
                         _buildFeatureCard(
                           icon: Icons.auto_awesome_rounded,
-                          iconColor: const AppColors.warning,
+                          iconColor: AppColors.warning,
                           title: isAr
                               ? 'نظام مطابقة وتوافق ذكي'
                               : 'Smart Matching System',
@@ -243,7 +243,7 @@ class AboutAppDialog extends StatelessWidget {
                         ),
                         _buildFeatureCard(
                           icon: Icons.mark_email_read_rounded,
-                          iconColor: const AppColors.accentWarm,
+                          iconColor: AppColors.accentWarm,
                           title: isAr
                               ? 'تواصل محترم ومباشر'
                               : 'Respectful Communication',
@@ -253,7 +253,7 @@ class AboutAppDialog extends StatelessWidget {
                         ),
                         _buildFeatureCard(
                           icon: Icons.workspace_premium_rounded,
-                          iconColor: const AppColors.accentLight,
+                          iconColor: AppColors.accentLight,
                           title: isAr
                               ? 'عضوية وصال Premium'
                               : 'Wesal Premium Membership',
@@ -283,7 +283,7 @@ class AboutAppDialog extends StatelessWidget {
                         boxShadow: [
                           BoxShadow(
                             color:
-                                const AppColors.primaryTeal.withValues(alpha: 0.35),
+                                AppColors.primaryTeal.withValues(alpha: 0.35),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
