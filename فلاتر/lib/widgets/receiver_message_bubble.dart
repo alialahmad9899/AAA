@@ -6,6 +6,7 @@
 
 import 'package:flutter/material.dart';
 import '../models/chat_model.dart';
+import '../constants/colors.dart';
 
 /// ويدجت مستقلة لرسائل المُستقبِل (الطرف الثاني)
 class ReceiverMessageBubble extends StatelessWidget {
@@ -32,7 +33,7 @@ class ReceiverMessageBubble extends StatelessWidget {
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.3),
+          color: AppColors.sectionBackground,
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(18),
             topRight: Radius.circular(18),
@@ -40,7 +41,7 @@ class ReceiverMessageBubble extends StatelessWidget {
             bottomRight: Radius.circular(2),
           ),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.3),
+            color: AppColors.lineColor,
             width: 1,
           ),
         ),
@@ -52,7 +53,7 @@ class ReceiverMessageBubble extends StatelessWidget {
             Text(
               message.message,
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.textDark,
                 fontSize: 15,
                 fontFamily: 'Cairo',
                 height: 1.3,
@@ -63,7 +64,7 @@ class ReceiverMessageBubble extends StatelessWidget {
             Text(
               message.time,
               style: const TextStyle(
-                color: Colors.white60,
+                color: AppColors.textMuted,
                 fontSize: 10,
                 fontFamily: 'Cairo',
               ),

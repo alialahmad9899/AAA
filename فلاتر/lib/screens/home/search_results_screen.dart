@@ -357,13 +357,13 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                             _buildInfoBadge(
                               icon: Icons.favorite_rounded,
                               text: maritalStatusText,
-                              color: const Color(0xFF9C4A62),
+                              color: AppColors.accentWarm,
                             ),
                           if (religionText.isNotEmpty)
                             _buildInfoBadge(
                               icon: Icons.auto_awesome_rounded,
                               text: religionText,
-                              color: const Color(0xFF8A641D),
+                              color: AppColors.premiumGold,
                             ),
                           if (residenceText.isNotEmpty)
                             _buildInfoBadge(

@@ -8,6 +8,11 @@ class AppColors {
   static const Color secondaryTeal = Color(0xFF1F6675);
   static const Color accentWarm = Color(0xFFD76B50);
   static const Color accentLight = Color(0xFFF2B5A0);
+  static const Color accentWarmDeep = Color(0xFFB94F37);
+  static const Color premiumGold = Color(0xFF805600);
+  static const Color premiumGoldDeep = Color(0xFF6C4800);
+  static const Color premiumSilver = Color(0xFF5B6B7D);
+  static const Color premiumSilverDeep = Color(0xFF3F4C5D);
 
   static const Color backgroundColor = Color(0xFFFDFBF7);
   static const Color sectionBackground = Color(0xFFF6F4EF);

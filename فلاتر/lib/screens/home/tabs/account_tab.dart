@@ -244,12 +244,12 @@ class AccountTab extends StatefulWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withValues(alpha: 0.15),
+                  color: AppColors.premiumGold.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.amber, width: 1.5),
+                  border: Border.all(color: AppColors.premiumGold, width: 1.5),
                 ),
                 child: const Icon(Icons.favorite_border_rounded,
-                    color: Colors.amber, size: 48),
+                    color: AppColors.premiumGold, size: 48),
               ),
               const SizedBox(height: 16),
               Text(
@@ -288,13 +288,13 @@ class AccountTab extends StatefulWidget {
                         borderRadius: BorderRadius.circular(16)),
                   ),
                   icon: const Icon(Icons.workspace_premium_rounded,
-                      color: Colors.amber, size: 22),
+                      color: AppColors.accentLight, size: 22),
                   label: Text(
                     isArabic
                         ? 'ترقية الحساب والاشتراك الآن 🚀'
                         : 'Upgrade Account Now 🚀',
                     style: const TextStyle(
-                      color: AppColors.textDark,
+                      color: Colors.white,
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Cairo',
@@ -2184,14 +2184,14 @@ class _SubscriptionsModalContentState
                       padding: const EdgeInsets.all(9),
                       decoration: BoxDecoration(
                         color: isPaymentStep
-                            ? Colors.amber.withValues(alpha: 0.18)
+                            ? AppColors.premiumGold.withValues(alpha: 0.18)
                             : AppColors.accentLight.withValues(alpha: 0.30),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         Icons.workspace_premium_rounded,
                         color: isPaymentStep
-                            ? Colors.amber
+                            ? AppColors.premiumGold
                             : AppColors.primaryTeal,
                         size: 23,
                       ),
@@ -2644,18 +2644,18 @@ class _SubscriptionsModalContentState
                   widget.isArabic ? 'باقة VIP الملكية 👑' : 'Royal VIP Package';
               badgeIcon = Icons.workspace_premium_rounded;
             } else if (validity >= 30 || rawPkgName.contains('شهري')) {
-              themeColor = const Color(0xFF8A5A12);
+              themeColor = AppColors.premiumGold;
               gradientColors = [
-                const Color(0xFF9A650B),
-                const Color(0xFF6E4808),
+                AppColors.premiumGold,
+                AppColors.premiumGoldDeep,
               ];
               badgeTag = widget.isArabic ? 'الباقة الذهبية 🥇' : 'Gold Package';
               badgeIcon = Icons.stars_rounded;
             } else {
-              themeColor = const Color(0xFF9D4A37);
+              themeColor = AppColors.premiumSilver;
               gradientColors = [
-                const Color(0xFF9D4A37),
-                const Color(0xFF773526),
+                AppColors.premiumSilver,
+                AppColors.premiumSilverDeep,
               ];
               badgeTag =
                   widget.isArabic ? 'الباقة الفضية 🥈' : 'Silver Package';
@@ -2905,12 +2905,12 @@ class _SubscriptionsModalContentState
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
                       color: _selectedPaymentCategory == 1
-                          ? Colors.amber.withValues(alpha: 0.2)
+                          ? AppColors.premiumGold.withValues(alpha: 0.2)
                           : AppColors.sectionBackground,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: _selectedPaymentCategory == 1
-                            ? Colors.amber
+                            ? AppColors.premiumGold
                             : AppColors.lineColor,
                       ),
                     ),
@@ -3088,7 +3088,7 @@ class _SubscriptionsModalContentState
               decoration: BoxDecoration(
                 color: AppColors.sectionBackground,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+                border: Border.all(color: AppColors.premiumGold.withValues(alpha: 0.4)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -3096,7 +3096,7 @@ class _SubscriptionsModalContentState
                   Row(
                     children: [
                       const Icon(Icons.payments_rounded,
-                          color: Colors.amber, size: 24),
+                          color: AppColors.premiumGold, size: 24),
                       const SizedBox(width: 10),
                       Text(
                         widget.isArabic
@@ -3130,12 +3130,12 @@ class _SubscriptionsModalContentState
                       color: AppColors.sectionBackground,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                          color: Colors.amber.withValues(alpha: 0.5)),
+                          color: AppColors.premiumGold.withValues(alpha: 0.5)),
                     ),
                     child: Row(
                       children: [
                         const Icon(Icons.vpn_key_rounded,
-                            color: Colors.amber, size: 18),
+                            color: AppColors.premiumGold, size: 18),
                         const SizedBox(width: 8),
                         const Expanded(
                           child: SelectableText(
@@ -3163,13 +3163,13 @@ class _SubscriptionsModalContentState
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: Colors.amber,
+                              color: AppColors.premiumGold,
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
                               widget.isArabic ? 'نسخ الكود' : 'Copy',
                               style: const TextStyle(
-                                  color: Colors.black,
+                                  color: Colors.white,
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                   fontFamily: 'Cairo'),

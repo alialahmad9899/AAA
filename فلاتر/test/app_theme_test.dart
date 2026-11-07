@@ -69,6 +69,41 @@ void main() {
     }
   });
 
+  test('premium, silver and gender accents remain readable', () {
+    const whiteLabelBackgrounds = [
+      AppColors.accentWarmDeep,
+      AppColors.premiumGold,
+      AppColors.premiumGoldDeep,
+      AppColors.premiumSilver,
+      AppColors.premiumSilverDeep,
+    ];
+
+    for (final background in whiteLabelBackgrounds) {
+      expect(
+        _contrastRatio(Colors.white, background),
+        greaterThanOrEqualTo(4.5),
+        reason: 'White labels must stay readable on premium and gender accents.',
+      );
+    }
+
+    const readableTextAccents = [
+      AppColors.accentWarmDeep,
+      AppColors.premiumGold,
+      AppColors.premiumSilver,
+    ];
+
+    for (final foreground in readableTextAccents) {
+      expect(
+        _contrastRatio(foreground, AppColors.backgroundColor),
+        greaterThanOrEqualTo(4.5),
+      );
+      expect(
+        _contrastRatio(foreground, AppColors.sectionBackground),
+        greaterThanOrEqualTo(4.5),
+      );
+    }
+  });
+
   test('primary teal actions remain readable with white labels', () {
     expect(_contrastRatio(Colors.white, AppColors.primaryTeal),
         greaterThanOrEqualTo(4.5));

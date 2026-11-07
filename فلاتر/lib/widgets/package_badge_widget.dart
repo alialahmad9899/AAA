@@ -5,6 +5,7 @@
 // ============================================================================
 
 import 'package:flutter/material.dart';
+import '../constants/colors.dart';
 
 class PackageBadgeWidget extends StatelessWidget {
   final String packageName;
@@ -34,10 +35,10 @@ class PackageBadgeWidget extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    const Color primaryColor = Color(0xFF805600);
+    const Color primaryColor = AppColors.premiumGold;
     const List<Color> gradientColors = [
-      Color(0xFF805600),
-      Color(0xFF6C4800),
+      AppColors.premiumGold,
+      AppColors.premiumGoldDeep,
     ];
     final String badgeTitle = canonicalName;
 

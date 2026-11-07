@@ -7,6 +7,7 @@
 
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../constants/colors.dart';
 import '../services/api_service.dart';
 import '../widgets/app_snackbar.dart';
 
@@ -138,15 +139,15 @@ class ProfileUpdateManager {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1A1A2E).withValues(alpha: 0.85),
+                  color: const AppColors.cardColor.withValues(alpha: 0.98),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.15),
+                    color: AppColors.lineColor,
                     width: 1.5,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.3),
+                      color: AppColors.textDark.withValues(alpha: 0.12),
                       blurRadius: 20,
                       spreadRadius: 5,
                     ),
@@ -162,7 +163,7 @@ class ProfileUpdateManager {
                       child: CircularProgressIndicator(
                         strokeWidth: 3.5,
                         valueColor:
-                            AlwaysStoppedAnimation<Color>(Color(0xFFE91E63)),
+                            AlwaysStoppedAnimation<Color>(AppColors.primaryTeal),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -170,19 +171,19 @@ class ProfileUpdateManager {
                     const Text(
                       'جاري حفظ التغييرات...',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: AppColors.textDark,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        fontFamily: 'Tajawal',
+                        fontFamily: 'Cairo',
                       ),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       'جاري الاتصال بسيرفر وصال الآمن',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.7),
+                        color: AppColors.textMuted,
                         fontSize: 12,
-                        fontFamily: 'Tajawal',
+                        fontFamily: 'Cairo',
                       ),
                     ),
                   ],

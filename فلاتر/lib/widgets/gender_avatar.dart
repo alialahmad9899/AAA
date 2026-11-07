@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/chat_model.dart';
+import '../constants/colors.dart';
 
 /// ويدجت مستقلة لعرض الصورة الشخصية أو الرسمة الرمزية بحسب الجنس
 class GenderAvatar extends StatelessWidget {
@@ -23,7 +24,7 @@ class GenderAvatar extends StatelessWidget {
         gender.contains('انثى');
 
     final Color bgColor =
-        isFemale ? const Color(0xFFEC407A) : const Color(0xFF1E88E5);
+        isFemale ? AppColors.accentWarm : AppColors.primaryTeal;
     final IconData iconData =
         isFemale ? Icons.female_rounded : Icons.male_rounded;
 

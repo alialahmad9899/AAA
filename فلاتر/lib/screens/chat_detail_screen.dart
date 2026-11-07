@@ -800,7 +800,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           title: Row(
             children: [
               const Icon(Icons.workspace_premium_rounded,
-                  color: Colors.amber, size: 28),
+                  color: AppColors.premiumGold, size: 28),
               const SizedBox(width: 10),
               Text(
                 _isArabic ? 'تجديد الاشتراك' : 'Renew Subscription',
@@ -1024,11 +1024,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                           leading: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Colors.amber.withValues(alpha: 0.15),
+                              color: AppColors.warning.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: const Icon(Icons.report_problem_rounded,
-                                color: Colors.amber, size: 22),
+                                color: AppColors.warning, size: 22),
                           ),
                           title: Text(
                               _isArabic
@@ -1175,7 +1175,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(32)),
                   border:
-                      Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                      Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
                 ),
                 child: SingleChildScrollView(
                   child: Column(
@@ -2358,7 +2358,7 @@ class _StyledGenderAvatar extends StatelessWidget {
         gender.contains('انثى');
 
     final List<Color> gradientColors = isFemale
-        ? [const Color(0xFFB85C4A), const Color(0xFF8E4438)]
+        ? [AppColors.accentWarm, AppColors.accentWarmDeep]
         : [AppColors.primaryTeal, AppColors.secondaryTeal];
 
     final IconData avatarIcon =

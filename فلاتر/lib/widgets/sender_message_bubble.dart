@@ -6,6 +6,7 @@
 
 import 'package:flutter/material.dart';
 import '../models/chat_model.dart';
+import '../constants/colors.dart';
 
 /// ويدجت مستقلة لرسائل المُرسِل (الطرف الأول)
 class SenderMessageBubble extends StatelessWidget {
@@ -32,7 +33,7 @@ class SenderMessageBubble extends StatelessWidget {
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: const Color(0xFF0288D1),
+          color: AppColors.primaryTeal,
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(18),
             topRight: Radius.circular(18),
@@ -63,7 +64,7 @@ class SenderMessageBubble extends StatelessWidget {
             Text(
               message.time,
               style: const TextStyle(
-                color: Colors.white60,
+                color: Colors.white.withValues(alpha: 0.86),
                 fontSize: 10,
                 fontFamily: 'Cairo',
               ),

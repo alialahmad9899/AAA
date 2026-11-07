@@ -861,7 +861,7 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
         gender.contains('انثى');
 
     final List<Color> gradientColors = isFemale
-        ? [const Color(0xFFB85C4A), const Color(0xFF8E4438)]
+        ? [AppColors.accentWarm, AppColors.accentWarmDeep]
         : [AppColors.primaryTeal, AppColors.secondaryTeal];
 
     final IconData avatarIcon =

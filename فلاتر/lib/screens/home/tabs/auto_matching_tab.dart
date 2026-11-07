@@ -126,7 +126,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
     required String messageAr,
     required String messageEn,
     required IconData icon,
-    Color iconColor = Colors.amber,
+    Color iconColor = AppColors.premiumGold,
     required VoidCallback onUpgradePressed,
   }) async {
     if (_isModalActive || !mounted) return;
@@ -202,7 +202,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                         borderRadius: BorderRadius.circular(16)),
                   ),
                   icon: const Icon(Icons.workspace_premium_rounded,
-                      color: Colors.amber, size: 22),
+                      color: AppColors.accentLight, size: 22),
                   label: Text(
                     _isAr
                         ? 'ترقية الحساب والاشتراك الآن 🚀'
@@ -591,7 +591,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                             AppColors.primaryTeal.withValues(alpha: 0.18),
                       ),
                       icon: const Icon(Icons.workspace_premium_rounded,
-                          color: Colors.amber, size: 22),
+                          color: AppColors.premiumGold, size: 22),
                       label: Text(
                         _isAr ? 'تفعيل الباقة الآن 🚀' : 'Activate Plan Now 🚀',
                         style: const TextStyle(
