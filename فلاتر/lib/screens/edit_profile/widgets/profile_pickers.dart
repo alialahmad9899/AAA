@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:wesal_app/widgets/bottom_system_inset.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../services/api_service.dart';
+import '../../../constants/colors.dart';
 
 // ============================================================================
 // 🌐 1. قاموس الترجمة الشامل للقوائم والخيارات الثابتة (Translation Dictionary)
@@ -249,10 +250,10 @@ class _GenericPickerBottomSheetContentState
           ),
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
           decoration: BoxDecoration(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.96),
+            color: AppColors.cardColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
             border: Border.all(
-              color: const Color(0xFF38BDF8).withValues(alpha: 0.3),
+              color: AppColors.lineColor,
               width: 1.2,
             ),
           ),
@@ -264,7 +265,7 @@ class _GenericPickerBottomSheetContentState
                 width: 48,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: Colors.white38,
+                  color: AppColors.textLight,
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -275,7 +276,7 @@ class _GenericPickerBottomSheetContentState
                 widget.title,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: AppColors.textDark,
                   fontSize: 19,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Cairo',
@@ -288,7 +289,7 @@ class _GenericPickerBottomSheetContentState
                 TextField(
                   controller: _searchCtrl,
                   style: const TextStyle(
-                      color: Colors.white, fontSize: 16, fontFamily: 'Cairo'),
+                      color: AppColors.textDark, fontSize: 16, fontFamily: 'Cairo'),
                   onChanged: (query) {
                     _debouncer.run(() {
                       final q = query.toLowerCase().trim();
@@ -310,13 +311,13 @@ class _GenericPickerBottomSheetContentState
                   decoration: InputDecoration(
                     hintText: widget.isAr ? 'بحث سريع...' : 'Quick search...',
                     hintStyle: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.65),
+                        color: AppColors.textMuted,
                         fontSize: 15,
                         fontFamily: 'Cairo'),
                     prefixIcon:
-                        const Icon(Icons.search_rounded, color: Colors.white70),
+                        const Icon(Icons.search_rounded, color: AppColors.primaryTeal),
                     filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.12),
+                    fillColor: AppColors.sectionBackground,
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
                         borderSide: BorderSide.none),
@@ -335,7 +336,7 @@ class _GenericPickerBottomSheetContentState
                               ? 'لا توجد نتائج مطابقة'
                               : 'No results found',
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.6),
+                            color: AppColors.textMuted,
                             fontSize: 15,
                             fontFamily: 'Cairo',
                           ),
@@ -346,7 +347,7 @@ class _GenericPickerBottomSheetContentState
                         shrinkWrap: true,
                         itemCount: _filteredItems.length,
                         separatorBuilder: (context, index) => Divider(
-                            color: Colors.white.withValues(alpha: 0.12)),
+                            color: AppColors.sectionBackground),
                         itemBuilder: (context, index) {
                           final item = _filteredItems[index];
                           final String itemName = _getItemName(item);
@@ -365,7 +366,7 @@ class _GenericPickerBottomSheetContentState
                                         color: colorValue,
                                         shape: BoxShape.circle,
                                         border: Border.all(
-                                            color: Colors.white, width: 2),
+                                            color: AppColors.lineColor, width: 2),
                                         boxShadow: [
                                           BoxShadow(
                                             color: colorValue.withValues(
@@ -379,7 +380,7 @@ class _GenericPickerBottomSheetContentState
                               title: Text(
                                 itemName,
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: AppColors.textDark,
                                   fontSize: 16,
                                   fontFamily: 'Cairo',
                                   fontWeight: isSelected
@@ -389,7 +390,7 @@ class _GenericPickerBottomSheetContentState
                               ),
                               trailing: isSelected
                                   ? const Icon(Icons.check_circle_rounded,
-                                      color: Colors.amberAccent, size: 22)
+                                      color: AppColors.accentWarm, size: 22)
                                   : null,
                               onTap: () {
                                 if (itemId.isNotEmpty) {
@@ -488,10 +489,10 @@ class _CountryPickerBottomSheetContentState
           ),
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
           decoration: BoxDecoration(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.96),
+            color: AppColors.cardColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
             border: Border.all(
-              color: const Color(0xFF38BDF8).withValues(alpha: 0.3),
+              color: AppColors.lineColor,
               width: 1.2,
             ),
           ),
@@ -503,7 +504,7 @@ class _CountryPickerBottomSheetContentState
                 width: 48,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: Colors.white38,
+                  color: AppColors.textLight,
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -520,7 +521,7 @@ class _CountryPickerBottomSheetContentState
                         : 'Select Residence Country 🏠'),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textDark,
                     fontSize: 19,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Cairo'),
@@ -531,7 +532,7 @@ class _CountryPickerBottomSheetContentState
               TextField(
                 controller: _searchCtrl,
                 style: const TextStyle(
-                    color: Colors.white, fontSize: 16, fontFamily: 'Cairo'),
+                    color: AppColors.textDark, fontSize: 16, fontFamily: 'Cairo'),
                 onChanged: (query) {
                   _debouncer.run(() {
                     final q = query.toLowerCase().trim();
@@ -563,13 +564,13 @@ class _CountryPickerBottomSheetContentState
                       ? 'ابحث باسم الدولة...'
                       : 'Search country name...',
                   hintStyle: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.65),
+                      color: AppColors.textMuted,
                       fontSize: 14,
                       fontFamily: 'Cairo'),
                   prefixIcon:
-                      const Icon(Icons.search_rounded, color: Colors.white70),
+                      const Icon(Icons.search_rounded, color: AppColors.primaryTeal),
                   filled: true,
-                  fillColor: Colors.white.withValues(alpha: 0.12),
+                  fillColor: AppColors.sectionBackground,
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20),
                       borderSide: BorderSide.none),
@@ -587,7 +588,7 @@ class _CountryPickerBottomSheetContentState
                               ? 'لم يتم العثور على أي دولة'
                               : 'No country found',
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.6),
+                            color: AppColors.textMuted,
                             fontSize: 15,
                             fontFamily: 'Cairo',
                           ),
@@ -598,7 +599,7 @@ class _CountryPickerBottomSheetContentState
                         shrinkWrap: true,
                         itemCount: _filteredCountries.length,
                         separatorBuilder: (context, index) => Divider(
-                            color: Colors.white.withValues(alpha: 0.12)),
+                            color: AppColors.sectionBackground),
                         itemBuilder: (context, index) {
                           final country = _filteredCountries[index] as Map;
                           final String id = country['id'].toString();
@@ -620,19 +621,19 @@ class _CountryPickerBottomSheetContentState
                                 placeholder: (context, url) => Container(
                                   width: 38,
                                   height: 26,
-                                  color: Colors.white12,
+                                  color: AppColors.sectionBackground,
                                 ),
                                 errorWidget: (context, url, error) =>
                                     const Icon(
                                   Icons.flag_rounded,
-                                  color: Colors.white54,
+                                  color: AppColors.textMuted,
                                   size: 26,
                                 ),
                               ),
                               title: Text(
                                 name,
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: AppColors.textDark,
                                   fontSize: 16,
                                   fontFamily: 'Cairo',
                                   fontWeight: isSelected
