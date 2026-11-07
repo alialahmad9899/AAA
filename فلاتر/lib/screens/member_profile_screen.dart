@@ -927,7 +927,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                                                 : 'About Me',
                                             icon: Icons.format_quote_rounded,
                                             accentColor:
-                                                const AppColors.primaryTeal,
+                                                AppColors.primaryTeal,
                                             content: Text(
                                               _profile!.introduction,
                                               style: TextStyle(
@@ -1961,7 +1961,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _isInterestSent
                               ? AppColors.success
-                              : const AppColors.primaryTeal,
+                              : AppColors.primaryTeal,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(18),
                           ),
@@ -2012,9 +2012,9 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                       child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.sectionBackground,
-                          foregroundColor: const AppColors.primaryTeal,
+                          foregroundColor: AppColors.primaryTeal,
                           side: const BorderSide(
-                            color: Color(0xFF38BDF8),
+                            color: AppColors.primaryTeal,
                             width: 1.2,
                           ),
                           shape: RoundedRectangleBorder(
@@ -2025,7 +2025,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                         ),
                         icon: const Icon(
                           Icons.chat_bubble_rounded,
-                          color: Color(0xFF38BDF8),
+                          color: AppColors.primaryTeal,
                           size: 20,
                         ),
                         label: Text(
@@ -2033,7 +2033,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            color: Color(0xFF38BDF8),
+                            color: AppColors.primaryTeal,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'Cairo',
                             fontSize: 14,
