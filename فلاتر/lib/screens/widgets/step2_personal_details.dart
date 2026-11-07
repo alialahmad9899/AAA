@@ -236,8 +236,8 @@ class Step2PersonalDetails extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? Colors.amberAccent
-              : Colors.white.withValues(alpha: 0.18),
+              ? AppColors.accentLight.withValues(alpha: 0.42)
+              : AppColors.sectionBackground,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? AppColors.accentWarm : AppColors.lineColor,
@@ -249,7 +249,7 @@ class Step2PersonalDetails extends StatelessWidget {
           children: [
             if (isSelected) ...[
               const Icon(Icons.check_circle_rounded,
-                  size: 15, color: Color(0xFF01579B)),
+                  size: 15, color: AppColors.primaryTeal),
               const SizedBox(width: 5),
             ],
             Text(
@@ -403,7 +403,7 @@ class Step2PersonalDetails extends StatelessWidget {
                           Text(
                             _isAr ? 'الطول:' : 'Height:',
                             style: const TextStyle(
-                              color: Colors.white70,
+                              color: AppColors.textMuted,
                               fontSize: 13,
                               fontFamily: 'Cairo',
                             ),
@@ -428,7 +428,7 @@ class Step2PersonalDetails extends StatelessWidget {
                         divisions: 70,
                         activeColor:
                             heightWasSelected ? AppColors.accentWarm : AppColors.lineColor,
-                        inactiveColor: Colors.white24,
+                        inactiveColor: AppColors.lineColor,
                         onChanged: onHeightChanged,
                       ),
                       const Divider(color: AppColors.lineColor),
@@ -448,7 +448,7 @@ class Step2PersonalDetails extends StatelessWidget {
                                 ? '${weight.round()} ${_isAr ? 'كغ' : 'kg'}'
                                 : (_isAr ? 'لم يتم التحديد بعد' : 'Not selected yet'),
                             style: const TextStyle(
-                              color: Colors.amberAccent,
+                              color: AppColors.primaryTeal,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               fontFamily: 'Cairo',
@@ -621,12 +621,12 @@ class Step2PersonalDetails extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(icon, color: Colors.amberAccent, size: 16),
+            Icon(icon, color: AppColors.accentWarm, size: 16),
             const SizedBox(width: 6),
             Text(
               title,
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.primaryTeal,
                 fontSize: 13,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Cairo',
@@ -654,11 +654,11 @@ class Step2PersonalDetails extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? Colors.amberAccent
-                      : Colors.black.withValues(alpha: 0.25),
+                      ? AppColors.accentLight.withValues(alpha: 0.42)
+                      : AppColors.sectionBackground,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: isSelected ? Colors.amber : Colors.white24,
+                    color: isSelected ? AppColors.accentWarm : AppColors.lineColor,
                     width: 1.5,
                   ),
                 ),
