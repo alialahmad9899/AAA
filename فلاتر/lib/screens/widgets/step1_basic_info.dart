@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../constants/colors.dart';
 import '../../utils/arabic_number_formatter.dart';
 
 class Step1BasicInfo extends StatefulWidget {
@@ -188,9 +189,9 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
             AndroidUiSettings(
               toolbarTitle:
                   _isAr ? 'اقتصاص الصورة الشخصية' : 'Crop Profile Photo',
-              toolbarColor: const Color(0xFF01579B),
+              toolbarColor: AppColors.primaryTeal,
               toolbarWidgetColor: Colors.white,
-              activeControlsWidgetColor: Colors.amberAccent,
+              activeControlsWidgetColor: AppColors.accentWarm,
               initAspectRatio: CropAspectRatioPreset.original,
               lockAspectRatio: true,
             ),
@@ -226,17 +227,17 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
     return InputDecoration(
       hintText: hintText,
       hintStyle: const TextStyle(
-        color: Colors.black54,
+        color: AppColors.textMuted,
         fontSize: 13,
         fontFamily: 'Cairo',
         fontWeight: FontWeight.w500,
       ),
       prefixIcon: prefixIcon != null
-          ? Icon(prefixIcon, color: const Color(0xFF0288D1), size: 18)
+          ? Icon(prefixIcon, color: AppColors.primaryTeal, size: 18)
           : null,
       suffixIcon: suffixIcon,
       filled: true,
-      fillColor: Colors.white,
+      fillColor: AppColors.cardColor,
       contentPadding: contentPadding ??
           const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       enabledBorder: OutlineInputBorder(
@@ -245,7 +246,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Color(0xFF0288D1), width: 1.8),
+        borderSide: const BorderSide(color: AppColors.primaryTeal, width: 1.8),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
@@ -265,7 +266,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
         Text(
           title,
           style: const TextStyle(
-            color: Colors.amberAccent,
+            color: AppColors.primaryTeal,
             fontSize: 15,
             fontWeight: FontWeight.bold,
             fontFamily: 'Cairo',
@@ -276,7 +277,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
           Text(
             subtitle,
             style: const TextStyle(
-              color: Colors.white70,
+              color: AppColors.textMuted,
               fontSize: 12,
               fontFamily: 'Cairo',
             ),
@@ -304,7 +305,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
               : Colors.white.withValues(alpha: 0.18),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? Colors.amber : Colors.white30,
+            color: isSelected ? AppColors.accentWarm : AppColors.lineColor,
             width: 1.5,
           ),
         ),
@@ -319,7 +320,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? const Color(0xFF01579B) : Colors.white,
+                color: isSelected ? AppColors.primaryTeal : AppColors.textDark,
                 fontWeight: FontWeight.bold,
                 fontSize: 13.5,
                 fontFamily: 'Cairo',
@@ -343,10 +344,10 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
           child: Container(
             padding: const EdgeInsets.all(18.0),
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.35),
+              color: AppColors.cardColor,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.2),
+                color: AppColors.lineColor,
                 width: 1.2,
               ),
             ),
@@ -360,7 +361,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                         : 'Step 1: Let us know you ✨',
                     style: const TextStyle(
                       fontSize: 19,
-                      color: Colors.white,
+                      color: AppColors.textDark,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Cairo',
                     ),
@@ -389,7 +390,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.3),
+                                    color: AppColors.textDark.withValues(alpha: 0.08),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),
@@ -454,11 +455,11 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                             horizontal: 14, vertical: 10),
                         decoration: BoxDecoration(
                           color:
-                              const Color(0xFF0288D1).withValues(alpha: 0.25),
+                              AppColors.sectionBackground,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color:
-                                const Color(0xFF00E5FF).withValues(alpha: 0.5),
+                                AppColors.lineColor,
                             width: 1,
                           ),
                         ),
@@ -466,7 +467,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                           children: [
                             const Icon(
                               Icons.info_outline_rounded,
-                              color: Color(0xFF00E5FF),
+                              color: AppColors.accentWarm,
                               size: 20,
                             ),
                             const SizedBox(width: 10),
@@ -520,7 +521,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                       child: TextFormField(
                         controller: widget.firstNameController,
                         style: const TextStyle(
-                          color: Colors.black87,
+                          color: AppColors.textDark,
                           fontSize: 14,
                           fontFamily: 'Cairo',
                           fontWeight: FontWeight.bold,
@@ -802,11 +803,11 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                 Row(
                   children: [
                     Theme(
-                      data: ThemeData(unselectedWidgetColor: Colors.white70),
+                      data: ThemeData(unselectedWidgetColor: AppColors.textLight),
                       child: Checkbox(
                         value: widget.agreedToTerms,
-                        activeColor: Colors.amberAccent,
-                        checkColor: const Color(0xFF01579B),
+                        activeColor: AppColors.primaryTeal,
+                        checkColor: Colors.white,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(4)),
                         onChanged: (val) => widget.onTermsChanged(val ?? false),
@@ -831,9 +832,9 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                                   ? 'الخصوصية وشروط التسجيل'
                                   : 'Privacy Policy & Registration Terms',
                               style: const TextStyle(
-                                color: Color(0xFF38BDF8),
+                                color: AppColors.accentWarm,
                                 decoration: TextDecoration.underline,
-                                decorationColor: Color(0xFF38BDF8),
+                                decorationColor: AppColors.accentWarm,
                                 fontWeight: FontWeight.bold,
                               ),
                               recognizer: _termsLinkRecognizer,

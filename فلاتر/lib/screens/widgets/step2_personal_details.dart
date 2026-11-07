@@ -6,6 +6,7 @@
 // ============================================================================
 
 import 'package:flutter/material.dart';
+import '../../constants/colors.dart';
 
 class Step2PersonalDetails extends StatelessWidget {
   final GlobalKey<FormState> formKey;
@@ -168,14 +169,14 @@ class Step2PersonalDetails extends StatelessWidget {
     return InputDecoration(
       hintText: hintText,
       hintStyle: const TextStyle(
-        color: Colors.black54,
+        color: AppColors.textMuted,
         fontSize: 13,
         fontFamily: 'Cairo',
         fontWeight: FontWeight.w500,
       ),
-      prefixIcon: Icon(prefixIcon, color: const Color(0xFF0288D1), size: 18),
+      prefixIcon: Icon(prefixIcon, color: AppColors.primaryTeal, size: 18),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: AppColors.cardColor,
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
@@ -183,7 +184,7 @@ class Step2PersonalDetails extends StatelessWidget {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Color(0xFF0288D1), width: 1.8),
+        borderSide: const BorderSide(color: AppColors.primaryTeal, width: 1.8),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
@@ -198,7 +199,7 @@ class Step2PersonalDetails extends StatelessWidget {
       child: Text(
         title,
         style: const TextStyle(
-          color: Colors.amberAccent,
+          color: AppColors.primaryTeal,
           fontSize: 15,
           fontWeight: FontWeight.bold,
           fontFamily: 'Cairo',
@@ -213,7 +214,7 @@ class Step2PersonalDetails extends StatelessWidget {
       child: Text(
         title,
         style: const TextStyle(
-          color: Colors.white70,
+          color: AppColors.textMuted,
           fontSize: 13,
           fontWeight: FontWeight.bold,
           fontFamily: 'Cairo',
@@ -239,7 +240,7 @@ class Step2PersonalDetails extends StatelessWidget {
               : Colors.white.withValues(alpha: 0.18),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? Colors.amber : Colors.white30,
+            color: isSelected ? AppColors.accentWarm : AppColors.lineColor,
             width: 1.5,
           ),
         ),
@@ -254,7 +255,7 @@ class Step2PersonalDetails extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? const Color(0xFF01579B) : Colors.white,
+                color: isSelected ? AppColors.primaryTeal : AppColors.textDark,
                 fontWeight: FontWeight.bold,
                 fontSize: 13,
                 fontFamily: 'Cairo',
@@ -278,10 +279,10 @@ class Step2PersonalDetails extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(18.0),
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.35),
+              color: AppColors.cardColor,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.2),
+                color: AppColors.lineColor,
                 width: 1.2,
               ),
             ),
@@ -295,7 +296,7 @@ class Step2PersonalDetails extends StatelessWidget {
                         : 'Step 2: Education & Physical Traits 🎓📏',
                     style: const TextStyle(
                       fontSize: 19,
-                      color: Colors.white,
+                      color: AppColors.textDark,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Cairo',
                     ),
@@ -389,9 +390,9 @@ class Step2PersonalDetails extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.2),
+                    color: AppColors.sectionBackground,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white24),
+                    border: Border.all(color: AppColors.lineColor),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -412,7 +413,7 @@ class Step2PersonalDetails extends StatelessWidget {
                                 ? '${height.round()} ${_isAr ? 'سم' : 'cm'}'
                                 : (_isAr ? 'لم يتم التحديد بعد' : 'Not selected yet'),
                             style: const TextStyle(
-                              color: Colors.amberAccent,
+                              color: AppColors.accentWarm,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               fontFamily: 'Cairo',
@@ -426,11 +427,11 @@ class Step2PersonalDetails extends StatelessWidget {
                         max: 210,
                         divisions: 70,
                         activeColor:
-                            heightWasSelected ? Colors.amberAccent : Colors.white24,
+                            heightWasSelected ? AppColors.accentWarm : AppColors.lineColor,
                         inactiveColor: Colors.white24,
                         onChanged: onHeightChanged,
                       ),
-                      const Divider(color: Colors.white24),
+                      const Divider(color: AppColors.lineColor),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -461,7 +462,7 @@ class Step2PersonalDetails extends StatelessWidget {
                         max: 150,
                         divisions: 110,
                         activeColor:
-                            weightWasSelected ? Colors.amberAccent : Colors.white24,
+                            weightWasSelected ? AppColors.accentWarm : AppColors.lineColor,
                         inactiveColor: Colors.white24,
                         onChanged: onWeightChanged,
                       ),
@@ -670,7 +671,7 @@ class Step2PersonalDetails extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: color,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 1),
+                        border: Border.all(color: AppColors.lineColor, width: 1),
                       ),
                     ),
                     const SizedBox(width: 6),
@@ -678,7 +679,7 @@ class Step2PersonalDetails extends StatelessWidget {
                       label,
                       style: TextStyle(
                         color:
-                            isSelected ? const Color(0xFF01579B) : Colors.white,
+                            isSelected ? AppColors.primaryTeal : AppColors.textDark,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                         fontFamily: 'Cairo',

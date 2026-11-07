@@ -5,6 +5,7 @@
 // ============================================================================
 
 import 'package:flutter/material.dart';
+import '../../constants/colors.dart';
 
 class Step4PartnerExpectations extends StatelessWidget {
   final GlobalKey<FormState> formKey;
@@ -220,14 +221,14 @@ class Step4PartnerExpectations extends StatelessWidget {
     return InputDecoration(
       hintText: hintText,
       hintStyle: const TextStyle(
-        color: Colors.black54,
+        color: AppColors.textMuted,
         fontSize: 13,
         fontFamily: 'Cairo',
         fontWeight: FontWeight.w500,
       ),
-      prefixIcon: Icon(icon, color: const Color(0xFF0288D1), size: 18),
+      prefixIcon: Icon(icon, color: AppColors.primaryTeal, size: 18),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: AppColors.cardColor,
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
@@ -235,7 +236,7 @@ class Step4PartnerExpectations extends StatelessWidget {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Color(0xFF0288D1), width: 1.8),
+        borderSide: const BorderSide(color: AppColors.primaryTeal, width: 1.8),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
@@ -254,7 +255,7 @@ class Step4PartnerExpectations extends StatelessWidget {
       child: Text(
         title,
         style: const TextStyle(
-          color: Colors.amberAccent,
+          color: AppColors.primaryTeal,
           fontSize: 14.5,
           fontWeight: FontWeight.bold,
           fontFamily: 'Cairo',
@@ -278,7 +279,7 @@ class Step4PartnerExpectations extends StatelessWidget {
     if (normalized.contains('أشقر') || normalized.contains('blonde')) return const Color(0xFFE7C66B);
     if (normalized.contains('أحمر') || normalized.contains('red')) return const Color(0xFFB7473A);
     if (normalized.contains('رمادي') || normalized.contains('grey') || normalized.contains('gray') || normalized.contains('شيب')) return const Color(0xFF9CA3AF);
-    return const Color(0xFF38BDF8);
+    return AppColors.secondaryTeal;
   }
 
   Widget _buildColorDot(String value) {
@@ -311,7 +312,7 @@ class Step4PartnerExpectations extends StatelessWidget {
               : Colors.white.withValues(alpha: 0.18),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? Colors.amber : Colors.white30,
+            color: isSelected ? AppColors.accentWarm : AppColors.lineColor,
             width: 1.5,
           ),
         ),
@@ -330,7 +331,7 @@ class Step4PartnerExpectations extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? const Color(0xFF01579B) : Colors.white,
+                color: isSelected ? AppColors.primaryTeal : AppColors.textDark,
                 fontWeight: FontWeight.bold,
                 fontSize: 13,
                 fontFamily: 'Cairo',
@@ -403,10 +404,10 @@ class Step4PartnerExpectations extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(18.0),
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.35),
+              color: AppColors.cardColor,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.2),
+                color: AppColors.lineColor,
                 width: 1.2,
               ),
             ),
@@ -421,7 +422,7 @@ class Step4PartnerExpectations extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: AppColors.textDark,
                       fontFamily: 'Cairo',
                     ),
                   ),
@@ -435,7 +436,7 @@ class Step4PartnerExpectations extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 12.5,
-                      color: Colors.white70,
+                      color: AppColors.textMuted,
                       fontFamily: 'Cairo',
                     ),
                   ),
@@ -471,9 +472,9 @@ class Step4PartnerExpectations extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.2),
+                    color: AppColors.sectionBackground,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white24),
+                    border: Border.all(color: AppColors.lineColor),
                   ),
                   child: Column(
                     children: [
@@ -512,7 +513,7 @@ class Step4PartnerExpectations extends StatelessWidget {
                         activeColor: ageRangeWasSelected
                             ? Colors.amberAccent
                             : Colors.white24,
-                        inactiveColor: Colors.white24,
+                        inactiveColor: AppColors.lineColor,
                         onChanged: onAgeRangeChanged,
                       ),
                       Align(
@@ -606,8 +607,8 @@ class Step4PartnerExpectations extends StatelessWidget {
                           max: 210,
                           divisions: 70,
                           activeColor: heightRangeWasSelected
-                              ? Colors.amberAccent
-                              : Colors.white24,
+                              ? AppColors.accentWarm
+                              : AppColors.lineColor,
                           inactiveColor: Colors.white24,
                           onChanged: onHeightRangeChanged,
                         ),
@@ -784,7 +785,7 @@ class Step4PartnerExpectations extends StatelessWidget {
                     : '8. Preferred Partner Language *'),
                 if (isLoadingLanguages)
                   const Center(
-                    child: CircularProgressIndicator(color: Colors.amberAccent),
+                    child: CircularProgressIndicator(color: AppColors.accentWarm),
                   )
                 else if (languageItems.isEmpty)
                   Align(

@@ -9,6 +9,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../constants/colors.dart';
 
 import '../services/api_service.dart';
 import 'notifications_screen.dart';
@@ -313,10 +314,10 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(22),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF01579B).withValues(alpha: 0.92),
+                    color: AppColors.cardColor,
                     borderRadius: BorderRadius.circular(28),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.35),
+                      color: AppColors.lineColor,
                       width: 1.5,
                     ),
                   ),
@@ -326,7 +327,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                       Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
+                          color: AppColors.sectionBackground,
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: Colors.white.withValues(alpha: 0.3),
@@ -334,7 +335,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                         ),
                         child: const Icon(
                           Icons.exit_to_app_rounded,
-                          color: Colors.white,
+                          color: AppColors.primaryTeal,
                           size: 32,
                         ),
                       ),
@@ -342,7 +343,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                       Text(
                         _txt('exit_title'),
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: AppColors.textDark,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           fontFamily: 'Cairo',
@@ -353,7 +354,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                         _txt('exit_desc'),
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.85),
+                          color: AppColors.textMuted,
                           fontSize: 14,
                           height: 1.4,
                           fontFamily: 'Cairo',
@@ -368,7 +369,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                               child: Text(
                                 _txt('cancel'),
                                 style: const TextStyle(
-                                    color: Colors.white70, fontFamily: 'Cairo'),
+                                    color: AppColors.textMuted, fontFamily: 'Cairo'),
                               ),
                             ),
                           ),
@@ -376,8 +377,8 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                           Expanded(
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: const Color(0xFF0288D1),
+                                backgroundColor: AppColors.primaryTeal,
+                                foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(14),
                                 ),
@@ -421,7 +422,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const Color primarySkyBlue = Color(0xFF0288D1);
+    const Color primarySkyBlue = AppColors.primaryTeal;
 
     final List<Widget> pages = [
       AutoMatchingTab(
@@ -492,9 +493,8 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Color(0xFF01579B),
-                  Color(0xFF0288D1),
-                  Color(0xFF4FC3F7),
+                  AppColors.backgroundColor,
+                  AppColors.sectionBackground,
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -533,10 +533,10 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
         child: Container(
           height: 62,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.20),
+            color: Colors.white.withValues(alpha: 0.96),
             borderRadius: BorderRadius.circular(30),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.40),
+              color: AppColors.lineColor,
               width: 1.5,
             ),
             boxShadow: [

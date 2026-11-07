@@ -10,6 +10,7 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../constants/colors.dart';
 
 import '../services/api_service.dart';
 import '../services/notification_service.dart';
@@ -871,10 +872,10 @@ class _SignupScreenState extends State<SignupScreen> {
               child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0F172A).withValues(alpha: 0.95),
+                  color: AppColors.cardColor,
                   borderRadius: BorderRadius.circular(28),
                   border: Border.all(
-                    color: const Color(0xFF38BDF8).withValues(alpha: 0.5),
+                    color: AppColors.lineColor,
                     width: 1.5,
                   ),
                 ),
@@ -887,11 +888,11 @@ class _SignupScreenState extends State<SignupScreen> {
                         color: const Color(0xFF10B981).withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                         border: Border.all(
-                            color: const Color(0xFF10B981), width: 1.5),
+                            color: AppColors.success, width: 1.5),
                       ),
                       child: const Icon(
                         Icons.verified_rounded,
-                        color: Color(0xFF10B981),
+                        color: AppColors.success,
                         size: 48,
                       ),
                     ),
@@ -902,7 +903,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           : 'Account Created Successfully! ✨',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppColors.textDark,
                         fontFamily: 'Cairo',
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
@@ -915,7 +916,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           : 'Profile and partner expectations saved successfully. You can now browse the app.',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        color: Colors.white70,
+                        color: AppColors.textMuted,
                         fontFamily: 'Cairo',
                         fontSize: 13.5,
                         height: 1.5,
@@ -927,7 +928,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       height: 48,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0288D1),
+                          backgroundColor: AppColors.primaryTeal,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
@@ -967,8 +968,8 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     final bool isAr = widget.currentLanguage == 'ar';
-    const primaryColor = Color(0xFF0288D1);
-    const darkBgColor = Color(0xFF01579B);
+    const primaryColor = AppColors.primaryTeal;
+    const darkBgColor = AppColors.backgroundColor;
 
     final double bottomInset = MediaQuery.of(context).padding.bottom;
     final double bottomButtonPadding =
@@ -977,9 +978,9 @@ class _SignupScreenState extends State<SignupScreen> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
+        statusBarIconBrightness: Brightness.dark,
         systemNavigationBarColor: darkBgColor,
-        systemNavigationBarIconBrightness: Brightness.light,
+        systemNavigationBarIconBrightness: Brightness.dark,
         systemNavigationBarDividerColor: Colors.transparent,
       ),
       child: Scaffold(
@@ -989,9 +990,8 @@ class _SignupScreenState extends State<SignupScreen> {
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Color(0xFF01579B),
-                  Color(0xFF0288D1),
-                  Color(0xFF00838F)
+                  AppColors.backgroundColor,
+                  AppColors.sectionBackground
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -1012,7 +1012,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             isAr
                                 ? Icons.arrow_back_ios_rounded
                                 : Icons.arrow_back_ios_new_rounded,
-                            color: Colors.white,
+                            color: AppColors.primaryTeal,
                             size: 20,
                           ),
                           onPressed: _goToPreviousPage,
@@ -1046,8 +1046,8 @@ class _SignupScreenState extends State<SignupScreen> {
                             height: 6,
                             decoration: BoxDecoration(
                               color: index <= _currentStep
-                                  ? Colors.amberAccent
-                                  : Colors.white24,
+                                   ? AppColors.accentWarm
+                                   : AppColors.lineColor,
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
@@ -1245,8 +1245,8 @@ class _SignupScreenState extends State<SignupScreen> {
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _handleNextStep,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: primaryColor,
+                          backgroundColor: primaryColor,
+                          foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(28),
                           ),
@@ -1257,8 +1257,8 @@ class _SignupScreenState extends State<SignupScreen> {
                                 width: 24,
                                 height: 24,
                                 child: CircularProgressIndicator(
-                                  color: primaryColor,
-                                  strokeWidth: 3,
+                                  color: Colors.white,
+                                   strokeWidth: 3,
                                 ),
                               )
                             : Text(

@@ -7,6 +7,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../../constants/colors.dart';
 
 import '../../../models/member_model.dart';
 import '../../../models/chat_model.dart';
@@ -138,10 +139,10 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.96),
+            color: AppColors.cardColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
             border: Border.all(
-                color: const Color(0xFF38BDF8).withValues(alpha: 0.4)),
+                color: AppColors.lineColor),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -150,7 +151,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white30,
+                  color: AppColors.lineColor,
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -169,7 +170,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                 _isAr ? titleAr : titleEn,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: AppColors.textDark,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Cairo',
@@ -180,7 +181,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                 _isAr ? messageAr : messageEn,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  color: Colors.white70,
+                  color: AppColors.textMuted,
                   fontSize: 13.5,
                   fontFamily: 'Cairo',
                   height: 1.5,
@@ -191,7 +192,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0288D1),
+                    backgroundColor: AppColors.primaryTeal,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16)),
@@ -203,7 +204,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                         ? 'ترقية الحساب والاشتراك الآن 🚀'
                         : 'Upgrade Account Now 🚀',
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: AppColors.textDark,
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Cairo',
@@ -234,7 +235,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
       messageEn:
           'Filtering profiles by match percentage is a premium feature. Subscribe now to get accurate matching results!',
       icon: Icons.auto_awesome_rounded,
-      iconColor: const Color(0xFF00E5FF),
+      iconColor: AppColors.accentWarm,
       onUpgradePressed: widget.onUpgradeRequested,
     );
   }
@@ -262,7 +263,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
       messageEn:
           'Direct messaging is exclusive to subscribed accounts. Upgrade now to start direct messaging with your partner!',
       icon: Icons.chat_bubble_outline_rounded,
-      iconColor: const Color(0xFFFFB300),
+      iconColor: AppColors.accentWarm,
       onUpgradePressed: widget.onUpgradeRequested,
     );
   }
@@ -502,15 +503,15 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
             child: Container(
               padding: const EdgeInsets.all(28.0),
               decoration: BoxDecoration(
-                color: const Color(0xFF0F172A).withValues(alpha: 0.92),
+                color: AppColors.cardColor,
                 borderRadius: BorderRadius.circular(28),
                 border: Border.all(
-                  color: const Color(0xFF00E5FF).withValues(alpha: 0.5),
+                  color: AppColors.lineColor,
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF00E5FF).withValues(alpha: 0.25),
+                    color: AppColors.primaryTeal.withValues(alpha: 0.08),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -522,16 +523,16 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                   Container(
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0288D1).withValues(alpha: 0.2),
+                      color: AppColors.accentLight.withValues(alpha: 0.22),
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: const Color(0xFF00E5FF),
+                        color: AppColors.accentWarm,
                         width: 1.5,
                       ),
                     ),
                     child: const Icon(
                       Icons.auto_awesome_rounded,
-                      color: Color(0xFF00E5FF),
+                      color: AppColors.accentWarm,
                       size: 48,
                     ),
                   ),
@@ -542,7 +543,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                         : 'Auto-Matching Feature Locked 💎',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: AppColors.textDark,
                       fontSize: 19,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Cairo',
@@ -555,7 +556,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                         : 'Subscribe to a premium plan to unlock advanced profile matching algorithms!',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      color: Colors.white70,
+                      color: AppColors.textMuted,
                       fontSize: 14,
                       fontFamily: 'Cairo',
                       height: 1.5,
@@ -566,7 +567,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0288D1),
+                        backgroundColor: AppColors.primaryTeal,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
@@ -580,7 +581,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                       label: Text(
                         _isAr ? 'تفعيل الباقة الآن 🚀' : 'Activate Plan Now 🚀',
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: AppColors.textDark,
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                           fontFamily: 'Cairo',
@@ -607,148 +608,80 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
+                  color: AppColors.cardColor,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.35), width: 1.2),
+                  border: Border.all(color: AppColors.lineColor),
                 ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF4FC3F7),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Cairo',
-                      ),
-                    ),
-                  ],
-                ),
+                child: Row(children: [
+                  Container(width: 8, height: 8, decoration: const BoxDecoration(
+                    color: AppColors.accentWarm, shape: BoxShape.circle)),
+                  const SizedBox(width: 8),
+                  Text(title, style: const TextStyle(color: AppColors.primaryTeal,
+                    fontSize: 15, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+                ]),
               ),
               Container(
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.35), width: 1.2),
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    IconButton(
-                      constraints:
-                          const BoxConstraints(minWidth: 38, minHeight: 38),
-                      padding: EdgeInsets.zero,
-                      icon: const Icon(Icons.notifications_none_rounded,
-                          color: Colors.white, size: 22),
-                      onPressed: widget.onNotificationPressed,
-                    ),
-                    if (widget.unreadNotificationCount > 0)
-                      Positioned(
-                        top: 6,
-                        right: 6,
-                        child: Container(
-                          padding: const EdgeInsets.all(3),
-                          decoration: const BoxDecoration(
-                            color: Colors.redAccent,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Text(
-                            '${widget.unreadNotificationCount}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'Cairo',
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
+                decoration: BoxDecoration(color: AppColors.cardColor, shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.lineColor)),
+                child: Stack(alignment: Alignment.center, children: [
+                  IconButton(
+                    constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                    padding: EdgeInsets.zero,
+                    icon: const Icon(Icons.notifications_none_rounded,
+                      color: AppColors.primaryTeal, size: 22),
+                    onPressed: widget.onNotificationPressed,
+                  ),
+                  if (widget.unreadNotificationCount > 0)
+                    Positioned(top: 6, right: 6, child: Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: const BoxDecoration(color: AppColors.error, shape: BoxShape.circle),
+                      child: Text('${widget.unreadNotificationCount}',
+                        style: const TextStyle(color: Colors.white, fontSize: 9,
+                          fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+                    )),
+                ]),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
             decoration: BoxDecoration(
               color: _isMatchFilterEnabled
-                  ? const Color(0xFF0288D1).withValues(alpha: 0.30)
-                  : Colors.white.withValues(alpha: 0.12),
+                  ? AppColors.accentLight.withValues(alpha: 0.24)
+                  : AppColors.cardColor,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: _isMatchFilterEnabled
-                    ? const Color(0xFF00E5FF)
-                    : Colors.white.withValues(alpha: 0.25),
-                width: 1.2,
-              ),
+              border: Border.all(color: _isMatchFilterEnabled
+                  ? AppColors.accentWarm : AppColors.lineColor),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      _isMatchFilterEnabled
-                          ? Icons.auto_awesome_rounded
-                          : Icons.people_alt_rounded,
-                      color: _isMatchFilterEnabled
-                          ? const Color(0xFF00E5FF)
-                          : Colors.white70,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      _isAr
-                          ? 'ترتيب حسب نسبة التوافق'
-                          : 'Sort by compatibility score',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: _isMatchFilterEnabled
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        fontFamily: 'Cairo',
-                      ),
-                    ),
-                  ],
-                ),
-                Transform.scale(
-                  scale: 0.85,
-                  child: Switch(
-                    value: _isMatchFilterEnabled,
-                    activeThumbColor: const Color(0xFF00E5FF),
-                    activeTrackColor: const Color(0xFF0288D1),
-                    inactiveThumbColor: Colors.white70,
-                    inactiveTrackColor: Colors.white24,
-                    onChanged: (val) {
-                      if (!_isSubscribedOrFemale && val) {
-                        _showMatchFilterModal();
-                        return;
-                      }
-                      setState(() {
-                        _isMatchFilterEnabled = val;
-                      });
-                      _fetchMatches();
-                    },
-                  ),
-                ),
-              ],
-            ),
+            child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              Row(children: [
+                Icon(_isMatchFilterEnabled ? Icons.auto_awesome_rounded : Icons.people_alt_rounded,
+                  color: _isMatchFilterEnabled ? AppColors.accentWarm : AppColors.primaryTeal, size: 18),
+                const SizedBox(width: 8),
+                Text(_isAr ? 'ترتيب حسب نسبة التوافق' : 'Sort by compatibility score',
+                  style: TextStyle(color: AppColors.textDark, fontSize: 13,
+                    fontWeight: _isMatchFilterEnabled ? FontWeight.bold : FontWeight.normal,
+                    fontFamily: 'Cairo')),
+              ]),
+              Transform.scale(scale: 0.85, child: Switch(
+                value: _isMatchFilterEnabled,
+                activeThumbColor: Colors.white,
+                activeTrackColor: AppColors.primaryTeal,
+                inactiveThumbColor: AppColors.textLight,
+                inactiveTrackColor: AppColors.lineColor,
+                onChanged: (val) {
+                  if (!_isSubscribedOrFemale && val) {
+                    _showMatchFilterModal();
+                    return;
+                  }
+                  setState(() => _isMatchFilterEnabled = val);
+                  _fetchMatches();
+                },
+              )),
+            ]),
           ),
         ],
       ),
@@ -771,17 +704,17 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(32),
             border: Border.all(
-              color: const Color(0xFF00E5FF),
-              width: 1.8,
+              color: AppColors.primaryTeal,
+              width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF00E5FF).withValues(alpha: 0.35),
+                color: AppColors.primaryTeal.withValues(alpha: 0.16),
                 blurRadius: 20,
                 spreadRadius: 2,
               ),
               BoxShadow(
-                color: const Color(0xFF7C4DFF).withValues(alpha: 0.25),
+                color: AppColors.accentWarm.withValues(alpha: 0.12),
                 blurRadius: 30,
                 spreadRadius: 4,
               ),
@@ -848,14 +781,14 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                           ),
                           decoration: BoxDecoration(
                             color: member.matchPercentage == null
-                                ? const Color(0xFF263449).withValues(alpha: 0.88)
+                                ? AppColors.textDark.withValues(alpha: 0.90)
                                 : null,
                             gradient: member.matchPercentage == null
                                 ? null
                                 : const LinearGradient(
                                     colors: [
-                                      Color(0xFF00E5FF),
-                                      Color(0xFF0288D1),
+                                      AppColors.accentWarm,
+                                      AppColors.primaryTeal,
                                     ],
                                   ),
                             borderRadius: BorderRadius.circular(20),
@@ -869,7 +802,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                               BoxShadow(
                                 color: (member.matchPercentage == null
                                         ? Colors.black
-                                        : const Color(0xFF00E5FF))
+                                        : AppColors.accentWarm)
                                     .withValues(alpha: 0.35),
                                 blurRadius: 10,
                               ),
@@ -972,19 +905,19 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                             _buildInfoPillChip(
                               icon: Icons.cake_rounded,
                               label: '${member.age} ${_isAr ? 'سنة' : 'yrs'}',
-                              iconColor: const Color(0xFF4FC3F7),
+                              iconColor: AppColors.accentLight,
                             ),
                           if (maritalStatusText.isNotEmpty)
                             _buildInfoPillChip(
                               icon: Icons.favorite_rounded,
                               label: maritalStatusText,
-                              iconColor: const Color(0xFFFF80AB),
+                              iconColor: AppColors.accentWarm,
                             ),
                           if (locationText.isNotEmpty)
                             _buildInfoPillChip(
                               icon: Icons.location_on_rounded,
                               label: locationText,
-                              iconColor: const Color(0xFF81D4FA),
+                              iconColor: AppColors.secondaryTeal,
                             ),
                           if (occupationText.isNotEmpty &&
                               occupationText != 'غير محدد' &&
@@ -993,7 +926,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                             _buildInfoPillChip(
                               icon: Icons.work_rounded,
                               label: occupationText,
-                              iconColor: const Color(0xFFB388FF),
+                              iconColor: AppColors.accentLight,
                             ),
                         ],
                       ),
@@ -1120,7 +1053,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                     gradient: LinearGradient(
                       colors: isLiked
                           ? [Colors.grey.shade600, Colors.grey.shade800]
-                          : const [Color(0xFF0288D1), Color(0xFF00B0FF)],
+                          : const [AppColors.accentWarm, AppColors.accentLight],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -1186,13 +1119,13 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                     color: Colors.white.withValues(alpha: 0.18),
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: Colors.amberAccent.withValues(alpha: 0.7),
+                      color: AppColors.accentLight.withValues(alpha: 0.85),
                       width: 1.2,
                     ),
                   ),
                   child: const Icon(
                     Icons.chat_bubble_rounded,
-                    color: Colors.amberAccent,
+                    color: AppColors.accentLight,
                     size: 20,
                   ),
                 ),
@@ -1265,7 +1198,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
           Expanded(
             child: _isLoading
                 ? const Center(
-                    child: CircularProgressIndicator(color: Colors.white))
+                    child: CircularProgressIndicator(color: AppColors.accentWarm))
                 : !_isSubscribedOrFemale && _isMatchFilterEnabled
                     ? _buildLockOverlayView()
                     : _errorMessage != null
@@ -1300,7 +1233,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                           )
                         : RefreshIndicator(
                             onRefresh: _checkSubscriptionAndFetch,
-                            color: const Color(0xFF00E5FF),
+                            color: AppColors.accentWarm,
                             child: _matchedMembers.isEmpty
                                 ? ListView(
                                     physics:

@@ -103,7 +103,7 @@ jobs:
       - name: Package only files changed in this repair session
         shell: bash
         env:
-          BASE_SHA: ${{ contains(github.event.head_commit.message, '[package-session]') && 'd4d6e36ac2dc9b81e624a601f89a67140abe35c0' || github.event.pull_request.base.sha || github.event.before }}
+          BASE_SHA: ${{ contains(github.event.head_commit.message, '[package-wesal-ui]') && 'e8fdd263b9060b8775b4a924261209d017b26c98' || github.event.pull_request.base.sha || github.event.before }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail

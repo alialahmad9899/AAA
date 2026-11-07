@@ -4,6 +4,7 @@
 // الوصف: المرحلة 3 - المنشأ والإقامة مع الدعم الكامل للغتين والتأقلم مع الاتجاه.
 // ============================================================================
 import 'package:flutter/material.dart';
+import '../../constants/colors.dart';
 import 'package:wesal_app/widgets/bottom_system_inset.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/api_service.dart';
@@ -307,7 +308,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF01579B),
+      backgroundColor: AppColors.cardColor,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (context) {
@@ -337,14 +338,14 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                     children: [
                       Text(title,
                           style: const TextStyle(
-                              color: Colors.white,
+                              color: AppColors.textDark,
                               fontSize: 17,
                               fontWeight: FontWeight.bold,
                               fontFamily: 'Cairo')),
                       const SizedBox(height: 12),
                       TextField(
                         style: const TextStyle(
-                            color: Colors.white,
+                            color: AppColors.textDark,
                             fontFamily: 'Cairo',
                             fontSize: 13.5),
                         decoration: InputDecoration(
@@ -352,11 +353,11 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                               ? 'ابحث باسم الدولة...'
                               : 'Search country...',
                           hintStyle: const TextStyle(
-                              color: Colors.white60, fontFamily: 'Cairo'),
+                              color: AppColors.textMuted, fontFamily: 'Cairo'),
                           prefixIcon: const Icon(Icons.search,
-                              color: Colors.amberAccent),
+                              color: AppColors.accentWarm),
                           filled: true,
-                          fillColor: Colors.black26,
+                          fillColor: AppColors.sectionBackground,
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 10),
                           border: OutlineInputBorder(
@@ -392,7 +393,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                                       ? countryName
                                       : (country['name'] ?? '').toString(),
                                   style: const TextStyle(
-                                      color: Colors.white,
+                                      color: AppColors.textDark,
                                       fontFamily: 'Cairo',
                                       fontWeight: FontWeight.bold)),
                               onTap: () {
@@ -419,7 +420,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF01579B),
+      backgroundColor: AppColors.cardColor,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (context) => Directionality(
@@ -431,7 +432,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
             children: [
               Text(title,
                   style: const TextStyle(
-                      color: Colors.white,
+                      color: AppColors.textDark,
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Cairo')),
@@ -444,7 +445,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                               ? 'لا توجد بيانات متاحة'
                               : 'No options available',
                           style: const TextStyle(
-                              color: Colors.white70, fontFamily: 'Cairo'),
+                              color: AppColors.textMuted, fontFamily: 'Cairo'),
                         ),
                       )
                     : ListView.builder(
@@ -457,7 +458,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                               textAlign: _isAr ? TextAlign.right : TextAlign.left,
                               textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
                               style: const TextStyle(
-                                    color: Colors.white,
+                                    color: AppColors.textDark,
                                     fontFamily: 'Cairo',
                                     fontWeight: FontWeight.bold)),
                             onTap: () {
@@ -481,7 +482,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
       child: Text(
         title,
         style: const TextStyle(
-          color: Colors.amberAccent,
+          color: AppColors.primaryTeal,
           fontSize: 15,
           fontWeight: FontWeight.bold,
           fontFamily: 'Cairo',
@@ -507,7 +508,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
               : Colors.white.withValues(alpha: 0.18),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? Colors.amber : Colors.white30,
+            color: isSelected ? AppColors.accentWarm : AppColors.lineColor,
             width: 1.5,
           ),
         ),
@@ -522,7 +523,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? const Color(0xFF01579B) : Colors.white,
+                color: isSelected ? AppColors.primaryTeal : AppColors.textDark,
                 fontWeight: FontWeight.bold,
                 fontSize: 13,
                 fontFamily: 'Cairo',
@@ -547,7 +548,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.15),
+          color: AppColors.sectionBackground,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? Colors.amberAccent : Colors.white30,
@@ -556,7 +557,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
         ),
         child: Row(
           children: [
-            Icon(icon, color: Colors.amberAccent, size: 20),
+            Icon(icon, color: AppColors.primaryTeal, size: 20),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -564,7 +565,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                 textAlign: TextAlign.start,
                 textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
                 style: const TextStyle(
-                  color: Colors.white70,
+                  color: AppColors.textMuted,
                   fontSize: 13,
                   fontFamily: 'Cairo',
                 ),
@@ -583,7 +584,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
             ),
             const SizedBox(width: 6),
             const Icon(Icons.keyboard_arrow_down_rounded,
-                color: Colors.white70, size: 20),
+                color: AppColors.textMuted, size: 20),
           ],
         ),
       ),
@@ -602,10 +603,10 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
           child: Container(
             padding: const EdgeInsets.all(18.0),
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.35),
+              color: AppColors.cardColor,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.2),
+                color: AppColors.lineColor,
                 width: 1.2,
               ),
             ),
@@ -619,7 +620,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                         : 'Step 3: Residency & Background 🏠🌍',
                     style: const TextStyle(
                       fontSize: 19,
-                      color: Colors.white,
+                      color: AppColors.textDark,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Cairo',
                     ),
@@ -636,7 +637,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                 if (_isLoadingCountries)
                   const Center(
                       child:
-                          CircularProgressIndicator(color: Colors.amberAccent))
+                          CircularProgressIndicator(color: AppColors.accentWarm))
                 else
                   _buildPickerTile(
                     label: _isAr ? 'بلد الميلاد والمنشأ' : 'Birth Country',
@@ -661,7 +662,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                 if (_isLoadingCountries)
                   const Center(
                       child:
-                          CircularProgressIndicator(color: Colors.amberAccent))
+                          CircularProgressIndicator(color: AppColors.accentWarm))
                 else
                   _buildPickerTile(
                     label: _isAr ? 'بلد الإقامة' : 'Residence Country',
@@ -687,7 +688,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                       child: Padding(
                           padding: EdgeInsets.all(8.0),
                           child: CircularProgressIndicator(
-                              color: Colors.amberAccent)))
+                              color: AppColors.accentWarm)))
                 else
                   _buildPickerTile(
                     label:
@@ -703,7 +704,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                                   ? 'يرجى اختيار بلد الإقامة أولاً'
                                   : 'Select Country first',
                               style: const TextStyle(fontFamily: 'Cairo')),
-                          backgroundColor: Colors.amber.shade800,
+                          backgroundColor: AppColors.warning,
                         ));
                         return;
                       }
@@ -732,7 +733,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                       child: Padding(
                           padding: EdgeInsets.all(8.0),
                           child: CircularProgressIndicator(
-                              color: Colors.amberAccent)))
+                              color: AppColors.accentWarm)))
                 else
                   _buildPickerTile(
                     label: _isAr ? 'المدينة' : 'City',
@@ -747,7 +748,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                                   ? 'يرجى اختيار المحافظة أولاً'
                                   : 'Select State first',
                               style: const TextStyle(fontFamily: 'Cairo')),
-                          backgroundColor: Colors.amber.shade800,
+                          backgroundColor: AppColors.warning,
                         ));
                         return;
                       }
@@ -790,7 +791,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                     }).toList(),
                   )
                 else
-                  const CircularProgressIndicator(color: Colors.amberAccent),
+                  const CircularProgressIndicator(color: AppColors.accentWarm),
                 const SizedBox(height: 16),
 
                                 const SizedBox(height: 16),
@@ -804,7 +805,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                       labelText: _isAr ? 'كم طفلاً لديك؟ 👶' : 'How many children do you have? 👶',
                       hintText: _isAr ? 'اكتب العدد، أو 0 إن لم يكن لديك أطفال' : 'Enter a number, or 0 if none',
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: AppColors.cardColor,
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
                     ),
                     validator: (value) {
@@ -842,7 +843,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                     }).toList(),
                   )
                 else
-                  const CircularProgressIndicator(color: Colors.amberAccent),
+                  const CircularProgressIndicator(color: AppColors.accentWarm),
               ],
             ),
           ),
