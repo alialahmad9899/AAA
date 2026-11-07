@@ -386,7 +386,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                                     fit: BoxFit.cover,
                                     errorWidget: (c, u, e) => const Icon(
                                         Icons.flag,
-                                        color: Colors.white)),
+                                        color: AppColors.textMuted)),
                               ),
                               title: Text(
                                   countryName.isNotEmpty
@@ -504,8 +504,8 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? Colors.amberAccent
-              : Colors.white.withValues(alpha: 0.18),
+              ? AppColors.accentLight.withValues(alpha: 0.42)
+              : AppColors.sectionBackground,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? AppColors.accentWarm : AppColors.lineColor,
@@ -517,7 +517,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
           children: [
             if (isSelected) ...[
               const Icon(Icons.check_circle_rounded,
-                  size: 15, color: Color(0xFF01579B)),
+                  size: 15, color: AppColors.primaryTeal),
               const SizedBox(width: 5),
             ],
             Text(
@@ -551,7 +551,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
           color: AppColors.sectionBackground,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? Colors.amberAccent : Colors.white30,
+            color: isSelected ? AppColors.accentWarm : AppColors.lineColor,
             width: 1.2,
           ),
         ),
@@ -576,7 +576,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
               textAlign: TextAlign.start,
               textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
               style: TextStyle(
-                color: isSelected ? Colors.amberAccent : Colors.white,
+                color: isSelected ? AppColors.primaryTeal : AppColors.textDark,
                 fontWeight: FontWeight.bold,
                 fontSize: 13.5,
                 fontFamily: 'Cairo',
