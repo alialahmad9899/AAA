@@ -601,87 +601,207 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
 
   Widget _buildCompactHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
       child: Column(
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.cardColor,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.lineColor),
-                ),
-                child: Row(children: [
-                  Container(width: 8, height: 8, decoration: const BoxDecoration(
-                    color: AppColors.accentWarm, shape: BoxShape.circle)),
-                  const SizedBox(width: 8),
-                  Text(title, style: const TextStyle(color: AppColors.primaryTeal,
-                    fontSize: 15, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
-                ]),
-              ),
-              Container(
-                decoration: BoxDecoration(color: AppColors.cardColor, shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.lineColor)),
-                child: Stack(alignment: Alignment.center, children: [
-                  IconButton(
-                    constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                    padding: EdgeInsets.zero,
-                    icon: const Icon(Icons.notifications_none_rounded,
-                      color: AppColors.primaryTeal, size: 22),
-                    onPressed: widget.onNotificationPressed,
+                  gradient: const LinearGradient(
+                    colors: [AppColors.primaryTeal, AppColors.secondaryTeal],
+                    begin: Alignment.topRight,
+                    end: Alignment.bottomLeft,
                   ),
-                  if (widget.unreadNotificationCount > 0)
-                    Positioned(top: 6, right: 6, child: Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: const BoxDecoration(color: AppColors.error, shape: BoxShape.circle),
-                      child: Text('${widget.unreadNotificationCount}',
-                        style: const TextStyle(color: Colors.white, fontSize: 9,
-                          fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
-                    )),
-                ]),
+                  borderRadius: BorderRadius.circular(15),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primaryTeal.withValues(alpha: 0.15),
+                      blurRadius: 12,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.favorite_rounded,
+                    color: AppColors.accentLight, size: 23),
+              ),
+              const SizedBox(width: 11),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _isAr ? 'اكتشف من يشبهك' : 'Discover your connection',
+                      style: const TextStyle(
+                        color: AppColors.textDark,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                        fontFamily: 'Cairo',
+                      ),
+                    ),
+                    Text(
+                      _isAr
+                          ? 'مساحة للتعارف الجاد والتوافق الحقيقي'
+                          : 'Meaningful connections and real compatibility',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 10.5,
+                        fontFamily: 'Cairo',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Material(
+                color: AppColors.cardColor,
+                shape: const CircleBorder(),
+                child: InkWell(
+                  onTap: widget.onNotificationPressed,
+                  customBorder: const CircleBorder(),
+                  child: SizedBox(
+                    width: 43,
+                    height: 43,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const Icon(Icons.notifications_none_rounded,
+                            color: AppColors.primaryTeal, size: 23),
+                        if (widget.unreadNotificationCount > 0)
+                          Positioned(
+                            top: 5,
+                            right: 5,
+                            child: Container(
+                              padding: const EdgeInsets.all(3),
+                              decoration: const BoxDecoration(
+                                color: AppColors.error,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Text(
+                                '${widget.unreadNotificationCount}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Cairo',
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+            decoration: BoxDecoration(
+              color: AppColors.cardColor,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppColors.lineColor),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: AppColors.accentLight.withValues(alpha: 0.30),
+                    borderRadius: BorderRadius.circular(11),
+                  ),
+                  child: const Icon(Icons.auto_awesome_rounded,
+                      color: AppColors.primaryTeal, size: 18),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          color: AppColors.textDark,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Cairo',
+                        ),
+                      ),
+                      Text(
+                        _isAr
+                            ? 'تعرّف على ملفات جديدة تم اختيارها لك'
+                            : 'Explore new profiles selected for you',
+                        style: const TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 10,
+                          fontFamily: 'Cairo',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.favorite_border_rounded,
+                    color: AppColors.accentWarm, size: 20),
+              ],
+            ),
+          ),
+          const SizedBox(height: 9),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 5),
             decoration: BoxDecoration(
               color: _isMatchFilterEnabled
                   ? AppColors.accentLight.withValues(alpha: 0.24)
                   : AppColors.cardColor,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: _isMatchFilterEnabled
-                  ? AppColors.accentWarm : AppColors.lineColor),
+              border: Border.all(
+                color: _isMatchFilterEnabled
+                    ? AppColors.accentWarm
+                    : AppColors.lineColor,
+              ),
             ),
-            child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Row(children: [
-                Icon(_isMatchFilterEnabled ? Icons.auto_awesome_rounded : Icons.people_alt_rounded,
-                  color: _isMatchFilterEnabled ? AppColors.accentWarm : AppColors.primaryTeal, size: 18),
+            child: Row(
+              children: [
+                const Icon(Icons.auto_awesome_rounded,
+                    color: AppColors.primaryTeal, size: 18),
                 const SizedBox(width: 8),
-                Text(_isAr ? 'ترتيب حسب نسبة التوافق' : 'Sort by compatibility score',
-                  style: TextStyle(color: AppColors.textDark, fontSize: 13,
-                    fontWeight: _isMatchFilterEnabled ? FontWeight.bold : FontWeight.normal,
-                    fontFamily: 'Cairo')),
-              ]),
-              Transform.scale(scale: 0.85, child: Switch(
-                value: _isMatchFilterEnabled,
-                activeThumbColor: Colors.white,
-                activeTrackColor: AppColors.primaryTeal,
-                inactiveThumbColor: AppColors.textLight,
-                inactiveTrackColor: AppColors.lineColor,
-                onChanged: (val) {
-                  if (!_isSubscribedOrFemale && val) {
-                    _showMatchFilterModal();
-                    return;
-                  }
-                  setState(() => _isMatchFilterEnabled = val);
-                  _fetchMatches();
-                },
-              )),
-            ]),
+                Expanded(
+                  child: Text(
+                    _isAr
+                        ? 'ترتيب حسب نسبة التوافق'
+                        : 'Sort by compatibility score',
+                    style: const TextStyle(
+                      color: AppColors.textDark,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Cairo',
+                    ),
+                  ),
+                ),
+                Transform.scale(
+                  scale: 0.85,
+                  child: Switch(
+                    value: _isMatchFilterEnabled,
+                    activeThumbColor: Colors.white,
+                    activeTrackColor: AppColors.primaryTeal,
+                    inactiveThumbColor: AppColors.textLight,
+                    inactiveTrackColor: AppColors.lineColor,
+                    onChanged: (value) {
+                      if (!_isSubscribedOrFemale && value) {
+                        _showMatchFilterModal();
+                        return;
+                      }
+                      setState(() => _isMatchFilterEnabled = value);
+                      _fetchMatches();
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -695,272 +815,236 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
     final String occupationText =
         member.getLocalizedOccupation(isArabic: _isAr);
 
+    final bool hasMatchBadge = member.matchStatus != 'not_eligible';
+    final String matchLabel = member.matchPercentage != null
+        ? '${member.matchPercentage}% ${_isAr ? 'توافق' : 'Match'}'
+        : (member.matchStatus == 'no_preferences'
+            ? (_isAr ? 'أكمل تفضيلاتك' : 'Complete preferences')
+            : (_isAr ? 'غير محسوبة' : 'Not calculated'));
+
     return GestureDetector(
       onTap: () => _navigateToProfile(member),
       onDoubleTap: () => _triggerLikeAnimation(member),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(32),
-            border: Border.all(
-              color: AppColors.lineColor,
-              width: 1,
-            ),
+            color: AppColors.cardColor,
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: AppColors.lineColor, width: 1),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primaryTeal.withValues(alpha: 0.09),
-                blurRadius: 18,
-                spreadRadius: 0,
-              ),
-              BoxShadow(
-                color: AppColors.accentWarm.withValues(alpha: 0.07),
+                color: AppColors.primaryTeal.withValues(alpha: 0.10),
                 blurRadius: 22,
-                spreadRadius: 0,
-              ),
-              BoxShadow(
-                color: AppColors.textDark.withValues(alpha: 0.12),
-                blurRadius: 22,
-                offset: const Offset(0, 7),
+                offset: const Offset(0, 8),
               ),
             ],
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(30),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: CachedNetworkImage(
-                    imageUrl: member.image,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      color: AppColors.sectionBackground,
-                      child: const Center(
-                        child: CircularProgressIndicator(
-                          color: AppColors.accentWarm,
-                          strokeWidth: 2,
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: [
+              Expanded(
+                flex: 7,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    CachedNetworkImage(
+                      imageUrl: member.image,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(
+                        color: AppColors.sectionBackground,
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.primaryTeal,
+                            strokeWidth: 2,
+                          ),
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        color: AppColors.sectionBackground,
+                        child: const Icon(
+                          Icons.person_rounded,
+                          size: 100,
+                          color: AppColors.primaryTeal,
                         ),
                       ),
                     ),
-                    errorWidget: (context, url, error) => Container(
-                      color: AppColors.sectionBackground,
-                      child: const Icon(Icons.person,
-                          size: 110, color: AppColors.primaryTeal),
-                    ),
-                  ),
-                ),
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.transparent,
-                          AppColors.primaryTeal.withValues(alpha: 0.18),
-                          AppColors.primaryTeal.withValues(alpha: 0.94),
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        stops: const [0.35, 0.65, 1.0],
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: 90,
+                      child: IgnorePointer(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppColors.primaryTeal.withValues(alpha: 0.25),
+                                Colors.transparent,
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-                if (member.matchStatus != 'not_eligible')
-                  Positioned(
-                    top: 16,
-                    left: _isAr ? null : 16,
-                    right: _isAr ? 16 : null,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    if (hasMatchBadge)
+                      Positioned(
+                        top: 14,
+                        right: _isAr ? 14 : null,
+                        left: _isAr ? null : 14,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12,
-                            vertical: 7,
+                            vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: member.matchPercentage == null
-                                ? AppColors.textDark.withValues(alpha: 0.90)
-                                : null,
-                            gradient: member.matchPercentage == null
-                                ? null
-                                : const LinearGradient(
-                                    colors: [
-                                      AppColors.primaryTeal,
-                                      AppColors.secondaryTeal,
-                                    ],
-                                  ),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: member.matchPercentage == null
-                                  ? Colors.white24
-                                  : Colors.white,
-                              width: 1.2,
-                            ),
+                            color: AppColors.cardColor.withValues(alpha: 0.97),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: AppColors.lineColor),
                             boxShadow: [
                               BoxShadow(
-                                color: (member.matchPercentage == null
-                                        ? Colors.black
-                                        : AppColors.accentWarm)
-                                    .withValues(alpha: 0.35),
-                                blurRadius: 10,
+                                color: AppColors.textDark.withValues(alpha: 0.12),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
-                          child: Column(
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    member.matchPercentage == null
-                                        ? Icons.info_outline_rounded
-                                        : Icons.auto_awesome_rounded,
-                                    color: member.matchPercentage == null
-                                        ? Colors.white70
-                                         : AppColors.accentLight,
-                                    size: 15,
-                                  ),
-                                  const SizedBox(width: 5),
-                                  Text(
-                                    member.matchPercentage != null
-                                        ? '${member.matchPercentage}% ${_isAr ? 'توافق' : 'Match'}'
-                                        : (member.matchStatus == 'no_preferences'
-                                            ? (_isAr
-                                                ? 'أكمل تفضيلاتك'
-                                                : 'Complete preferences')
-                                            : (_isAr
-                                                ? 'غير محسوبة'
-                                                : 'Not calculated')),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'Cairo',
-                                    ),
-                                  ),
-                                ],
+                              Icon(
+                                member.matchPercentage == null
+                                    ? Icons.info_outline_rounded
+                                    : Icons.auto_awesome_rounded,
+                                color: AppColors.primaryTeal,
+                                size: 15,
                               ),
-                              if (member.matchCriteriaCount > 0) ...[
-                                const SizedBox(height: 2),
-                                Text(
-                                  _isAr
-                                      ? 'المعايير ${member.matchEvaluatedCriteriaCount}/${member.matchCriteriaCount}'
-                                      : 'Criteria ${member.matchEvaluatedCriteriaCount}/${member.matchCriteriaCount}',
-                                  style: const TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w600,
-                                    fontFamily: 'Cairo',
-                                  ),
+                              const SizedBox(width: 6),
+                              Text(
+                                matchLabel,
+                                style: const TextStyle(
+                                  color: AppColors.textDark,
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w900,
+                                  fontFamily: 'Cairo',
                                 ),
-                              ],
+                              ),
                             ],
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                Positioned(
-                  bottom: 20,
-                  right: 18,
-                  left: 18,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              member.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 26,
-                                fontWeight: FontWeight.w900,
-                                fontFamily: 'Cairo',
+                    if (_showHeartOverlay)
+                      Center(
+                        child: FadeTransition(
+                          opacity: _heartOpacityAnimation,
+                          child: ScaleTransition(
+                            scale: _heartScaleAnimation,
+                            child: Container(
+                              padding: const EdgeInsets.all(25),
+                              decoration: BoxDecoration(
+                                color: AppColors.cardColor.withValues(alpha: 0.90),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.favorite_rounded,
+                                color: AppColors.accentWarm,
+                                size: 82,
                               ),
                             ),
                           ),
-                          // 🟢 استبدال الدالة المحلية باستدعاء الودجت الموحد PackageBadgeWidget
-                          if (member.packageName.isNotEmpty) ...[
-                            const SizedBox(width: 8),
-                            PackageBadgeWidget(
-                              packageName: member.packageName,
-                              compact: true,
-                              isArabic: _isAr,
-                            ),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: [
-                          if (member.age > 0)
-                            _buildInfoPillChip(
-                              icon: Icons.cake_rounded,
-                              label: '${member.age} ${_isAr ? 'سنة' : 'yrs'}',
-                              iconColor: AppColors.accentLight,
-                            ),
-                          if (maritalStatusText.isNotEmpty)
-                            _buildInfoPillChip(
-                              icon: Icons.favorite_rounded,
-                              label: maritalStatusText,
-                              iconColor: AppColors.accentWarm,
-                            ),
-                          if (locationText.isNotEmpty)
-                            _buildInfoPillChip(
-                              icon: Icons.location_on_rounded,
-                              label: locationText,
-                              iconColor: AppColors.secondaryTeal,
-                            ),
-                          if (occupationText.isNotEmpty &&
-                              occupationText != 'غير محدد' &&
-                              occupationText != 'Unspecified' &&
-                              occupationText != 'Not Specified')
-                            _buildInfoPillChip(
-                              icon: Icons.work_rounded,
-                              label: occupationText,
-                              iconColor: AppColors.accentLight,
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                if (_showHeartOverlay)
-                  Center(
-                    child: FadeTransition(
-                      opacity: _heartOpacityAnimation,
-                      child: ScaleTransition(
-                        scale: _heartScaleAnimation,
-                        child: Container(
-                          padding: const EdgeInsets.all(28),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: RadialGradient(
-                              colors: [
-                                Colors.redAccent.withValues(alpha: 0.7),
-                                Colors.transparent,
-                              ],
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.favorite_rounded,
-                            color: Colors.redAccent,
-                            size: 110,
-                          ),
                         ),
                       ),
-                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(16, 13, 16, 14),
+                decoration: const BoxDecoration(
+                  color: AppColors.cardColor,
+                  border: Border(
+                    top: BorderSide(color: AppColors.lineColor),
                   ),
-              ],
-            ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            member.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppColors.textDark,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              fontFamily: 'Cairo',
+                            ),
+                          ),
+                        ),
+                        if (member.packageName.isNotEmpty) ...[
+                          const SizedBox(width: 7),
+                          PackageBadgeWidget(
+                            packageName: member.packageName,
+                            compact: true,
+                            isArabic: _isAr,
+                          ),
+                        ],
+                      ],
+                    ),
+                    if (member.matchCriteriaCount > 0 &&
+                        member.matchPercentage != null) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        _isAr
+                            ? 'تم تقييم ${member.matchEvaluatedCriteriaCount} من ${member.matchCriteriaCount} معياراً'
+                            : '${member.matchEvaluatedCriteriaCount} of ${member.matchCriteriaCount} criteria evaluated',
+                        style: const TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 10,
+                          fontFamily: 'Cairo',
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 7,
+                      runSpacing: 7,
+                      children: [
+                        if (member.age > 0)
+                          _buildInfoPillChip(
+                            icon: Icons.cake_rounded,
+                            label: '${member.age} ${_isAr ? 'سنة' : 'yrs'}',
+                          ),
+                        if (maritalStatusText.isNotEmpty)
+                          _buildInfoPillChip(
+                            icon: Icons.favorite_rounded,
+                            label: maritalStatusText,
+                            iconColor: AppColors.accentWarm,
+                          ),
+                        if (locationText.isNotEmpty)
+                          _buildInfoPillChip(
+                            icon: Icons.location_on_rounded,
+                            label: locationText,
+                          ),
+                        if (occupationText.isNotEmpty &&
+                            occupationText != 'غير محدد' &&
+                            occupationText != 'Unspecified' &&
+                            occupationText != 'Not Specified')
+                          _buildInfoPillChip(
+                            icon: Icons.work_rounded,
+                            label: occupationText,
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -1105,35 +1189,28 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
     required String label,
     Color? iconColor,
   }) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.35),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-                color: Colors.white.withValues(alpha: 0.35), width: 1),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.sectionBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.lineColor),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: iconColor ?? AppColors.primaryTeal, size: 14),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textDark,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'Cairo',
+            ),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: iconColor ?? AppColors.accentLight, size: 14),
-              const SizedBox(width: 5),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'Cairo',
-                ),
-              ),
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }
