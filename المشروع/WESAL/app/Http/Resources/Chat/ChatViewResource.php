@@ -52,6 +52,8 @@ class ChatViewResource extends JsonResource
             'message'        => $this->message,
             'attachment'     => $attachments,
             'seen'           => $this->seen,
+            'created_at'     => optional($this->created_at)->toIso8601String(),
+            'time'           => optional($this->created_at)->toIso8601String(),
         ];
     }
 }

@@ -5,6 +5,7 @@
 //        لإظهار شارات الباقات الموحدة والترجمة المزدوجة اللحظية.
 // ============================================================================
 
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -16,6 +17,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/chat_model.dart';
 import '../models/member_profile_model.dart';
 import '../services/api_service.dart';
+import '../utils/chat_time_utils.dart';
 import '../widgets/app_snackbar.dart';
 import '../widgets/bottom_system_inset.dart';
 import '../widgets/package_badge_widget.dart';
@@ -35,7 +37,8 @@ class ChatDetailScreen extends StatefulWidget {
   State<ChatDetailScreen> createState() => _ChatDetailScreenState();
 }
 
-class _ChatDetailScreenState extends State<ChatDetailScreen> {
+class _ChatDetailScreenState extends State<ChatDetailScreen>
+    with WidgetsBindingObserver {
   static final Map<int, List<ChatMessageModel>> _globalMessagesCache = {};
 
   final TextEditingController _messageController = TextEditingController();
@@ -52,7 +55,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   String _messageLoadError = '';
   bool _isSending = false;
   bool _isLoadingMore = false;
+  bool _isFetchingMessages = false;
+  bool _pendingMessageRefresh = false;
   bool _hasMoreOldMessages = true;
+  Timer? _messageRefreshTimer;
   bool _showEmojiPicker = false;
   int _selectedPickerTab = 0;
   File? _selectedImageFile;
@@ -124,18 +130,23 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   void initState() {
     super.initState();
     _activeThreadId = widget.thread.id;
+    WidgetsBinding.instance.addObserver(this);
     _scrollController.addListener(_scrollListener);
+    _startMessageRefreshTimer();
 
     _inputFocusNode.addListener(_onFocusChange);
 
-    if (_globalMessagesCache.containsKey(_activeThreadId)) {
+    if (_activeThreadId > 0 && _globalMessagesCache.containsKey(_activeThreadId)) {
       _messages = List.from(_globalMessagesCache[_activeThreadId]!);
       _isLoading = false;
     } else {
       _isLoading = true;
     }
 
-    _loadMessages(silent: _messages.isNotEmpty);
+    _loadMessages(
+      silent: _messages.isNotEmpty,
+      preserveHistory: _messages.isNotEmpty,
+    );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkAndShowMaleWarningDialog();
@@ -152,6 +163,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   @override
   void dispose() {
+    _messageRefreshTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     _scrollController.removeListener(_scrollListener);
     _inputFocusNode.removeListener(_onFocusChange);
     _messageController.dispose();
@@ -159,6 +172,31 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     _scrollController.dispose();
     _inputFocusNode.dispose();
     super.dispose();
+  }
+
+  void _startMessageRefreshTimer() {
+    _messageRefreshTimer?.cancel();
+    if (_activeThreadId <= 0) {
+      return;
+    }
+    _messageRefreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      if (!mounted || WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed ||
+          _isSending || _isLoadingMore) {
+        return;
+      }
+      _loadMessages(silent: true, preserveHistory: true);
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadMessages(silent: true, preserveHistory: true);
+      _startMessageRefreshTimer();
+    } else {
+      _messageRefreshTimer?.cancel();
+      _messageRefreshTimer = null;
+    }
   }
 
   /// 🟢 معالجة إغلاق الشاشة وإرجاع النتيجة بشكل آمن
@@ -422,23 +460,53 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     }
   }
 
-  Future<void> _loadMessages({bool silent = false}) async {
+  List<ChatMessageModel> _mergeMessageHistory(
+      List<ChatMessageModel> existing, List<ChatMessageModel> incoming) {
+    final byId = <int, ChatMessageModel>{};
+    for (final message in existing) {
+      if (message.id > 0) byId[message.id] = message;
+    }
+    for (final message in incoming) {
+      if (message.id > 0) byId[message.id] = message;
+    }
+    final merged = byId.values.toList()
+      ..sort((a, b) => a.id.compareTo(b.id));
+    return merged;
+  }
+
+  Future<void> _loadMessages({
+    bool silent = false,
+    bool preserveHistory = false,
+  }) async {
+    if (!mounted) return;
+    if (_isFetchingMessages) {
+      _pendingMessageRefresh = true;
+      return;
+    }
+    _isFetchingMessages = true;
+    final requestedThreadId = _activeThreadId;
+    final int previousMessageCount = _messages.length;
+    final bool wasNearBottom = _scrollController.hasClients &&
+        (_scrollController.position.maxScrollExtent -
+                _scrollController.position.pixels <=
+            120);
     try {
       final res = await ApiService.getChatMessages(
-        _activeThreadId,
+        requestedThreadId,
         widget.thread.userId,
         lang: widget.currentLanguage,
       );
+      if (!mounted || requestedThreadId != _activeThreadId) return;
 
       if (res['success'] != true) {
-        if (mounted) {
+        if (!silent) {
           setState(() {
             _isLoading = false;
             _hasMessageLoadError = true;
             _messageLoadError = res['message']?.toString() ??
                 (_isArabic ? 'تعذر تحميل الرسائل' : 'Could not load messages');
           });
-          if (!silent && _messages.isEmpty) {
+          if (_messages.isEmpty) {
             AppSnackBar.show(
               context: context,
               type: NotificationType.error,
@@ -453,22 +521,30 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
       final List<ChatMessageModel> messages = res['messages'] ?? [];
       final ChatRulesModel? rules = res['chat_rules'];
-      _globalMessagesCache[_activeThreadId] = List.from(messages);
-
-      if (mounted) {
-        setState(() {
-          _messages = messages;
-          _chatRules = rules;
-          _isLoading = false;
-          _hasMessageLoadError = false;
-          _messageLoadError = '';
-        });
-        if (!silent) {
-          _scrollToBottom();
-        }
+      final displayedMessages = preserveHistory
+          ? _mergeMessageHistory(_messages, messages)
+          : messages;
+      if (_activeThreadId > 0) {
+        _globalMessagesCache[_activeThreadId] = List.from(displayedMessages);
+      }
+      setState(() {
+        _messages = displayedMessages;
+        _chatRules = rules;
+        _hasMoreOldMessages = preserveHistory
+            ? (_hasMoreOldMessages && res['has_more_old_messages'] == true)
+            : res['has_more_old_messages'] == true;
+        _isLoading = false;
+        _hasMessageLoadError = false;
+        _messageLoadError = '';
+      });
+      if (!silent ||
+          (preserveHistory && wasNearBottom &&
+              displayedMessages.length > previousMessageCount)) {
+        _scrollToBottom();
       }
     } catch (e) {
-      if (mounted) {
+      if (!mounted) return;
+      if (!silent) {
         setState(() {
           _isLoading = false;
           _hasMessageLoadError = true;
@@ -476,7 +552,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               ? 'تعذر الاتصال بالسيرفر أثناء تحميل الرسائل'
               : 'Could not connect to load messages';
         });
-        if (!silent && _messages.isEmpty) {
+        if (_messages.isEmpty) {
           AppSnackBar.show(
             context: context,
             type: NotificationType.error,
@@ -486,34 +562,41 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           );
         }
       }
+    } finally {
+      _isFetchingMessages = false;
+      if (_pendingMessageRefresh && mounted) {
+        _pendingMessageRefresh = false;
+        _loadMessages(silent: true, preserveHistory: true);
+      }
     }
   }
 
   Future<void> _loadOldMessages() async {
-    if (_messages.isEmpty || _isLoadingMore) return;
+    if (_messages.isEmpty || _isLoadingMore || !_hasMoreOldMessages) return;
+    final previousPixels = _scrollController.hasClients
+        ? _scrollController.position.pixels : 0.0;
+    final previousMax = _scrollController.hasClients
+        ? _scrollController.position.maxScrollExtent : 0.0;
     setState(() => _isLoadingMore = true);
-
     try {
-      final firstMsgId = _messages.first.id;
       final result = await ApiService.getOldMessages(
-        firstMsgId,
+        _messages.first.id,
         widget.thread.userId,
         lang: widget.currentLanguage,
       );
       final List<ChatMessageModel> oldMsgs =
           result['messages'] is List ? result['messages'] : <ChatMessageModel>[];
-
       if (mounted) {
         setState(() {
           _isLoadingMore = false;
-          if (result['success'] != true) {
-            // Keep pagination enabled: a network error is not proof that
-            // the conversation has no older messages.
-          } else if (oldMsgs.isNotEmpty) {
-            _messages.insertAll(0, oldMsgs);
-            _globalMessagesCache[_activeThreadId] = List.from(_messages);
-          } else {
-            _hasMoreOldMessages = false;
+          if (result['success'] == true) {
+            if (oldMsgs.isNotEmpty) {
+              _messages.insertAll(0, oldMsgs);
+              if (_activeThreadId > 0) {
+                _globalMessagesCache[_activeThreadId] = List.from(_messages);
+              }
+            }
+            _hasMoreOldMessages = result['has_more'] == true;
           }
         });
         if (result['success'] != true) {
@@ -524,12 +607,19 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             messageAr: result['message']?.toString() ?? 'تعذر تحميل الرسائل السابقة',
             messageEn: result['message']?.toString() ?? 'Could not load older messages',
           );
+        } else if (oldMsgs.isNotEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!_scrollController.hasClients) return;
+            final addedExtent = _scrollController.position.maxScrollExtent - previousMax;
+            final target = (previousPixels + addedExtent)
+                .clamp(0.0, _scrollController.position.maxScrollExtent)
+                .toDouble();
+            _scrollController.jumpTo(target);
+          });
         }
       }
     } catch (e) {
-      if (mounted) {
-        setState(() => _isLoadingMore = false);
-      }
+      if (mounted) setState(() => _isLoadingMore = false);
     }
   }
 
@@ -714,7 +804,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       _isSending = true;
       _hasSentMessage = true;
       _messages.add(tempMsg);
-      _globalMessagesCache[_activeThreadId] = List.from(_messages);
+      if (_activeThreadId > 0) {
+        _globalMessagesCache[_activeThreadId] = List.from(_messages);
+      }
     });
     _scrollToBottom();
 
@@ -742,13 +834,19 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
         if (newThreadId != null && newThreadId > 0) {
           _activeThreadId = newThreadId;
+          _startMessageRefreshTimer();
         }
-
+        _messages.removeWhere((message) => message.id == tempMsg.id);
+        if (_activeThreadId > 0) {
+          _globalMessagesCache[_activeThreadId] = List.from(_messages);
+        }
         _loadMessages(silent: true);
       } else {
         setState(() {
           _messages.removeWhere((m) => m.id == tempMsg.id);
-          _globalMessagesCache[_activeThreadId] = List.from(_messages);
+          if (_activeThreadId > 0) {
+            _globalMessagesCache[_activeThreadId] = List.from(_messages);
+          }
         });
 
         final String status = result['status'] ?? '';
@@ -776,7 +874,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       setState(() {
         _isSending = false;
         _messages.removeWhere((m) => m.id == tempMsg.id);
-        _globalMessagesCache[_activeThreadId] = List.from(_messages);
+        if (_activeThreadId > 0) {
+          _globalMessagesCache[_activeThreadId] = List.from(_messages);
+        }
       });
       AppSnackBar.show(
         context: context,
@@ -2110,17 +2210,7 @@ bool _isNetworkUrl(String? url) {
 
 /// 🟢 صيغة ترجمة توقيت الرسائل الفردية
 String _formatMessageTime(String time, bool isArabic) {
-  if (time.trim().isEmpty) return '';
-  String clean = time.trim();
-  if (isArabic) {
-    return clean.replaceAll('Now', 'الآن');
-  } else {
-    return clean
-        .replaceAll('الآن', 'Now')
-        .replaceAll('الان', 'Now')
-        .replaceAll('أمس', 'Yesterday')
-        .replaceAll('امس', 'Yesterday');
-  }
+  return formatChatMessageTime(time, isArabic: isArabic);
 }
 
 class _SenderMessageBubble extends StatelessWidget {

@@ -33,6 +33,10 @@ jobs:
             "المشروع/WESAL/app/Http/Controllers/Api/HomeController.php"
             "المشروع/WESAL/app/Http/Controllers/Api/MemberController.php"
             "المشروع/WESAL/app/Http/Controllers/Api/ChatController.php"
+            "المشروع/WESAL/app/Services/ChatService.php"
+            "المشروع/WESAL/app/Http/Resources/ChatResource.php"
+            "المشروع/WESAL/app/Http/Resources/ChatThreadResource.php"
+            "المشروع/WESAL/app/Http/Resources/Chat/ChatViewResource.php"
             "المشروع/WESAL/app/Http/Controllers/Api/PackageController.php"
             "المشروع/WESAL/app/Http/Controllers/Api/Payment/PaymentTypesController.php"
             "المشروع/WESAL/app/Http/Controllers/Api/Payment/StripeController.php"
@@ -83,7 +87,7 @@ jobs:
       - name: Analyze Dart sources without the LSP server
         working-directory: فلاتر
         run: dart analyze --fatal-infos
-      - name: Run profile, signup and account model regression tests
+      - name: Run Flutter regression tests including chat timestamps and models
         working-directory: فلاتر
         run: flutter test
 

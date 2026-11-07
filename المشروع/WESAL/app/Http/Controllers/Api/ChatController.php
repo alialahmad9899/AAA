@@ -5,18 +5,15 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Api\Controller;
 use App\Http\Requests\ChatRequest;
 use App\Http\Resources\ChatResource;
+use App\Http\Resources\Chat\ChatViewResource;
 use App\Http\Resources\ChatThreadResource;
 use App\Models\Chat;
 use App\Models\ChatThread;
-use App\Models\Notification;
-use App\Models\User;
 use App\Services\ChatService;
-use App\Services\FirebaseNotificationService;
 use App\Utility\MemberUtility; // فحص سياسات المحادثة والاشتراك
 use App\Utility\SubscriptionUtility;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Throwable;
 
 class ChatController extends Controller
@@ -60,9 +57,32 @@ class ChatController extends Controller
     {
         $auth_id = auth()->user()->id;
 
-        $chat_threads = ChatThread::where('sender_user_id', $auth_id)
-            ->orWhere('receiver_user_id', $auth_id)
-            ->latest('updated_at')
+        $unreadCountQuery = function ($query) use ($auth_id) {
+            $query->where('seen', 0)
+                ->where('sender_user_id', '!=', $auth_id);
+        };
+
+        $chat_threads = ChatThread::query()
+            ->with(['sender', 'receiver'])
+            ->withCount(['chats as unseen_message_count' => $unreadCountQuery])
+            ->addSelect([
+                'last_message_text' => Chat::query()
+                    ->select('message')
+                    ->whereColumn('chat_thread_id', 'chat_threads.id')
+                    ->latest('id')
+                    ->limit(1),
+                'last_message_created_at' => Chat::query()
+                    ->select('created_at')
+                    ->whereColumn('chat_thread_id', 'chat_threads.id')
+                    ->latest('id')
+                    ->limit(1),
+            ])
+            ->where(function ($query) use ($auth_id) {
+                $query->where('sender_user_id', $auth_id)
+                    ->orWhere('receiver_user_id', $auth_id);
+            })
+            ->orderByDesc('updated_at')
+            ->orderByDesc('id')
             ->get();
 
         return ChatThreadResource::collection($chat_threads)->additional([
@@ -113,13 +133,11 @@ class ChatController extends Controller
             ]);
         }
 
-        // تحديث حالة القراءة للرسائل القادمة من الطرف الآخر
-        foreach ($chat_thread->chats as $chat) {
-            if ($chat->sender_user_id != $auth_id) {
-                $chat->seen = 1;
-                $chat->save();
-            }
-        }
+        // تحديث إيصالات القراءة باستعلام واحد بدلاً من حفظ كل رسالة منفردة.
+        $chat_thread->chats()
+            ->where('sender_user_id', '!=', $auth_id)
+            ->where('seen', 0)
+            ->update(['seen' => 1]);
 
         // 🟢 حساب قواعد المحادثة وإرجاعها مع الاستجابة لتظهر كشريط توضيحي في Flutter
         $is_female = MemberUtility::is_female($auth_id);
@@ -169,24 +187,30 @@ class ChatController extends Controller
             ], 403);
         }
 
+        // Fetch one extra row so the client knows if another page exists.
         $chats = Chat::where('id', '<', $chat->id)
             ->where('chat_thread_id', $ownedThread->id)
-            ->latest()
-            ->limit(20)
+            ->latest('id')
+            ->limit(21)
             ->get();
 
-        if (count($chats) > 0) {
+        $hasMore = $chats->count() > 20;
+        $chats = $chats->take(20);
+
+        if ($chats->isNotEmpty()) {
             return response()->json([
                 'result' => true,
-                'messages' => $chats,
-                'first_message_id' => $chats->last()->id
+                'messages' => ChatViewResource::collection($chats),
+                'first_message_id' => $chats->last()->id,
+                'has_more' => $hasMore,
             ]);            
         } else {
             return response()->json([
-                'result' => false,
-                'messages' => "",
-                'first_message_id' => 0
-            ]);            
+                'result' => true,
+                'messages' => [],
+                'first_message_id' => 0,
+                'has_more' => false,
+            ]);
         }
     }
 
@@ -357,50 +381,7 @@ class ChatController extends Controller
             $chatService = new ChatService();
             $new_chat = $chatService->store($request->except(['_token']), $attachments);
 
-            // 7. إرسال الإشعار للطرف الآخر
-            try {
-                $chat_thread = ChatThread::find($chat_thread_id);
-                if ($chat_thread) {
-                    $target_receiver_id = ($chat_thread->sender_user_id == $sender_id) 
-                        ? $chat_thread->receiver_user_id 
-                        : $chat_thread->sender_user_id;
-
-                    $receiver = User::find($target_receiver_id);
-                    $sender_name = auth()->user()->first_name ?? 'مستخدم';
-                    $notification_title = "رسالة جديدة من " . $sender_name;
-                    $notification_body = !empty($message_content) 
-                        ? $message_content 
-                        : "أرسل لك ملفاً/صورة جديدة";
-
-                    Notification::create([
-                        'id'              => (string) Str::uuid(),
-                        'type'            => 'App\Notifications\MessageNotification',
-                        'notifiable_type' => 'App\Models\User',
-                        'notifiable_id'   => $target_receiver_id,
-                        'data'            => json_encode([
-                            'notify_type' => 'chat_message',
-                            'notify_by'   => $sender_id,
-                            'info_id'     => $chat_thread->id,
-                            'title'       => $notification_title,
-                            'message'     => $notification_body,
-                            'route'       => 'chat'
-                        ]),
-                        'read_at'          => null,
-                    ]);
-
-                    if ($receiver && !empty($receiver->fcm_token)) {
-                        if (class_exists('App\Services\FirebaseNotificationService')) {
-                            FirebaseNotificationService::sendPushNotification(
-                                $receiver->fcm_token,
-                                $notification_title,
-                                $notification_body
-                            );
-                        }
-                    }
-                }
-            } catch (Throwable $notifError) {
-                Log::error("❌ خطأ معزول أثناء معالجة إشعار المحادثة: " . $notifError->getMessage());
-            }
+            // ChatService is the single owner of database and FCM message alerts.
 
             return response()->json([
                 'result' => true,
