@@ -566,7 +566,14 @@ class NotificationService {
     for (int attempt = 0; attempt < 24; attempt++) {
       final NavigatorState? navigator = FCMService.navigatorKey.currentState;
       if (navigator != null && navigator.mounted) {
-        navigator.push(MaterialPageRoute<void>(builder: builder));
+        unawaited(
+          navigator
+              .push<void>(MaterialPageRoute<void>(builder: builder))
+              .then((_) {
+            // حدّث الشارة بعد إغلاق الوجهة التي فُتحت من إشعار النظام.
+            foregroundMessageVersion.value++;
+          }),
+        );
         return true;
       }
       await Future<void>.delayed(const Duration(milliseconds: 250));
