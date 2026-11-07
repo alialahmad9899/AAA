@@ -175,10 +175,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
 
   void _startMessageRefreshTimer() {
     _messageRefreshTimer?.cancel();
-    if (_activeThreadId <= 0) return;
+    if (_activeThreadId <= 0) {
+      return;
+    }
     _messageRefreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
       if (!mounted || WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed ||
-          _isSending || _isLoadingMore) return;
+          _isSending || _isLoadingMore) {
+        return;
+      }
       _loadMessages(silent: true, preserveHistory: true);
     });
   }
