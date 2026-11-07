@@ -17,7 +17,6 @@ void main() {
     expect(theme.elevatedButtonTheme.style?.foregroundColor?.resolve({}),
         const Color(0xFFFFFFFF));
   });
-}
 
   test('interactive controls keep strong contrast on light surfaces', () {
     final theme = AppTheme.light;
@@ -30,3 +29,4 @@ void main() {
     expect(theme.outlinedButtonTheme.style?.foregroundColor?.resolve({}),
         AppColors.primaryTeal);
   });
+}
