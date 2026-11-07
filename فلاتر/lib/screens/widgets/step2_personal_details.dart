@@ -438,7 +438,7 @@ class Step2PersonalDetails extends StatelessWidget {
                           Text(
                             _isAr ? 'الوزن:' : 'Weight:',
                             style: const TextStyle(
-                              color: Colors.white70,
+                              color: AppColors.textMuted,
                               fontSize: 13,
                               fontFamily: 'Cairo',
                             ),
@@ -463,7 +463,7 @@ class Step2PersonalDetails extends StatelessWidget {
                         divisions: 110,
                         activeColor:
                             weightWasSelected ? AppColors.accentWarm : AppColors.lineColor,
-                        inactiveColor: Colors.white24,
+                        inactiveColor: AppColors.lineColor,
                         onChanged: onWeightChanged,
                       ),
                     ],
