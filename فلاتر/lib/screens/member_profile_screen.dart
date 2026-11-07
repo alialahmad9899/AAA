@@ -1299,35 +1299,63 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                       ],
                     ),
                   ),
-                  if (_profile!.profileMatchPercentage != null)
+                  if (_profile!.profileMatchStatus != 'not_eligible')
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                            colors: [Color(0xFF10B981), Color(0xFF059669)]),
+                        color: _profile!.profileMatchPercentage == null
+                            ? const Color(0xFF334155)
+                            : null,
+                        gradient: _profile!.profileMatchPercentage == null
+                            ? null
+                            : const LinearGradient(
+                                colors: [Color(0xFF10B981), Color(0xFF059669)]),
                         borderRadius: BorderRadius.circular(18),
                         border: Border.all(
                             color: Colors.white.withValues(alpha: 0.2)),
                         boxShadow: [
                           BoxShadow(
-                              color: const Color(0xFF10B981)
-                                  .withValues(alpha: 0.35),
+                              color: (_profile!.profileMatchPercentage == null
+                                      ? Colors.black
+                                      : const Color(0xFF10B981))
+                                  .withValues(alpha: 0.25),
                               blurRadius: 12)
                         ],
                       ),
                       child: Column(
                         children: [
-                          Text('${_profile!.profileMatchPercentage}%',
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold)),
-                          Text(_isArabic ? 'تطابق' : 'Match',
+                          Text(
+                            _profile!.profileMatchPercentage != null
+                                ? '${_profile!.profileMatchPercentage}%'
+                                : (_profile!.profileMatchStatus == 'no_preferences'
+                                    ? (_isArabic
+                                        ? 'أكمل تفضيلاتك'
+                                        : 'Complete preferences')
+                                    : (_isArabic
+                                        ? 'غير محسوبة'
+                                        : 'Not calculated')),
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Cairo'),
+                          ),
+                          Text(_isArabic ? 'توافق' : 'Match',
                               style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 10,
                                   fontFamily: 'Cairo')),
+                          if (_profile!.profileMatchCriteriaCount > 0)
+                            Text(
+                              _isArabic
+                                  ? 'المعايير ${_profile!.profileMatchEvaluatedCriteriaCount}/${_profile!.profileMatchCriteriaCount}'
+                                  : 'Criteria ${_profile!.profileMatchEvaluatedCriteriaCount}/${_profile!.profileMatchCriteriaCount}',
+                              style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 9,
+                                  fontFamily: 'Cairo'),
+                            ),
                         ],
                       ),
                     ),
