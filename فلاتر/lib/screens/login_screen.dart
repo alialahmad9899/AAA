@@ -372,401 +372,515 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const Color primaryTeal = AppColors.primaryTeal;
-
     return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
       body: Directionality(
         textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
-        child: Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppColors.backgroundColor,
-                AppColors.sectionBackground,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: SafeArea(
-            child: Column(
-              children: [
-                Align(
-                  alignment: _isArabic ? Alignment.topRight : Alignment.topLeft,
-                  child: IconButton(
-                    icon: Icon(
-                      _isArabic
-                          ? Icons.arrow_back_ios_new_rounded
-                          : Icons.arrow_back_rounded,
-                      color: AppColors.textDark,
-                    ),
-                    onPressed: () {
-                      if (Navigator.canPop(context)) {
-                        Navigator.pop(context);
-                      }
-                    },
-                  ),
-                ),
-                Expanded(
-                  child: Center(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 22.0, vertical: 8.0),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          children: [
-                            Container(
-                              width: 76,
-                              height: 76,
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    AppColors.primaryTeal,
-                                    AppColors.secondaryTeal,
-                                  ],
-                                  begin: Alignment.topRight,
-                                  end: Alignment.bottomLeft,
+        child: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 26),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 480),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            children: [
+                              Material(
+                                color: AppColors.cardColor,
+                                shape: const CircleBorder(),
+                                child: IconButton(
+                                  tooltip: _isArabic ? 'رجوع' : 'Back',
+                                  onPressed: () {
+                                    if (Navigator.canPop(context)) {
+                                      Navigator.pop(context);
+                                    }
+                                  },
+                                  icon: Icon(
+                                    _isArabic
+                                        ? Icons.arrow_forward_rounded
+                                        : Icons.arrow_back_rounded,
+                                    color: AppColors.primaryTeal,
+                                  ),
                                 ),
-                                borderRadius: BorderRadius.circular(25),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.primaryTeal
-                                        .withValues(alpha: 0.18),
-                                    blurRadius: 18,
-                                    offset: const Offset(0, 8),
-                                  ),
-                                ],
                               ),
-                              child: const Icon(
+                              const Spacer(),
+                              Text(
+                                _isArabic ? 'وصال' : 'Wesal',
+                                style: const TextStyle(
+                                  color: AppColors.primaryTeal,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w900,
+                                  fontFamily: 'Cairo',
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Icon(
                                 Icons.favorite_rounded,
-                                color: AppColors.accentLight,
-                                size: 38,
+                                color: AppColors.accentWarm,
+                                size: 18,
                               ),
-                            ),
-                            const SizedBox(height: 14),
-                            Text(
-                              _isArabic ? 'أهلاً بعودتك' : 'Welcome Back',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                color: AppColors.primaryTeal,
-                                fontSize: 24,
-                                fontWeight: FontWeight.w900,
-                                fontFamily: 'Cairo',
+                            ],
+                          ),
+                          const SizedBox(height: 14),
+                          Container(
+                            padding: const EdgeInsets.fromLTRB(22, 22, 22, 24),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  AppColors.primaryTeal,
+                                  AppColors.secondaryTeal,
+                                ],
+                                begin: Alignment.topRight,
+                                end: Alignment.bottomLeft,
                               ),
+                              borderRadius: BorderRadius.circular(30),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primaryTeal
+                                      .withValues(alpha: 0.18),
+                                  blurRadius: 24,
+                                  offset: const Offset(0, 12),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 5),
-                            Text(
-                              _isArabic
-                                  ? 'سجّل دخولك لمتابعة رحلتك والتواصل بثقة.'
-                                  : 'Sign in to continue your journey with confidence.',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                color: AppColors.textMuted,
-                                fontSize: 12.5,
-                                height: 1.5,
-                                fontFamily: 'Cairo',
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(28),
-                              child: BackdropFilter(
-                                filter:
-                                    ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-                                child: Container(
-                                  padding: const EdgeInsets.all(24.0),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.cardColor,
-                                    borderRadius: BorderRadius.circular(28),
-                                    border: Border.all(
-                                      color:
-                                          AppColors.lineColor,
-                                      width: 1.5,
+                            child: Stack(
+                              children: [
+                                Positioned(
+                                  top: -34,
+                                  left: -24,
+                                  child: Container(
+                                    width: 118,
+                                    height: 118,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white
+                                          .withValues(alpha: 0.07),
+                                      shape: BoxShape.circle,
                                     ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: AppColors.textDark
-                                            .withValues(alpha: 0.06),
-                                        blurRadius: 25,
-                                        offset: const Offset(0, 10),
-                                      ),
-                                    ],
                                   ),
-                                  child: Column(
-                                    children: [
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        _isArabic ? 'تسجيل الدخول' : 'Sign In',
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      width: 58,
+                                      height: 58,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.backgroundColor,
+                                        borderRadius:
+                                            BorderRadius.circular(19),
+                                      ),
+                                      child: const Icon(
+                                        Icons.favorite_rounded,
+                                        color: AppColors.accentWarm,
+                                        size: 32,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 18),
+                                    Text(
+                                      _isArabic
+                                          ? 'أهلاً بعودتك إلى وصال'
+                                          : 'Welcome back to Wesal',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.w900,
+                                        height: 1.35,
+                                        fontFamily: 'Cairo',
+                                      ),
+                                    ),
+                                    const SizedBox(height: 7),
+                                    Text(
+                                      _isArabic
+                                          ? 'سجّل دخولك وتابع رحلتك نحو تعارف أكثر وضوحاً وراحة.'
+                                          : 'Sign in and continue your journey toward a meaningful connection.',
+                                      style: TextStyle(
+                                        color: Colors.white
+                                            .withValues(alpha: 0.88),
+                                        fontSize: 13,
+                                        height: 1.7,
+                                        fontFamily: 'Cairo',
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      children: [
+                                        _LoginFeatureChip(
+                                          icon: Icons.shield_outlined,
+                                          label: _isArabic
+                                              ? 'خصوصيتك أولاً'
+                                              : 'Privacy first',
+                                        ),
+                                        _LoginFeatureChip(
+                                          icon: Icons.auto_awesome_rounded,
+                                          label: _isArabic
+                                              ? 'توافق أوضح'
+                                              : 'Better compatibility',
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          Container(
+                            padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
+                            decoration: BoxDecoration(
+                              color: AppColors.cardColor,
+                              borderRadius: BorderRadius.circular(28),
+                              border: Border.all(color: AppColors.lineColor),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.textDark
+                                      .withValues(alpha: 0.055),
+                                  blurRadius: 22,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(
+                                  _isArabic
+                                      ? 'تسجيل الدخول'
+                                      : 'Sign in to your account',
+                                  style: const TextStyle(
+                                    color: AppColors.textDark,
+                                    fontSize: 21,
+                                    fontWeight: FontWeight.w900,
+                                    fontFamily: 'Cairo',
+                                  ),
+                                ),
+                                const SizedBox(height: 5),
+                                Text(
+                                  _isArabic
+                                      ? 'أدخل بياناتك للمتابعة.'
+                                      : 'Enter your details to continue.',
+                                  style: const TextStyle(
+                                    color: AppColors.textMuted,
+                                    fontSize: 12.5,
+                                    fontFamily: 'Cairo',
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                                Text(
+                                  _isArabic ? 'البريد الإلكتروني' : 'Email address',
+                                  style: const TextStyle(
+                                    color: AppColors.textDark,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Cairo',
+                                  ),
+                                ),
+                                const SizedBox(height: 7),
+                                TextFormField(
+                                  controller: _emailController,
+                                  enabled: !_isLoading,
+                                  keyboardType: TextInputType.emailAddress,
+                                  textInputAction: TextInputAction.next,
+                                  style: const TextStyle(
+                                    color: AppColors.textDark,
+                                    fontSize: 15,
+                                    fontFamily: 'Cairo',
+                                  ),
+                                  inputFormatters: [
+                                    ArabicToEnglishNumbersFormatter(),
+                                    FilteringTextInputFormatter.deny(
+                                      RegExp(r'\s'),
+                                    ),
+                                  ],
+                                  decoration: _buildInputDecoration(
+                                    hintText: _isArabic
+                                        ? 'name@example.com'
+                                        : 'name@example.com',
+                                    prefixIcon: Icons.email_outlined,
+                                  ),
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return _isArabic
+                                          ? 'يرجى إدخال البريد الإلكتروني'
+                                          : 'Please enter your email';
+                                    }
+                                    final emailRegExp = RegExp(
+                                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                                    );
+                                    if (!emailRegExp.hasMatch(value.trim())) {
+                                      return _isArabic
+                                          ? 'يرجى إدخال بريد إلكتروني صحيح'
+                                          : 'Please enter a valid email address';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 15),
+                                Text(
+                                  _isArabic ? 'كلمة المرور' : 'Password',
+                                  style: const TextStyle(
+                                    color: AppColors.textDark,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Cairo',
+                                  ),
+                                ),
+                                const SizedBox(height: 7),
+                                TextFormField(
+                                  controller: _passwordController,
+                                  enabled: !_isLoading,
+                                  obscureText: _obscurePassword,
+                                  textInputAction: TextInputAction.done,
+                                  onFieldSubmitted: (_) {
+                                    if (!_isLoading) _handleLogin();
+                                  },
+                                  style: const TextStyle(
+                                    color: AppColors.textDark,
+                                    fontSize: 15,
+                                    fontFamily: 'Cairo',
+                                  ),
+                                  inputFormatters: [
+                                    ArabicToEnglishNumbersFormatter(),
+                                  ],
+                                  decoration: _buildInputDecoration(
+                                    hintText: _isArabic
+                                        ? 'أدخل كلمة المرور'
+                                        : 'Enter your password',
+                                    prefixIcon: Icons.lock_outline_rounded,
+                                    suffixIcon: IconButton(
+                                      tooltip: _isArabic
+                                          ? 'إظهار أو إخفاء كلمة المرور'
+                                          : 'Show or hide password',
+                                      icon: Icon(
+                                        _obscurePassword
+                                            ? Icons.visibility_off_outlined
+                                            : Icons.visibility_outlined,
+                                        color: AppColors.textMuted,
+                                      ),
+                                      onPressed: () => setState(
+                                        () => _obscurePassword =
+                                            !_obscurePassword,
+                                      ),
+                                    ),
+                                  ),
+                                  validator: (value) =>
+                                      value == null || value.trim().isEmpty
+                                          ? (_isArabic
+                                              ? 'يرجى إدخال كلمة المرور'
+                                              : 'Please enter your password')
+                                          : null,
+                                ),
+                                const SizedBox(height: 12),
+                                Wrap(
+                                  alignment: WrapAlignment.spaceBetween,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  spacing: 12,
+                                  runSpacing: 4,
+                                  children: [
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Checkbox(
+                                          value: _rememberMe,
+                                          activeColor: AppColors.primaryTeal,
+                                          checkColor: Colors.white,
+                                          side: const BorderSide(
+                                            color: AppColors.textLight,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(5),
+                                          ),
+                                          onChanged: (value) => setState(
+                                            () => _rememberMe = value ?? false,
+                                          ),
+                                        ),
+                                        Text(
+                                          _isArabic ? 'تذكرني' : 'Remember me',
+                                          style: const TextStyle(
+                                            color: AppColors.textDark,
+                                            fontSize: 12.5,
+                                            fontFamily: 'Cairo',
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    TextButton(
+                                      onPressed: () {},
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: AppColors.primaryTeal,
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 4, vertical: 8),
+                                      ),
+                                      child: Text(
+                                        _isArabic
+                                            ? 'نسيت كلمة المرور؟'
+                                            : 'Forgot password?',
                                         style: const TextStyle(
-                                          fontSize: 24,
-                                          color: AppColors.textDark,
+                                          color: AppColors.primaryTeal,
+                                          fontSize: 12.5,
                                           fontWeight: FontWeight.bold,
                                           fontFamily: 'Cairo',
                                         ),
                                       ),
-                                      const SizedBox(height: 22),
-
-                                      // حقل البريد الإلكتروني
-                                      TextFormField(
-                                        controller: _emailController,
-                                        enabled: !_isLoading,
-                                        keyboardType:
-                                            TextInputType.emailAddress,
-                                        style: const TextStyle(
-                                          color: AppColors.textDark,
-                                          fontSize: 16,
-                                          fontFamily: 'Cairo',
-                                        ),
-                                        inputFormatters: [
-                                          ArabicToEnglishNumbersFormatter(),
-                                          FilteringTextInputFormatter.deny(
-                                              RegExp(r'\s')),
-                                        ],
-                                        decoration: _buildInputDecoration(
-                                          hintText: _isArabic
-                                              ? 'البريد الإلكتروني'
-                                              : 'Email Address',
-                                          prefixIcon: Icons.email_outlined,
-                                        ),
-                                        validator: (v) {
-                                          if (v == null || v.trim().isEmpty) {
-                                            return _isArabic
-                                                ? 'يرجى إدخال البريد الإلكتروني'
-                                                : 'Please enter your email';
-                                          }
-                                          final emailRegExp = RegExp(
-                                              r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-                                          if (!emailRegExp.hasMatch(v.trim())) {
-                                            return _isArabic
-                                                ? 'يرجى إدخال بريد إلكتروني صحيح'
-                                                : 'Please enter a valid email address';
-                                          }
-                                          return null;
-                                        },
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                                SizedBox(
+                                  height: 54,
+                                  child: ElevatedButton(
+                                    onPressed:
+                                        _isLoading ? null : _handleLogin,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.primaryTeal,
+                                      foregroundColor: Colors.white,
+                                      elevation: 0,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(17),
                                       ),
-                                      const SizedBox(height: 16),
-
-                                      // حقل كلمة المرور
-                                      TextFormField(
-                                        controller: _passwordController,
-                                        enabled: !_isLoading,
-                                        obscureText: _obscurePassword,
-                                        style: const TextStyle(
-                                          color: AppColors.textDark,
-                                          fontSize: 16,
-                                          fontFamily: 'Cairo',
-                                        ),
-                                        inputFormatters: [
-                                          ArabicToEnglishNumbersFormatter(),
-                                        ],
-                                        decoration: _buildInputDecoration(
-                                          hintText: _isArabic
-                                              ? 'كلمة المرور'
-                                              : 'Password',
-                                          prefixIcon: Icons.lock_outline,
-                                          suffixIcon: IconButton(
-                                            icon: Icon(
-                                              _obscurePassword
-                                                  ? Icons
-                                                      .visibility_off_outlined
-                                                  : Icons.visibility_outlined,
-                                              color: AppColors.textMuted,
+                                    ),
+                                    child: _isLoading
+                                        ? const SizedBox(
+                                            width: 22,
+                                            height: 22,
+                                            child: CircularProgressIndicator(
+                                              color: Colors.white,
+                                              strokeWidth: 2.4,
                                             ),
-                                            onPressed: () => setState(() =>
-                                                _obscurePassword =
-                                                    !_obscurePassword),
-                                          ),
-                                        ),
-                                        validator: (v) => v == null ||
-                                                v.trim().isEmpty
-                                            ? (_isArabic
-                                                ? 'يرجى إدخال كلمة المرور'
-                                                : 'Please enter your password')
-                                            : null,
-                                      ),
-                                      const SizedBox(height: 20),
-
-                                      // زر تسجيل الدخول
-                                      SizedBox(
-                                        width: double.infinity,
-                                        height: 52,
-                                        child: ElevatedButton(
-                                          onPressed:
-                                              _isLoading ? null : _handleLogin,
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: primaryTeal,
-                                            foregroundColor: Colors.white,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(30),
-                                            ),
-                                            elevation: 4,
-                                            shadowColor: Colors.black26,
-                                          ),
-                                          child: _isLoading
-                                              ? const SizedBox(
-                                                  width: 22,
-                                                  height: 22,
-                                                  child:
-                                                      CircularProgressIndicator(
-                                                    color: Colors.white,
-                                                    strokeWidth: 2.5,
-                                                  ),
-                                                )
-                                              : Text(
-                                                  _isArabic
-                                                      ? 'تسجيل الدخول'
-                                                      : 'Sign In',
-                                                  style: const TextStyle(
-                                                    fontSize: 17,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontFamily: 'Cairo',
-                                                  ),
-                                                ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 16),
-
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Row(
+                                          )
+                                        : Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
                                             children: [
-                                              SizedBox(
-                                                width: 20,
-                                                height: 20,
-                                                child: Checkbox(
-                                                  value: _rememberMe,
-                                                  activeColor: AppColors.primaryTeal,
-                                                   checkColor: Colors.white,
-                                                   side: const BorderSide(
-                                                       color: AppColors.textLight),
-                                                  onChanged: (v) => setState(
-                                                      () => _rememberMe =
-                                                          v ?? false),
-                                                ),
+                                              const Icon(
+                                                Icons.login_rounded,
+                                                size: 20,
                                               ),
-                                              const SizedBox(width: 8),
+                                              const SizedBox(width: 9),
                                               Text(
                                                 _isArabic
-                                                    ? 'تذكرني'
-                                                    : 'Remember Me',
+                                                    ? 'الدخول إلى حسابي'
+                                                    : 'Sign in',
                                                 style: const TextStyle(
-                                                  color: AppColors.textDark,
-                                                  fontSize: 14,
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.bold,
                                                   fontFamily: 'Cairo',
                                                 ),
                                               ),
                                             ],
                                           ),
-                                          GestureDetector(
-                                            onTap: () {},
-                                            child: Text(
-                                              _isArabic
-                                                  ? 'نسيت كلمة المرور؟'
-                                                  : 'Forgot Password?',
-                                              style: const TextStyle(
-                                                color: AppColors.primaryTeal,
-                                                fontSize: 14,
-                                                fontFamily: 'Cairo',
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
                                   ),
                                 ),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-
-                            // 🟢 زر الدخول الزجاجي عبر Google المربوط بالخدمة
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(24),
-                              child: BackdropFilter(
-                                filter:
-                                    ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16.0, vertical: 12.0),
-                                  width: double.infinity,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.cardColor,
-                                    borderRadius: BorderRadius.circular(24),
-                                    border: Border.all(
-                                      color:
-                                          AppColors.lineColor,
-                                      width: 1.5,
+                                const SizedBox(height: 14),
+                                Row(
+                                  children: [
+                                    const Expanded(
+                                      child: Divider(
+                                        color: AppColors.lineColor,
+                                        thickness: 1,
+                                      ),
                                     ),
-                                  ),
-                                  child: SizedBox(
-                                    width: double.infinity,
-                                    height: 48,
-                                    child: OutlinedButton(
-                                      onPressed: _isLoading
-                                          ? null
-                                          : _handleGoogleSignIn,
-                                      style: OutlinedButton.styleFrom(
-                                        backgroundColor: Colors.white,
-                                        side: const BorderSide(color: AppColors.lineColor),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(30),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12),
+                                      child: Text(
+                                        _isArabic
+                                            ? 'أو تابع باستخدام'
+                                            : 'Or continue with',
+                                        style: const TextStyle(
+                                          color: AppColors.textMuted,
+                                          fontSize: 11.5,
+                                          fontFamily: 'Cairo',
                                         ),
                                       ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          const Icon(
-                                            Icons.g_mobiledata_rounded,
-                                            size: 34,
-                                            color: Colors.redAccent,
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Expanded(
-                                            child: FittedBox(
-                                              fit: BoxFit.scaleDown,
-                                              child: Text(
-                                                _isArabic
-                                                    ? 'تسجيل الدخول عن طريق جوجل'
-                                                    : 'Sign in with Google',
-                                                style: const TextStyle(
-                                                  fontSize: 15,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: primaryTeal,
-                                                  fontFamily: 'Cairo',
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
+                                    ),
+                                    const Expanded(
+                                      child: Divider(
+                                        color: AppColors.lineColor,
+                                        thickness: 1,
                                       ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                SizedBox(
+                                  height: 50,
+                                  child: OutlinedButton(
+                                    onPressed: _isLoading
+                                        ? null
+                                        : _handleGoogleSignIn,
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: AppColors.textDark,
+                                      backgroundColor: AppColors.cardColor,
+                                      side: const BorderSide(
+                                          color: AppColors.lineColor),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(
+                                          Icons.g_mobiledata_rounded,
+                                          size: 30,
+                                          color: Colors.redAccent,
+                                        ),
+                                        const SizedBox(width: 7),
+                                        Text(
+                                          _isArabic
+                                              ? 'المتابعة باستخدام Google'
+                                              : 'Continue with Google',
+                                          style: const TextStyle(
+                                            color: AppColors.textDark,
+                                            fontSize: 13.5,
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: 'Cairo',
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 14),
+                            decoration: BoxDecoration(
+                              color: AppColors.accentLight
+                                  .withValues(alpha: 0.20),
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(
+                                color: AppColors.accentWarm
+                                    .withValues(alpha: 0.25),
                               ),
                             ),
-
-                            const SizedBox(height: 16),
-
-                            // 🟢 رابط إنشاء حساب جديد للمستخدمين غير المسجلين
-                            Row(
+                            child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text(
-                                  _isArabic
-                                      ? 'ليس لديك حساب؟'
-                                      : "Don't have an account?",
-                                  style: const TextStyle(
-                                    color: AppColors.textMuted,
-                                    fontSize: 14,
-                                    fontFamily: 'Cairo',
+                                Flexible(
+                                  child: Text(
+                                    _isArabic
+                                        ? 'ليس لديك حساب بعد؟'
+                                        : 'New to Wesal?',
+                                    style: const TextStyle(
+                                      color: AppColors.textDark,
+                                      fontSize: 13,
+                                      fontFamily: 'Cairo',
+                                    ),
                                   ),
                                 ),
                                 TextButton(
@@ -776,38 +890,76 @@ class _LoginScreenState extends State<LoginScreen> {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) =>
-                                                  SignupScreen(
+                                              builder: (context) => SignupScreen(
                                                 currentLanguage:
                                                     widget.currentLanguage,
                                               ),
                                             ),
                                           );
                                         },
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: AppColors.primaryTeal,
+                                  ),
                                   child: Text(
-                                    _isArabic ? 'أنشئ حساباً الآن' : 'Sign Up',
+                                    _isArabic
+                                        ? 'إنشاء حساب جديد'
+                                        : 'Create an account',
                                     style: const TextStyle(
-                                      color: AppColors.textDark,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
+                                      color: AppColors.primaryTeal,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w900,
                                       fontFamily: 'Cairo',
-                                      decoration: TextDecoration.underline,
-                                      decorationColor: AppColors.accentWarm,
                                     ),
                                   ),
                                 ),
                               ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
-              ],
-            ),
+              );
+            },
           ),
         ),
+      ),
+    );
+  }
+}
+
+
+class _LoginFeatureChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _LoginFeatureChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.20)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: AppColors.accentLight, size: 15),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'Cairo',
+            ),
+          ),
+        ],
       ),
     );
   }
