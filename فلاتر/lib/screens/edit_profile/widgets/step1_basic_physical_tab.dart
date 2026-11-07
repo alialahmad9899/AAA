@@ -9,6 +9,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../utils/arabic_number_formatter.dart';
+import '../../../constants/colors.dart';
 
 class Step1BasicPhysicalTab extends StatelessWidget {
   final bool isAr;
@@ -95,14 +96,14 @@ class Step1BasicPhysicalTab extends StatelessWidget {
     return InputDecoration(
       labelText: label,
       labelStyle: const TextStyle(
-        color: Colors.white,
+        color: AppColors.textDark,
         fontSize: 15,
         fontWeight: FontWeight.w600,
         fontFamily: 'Cairo',
       ),
-      prefixIcon: Icon(icon, color: Colors.white70, size: 22),
+      prefixIcon: Icon(icon, color: AppColors.textMuted, size: 22),
       filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.12),
+      fillColor: AppColors.sectionBackground,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: InputBorder.none,
       enabledBorder: OutlineInputBorder(
@@ -132,18 +133,18 @@ class Step1BasicPhysicalTab extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.12),
+          color: AppColors.sectionBackground,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
           children: [
-            Icon(icon, color: Colors.white70, size: 22),
+            Icon(icon, color: AppColors.textMuted, size: 22),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 textToDisplay,
                 style: TextStyle(
-                  color: hasValue ? Colors.white : Colors.white70,
+                  color: hasValue ? AppColors.textDark : AppColors.textMuted,
                   fontSize: 15,
                   fontFamily: 'Cairo',
                   fontWeight: hasValue ? FontWeight.bold : FontWeight.normal,
@@ -151,7 +152,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
               ),
             ),
             const Icon(Icons.keyboard_arrow_down_rounded,
-                color: Colors.white70, size: 24),
+                color: AppColors.textMuted, size: 24),
           ],
         ),
       ),
@@ -176,18 +177,18 @@ class Step1BasicPhysicalTab extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.12),
+          color: AppColors.sectionBackground,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
           children: [
-            Icon(icon, color: Colors.white70, size: 22),
+            Icon(icon, color: AppColors.textMuted, size: 22),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 textToDisplay,
                 style: TextStyle(
-                  color: hasValue ? Colors.white : Colors.white70,
+                  color: hasValue ? AppColors.textDark : AppColors.textMuted,
                   fontSize: 15,
                   fontFamily: 'Cairo',
                   fontWeight: hasValue ? FontWeight.bold : FontWeight.normal,
@@ -201,7 +202,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: currentColor,
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
+                  border: Border.all(color: AppColors.textDark, width: 2),
                   boxShadow: [
                     BoxShadow(
                       color: currentColor.withValues(alpha: 0.6),
@@ -213,7 +214,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
               const SizedBox(width: 8),
             ],
             const Icon(Icons.keyboard_arrow_down_rounded,
-                color: Colors.white70, size: 24),
+                color: AppColors.textMuted, size: 24),
           ],
         ),
       ),
@@ -228,17 +229,17 @@ class Step1BasicPhysicalTab extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.18),
+              color: AppColors.sectionBackground,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: Colors.white, size: 20),
+            child: Icon(icon, color: AppColors.textDark, size: 20),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               title,
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.textDark,
                 fontSize: 16.5,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Cairo',
@@ -289,8 +290,9 @@ class Step1BasicPhysicalTab extends StatelessWidget {
         padding: const EdgeInsets.only(
             left: 18.0, right: 18.0, top: 18.0, bottom: 100.0),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.18),
+          color: AppColors.cardColor,
           borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: AppColors.lineColor),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -307,7 +309,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                       decoration: const BoxDecoration(
                           shape: BoxShape.circle, color: Color(0xFF01579B)),
                       child: CircleAvatar(
-                        backgroundColor: Colors.white10,
+                        backgroundColor: AppColors.sectionBackground,
                         child: pickedImageFile != null
                             ? ClipRRect(
                                 borderRadius: BorderRadius.circular(55),
@@ -322,7 +324,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                                         height: 110,
                                         fit: BoxFit.cover))
                                 : const Icon(Icons.person_rounded,
-                                    size: 60, color: Colors.white70),
+                                    size: 60, color: AppColors.textMuted),
                       ),
                     ),
                     Positioned(
@@ -331,10 +333,10 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: AppColors.textDark,
                             shape: BoxShape.circle,
                             border: Border.all(
-                                color: const Color(0xFF0288D1), width: 2)),
+                                color: AppColors.primaryTeal, width: 2)),
                         child: const Icon(Icons.camera_alt_rounded,
                             color: Color(0xFF0288D1), size: 16),
                       ),
@@ -351,32 +353,32 @@ class Step1BasicPhysicalTab extends StatelessWidget {
             TextFormField(
                 controller: firstNameCtrl,
                 style: const TextStyle(
-                    color: Colors.white, fontSize: 15, fontFamily: 'Cairo'),
+                    color: AppColors.textDark, fontSize: 15, fontFamily: 'Cairo'),
                 decoration: _buildInput(isAr ? 'الاسم الأول *' : 'First Name *',
                     Icons.person_rounded)),
             const SizedBox(height: 14),
             TextFormField(
                 controller: lastNameCtrl,
                 style: const TextStyle(
-                    color: Colors.white, fontSize: 15, fontFamily: 'Cairo'),
+                    color: AppColors.textDark, fontSize: 15, fontFamily: 'Cairo'),
                 decoration: _buildInput(isAr ? 'اسم العائلة *' : 'Last Name *',
                     Icons.person_outline_rounded)),
             const SizedBox(height: 14),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.12),
+                  color: AppColors.sectionBackground,
                   borderRadius: BorderRadius.circular(16)),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(children: [
                     const Icon(Icons.transgender_rounded,
-                        color: Colors.white70, size: 22),
+                        color: AppColors.textMuted, size: 22),
                     const SizedBox(width: 12),
                     Text(isAr ? 'الجنس:' : 'Gender:',
                         style: const TextStyle(
-                            color: Colors.white,
+                            color: AppColors.textDark,
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
                             fontFamily: 'Cairo')),
@@ -392,11 +394,11 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                   ]),
                   Row(children: [
                     Icon(Icons.lock_outline_rounded,
-                        color: Colors.white.withValues(alpha: 0.6), size: 16),
+                        color: AppColors.textMuted, size: 16),
                     const SizedBox(width: 4),
                     Text(isAr ? 'ثابت' : 'Locked',
                         style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.6),
+                            color: AppColors.textMuted,
                             fontSize: 12.5,
                             fontFamily: 'Cairo'))
                   ]),
@@ -448,7 +450,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                 child: TextFormField(
                     controller: dobCtrl,
                     style: const TextStyle(
-                        color: Colors.white, fontSize: 15, fontFamily: 'Cairo'),
+                        color: AppColors.textDark, fontSize: 15, fontFamily: 'Cairo'),
                     decoration: _buildInput(
                         isAr ? 'تاريخ الميلاد' : 'Date of Birth',
                         Icons.calendar_today_rounded)),
@@ -461,7 +463,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                 keyboardType: TextInputType.phone,
                 inputFormatters: [ArabicToEnglishNumbersFormatter()],
                 style: const TextStyle(
-                    color: Colors.white, fontSize: 15, fontFamily: 'Cairo'),
+                    color: AppColors.textDark, fontSize: 15, fontFamily: 'Cairo'),
                 decoration: _buildInput(
                     isAr ? 'رقم للتواصل (اختياري)' : 'Phone Number (Optional)',
                     Icons.phone_rounded)),
@@ -499,7 +501,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                           ? 'تنويه هام: رقم التواصل مخصص لإدارة المنصة فقط، ولا يظهر نهائياً لأي عضو آخر 🔒'
                           : 'Important Note: Phone number is for admin contact only and will never be visible to other members 🔒',
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppColors.textDark,
                         fontSize: 13,
                         height: 1.4,
                         fontFamily: 'Cairo',
@@ -516,7 +518,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                 controller: introCtrl,
                 maxLines: 3,
                 style: const TextStyle(
-                    color: Colors.white, fontSize: 15, fontFamily: 'Cairo'),
+                    color: AppColors.textDark, fontSize: 15, fontFamily: 'Cairo'),
                 decoration: _buildInput(
                     isAr ? 'النبذة الشخصية ✍' : 'Introduction ✍️',
                     Icons.article_rounded)),
@@ -537,7 +539,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
             TextFormField(
                 controller: institutionCtrl,
                 style: const TextStyle(
-                    color: Colors.white, fontSize: 15, fontFamily: 'Cairo'),
+                    color: AppColors.textDark, fontSize: 15, fontFamily: 'Cairo'),
                 decoration: _buildInput(
                     isAr ? 'الجامعة / المؤسسة 🏛️' : 'Institution 🏛️',
                     Icons.account_balance_rounded)),
@@ -545,7 +547,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
             TextFormField(
                 controller: designationCtrl,
                 style: const TextStyle(
-                    color: Colors.white, fontSize: 15, fontFamily: 'Cairo'),
+                    color: AppColors.textDark, fontSize: 15, fontFamily: 'Cairo'),
                 decoration: _buildInput(
                     isAr ? 'المسمى الوظيفي / المهنة 💼' : 'Designation 💼',
                     Icons.work_rounded)),
@@ -553,7 +555,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
             TextFormField(
                 controller: companyCtrl,
                 style: const TextStyle(
-                    color: Colors.white, fontSize: 15, fontFamily: 'Cairo'),
+                    color: AppColors.textDark, fontSize: 15, fontFamily: 'Cairo'),
                 decoration: _buildInput(
                     isAr ? 'جهة العمل' : 'Company / Employer',
                     Icons.business_outlined)),
@@ -566,7 +568,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.12),
+                color: AppColors.sectionBackground,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Column(
@@ -582,7 +584,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                           const SizedBox(width: 8),
                           Text(isAr ? 'الطول:' : 'Height:',
                               style: const TextStyle(
-                                  color: Colors.white,
+                                  color: AppColors.textDark,
                                   fontSize: 15,
                                   fontFamily: 'Cairo',
                                   fontWeight: FontWeight.bold)),
@@ -610,10 +612,10 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                   ),
                   SliderTheme(
                     data: SliderThemeData(
-                      activeTrackColor: Colors.amberAccent,
-                      inactiveTrackColor: Colors.white24,
-                      thumbColor: Colors.white,
-                      overlayColor: Colors.amberAccent.withValues(alpha: 0.2),
+                      activeTrackColor: AppColors.accentWarm,
+                      inactiveTrackColor: AppColors.lineColor,
+                      thumbColor: AppColors.cardColor,
+                      overlayColor: AppColors.accentWarm.withValues(alpha: 0.18),
                       valueIndicatorShape:
                           const PaddleSliderValueIndicatorShape(),
                       valueIndicatorTextStyle:
@@ -639,7 +641,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.12),
+                color: AppColors.sectionBackground,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Column(
@@ -655,7 +657,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                           const SizedBox(width: 8),
                           Text(isAr ? 'الوزن:' : 'Weight:',
                               style: const TextStyle(
-                                  color: Colors.white,
+                                  color: AppColors.textDark,
                                   fontSize: 15,
                                   fontFamily: 'Cairo',
                                   fontWeight: FontWeight.bold)),
@@ -684,8 +686,8 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                   SliderTheme(
                     data: SliderThemeData(
                       activeTrackColor: Colors.amberAccent,
-                      inactiveTrackColor: Colors.white24,
-                      thumbColor: Colors.white,
+                      inactiveTrackColor: AppColors.lineColor,
+                      thumbColor: AppColors.textDark,
                       overlayColor: Colors.amberAccent.withValues(alpha: 0.2),
                     ),
                     child: Slider(
