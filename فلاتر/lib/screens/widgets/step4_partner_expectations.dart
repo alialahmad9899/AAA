@@ -564,7 +564,7 @@ class Step4PartnerExpectations extends StatelessWidget {
                               softWrap: true,
                               textAlign: TextAlign.start,
                               style: const TextStyle(
-                                color: Colors.amberAccent,
+                                color: AppColors.primaryTeal,
                                 fontWeight: FontWeight.bold,
                                 fontFamily: 'Cairo',
                                 fontSize: 12,
@@ -584,7 +584,7 @@ class Step4PartnerExpectations extends StatelessWidget {
                               softWrap: true,
                               textAlign: TextAlign.end,
                               style: const TextStyle(
-                                color: Colors.amberAccent,
+                                color: AppColors.primaryTeal,
                                 fontWeight: FontWeight.bold,
                                 fontFamily: 'Cairo',
                                 fontSize: 12,
@@ -625,7 +625,7 @@ class Step4PartnerExpectations extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: AppColors.sectionBackground,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white24),
+                    border: Border.all(color: AppColors.lineColor),
                   ),
                   child: Column(
                     children: [
@@ -644,7 +644,7 @@ class Step4PartnerExpectations extends StatelessWidget {
                               softWrap: true,
                               textAlign: TextAlign.start,
                               style: const TextStyle(
-                                color: Colors.amberAccent,
+                                color: AppColors.primaryTeal,
                                 fontWeight: FontWeight.bold,
                                 fontFamily: 'Cairo',
                                 fontSize: 12,
@@ -664,7 +664,7 @@ class Step4PartnerExpectations extends StatelessWidget {
                               softWrap: true,
                               textAlign: TextAlign.end,
                               style: const TextStyle(
-                                color: Colors.amberAccent,
+                                color: AppColors.primaryTeal,
                                 fontWeight: FontWeight.bold,
                                 fontFamily: 'Cairo',
                                 fontSize: 12,
@@ -685,7 +685,7 @@ class Step4PartnerExpectations extends StatelessWidget {
                           max: 140,
                           divisions: 100,
                           activeColor: weightRangeWasSelected ? AppColors.accentWarm : AppColors.textLight,
-                          inactiveColor: Colors.white24,
+                          inactiveColor: AppColors.lineColor,
                           onChanged: onWeightRangeChanged,
                         ),
                       ),
