@@ -792,17 +792,12 @@ class _SearchTabState extends State<SearchTab> {
                                                 horizontal: 14, vertical: 13),
                                             decoration: BoxDecoration(
                                               color: isSelected
-                                                  ? AppColors.secondaryTeal
-                                                      .withValues(alpha: 0.22)
-                                                  : AppColors.textDark
-                                                      .withValues(alpha: 0.08),
+                                                  ? AppColors.primaryTeal.withValues(alpha: 0.08)
+                                                  : AppColors.sectionBackground,
                                               borderRadius:
                                                   BorderRadius.circular(14),
                                               border: Border.all(
-                                                color: isSelected
-                                                    ? AppColors.secondaryTeal
-                                                    : AppColors.textDark.withValues(
-                                                        alpha: 0.15),
+                                                color: isSelected ? AppColors.primaryTeal : AppColors.lineColor,
                                               ),
                                             ),
                                             child: Row(
@@ -815,10 +810,7 @@ class _SearchTabState extends State<SearchTab> {
                                                     Text(
                                                       displayText,
                                                       style: TextStyle(
-                                                        color: isSelected
-                                                            ? const Color(
-                                                                0xFF4FC3F7)
-                                                            : AppColors.textDark,
+                                                        color: isSelected ? AppColors.primaryTeal : AppColors.textDark,
                                                         fontWeight: isSelected
                                                             ? FontWeight.bold
                                                             : FontWeight.w600,
@@ -836,20 +828,11 @@ class _SearchTabState extends State<SearchTab> {
                                                                 vertical: 2.5),
                                                         decoration:
                                                             BoxDecoration(
-                                                          color:
-                                                              AppColors.secondaryTeal
-                                                                  .withValues(
-                                                                      alpha:
-                                                                          0.2),
+                                                          color: AppColors.primaryTeal.withValues(alpha: 0.08),
                                                           borderRadius:
                                                               BorderRadius
                                                                   .circular(6),
-                                                          border: Border.all(
-                                                              color: Color(
-                                                                      0xFF4FC3F7)
-                                                                  .withValues(
-                                                                      alpha:
-                                                                          0.4)),
+                                                          border: Border.all(color: AppColors.primaryTeal.withValues(alpha: 0.18)),
                                                         ),
                                                         child: Text(
                                                           _isAr
@@ -857,8 +840,7 @@ class _SearchTabState extends State<SearchTab> {
                                                               : 'Arab',
                                                           style:
                                                               const TextStyle(
-                                                            color: Color(
-                                                                0xFF4FC3F7),
+                                                            color: AppColors.primaryTeal,
                                                             fontSize: 10,
                                                             fontWeight:
                                                                 FontWeight.bold,
@@ -872,7 +854,7 @@ class _SearchTabState extends State<SearchTab> {
                                                 if (isSelected)
                                                   const Icon(
                                                     Icons.check_circle_rounded,
-                                                    color: AppColors.secondaryTeal,
+                                                    color: AppColors.primaryTeal,
                                                     size: 20,
                                                   ),
                                               ],
