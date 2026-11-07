@@ -30,6 +30,8 @@ class SmartMatchingServiceTest extends TestCase
 
         $this->assertSame(100, $result['percentage']);
         $this->assertSame(1, $result['criteria_count']);
+        $this->assertSame(1, $result['evaluated_criteria_count']);
+        $this->assertSame('calculated', $result['status']);
         $this->assertSame('country', $result['details'][0]['key']);
     }
 
@@ -59,6 +61,7 @@ class SmartMatchingServiceTest extends TestCase
 
         $this->assertSame(100, $result['percentage']);
         $this->assertSame(2, $result['criteria_count']);
+        $this->assertSame(2, $result['evaluated_criteria_count']);
     }
 
     public function test_age_range_scores_inside_range_above_outside_range(): void
@@ -101,14 +104,47 @@ class SmartMatchingServiceTest extends TestCase
         $this->assertSame(1, $result['criteria_count']);
     }
 
-    public function test_missing_candidate_data_is_neutral_not_a_false_perfect_match(): void
+    public function test_missing_candidate_data_is_not_counted_as_a_match_or_a_zero(): void
     {
         $result = $this->service->scoreData([
             'religion_id' => 4,
         ], []);
 
-        $this->assertSame(50, $result['percentage']);
+        $this->assertNull($result['percentage']);
         $this->assertSame(1, $result['criteria_count']);
+        $this->assertSame(0, $result['evaluated_criteria_count']);
+        $this->assertSame('insufficient_data', $result['status']);
+        $this->assertFalse($result['details'][0]['evaluated']);
+    }
+
+    public function test_missing_criteria_are_excluded_from_the_percentage_denominator(): void
+    {
+        $result = $this->service->scoreData([
+            'preferred_country_id' => 12,
+            'religion_id' => 4,
+        ], [
+            'country_id' => 12,
+            'religion_id' => null,
+        ]);
+
+        $this->assertSame(100, $result['percentage']);
+        $this->assertSame(2, $result['criteria_count']);
+        $this->assertSame(1, $result['evaluated_criteria_count']);
+        $this->assertSame('calculated', $result['status']);
+    }
+
+    public function test_a_real_zero_match_is_preserved_when_data_is_present(): void
+    {
+        $result = $this->service->scoreData([
+            'religion_id' => 4,
+        ], [
+            'religion_id' => 5,
+        ]);
+
+        $this->assertSame(0, $result['percentage']);
+        $this->assertSame(1, $result['criteria_count']);
+        $this->assertSame(1, $result['evaluated_criteria_count']);
+        $this->assertSame('calculated', $result['status']);
     }
 
     public function test_arabic_profession_text_is_normalised_for_comparison(): void
@@ -135,8 +171,43 @@ class SmartMatchingServiceTest extends TestCase
             'drinking_acceptable' => 'does_not_matter',
         ], []);
 
-        $this->assertSame(0, $result['percentage']);
+        $this->assertNull($result['percentage']);
         $this->assertSame(0, $result['criteria_count']);
+        $this->assertSame(0, $result['evaluated_criteria_count']);
+        $this->assertSame('no_preferences', $result['status']);
         $this->assertSame([], $result['details']);
     }
+
+    public function test_supported_legacy_preferences_are_scored_when_candidate_fields_exist(): void
+    {
+        $result = $this->service->scoreData([
+            'caste_id' => 2,
+            'sub_caste_id' => 8,
+            'family_value_id' => 3,
+            'personal_value' => 'ملتزم',
+            'body_type' => 'رياضي',
+        ], [
+            'caste_id' => 2,
+            'sub_caste_id' => 8,
+            'family_value_id' => 3,
+            'personal_value' => 'ملتزم',
+            'body_type' => 'رياضي',
+        ]);
+
+        $this->assertSame(100, $result['percentage']);
+        $this->assertSame(5, $result['criteria_count']);
+        $this->assertSame(5, $result['evaluated_criteria_count']);
+    }
+
+    public function test_partial_profession_overlap_is_not_reported_as_a_perfect_match(): void
+    {
+        $result = $this->service->scoreData([
+            'profession' => 'مهندس برمجيات',
+        ], [
+            'professions' => ['مهندس'],
+        ]);
+
+        $this->assertSame(50, $result['percentage']);
+    }
+
 }
