@@ -17,8 +17,21 @@ class AppTheme {
       error: AppColors.error,
     );
 
+    final textTheme = ThemeData.light().textTheme.apply(
+      fontFamily: 'Cairo',
+      bodyColor: AppColors.textDark,
+      displayColor: AppColors.textDark,
+    );
+
     return ThemeData(
       fontFamily: 'Cairo',
+      textTheme: textTheme,
+      primaryTextTheme: textTheme,
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: AppColors.primaryTeal,
+        selectionColor: Color(0x332F7885),
+        selectionHandleColor: AppColors.accentWarm,
+      ),
       primaryColor: AppColors.primaryTeal,
       scaffoldBackgroundColor: AppColors.backgroundColor,
       colorScheme: colorScheme,
@@ -44,7 +57,24 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.cardColor,
-        hintStyle: const TextStyle(color: AppColors.textMuted),
+        textStyle: const TextStyle(
+          color: AppColors.textDark,
+          fontFamily: 'Cairo',
+          fontSize: 14,
+        ),
+        labelStyle: const TextStyle(
+          color: AppColors.textMuted,
+          fontFamily: 'Cairo',
+        ),
+        floatingLabelStyle: const TextStyle(
+          color: AppColors.primaryTeal,
+          fontFamily: 'Cairo',
+          fontWeight: FontWeight.w700,
+        ),
+        hintStyle: const TextStyle(
+          color: AppColors.textMuted,
+          fontFamily: 'Cairo',
+        ),
         prefixIconColor: AppColors.primaryTeal,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
