@@ -321,7 +321,7 @@ class Step4PartnerExpectations extends StatelessWidget {
           children: [
             if (isSelected) ...[
               const Icon(Icons.check_circle_rounded,
-                  size: 15, color: Color(0xFF01579B)),
+                  size: 15, color: AppColors.primaryTeal),
               const SizedBox(width: 5),
             ],
             if (leading != null) ...[
