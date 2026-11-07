@@ -244,7 +244,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                             ? (_isAr ? 'تم الرد (مغلقة)' : 'Closed')
                             : (_isAr ? 'قيد المتابعة' : 'Active'),
                         style: TextStyle(
-                          color: isClosed ? AppColors.success : AppColors.warning,
+                          color: AppColors.textDark,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                           fontFamily: 'Cairo',
@@ -435,7 +435,7 @@ class _CreateTicketModalState extends State<_CreateTicketModal> {
                     color: AppColors.textDark.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(16),
                     border:
-                        Border.all(color: AppColors.textDark.withValues(alpha: 0.15)),
+                        Border.all(color: AppColors.lineColor),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
