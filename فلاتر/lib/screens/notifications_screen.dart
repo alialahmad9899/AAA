@@ -345,15 +345,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             width: double.infinity,
             height: double.infinity,
             decoration: const BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment(-0.8, -0.6),
-                radius: 1.2,
-                colors: [
-                  Color(0xFF1E293B),
-                  Color(0xFF0F172A),
-                  Color(0xFF070A11),
-                ],
-              ),
+              color: AppColors.backgroundColor,
             ),
             child: SafeArea(
               child: Column(
