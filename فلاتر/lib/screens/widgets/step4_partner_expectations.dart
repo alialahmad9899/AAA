@@ -497,7 +497,7 @@ class Step4PartnerExpectations extends StatelessWidget {
                                 ? 'إلى: ${safeAgeRange.end.round()} سنة'
                                 : 'To: ${safeAgeRange.end.round()} yrs',
                             style: const TextStyle(
-                              color: Colors.amberAccent,
+                              color: AppColors.primaryTeal,
                               fontWeight: FontWeight.bold,
                               fontFamily: 'Cairo',
                               fontSize: 12,
@@ -607,7 +607,7 @@ class Step4PartnerExpectations extends StatelessWidget {
                           activeColor: heightRangeWasSelected
                               ? AppColors.accentWarm
                               : AppColors.lineColor,
-                          inactiveColor: Colors.white24,
+                          inactiveColor: AppColors.lineColor,
                           onChanged: onHeightRangeChanged,
                         ),
                       ),
@@ -623,7 +623,7 @@ class Step4PartnerExpectations extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.2),
+                    color: AppColors.sectionBackground,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: Colors.white24),
                   ),
