@@ -73,16 +73,6 @@ class MemberController extends Controller
 
         $oppositeGender = $gender === 1 ? 2 : 1;
         $usersQuery = User::query()
-            ->with([
-                'member.marital_status',
-                'member.mothereTongue',
-                'addresses.country',
-                'physical_attributes',
-                'spiritual_backgrounds.religion',
-                'spiritual_backgrounds.caste',
-                'career',
-                'recidency',
-            ])
             ->where('user_type', 'member')
             ->where('id', '!=', $user->id)
             ->where('blocked', 0)
@@ -102,7 +92,15 @@ class MemberController extends Controller
             })
             ->orderByDesc('created_at');
 
-        return ActiveUserResource::collection($usersQuery->get())->additional([
+        // Calculate a live score for every visible profile, without changing
+        // the default newest-first order. The switch controls sorting only.
+        $members = app(SmartMatchingService::class)->scoreCandidates(
+            $user,
+            $usersQuery->get(),
+            false
+        );
+
+        return ActiveUserResource::collection($members)->additional([
             'result' => true,
             'smart_matching' => false,
         ]);
