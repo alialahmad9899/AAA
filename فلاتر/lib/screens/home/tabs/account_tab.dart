@@ -275,7 +275,7 @@ class AccountTab extends StatefulWidget {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0288D1),
+                    backgroundColor: const AppColors.primaryTeal,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16)),
@@ -547,342 +547,218 @@ class AccountTabState extends State<AccountTab> {
 
   Widget _buildCompactHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.35), width: 1.2),
-            ),
-            child: Row(
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF4FC3F7),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 8),
                 Text(
                   title,
                   style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
+                    color: AppColors.textDark,
+                    fontSize: 19,
+                    fontWeight: FontWeight.w900,
+                    fontFamily: 'Cairo',
+                  ),
+                ),
+                Text(
+                  _isAr
+                      ? 'ملفك الشخصي وإعدادات وصال'
+                      : 'Your profile and Wesal settings',
+                  style: const TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 11,
                     fontFamily: 'Cairo',
                   ),
                 ),
               ],
             ),
           ),
-          Row(
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.35), width: 1.2),
-                ),
-                child: IconButton(
-                  constraints:
-                      const BoxConstraints(minWidth: 38, minHeight: 38),
-                  padding: EdgeInsets.zero,
-                  icon: const Icon(Icons.remove_red_eye_outlined,
-                      color: Colors.white, size: 22),
-                  tooltip: widget.txt('profile_viewers_title'),
-                  onPressed: widget.onProfileViewersPressed,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.35), width: 1.2),
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    IconButton(
-                      constraints:
-                          const BoxConstraints(minWidth: 38, minHeight: 38),
-                      padding: EdgeInsets.zero,
-                      icon: const Icon(Icons.notifications_none_rounded,
-                          color: Colors.white, size: 22),
-                      onPressed: widget.onNotificationPressed,
-                    ),
-                    if (widget.unreadNotificationCount > 0)
-                      Positioned(
-                        top: 6,
-                        right: 6,
-                        child: Container(
-                          padding: const EdgeInsets.all(3),
-                          decoration: const BoxDecoration(
-                              color: Colors.redAccent, shape: BoxShape.circle),
-                          child: Text(
-                            '${widget.unreadNotificationCount}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'Cairo',
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
+          _buildAccountHeaderAction(
+            icon: Icons.remove_red_eye_outlined,
+            tooltip: widget.txt('profile_viewers_title'),
+            onTap: widget.onProfileViewersPressed,
+          ),
+          const SizedBox(width: 8),
+          _buildAccountHeaderAction(
+            icon: Icons.notifications_none_rounded,
+            tooltip: _isAr ? 'الإشعارات' : 'Notifications',
+            onTap: widget.onNotificationPressed,
+            badgeCount: widget.unreadNotificationCount,
           ),
         ],
       ),
     );
   }
 
-  /// 🟢 تصميم الهيدر الرئيسي مع قراءة الأعداد والإحصائيات الحقيقية المظبوطة
+  Widget _buildAccountHeaderAction({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onTap,
+    int badgeCount = 0,
+  }) {
+    return Material(
+      color: AppColors.cardColor,
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: SizedBox(
+          width: 42,
+          height: 42,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Icon(icon, color: AppColors.primaryTeal, size: 21),
+              if (badgeCount > 0)
+                Positioned(
+                  top: 3,
+                  right: 3,
+                  child: Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: const BoxDecoration(
+                      color: AppColors.error,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      '$badgeCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Cairo',
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildModernProfileHeader(String displayName, bool isFemale) {
     final int age = _userProfile?.basicInfo.age ?? 0;
-
-    // Real database counts are independent from subscription quotas.
     final int sentInterestsDisplay = _userProfile?.sentInterestsCount ?? 0;
     final int profileVisitorsDisplay = _userProfile?.profileVisitorsCount ?? 0;
     final String residencyCountry =
         _userProfile?.residenceInfo?.residencyCountry.trim() ?? '';
 
+    final List<Color> avatarRing = isFemale
+        ? [AppColors.accentWarm, AppColors.accentLight]
+        : [AppColors.primaryTeal, AppColors.secondaryTeal];
+
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 12.0),
-      padding: const EdgeInsets.all(16.0),
+      margin: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.all(17),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFF0288D1).withValues(alpha: 0.25),
-            const Color(0xFF0F172A).withValues(alpha: 0.85),
-            const Color(0xFF004D40).withValues(alpha: 0.20),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: const Color(0xFF38BDF8).withValues(alpha: 0.4),
-          width: 1.2,
-        ),
+        color: AppColors.cardColor,
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: AppColors.lineColor),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0288D1).withValues(alpha: 0.15),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            color: AppColors.textDark.withValues(alpha: 0.055),
+            blurRadius: 22,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Column(
         children: [
           Row(
-            textDirection: TextDirection.ltr,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Stack(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: isFemale
-                            ? [const Color(0xFFF48FB1), const Color(0xFFC2185B)]
-                            : [
-                                const Color(0xFF38BDF8),
-                                const Color(0xFF0288D1)
-                              ],
-                      ),
-                    ),
-                    child: CircleAvatar(
-                      radius: 40,
-                      backgroundColor: const Color(0xFF01579B),
-                      child: _isLoadingUser
-                          ? const CircularProgressIndicator(
-                              color: Colors.white, strokeWidth: 2)
-                          : _userPhoto.isNotEmpty
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(40),
-                                  child: CachedNetworkImage(
-                                    imageUrl: _userPhoto,
-                                    width: 80,
-                                    height: 80,
-                                    fit: BoxFit.cover,
-                                    placeholder: (context, url) =>
-                                        Container(color: Colors.white12),
-                                    errorWidget: (context, url, error) =>
-                                        const Icon(
-                                      Icons.person_rounded,
-                                      size: 44,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                )
-                              : const Icon(Icons.person_rounded,
-                                  size: 44, color: Colors.white),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 2,
-                    right: 2,
-                    child: Container(
-                      width: 14,
-                      height: 14,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF10B981),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                            color: const Color(0xFF0F172A), width: 2),
-                      ),
-                    ),
-                  ),
-                ],
+              Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(colors: avatarRing),
+                ),
+                child: CircleAvatar(
+                  radius: 39,
+                  backgroundColor: AppColors.sectionBackground,
+                  child: _isLoadingUser
+                      ? const CircularProgressIndicator(
+                          color: AppColors.primaryTeal,
+                          strokeWidth: 2,
+                        )
+                      : _userPhoto.isNotEmpty
+                          ? ClipOval(
+                              child: CachedNetworkImage(
+                                imageUrl: _userPhoto,
+                                width: 78,
+                                height: 78,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => Container(
+                                  color: AppColors.sectionBackground,
+                                ),
+                                errorWidget: (context, url, error) =>
+                                    const Icon(
+                                  Icons.person_rounded,
+                                  size: 42,
+                                  color: AppColors.primaryTeal,
+                                ),
+                              ),
+                            )
+                          : const Icon(
+                              Icons.person_rounded,
+                              size: 42,
+                              color: AppColors.primaryTeal,
+                            ),
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(
                 child: Directionality(
-                  textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
+                  textDirection:
+                      _isAr ? TextDirection.rtl : TextDirection.ltr,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         displayName,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Cairo',
-                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppColors.textDark,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          fontFamily: 'Cairo',
+                        ),
                       ),
-                      const SizedBox(height: 6),
-                      Row(
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 7,
+                        runSpacing: 7,
                         children: [
-                          if (age > 0) ...[
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.cake_rounded,
-                                      color: Color(0xFFFFB74D), size: 13),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    _isAr ? '$age سنة' : '$age yrs',
-                                    style: const TextStyle(
-                                      color: Color(0xE6FFFFFF),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      fontFamily: 'Cairo',
-                                    ),
-                                  ),
-                                ],
-                              ),
+                          if (age > 0)
+                            _buildAccountMetaChip(
+                              icon: Icons.cake_outlined,
+                              label: _isAr ? '$age سنة' : '$age yrs',
                             ),
-                            const SizedBox(width: 8),
-                          ],
                           if (_userProfile != null)
-                            Expanded(
-                              child: SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: (_userProfile!.basicInfo.packageName
-                                            .isNotEmpty &&
-                                        _userProfile!.isSubscribedActive)
-                                    ? PackageBadgeWidget(
-                                        packageName: _userProfile!
-                                            .basicInfo.packageName,
-                                        isArabic: _isAr,
-                                      )
-                                    : Container(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 8, vertical: 3),
-                                            decoration: BoxDecoration(
-                                              color: Colors.amber
-                                                  .withValues(alpha: 0.2),
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                              border: Border.all(
-                                                  color: Colors.amber
-                                                      .withValues(alpha: 0.6)),
-                                            ),
-                                            child: Text(
-                                              _isAr ? 'مجاني 🔒' : 'Free 🔒',
-                                              style: const TextStyle(
-                                                color: Colors.amber,
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.bold,
-                                                fontFamily: 'Cairo',
-                                              ),
-                                            ),
-                                          ),
-                              ),
-                            ),
+                            (_userProfile!.basicInfo.packageName.isNotEmpty &&
+                                    _userProfile!.isSubscribedActive)
+                                ? PackageBadgeWidget(
+                                    packageName:
+                                        _userProfile!.basicInfo.packageName,
+                                    isArabic: _isAr,
+                                  )
+                                : _buildAccountMetaChip(
+                                    icon: Icons.lock_outline_rounded,
+                                    label: _isAr ? 'باقة مجانية' : 'Free plan',
+                                    accent: true,
+                                  ),
                         ],
                       ),
                       if (residencyCountry.isNotEmpty) ...[
-                        const SizedBox(height: 7),
-                        Align(
-                          alignment: _isAr
-                              ? Alignment.centerRight
-                              : Alignment.centerLeft,
-                          child: Container(
-                            constraints: const BoxConstraints(maxWidth: 210),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 9,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF38BDF8)
-                                  .withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: const Color(0xFF38BDF8)
-                                    .withValues(alpha: 0.25),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.location_on_outlined,
-                                  color: Color(0xFF80DEEA),
-                                  size: 13,
-                                ),
-                                const SizedBox(width: 4),
-                                Flexible(
-                                  child: Text(
-                                    residencyCountry,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: Color(0xE6FFFFFF),
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      fontFamily: 'Cairo',
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                        const SizedBox(height: 8),
+                        _buildAccountMetaChip(
+                          icon: Icons.location_on_outlined,
+                          label: residencyCountry,
                         ),
                       ],
                     ],
@@ -891,146 +767,185 @@ class AccountTabState extends State<AccountTab> {
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           Container(
-            height: 1,
-            color: Colors.white.withValues(alpha: 0.12),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              // 🟢 عدد إبداء الاهتمام المرسل
-              Expanded(
-                child: InkWell(
-                  onTap: () {
-                    Navigator.pushNamed(
-                      context,
-                      '/my-interests',
-                      arguments: {'currentLanguage': widget.currentLanguage},
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(14),
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE91E63).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                          color:
-                              const Color(0xFFE91E63).withValues(alpha: 0.35)),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.favorite_rounded,
-                            color: Color(0xFFF48FB1), size: 18),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                _isAr ? 'الاهتمام المرسل' : 'Sent Interests',
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 10.5,
-                                  fontFamily: 'Cairo',
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              Text(
-                                '$sentInterestsDisplay',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'Cairo',
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+            padding: const EdgeInsets.all(9),
+            decoration: BoxDecoration(
+              color: AppColors.sectionBackground,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildAccountStat(
+                    icon: Icons.favorite_rounded,
+                    iconColor: AppColors.accentWarm,
+                    title: _isAr ? 'اهتمامات أرسلتها' : 'Sent interests',
+                    value: '$sentInterestsDisplay',
+                    onTap: () {
+                      Navigator.pushNamed(
+                        context,
+                        '/my-interests',
+                        arguments: {
+                          'currentLanguage': widget.currentLanguage,
+                        },
+                      );
+                    },
                   ),
                 ),
-              ),
-              const SizedBox(width: 10),
-
-              // 🟢 عدد زوار الملف الشخصي
-              Expanded(
-                child: InkWell(
-                  onTap: widget.onProfileViewersPressed,
-                  borderRadius: BorderRadius.circular(14),
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF00ACC1).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                          color:
-                              const Color(0xFF00ACC1).withValues(alpha: 0.35)),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.remove_red_eye_rounded,
-                            color: Color(0xFF80DEEA), size: 18),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                _isAr ? 'زوار ملفي' : 'Profile Visitors',
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 10.5,
-                                  fontFamily: 'Cairo',
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              Text(
-                                '$profileVisitorsDisplay',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'Cairo',
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                Container(
+                  width: 1,
+                  height: 46,
+                  color: AppColors.lineColor,
+                ),
+                Expanded(
+                  child: _buildAccountStat(
+                    icon: Icons.visibility_rounded,
+                    iconColor: AppColors.primaryTeal,
+                    title: _isAr ? 'زوار ملفك' : 'Profile visitors',
+                    value: '$profileVisitorsDisplay',
+                    onTap: widget.onProfileViewersPressed,
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
+  Widget _buildAccountMetaChip({
+    required IconData icon,
+    required String label,
+    bool accent = false,
+  }) {
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 190),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: accent
+            ? AppColors.accentLight.withValues(alpha: 0.32)
+            : AppColors.sectionBackground,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: accent
+              ? AppColors.accentWarm.withValues(alpha: 0.28)
+              : AppColors.lineColor,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: accent ? AppColors.accentWarm : AppColors.primaryTeal,
+            size: 13,
+          ),
+          const SizedBox(width: 5),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.textDark,
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                fontFamily: 'Cairo',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAccountStat({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String value,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(13),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: Icon(icon, color: iconColor, size: 17),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 9.5,
+                        fontFamily: 'Cairo',
+                      ),
+                    ),
+                    Text(
+                      value,
+                      style: const TextStyle(
+                        color: AppColors.textDark,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                        fontFamily: 'Cairo',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildSectionTitle(String title, IconData icon) {
     return Padding(
-      padding: const EdgeInsets.only(right: 6, left: 6, top: 18, bottom: 8),
+      padding: const EdgeInsets.only(right: 6, left: 6, top: 19, bottom: 9),
       child: Row(
         children: [
-          Icon(icon, color: const Color(0xFF81D4FA), size: 18),
-          const SizedBox(width: 8),
-          Text(title,
-              style: const TextStyle(
-                  color: Color(0xFFE0F7FA),
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Cairo')),
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: AppColors.accentLight.withValues(alpha: 0.30),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: AppColors.primaryTeal, size: 17),
+          ),
+          const SizedBox(width: 9),
+          Text(
+            title,
+            style: const TextStyle(
+              color: AppColors.textDark,
+              fontSize: 13.5,
+              fontWeight: FontWeight.w900,
+              fontFamily: 'Cairo',
+            ),
+          ),
         ],
       ),
     );
@@ -1041,14 +956,11 @@ class AccountTabState extends State<AccountTab> {
     required String title,
     required VoidCallback onTap,
     List<Color>? gradientColors,
-    Color textColor = Colors.white,
+    Color textColor = AppColors.textDark,
     bool showDivider = true,
   }) {
     final List<Color> colors = gradientColors ??
-        [
-          Colors.white.withValues(alpha: 0.25),
-          Colors.white.withValues(alpha: 0.12)
-        ];
+        [AppColors.primaryTeal, AppColors.secondaryTeal];
 
     return Column(
       children: [
@@ -1056,105 +968,125 @@ class AccountTabState extends State<AccountTab> {
           color: Colors.transparent,
           child: InkWell(
             onTap: onTap,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(15),
             child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 14, vertical: 12),
               child: Row(
                 children: [
                   Container(
-                    width: 38,
-                    height: 38,
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                          colors: colors,
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight),
-                      borderRadius: BorderRadius.circular(12),
+                        colors: colors,
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(13),
+                      boxShadow: [
+                        BoxShadow(
+                          color: colors.first.withValues(alpha: 0.16),
+                          blurRadius: 9,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: Icon(icon, color: Colors.white, size: 20),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: 13),
                   Expanded(
-                      child: Text(title,
-                          style: TextStyle(
-                              color: textColor,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: 'Cairo'))),
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        color: textColor,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Cairo',
+                      ),
+                    ),
+                  ),
                   Icon(
-                      _isAr
-                          ? Icons.arrow_back_ios_new_rounded
-                          : Icons.arrow_forward_ios_rounded,
-                      size: 14,
-                      color: Colors.white.withValues(alpha: 0.5)),
+                    _isAr
+                        ? Icons.arrow_back_ios_new_rounded
+                        : Icons.arrow_forward_ios_rounded,
+                    size: 13,
+                    color: AppColors.textMuted,
+                  ),
                 ],
               ),
             ),
           ),
         ),
         if (showDivider)
-          Divider(
-              height: 1,
-              indent: 62,
-              endIndent: 14,
-              color: Colors.white.withValues(alpha: 0.12)),
+          const Divider(
+            height: 1,
+            indent: 67,
+            endIndent: 14,
+            color: AppColors.lineColor,
+          ),
       ],
     );
   }
 
   Widget _buildLanguageSwitcherTile() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
+      padding: const EdgeInsets.fromLTRB(14, 13, 14, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                width: 38,
-                height: 38,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                      colors: [Color(0xFF00B0FF), Color(0xFF00838F)]),
-                  borderRadius: BorderRadius.circular(12),
+                  color: AppColors.accentLight.withValues(alpha: 0.28),
+                  borderRadius: BorderRadius.circular(13),
                 ),
-                child: const Icon(Icons.language_rounded,
-                    color: Colors.white, size: 20),
+                child: const Icon(
+                  Icons.language_rounded,
+                  color: AppColors.primaryTeal,
+                  size: 20,
+                ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(_isAr ? 'لغة التطبيق' : 'App Language',
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Cairo')),
                     Text(
-                        _isAr
-                            ? 'اختر لغة الواجهة'
-                            : 'Select interface language',
-                        style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.65),
-                            fontSize: 12,
-                            fontFamily: 'Cairo')),
+                      _isAr ? 'لغة التطبيق' : 'App language',
+                      style: const TextStyle(
+                        color: AppColors.textDark,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        fontFamily: 'Cairo',
+                      ),
+                    ),
+                    Text(
+                      _isAr
+                          ? 'اختر اللغة التي تريحك'
+                          : 'Choose the language you prefer',
+                      style: const TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 11,
+                        fontFamily: 'Cairo',
+                      ),
+                    ),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 13),
           Container(
             height: 48,
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: const Color(0xFF002942).withValues(alpha: 0.7),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.25), width: 1.2),
+              color: AppColors.sectionBackground,
+              borderRadius: BorderRadius.circular(17),
+              border: Border.all(color: AppColors.lineColor),
             ),
             child: Row(
               children: [
@@ -1165,29 +1097,37 @@ class AccountTabState extends State<AccountTab> {
                         final prefs = await SharedPreferences.getInstance();
                         await prefs.setString('app_language', 'en');
                         await prefs.setString('app_lang', 'en');
-                        if (mounted) {
-                          widget.onLanguageChanged('en');
-                        }
+                        if (mounted) widget.onLanguageChanged('en');
                       }
                     },
                     child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
+                      duration: const Duration(milliseconds: 220),
                       decoration: BoxDecoration(
-                          color: !_isAr ? Colors.white : Colors.transparent,
-                          borderRadius: BorderRadius.circular(20)),
+                        color: !_isAr
+                            ? AppColors.accentLight.withValues(alpha: 0.45)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(13),
+                        border: !_isAr
+                            ? Border.all(color: AppColors.accentWarm)
+                            : null,
+                      ),
                       child: Center(
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const UKFlagWidget(),
                             const SizedBox(width: 8),
-                            Text('English',
-                                style: TextStyle(
-                                    color: !_isAr
-                                        ? const Color(0xFF01579B)
-                                        : Colors.white,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold)),
+                            Text(
+                              'English',
+                              style: TextStyle(
+                                color: AppColors.textDark,
+                                fontSize: 12.5,
+                                fontWeight: !_isAr
+                                    ? FontWeight.w900
+                                    : FontWeight.w600,
+                                fontFamily: 'Cairo',
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -1201,30 +1141,37 @@ class AccountTabState extends State<AccountTab> {
                         final prefs = await SharedPreferences.getInstance();
                         await prefs.setString('app_language', 'ar');
                         await prefs.setString('app_lang', 'ar');
-                        if (mounted) {
-                          widget.onLanguageChanged('ar');
-                        }
+                        if (mounted) widget.onLanguageChanged('ar');
                       }
                     },
                     child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
+                      duration: const Duration(milliseconds: 220),
                       decoration: BoxDecoration(
-                          color: _isAr ? Colors.white : Colors.transparent,
-                          borderRadius: BorderRadius.circular(20)),
+                        color: _isAr
+                            ? AppColors.accentLight.withValues(alpha: 0.45)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(13),
+                        border: _isAr
+                            ? Border.all(color: AppColors.accentWarm)
+                            : null,
+                      ),
                       child: Center(
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const SyrianFlagWidget(),
                             const SizedBox(width: 8),
-                            Text('العربية',
-                                style: TextStyle(
-                                    color: _isAr
-                                        ? const Color(0xFF01579B)
-                                        : Colors.white,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'Cairo')),
+                            Text(
+                              'العربية',
+                              style: TextStyle(
+                                color: AppColors.textDark,
+                                fontSize: 12.5,
+                                fontWeight: _isAr
+                                    ? FontWeight.w900
+                                    : FontWeight.w600,
+                                fontFamily: 'Cairo',
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -1240,20 +1187,21 @@ class AccountTabState extends State<AccountTab> {
   }
 
   Widget _buildGlassGroupCard({required List<Widget> children}) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.14),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-                color: Colors.white.withValues(alpha: 0.3), width: 1.2),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.cardColor,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.lineColor),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.textDark.withValues(alpha: 0.045),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
           ),
-          child: Column(children: children),
-        ),
+        ],
       ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(children: children),
     );
   }
 
@@ -1305,7 +1253,7 @@ class AccountTabState extends State<AccountTab> {
                           title: widget.txt('edit_profile'),
                           gradientColors: const [
                             Color(0xFF0288D1),
-                            Color(0xFF00ACC1)
+                            AppColors.secondaryTeal
                           ],
                           onTap: () async {
                             final updated = await Navigator.push(
