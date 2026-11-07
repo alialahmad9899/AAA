@@ -8,6 +8,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../widgets/app_snackbar.dart';
 
 /// كلاس مخصص لإدارة عمليات تحديث بيانات الملف الشخصي بالتوازي لسرعة فائقة
 class ProfileUpdateManager {
@@ -57,8 +58,9 @@ class ProfileUpdateManager {
       if (context.mounted) {
         _showModernSnackBar(
           context: context,
-          message: 'لم يتم إجراء أي تغييرات للحفظ',
-          isSuccess: true,
+          messageAr: 'لا توجد تعديلات جديدة لحفظها.',
+          messageEn: 'There are no new changes to save.',
+          type: NotificationType.info,
         );
       }
       return true;
@@ -87,10 +89,15 @@ class ProfileUpdateManager {
       if (context.mounted) {
         _showModernSnackBar(
           context: context,
-          message: allSuccessful
-              ? 'تم حفظ جميع التعديلات بنجاح'
-              : 'تم حفظ معظم البيانات، يرجى المراجعة',
-          isSuccess: allSuccessful,
+          messageAr: allSuccessful
+              ? 'تم حفظ جميع تعديلات الملف الشخصي بنجاح.'
+              : 'حُفظت بعض البيانات، لكن بقيت تعديلات لم تكتمل.',
+          messageEn: allSuccessful
+              ? 'All profile changes were saved successfully.'
+              : 'Some profile data was saved, but a few changes remain incomplete.',
+          type: allSuccessful
+              ? NotificationType.success
+              : NotificationType.warning,
         );
       }
 
@@ -104,8 +111,9 @@ class ProfileUpdateManager {
         }
         _showModernSnackBar(
           context: context,
-          message: 'حدث خطأ غير متوقع أثناء الحفظ: $e',
-          isSuccess: false,
+          messageAr: 'تعذّر إكمال حفظ بيانات الملف الشخصي.',
+          messageEn: 'We could not finish saving your profile information.',
+          type: NotificationType.error,
         );
       }
       return false;
@@ -187,42 +195,51 @@ class ProfileUpdateManager {
     );
   }
 
-  /// دالة لعرض شريط تنبيه عصري بتصميم 2026
+  /// تمرير النتيجة إلى مكوّن الإشعارات الموحد في التطبيق.
   static void _showModernSnackBar({
     required BuildContext context,
-    required String message,
-    required bool isSuccess,
+    required String messageAr,
+    required String messageEn,
+    required NotificationType type,
   }) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        elevation: 10,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        backgroundColor:
-            isSuccess ? const Color(0xFF10B981) : const Color(0xFFEF4444),
-        content: Row(
-          children: [
-            Icon(
-              isSuccess ? Icons.check_circle_rounded : Icons.error_rounded,
-              color: Colors.white,
-              size: 24,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                message,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'Tajawal',
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+    if (!context.mounted) return;
+    final bool isArabic =
+        Directionality.maybeOf(context) != TextDirection.ltr;
+    final String titleAr;
+    final String titleEn;
+    switch (type) {
+      case NotificationType.success:
+        titleAr = 'تم حفظ البيانات';
+        titleEn = 'Profile saved';
+        break;
+      case NotificationType.warning:
+        titleAr = 'الحفظ يحتاج إلى مراجعة';
+        titleEn = 'Review your saved changes';
+        break;
+      case NotificationType.error:
+        titleAr = 'تعذّر الحفظ';
+        titleEn = 'Could not save changes';
+        break;
+      case NotificationType.info:
+        titleAr = 'لا توجد تغييرات';
+        titleEn = 'No changes to save';
+        break;
+    }
+    AppSnackBar.show(
+      context: context,
+      type: type,
+      isArabic: isArabic,
+      titleAr: titleAr,
+      titleEn: titleEn,
+      messageAr: messageAr,
+      messageEn: messageEn,
+      detailsAr: type == NotificationType.error
+          ? 'تحقق من الاتصال وحاول حفظ البيانات مرة أخرى.'
+          : null,
+      detailsEn: type == NotificationType.error
+          ? 'Check your connection and try saving again.'
+          : null,
+      duration: const Duration(seconds: 5),
     );
   }
 }

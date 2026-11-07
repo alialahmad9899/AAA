@@ -8,6 +8,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../constants/colors.dart';
+import '../../../widgets/app_snackbar.dart';
+import '../../../widgets/bottom_system_inset.dart';
 
 import '../../../models/member_model.dart';
 import '../../../models/chat_model.dart';
@@ -133,11 +135,12 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (modalContext) => Directionality(
         textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
         child: Container(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + WesalBottomInsets.of(modalContext)),
           decoration: BoxDecoration(
             color: AppColors.cardColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -193,6 +196,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryTeal,
+                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16)),
@@ -204,7 +208,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                         ? 'ترقية الحساب والاشتراك الآن 🚀'
                         : 'Upgrade Account Now 🚀',
                     style: const TextStyle(
-                      color: AppColors.textDark,
+                      color: Colors.white,
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Cairo',
@@ -461,11 +465,16 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
           final String errorMsg =
               response['message']?.toString() ?? widget.txt('like_failed');
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(errorMsg),
-                backgroundColor: Colors.redAccent,
-              ),
+            AppSnackBar.show(
+              context: context,
+              type: NotificationType.error,
+              isArabic: _isAr,
+              titleAr: 'تعذّر إرسال طلب الاهتمام',
+              titleEn: 'Could not send interest',
+              messageAr: errorMsg,
+              messageEn: 'Your interest request was not sent. Please try again.',
+              detailsAr: 'لم يتم تسجيل الإعجاب على هذا الملف.',
+              detailsEn: 'No interest was recorded for this profile.',
             );
           }
         }
@@ -476,11 +485,16 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
           _likedUserIds.remove(member.id);
           _showHeartOverlay = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(widget.txt('like_failed')),
-            backgroundColor: Colors.redAccent,
-          ),
+        AppSnackBar.show(
+          context: context,
+          type: NotificationType.error,
+          isArabic: _isAr,
+          titleAr: 'تعذّر الاتصال',
+          titleEn: 'Connection problem',
+          messageAr: 'لم نتمكن من إرسال طلب الاهتمام حالياً.',
+          messageEn: 'We could not send your interest request right now.',
+          detailsAr: 'تحقق من اتصال الإنترنت ثم حاول مجدداً.',
+          detailsEn: 'Check your internet connection and try again.',
         );
       }
     } finally {

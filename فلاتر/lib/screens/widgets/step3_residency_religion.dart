@@ -5,6 +5,7 @@
 // ============================================================================
 import 'package:flutter/material.dart';
 import '../../constants/colors.dart';
+import '../../widgets/app_snackbar.dart';
 import 'package:wesal_app/widgets/bottom_system_inset.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/api_service.dart';
@@ -698,14 +699,15 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                     isSelected: widget.stateId != null,
                     onTap: () {
                       if (widget.residenceCountryId == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text(
-                              _isAr
-                                  ? 'يرجى اختيار بلد الإقامة أولاً'
-                                  : 'Select Country first',
-                              style: const TextStyle(fontFamily: 'Cairo')),
-                          backgroundColor: AppColors.warning,
-                        ));
+                        AppSnackBar.show(
+                          context: context,
+                          type: NotificationType.warning,
+                          isArabic: _isAr,
+                          titleAr: 'اختر بلد الإقامة أولاً',
+                          titleEn: 'Choose a country first',
+                          messageAr: 'يجب تحديد بلد الإقامة قبل اختيار المحافظة.',
+                          messageEn: 'Select your country of residence before choosing a governorate.',
+                        );
                         return;
                       }
                       final items = _states
@@ -742,14 +744,15 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                     isSelected: widget.cityId != null,
                     onTap: () {
                       if (widget.stateId == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text(
-                              _isAr
-                                  ? 'يرجى اختيار المحافظة أولاً'
-                                  : 'Select State first',
-                              style: const TextStyle(fontFamily: 'Cairo')),
-                          backgroundColor: AppColors.warning,
-                        ));
+                        AppSnackBar.show(
+                          context: context,
+                          type: NotificationType.warning,
+                          isArabic: _isAr,
+                          titleAr: 'اختر المحافظة أولاً',
+                          titleEn: 'Choose a governorate first',
+                          messageAr: 'حدد المحافظة حتى نتمكن من عرض المدن التابعة لها.',
+                          messageEn: 'Choose a governorate so we can show its available cities.',
+                        );
                         return;
                       }
                       final items = _cities

@@ -13,6 +13,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../constants/colors.dart';
+import '../../widgets/app_snackbar.dart';
 import '../../utils/arabic_number_formatter.dart';
 
 class Step1BasicInfo extends StatefulWidget {
@@ -100,27 +101,31 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
         mode: LaunchMode.externalApplication,
       );
       if (!opened && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              _isAr
-                  ? 'تعذر فتح صفحة الخصوصية وشروط التسجيل'
-                  : 'Could not open the privacy policy and registration terms',
-            ),
-          ),
+        AppSnackBar.show(
+          context: context,
+          type: NotificationType.error,
+          isArabic: _isAr,
+          titleAr: 'تعذّر فتح صفحة الشروط',
+          titleEn: 'Could not open the terms',
+          messageAr: 'لم نتمكن من فتح صفحة الخصوصية وشروط التسجيل.',
+          messageEn: 'We could not open the privacy policy and registration terms.',
+          detailsAr: 'تحقق من اتصال الإنترنت ثم حاول فتح الرابط مجدداً.',
+          detailsEn: 'Check your internet connection and open the link again.',
         );
       }
     } catch (error) {
       debugPrint('Failed to open Wesal terms and conditions: $error');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              _isAr
-                  ? 'تعذر فتح صفحة الخصوصية وشروط التسجيل'
-                  : 'Could not open the privacy policy and registration terms',
-            ),
-          ),
+        AppSnackBar.show(
+          context: context,
+          type: NotificationType.error,
+          isArabic: _isAr,
+          titleAr: 'تعذّر فتح صفحة الشروط',
+          titleEn: 'Could not open the terms',
+          messageAr: 'لم نتمكن من فتح صفحة الخصوصية وشروط التسجيل.',
+          messageEn: 'We could not open the privacy policy and registration terms.',
+          detailsAr: 'تحقق من اتصال الإنترنت ثم حاول فتح الرابط مجدداً.',
+          detailsEn: 'Check your internet connection and open the link again.',
         );
       }
     }

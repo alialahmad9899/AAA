@@ -12,6 +12,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../constants/colors.dart';
 import '../services/api_service.dart';
 import '../services/notification_service.dart';
+import '../widgets/app_snackbar.dart';
 import '../utils/arabic_number_formatter.dart';
 import 'main_home_screen.dart';
 import 'signup_screen.dart';
@@ -52,86 +53,17 @@ class _LoginScreenState extends State<LoginScreen> {
     required bool isSuccess,
   }) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        elevation: 0,
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.transparent,
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        duration: const Duration(seconds: 4),
-        content: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                color: isSuccess
-                    ? const Color(0xFF00897B).withValues(alpha: 0.92)
-                    : const Color(0xFFD32F2F).withValues(alpha: 0.92),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.40),
-                  width: 1.2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.22),
-                    blurRadius: 18,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.22),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      isSuccess
-                          ? Icons.check_circle_rounded
-                          : Icons.error_outline_rounded,
-                      color: Colors.white,
-                      size: 26,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Cairo',
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          message,
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.92),
-                            fontSize: 13,
-                            fontFamily: 'Cairo',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+    final bool isArabic =
+        Directionality.maybeOf(context) != TextDirection.ltr;
+    AppSnackBar.show(
+      context: context,
+      type: isSuccess ? NotificationType.success : NotificationType.error,
+      isArabic: isArabic,
+      titleAr: title,
+      titleEn: title,
+      messageAr: message,
+      messageEn: message,
+      duration: const Duration(seconds: 4),
     );
   }
 

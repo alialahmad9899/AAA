@@ -14,6 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/colors.dart';
 
 import '../services/api_service.dart';
+import '../widgets/app_snackbar.dart';
 import '../models/member_profile_model.dart';
 import '../services/profile_cache_service.dart';
 
@@ -831,45 +832,23 @@ class _EditProfileScreenState extends State<EditProfileScreen>
   }
 
   void _showNotification(String message, bool isSuccess) {
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        elevation: 0,
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.transparent,
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-        padding: EdgeInsets.zero,
-        duration: const Duration(seconds: 4),
-        content: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            color:
-                isSuccess ? const Color(0xFF0F382C) : const Color(0xFF4A1015),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                isSuccess
-                    ? Icons.check_circle_outline_rounded
-                    : Icons.error_outline_rounded,
-                color: isSuccess
-                    ? const Color(0xFF2EC4B6)
-                    : const Color(0xFFFF5252),
-                size: 24,
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Text(
-                  message,
-                  style: const TextStyle(
-                      color: Colors.white, fontSize: 14, fontFamily: 'Cairo'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    if (!mounted) return;
+    final bool isArabic =
+        Directionality.maybeOf(context) != TextDirection.ltr;
+    AppSnackBar.show(
+      context: context,
+      type: isSuccess ? NotificationType.success : NotificationType.error,
+      isArabic: isArabic,
+      titleAr: isSuccess ? 'تم حفظ التعديلات' : 'تعذّر حفظ بعض التعديلات',
+      titleEn: isSuccess ? 'Changes saved' : 'Some changes could not be saved',
+      messageAr: message,
+      messageEn: message,
+      detailsAr: isSuccess
+          ? 'أصبحت بيانات الملف الشخصي محدثة.'
+          : 'راجع البيانات واتصال الإنترنت ثم حاول مجدداً.',
+      detailsEn: isSuccess
+          ? 'Your profile information is now up to date.'
+          : 'Review the information and your connection, then try again.',
     );
   }
 

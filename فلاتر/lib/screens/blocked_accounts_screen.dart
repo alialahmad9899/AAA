@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import '../constants/colors.dart';
 import '../models/member_model.dart';
 import '../services/api_service.dart';
+import '../widgets/app_snackbar.dart';
 
 class BlockedAccountsScreen extends StatefulWidget {
   final String currentLanguage;
@@ -124,17 +125,15 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
 
     if (confirm != true || !mounted) return;
 
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          _isArabic ? 'جاري إلغاء الحظر...' : 'Unblocking...',
-          style: const TextStyle(fontFamily: 'Cairo'),
-        ),
-        duration: const Duration(seconds: 1),
-        backgroundColor: AppColors.sectionBackground,
-      ),
+    AppSnackBar.show(
+      context: context,
+      type: NotificationType.info,
+      isArabic: _isArabic,
+      titleAr: 'جارٍ تحديث قائمة الحظر',
+      titleEn: 'Updating blocked accounts',
+      messageAr: 'نعمل على إلغاء الحظر عن هذا الحساب.',
+      messageEn: 'We are removing this account from your blocked list.',
+      duration: const Duration(seconds: 2),
     );
 
     setState(() {
@@ -150,56 +149,40 @@ class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
         setState(() {
           _blockedUsers.removeWhere((item) => item.id == user.id);
         });
-        messenger.hideCurrentSnackBar();
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(
-              result['message'] ??
-                  (_isArabic
-                      ? 'تم إلغاء الحظر بنجاح'
-                      : 'User unblocked successfully'),
-              style: const TextStyle(fontFamily: 'Cairo'),
-            ),
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
+        AppSnackBar.show(
+          context: context,
+          type: NotificationType.success,
+          isArabic: _isArabic,
+          titleAr: 'تم إلغاء الحظر',
+          titleEn: 'Account unblocked',
+          messageAr: 'أصبح بإمكانك مشاهدة هذا الحساب والتفاعل معه مجدداً.',
+          messageEn: 'You can now view and interact with this account again.',
         );
       } else {
-        messenger.hideCurrentSnackBar();
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(
-              result['message'] ??
-                  (_isArabic
-                      ? 'تعذر إلغاء الحظر، يرجى المحاولة لاحقاً'
-                      : 'Failed to unblock user, please try again'),
-              style: const TextStyle(fontFamily: 'Cairo'),
-            ),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
+        AppSnackBar.show(
+          context: context,
+          type: NotificationType.error,
+          isArabic: _isArabic,
+          titleAr: 'تعذّر إلغاء الحظر',
+          titleEn: 'Could not unblock account',
+          messageAr: 'لم نتمكن من تحديث قائمة الحسابات المحظورة.',
+          messageEn: 'We could not update your blocked accounts list.',
+          detailsAr: 'حاول مجدداً بعد قليل، ولم يتم تغيير القائمة.',
+          detailsEn: 'Please try again shortly. Your list has not been changed.',
         );
       }
     } catch (e) {
       if (!mounted) return;
-      messenger.hideCurrentSnackBar();
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            _isArabic
-                ? 'تعذر إلغاء الحظر، يرجى المحاولة لاحقاً'
-                : 'Failed to unblock user, please try again',
-            style: const TextStyle(fontFamily: 'Cairo'),
-          ),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
+      AppSnackBar.show(
+        context: context,
+        type: NotificationType.error,
+        isArabic: _isArabic,
+        titleAr: 'تعذّر إلغاء الحظر',
+        titleEn: 'Could not unblock account',
+        messageAr: 'حدث خطأ أثناء تحديث قائمة الحسابات المحظورة.',
+        messageEn: 'An error occurred while updating your blocked accounts.',
+        detailsAr: 'تحقق من اتصال الإنترنت ثم حاول مرة أخرى.',
+        detailsEn: 'Check your internet connection and try again.',
       );
     } finally {
       if (mounted) {
