@@ -301,8 +301,8 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: isSelected
-              ? Colors.amberAccent
-              : Colors.white.withValues(alpha: 0.18),
+              ? AppColors.accentLight.withValues(alpha: 0.42)
+              : AppColors.sectionBackground,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? AppColors.accentWarm : AppColors.lineColor,
@@ -314,7 +314,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
           children: [
             if (isSelected) ...[
               const Icon(Icons.check_circle_rounded,
-                  size: 16, color: Color(0xFF01579B)),
+                  size: 16, color: AppColors.primaryTeal),
               const SizedBox(width: 6),
             ],
             Text(
@@ -384,8 +384,8 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                                 borderRadius: BorderRadius.circular(18),
                                 border: Border.all(
                                   color: widget.profilePhoto != null
-                                      ? Colors.amberAccent
-                                      : Colors.white60,
+                                      ? AppColors.accentWarm
+                                      : AppColors.lineColor,
                                   width: 2.5,
                                 ),
                                 boxShadow: [
@@ -407,12 +407,11 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                                         filterQuality: FilterQuality.medium,
                                       )
                                     : Container(
-                                        color: Colors.white
-                                            .withValues(alpha: 0.15),
+                                        color: AppColors.sectionBackground,
                                         child: const Icon(
                                           Icons.add_a_photo_rounded,
                                           size: 42,
-                                          color: Colors.white,
+                                          color: AppColors.primaryTeal,
                                         ),
                                       ),
                               ),
@@ -424,13 +423,13 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                               child: Container(
                                 padding: const EdgeInsets.all(6),
                                 decoration: const BoxDecoration(
-                                  color: Colors.amberAccent,
+                                  color: AppColors.accentWarm,
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
                                   Icons.crop_rounded,
                                   size: 16,
-                                  color: Color(0xFF01579B),
+                                  color: AppColors.primaryTeal,
                                 ),
                               ),
                             ),
@@ -443,7 +442,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                             ? 'الصورة الشخصية (إجبارية بنسبة 4:5) *'
                             : 'Profile Photo (Required 4:5) *',
                         style: const TextStyle(
-                          color: Colors.amberAccent,
+                          color: AppColors.primaryTeal,
                           fontSize: 13.5,
                           fontWeight: FontWeight.bold,
                           fontFamily: 'Cairo',
@@ -477,7 +476,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                                     ? 'ملاحظة: اختيار الصورة إجباري لإتمام الحساب، ويمكنك اقتطاع وتحديد الأبعاد المناسبة قبل الرفع.'
                                     : 'Note: Profile photo is required and will be cropped to 4:5 ratio.',
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: AppColors.textDark,
                                   fontSize: 12,
                                   height: 1.4,
                                   fontFamily: 'Cairo',
@@ -540,7 +539,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                       child: TextFormField(
                         controller: widget.lastNameController,
                         style: const TextStyle(
-                          color: Colors.black87,
+                          color: AppColors.textDark,
                           fontSize: 14,
                           fontFamily: 'Cairo',
                           fontWeight: FontWeight.bold,
@@ -757,7 +756,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                         _obscurePassword
                             ? Icons.visibility_off_outlined
                             : Icons.visibility_outlined,
-                        color: const Color(0xFF0288D1),
+                        color: AppColors.primaryTeal,
                         size: 20,
                       ),
                       onPressed: () =>
@@ -817,7 +816,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                       child: Text.rich(
                         TextSpan(
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: AppColors.textDark,
                             fontSize: 12.5,
                             fontFamily: 'Cairo',
                             fontWeight: FontWeight.w600,
@@ -885,11 +884,11 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? Colors.amberAccent
-              : Colors.white.withValues(alpha: 0.15),
+              ? AppColors.accentLight.withValues(alpha: 0.42)
+              : AppColors.sectionBackground,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? Colors.amber : Colors.white30,
+            color: isSelected ? AppColors.accentWarm : AppColors.lineColor,
             width: 1.5,
           ),
         ),
@@ -898,7 +897,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
           children: [
             Icon(
               icon,
-              color: isSelected ? const Color(0xFF01579B) : Colors.white,
+              color: isSelected ? AppColors.primaryTeal : AppColors.textDark,
               size: 20,
             ),
             const SizedBox(width: 8),
