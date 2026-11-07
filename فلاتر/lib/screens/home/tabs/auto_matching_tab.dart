@@ -350,6 +350,26 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
           }
           _isLoading = false;
         });
+
+        if (matchingLocked && mounted && currentRequestToken == _fetchCounter) {
+          // Keep the ordinary member list available when the account can browse
+          // profiles but does not have the separate smart-sort entitlement.
+          try {
+            final members = await ApiService.getMatchedProfiles(
+              matchEnabled: false,
+              lang: widget.currentLanguage,
+            );
+            if (mounted && currentRequestToken == _fetchCounter) {
+              setState(() {
+                _matchedMembers = members;
+                _isLoading = false;
+              });
+            }
+          } catch (_) {
+            // Preserve the localized entitlement notice and let Retry handle
+            // transient list-loading errors.
+          }
+        }
       }
     }
   }
