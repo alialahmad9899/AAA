@@ -1880,7 +1880,6 @@ class _EditProfileScreenState extends State<EditProfileScreen>
 
   @override
   Widget build(BuildContext context) {
-    const Color primarySkyBlue = AppColors.primaryTeal;
     final double completionRatio = _calculateProfileCompletion();
 
     return GestureDetector(
