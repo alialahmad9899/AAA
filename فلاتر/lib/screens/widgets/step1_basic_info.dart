@@ -787,7 +787,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                         _obscureConfirmPassword
                             ? Icons.visibility_off_outlined
                             : Icons.visibility_outlined,
-                        color: const Color(0xFF0288D1),
+                        color: AppColors.primaryTeal,
                         size: 20,
                       ),
                       onPressed: () => setState(() =>
@@ -904,7 +904,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? const Color(0xFF01579B) : Colors.white,
+                color: isSelected ? AppColors.primaryTeal : AppColors.textDark,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Cairo',
                 fontSize: 14,
