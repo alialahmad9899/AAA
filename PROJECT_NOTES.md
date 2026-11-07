@@ -833,3 +833,22 @@
 - لم تتغير معالجة الصورة المختارة أو نص التعليق أو استدعاء `_sendMessage(imageFile:, customText:)`.
 - الملف التشغيلي: `فلاتر/lib/screens/chat_detail_screen.dart`.
 - الاختبارات ستسجل من GitHub Actions؛ لا اختبار بصري على جهاز فعلي بعد.
+
+
+## 2026-11-07 — نتائج التحقق النهائية للدفعات الخامسة إلى الثامنة
+- الدفعة الخامسة (الخدمات الإضافية VIP): GitHub Actions #180 نجح؛ `dart analyze --fatal-infos` بلا ملاحظات، 53 اختبار Flutter ناجح، 30 فحص PHP syntax، و16 اختبار PHPUnit مع 47 assertion.
+- الدفعة السادسة (نوافذ المحادثة والحظر والإبلاغ والحذف): التشغيل #181 كشف مراجع لون غير صالحة فقط، ثم تم تصحيحها. التشغيل #182 نجح بالكامل بالنتائج نفسها: لا أخطاء Dart، 53 اختبار Flutter، 30 PHP syntax، و16 PHPUnit/47 assertions.
+- الدفعة السابعة (الحساب والاشتراكات والدفع وStripe PaymentSheet الفاتح): التشغيل #185 اجتاز التحليل والاختبارات؛ ثم أضيفت مراجعات تباين إضافية لعنوان Stripe ورموز/حقول Sham Cash، وأعاد التشغيل #187 اجتياز التحليل والاختبارات بالكامل.
+- الدفعة الثامنة (نافذة معاينة الصورة في المحادثة): التشغيل #186 نجح بالكامل؛ لا أخطاء Dart، 53 اختبار Flutter، 30 PHP syntax، و16 PHPUnit/47 assertions.
+- الحزم النهائية التي أنشأها CI:
+  - `WESAL_VIP_SERVICES_BATCH5.zip` — ملف Dart واحد.
+  - `WESAL_CHAT_DIALOGS_BATCH6.zip` — ملفا Dart.
+  - `WESAL_ACCOUNT_SUBSCRIPTIONS_BATCH7.zip` — ملف Dart واحد، آخر نسخة بعد تصحيح التباين.
+  - `WESAL_CHAT_IMAGE_PREVIEW_BATCH8.zip` — ملف Dart واحد.
+- تم فك الأرشيفات الداخلية وفحص CRC. الحزمة الموحّدة `WESAL_REMAINING_UI_BATCHES_5-8.zip` تضم أربعة ملفات Dart فقط بالمسارات الأصلية:
+  - `فلاتر/lib/screens/vip_services_screen.dart`
+  - `فلاتر/lib/screens/chat_detail_screen.dart`
+  - `فلاتر/lib/screens/home/chats_tab.dart`
+  - `فلاتر/lib/screens/home/tabs/account_tab.dart`
+- تمت مقارنة Git Blob SHA لكل ملف في الحزمة الموحّدة مع الملفات الحالية في `main`، وتطابقت جميع الملفات. SHA-256 للحزمة الموحّدة: `b472f5f0f669310f1c20b2dfebbbd96914ccfa28ddd373414ac85cac76dc4986`.
+- لم يتم تعديل API أو Laravel أو قاعدة البيانات أو الموقع العام. لا يوجد اختبار بصري على أجهزة Android/iOS فعلية أو صور شاشة لأحجام متعددة؛ هذه الخطوة ما زالت مطلوبة قبل الاعتماد البصري النهائي أو النشر.
