@@ -23,18 +23,33 @@ class ActiveUserResource extends JsonResource
         $package_update_alert = (get_setting('full_profile_show_according_to_membership') == 1 && optional(auth()->user())->membership == 1);
 
         // 2. جلب أسماء النصوص المباشرة
+        $language = $request->header('Accept-Language')
+            ?? $request->header('app_language')
+            ?? $request->get('lang')
+            ?? 'ar';
+        $isEnglish = strtolower(substr((string) $language, 0, 2)) === 'en';
         $showPresentAddress = get_setting('member_present_address_section') == 'on';
+
         // Only use the explicit present address; never expose a permanent address
         // as though it were the member's current city or country.
         $presentAddress = $this->addresses
             ? $this->addresses->firstWhere('type', 'present')
             : null;
-        $countryName = $showPresentAddress
-            ? (optional(optional($presentAddress)->country)->name ?? '')
-            : '';
-        $residenceName = $showPresentAddress
-            ? (optional(optional($presentAddress)->city)->name ?? '')
-            : '';
+        $country = optional($presentAddress)->country;
+        $city = optional($presentAddress)->city;
+        $countryName = '';
+        $residenceName = '';
+
+        if ($showPresentAddress && $country) {
+            $countryName = $isEnglish
+                ? (trim((string) ($country->name_en ?? $country->name ?? '')))
+                : (trim((string) ($country->name_ar ?? $country->name ?? '')));
+        }
+        if ($showPresentAddress && $city) {
+            $residenceName = $isEnglish
+                ? (trim((string) ($city->name ?? $city->name_en ?? '')))
+                : (trim((string) ($city->name_ar ?? $city->name ?? '')));
+        }
         $occupation = '';
         $careers = $this->career;
         if ($careers) {
