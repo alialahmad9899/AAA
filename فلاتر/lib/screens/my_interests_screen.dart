@@ -6,6 +6,7 @@
 // ============================================================================
 
 import 'package:flutter/material.dart';
+import '../constants/colors.dart';
 import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -260,14 +261,14 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
   @override
   Widget build(BuildContext context) {
     final bool isAr = _activeLang == 'ar';
-    const Color darkBgColor = Color(0xFF0F172A);
+    const Color darkBgColor = AppColors.backgroundColor;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
+        statusBarIconBrightness: Brightness.dark,
         systemNavigationBarColor: darkBgColor,
-        systemNavigationBarIconBrightness: Brightness.light,
+        systemNavigationBarIconBrightness: Brightness.dark,
         systemNavigationBarDividerColor: Colors.transparent,
       ),
       child: Directionality(
@@ -283,7 +284,7 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                 isAr
                     ? Icons.arrow_back_ios_rounded
                     : Icons.arrow_back_ios_new_rounded,
-                color: Colors.white,
+                color: AppColors.textDark,
                 size: 20,
               ),
               onPressed: () => Navigator.pop(context),
@@ -291,7 +292,7 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
             title: Text(
               isAr ? 'طلبات الاهتمام' : 'Interest Requests',
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.textDark,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Cairo',
@@ -302,26 +303,26 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
+                  color: AppColors.textDark.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(14),
                   border:
-                      Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                      Border.all(color: AppColors.textDark.withValues(alpha: 0.1)),
                 ),
                 child: TabBar(
                   controller: _tabController,
                   indicator: BoxDecoration(
-                    color: const Color(0xFFE91E63),
+                    color: AppColors.primaryTeal,
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFE91E63).withValues(alpha: 0.4),
+                        color: AppColors.primaryTeal.withValues(alpha: 0.4),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
                     ],
                   ),
                   labelColor: Colors.white,
-                  unselectedLabelColor: Colors.white60,
+                  unselectedLabelColor: AppColors.textMuted,
                   labelStyle: const TextStyle(
                     fontFamily: 'Cairo',
                     fontWeight: FontWeight.bold,
@@ -400,7 +401,7 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
   }) {
     if (isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: Color(0xFFE91E63)),
+        child: CircularProgressIndicator(color: AppColors.primaryTeal),
       );
     }
 
@@ -413,13 +414,13 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.cloud_off_rounded,
-                  color: Colors.white60, size: 48),
+                  color: AppColors.textMuted, size: 48),
               const SizedBox(height: 14),
               Text(
                 errorMessage,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  color: Colors.white70,
+                  color: AppColors.textMuted,
                   fontSize: 14,
                   fontFamily: 'Cairo',
                 ),
@@ -430,7 +431,7 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                 icon: const Icon(Icons.refresh_rounded),
                 label: Text(isAr ? 'إعادة المحاولة' : 'Retry'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE91E63),
+                  backgroundColor: AppColors.primaryTeal,
                   foregroundColor: Colors.white,
                 ),
               ),
@@ -450,24 +451,24 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE91E63).withValues(alpha: 0.1),
+                  color: AppColors.primaryTeal.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: const Color(0xFFE91E63).withValues(alpha: 0.2),
+                    color: AppColors.primaryTeal.withValues(alpha: 0.2),
                     width: 1.5,
                   ),
                 ),
                 child: const Icon(
                   Icons.favorite_border_rounded,
                   size: 56,
-                  color: Color(0xFFF48FB1),
+                  color: AppColors.accentWarm,
                 ),
               ),
               const SizedBox(height: 18),
               Text(
                 emptyMessage,
                 style: const TextStyle(
-                  color: Colors.white70,
+                  color: AppColors.textMuted,
                   fontSize: 14,
                   fontFamily: 'Cairo',
                 ),
@@ -481,8 +482,8 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
     final double bottomPadding = MediaQuery.of(context).padding.bottom + 24;
 
     return RefreshIndicator(
-      color: const Color(0xFFE91E63),
-      backgroundColor: const Color(0xFF1E293B),
+      color: AppColors.primaryTeal,
+      backgroundColor: AppColors.cardColor,
       onRefresh: _loadAllInterests,
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(
@@ -535,16 +536,16 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () => _navigateToProfile(userId),
-                  splashColor: const Color(0xFFE91E63).withValues(alpha: 0.12),
-                  highlightColor: Colors.white.withValues(alpha: 0.05),
+                  splashColor: AppColors.primaryTeal.withValues(alpha: 0.12),
+                  highlightColor: AppColors.textDark.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(20),
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E293B).withValues(alpha: 0.7),
+                      color: AppColors.cardColor.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.12),
+                        color: AppColors.textDark.withValues(alpha: 0.12),
                         width: 1,
                       ),
                     ),
@@ -556,8 +557,8 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                             shape: BoxShape.circle,
                             gradient: LinearGradient(
                               colors: [
-                                const Color(0xFFE91E63).withValues(alpha: 0.6),
-                                Colors.white.withValues(alpha: 0.2),
+                                AppColors.primaryTeal.withValues(alpha: 0.6),
+                                AppColors.textDark.withValues(alpha: 0.2),
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -574,13 +575,13 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                                     placeholder: (context, url) => Container(
                                       width: 58,
                                       height: 58,
-                                      color: const Color(0xFF0F172A),
+                                      color: AppColors.backgroundColor,
                                       child: const Center(
                                         child: SizedBox(
                                           width: 20,
                                           height: 20,
                                           child: CircularProgressIndicator(
-                                            color: Color(0xFFE91E63),
+                                            color: AppColors.primaryTeal,
                                             strokeWidth: 2,
                                           ),
                                         ),
@@ -590,10 +591,10 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                                         Container(
                                       width: 58,
                                       height: 58,
-                                      color: const Color(0xFF0F172A),
+                                      color: AppColors.backgroundColor,
                                       child: const Icon(
                                         Icons.person_rounded,
-                                        color: Colors.white54,
+                                        color: AppColors.textMuted,
                                         size: 32,
                                       ),
                                     ),
@@ -601,10 +602,10 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                                 : Container(
                                     width: 58,
                                     height: 58,
-                                    color: const Color(0xFF0F172A),
+                                    color: AppColors.backgroundColor,
                                     child: const Icon(
                                       Icons.person_rounded,
-                                      color: Colors.white54,
+                                      color: AppColors.textMuted,
                                       size: 32,
                                     ),
                                   ),
@@ -620,7 +621,7 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: AppColors.textDark,
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
                                   fontFamily: 'Cairo',
@@ -634,13 +635,13 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                                     Icon(
                                       Icons.cake_outlined,
                                       size: 13,
-                                      color: Colors.pink.shade200,
+                                      color: AppColors.accentWarm.shade200,
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
                                       '$ageVal ${isAr ? 'سنة' : 'yrs'}',
                                       style: const TextStyle(
-                                        color: Colors.white70,
+                                        color: AppColors.textMuted,
                                         fontSize: 12,
                                         fontFamily: 'Cairo',
                                       ),
@@ -651,13 +652,13 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                                       country.isNotEmpty)
                                     const Text(
                                       '  •  ',
-                                      style: TextStyle(color: Colors.white38),
+                                      style: TextStyle(color: AppColors.textMuted),
                                     ),
                                   if (country.isNotEmpty) ...[
                                     Icon(
                                       Icons.location_on_outlined,
                                       size: 13,
-                                      color: Colors.pink.shade200,
+                                      color: AppColors.accentWarm.shade200,
                                     ),
                                     const SizedBox(width: 3),
                                     Expanded(
@@ -666,7 +667,7 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(
-                                          color: Colors.white70,
+                                          color: AppColors.textMuted,
                                           fontSize: 12,
                                           fontFamily: 'Cairo',
                                         ),
@@ -689,17 +690,17 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                                 child: Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF10B981)
+                                    color: AppColors.success
                                         .withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: const Color(0xFF10B981)
+                                      color: AppColors.success
                                           .withValues(alpha: 0.4),
                                     ),
                                   ),
                                   child: const Icon(
                                     Icons.check_rounded,
-                                    color: Color(0xFF10B981),
+                                    color: AppColors.success,
                                     size: 20,
                                   ),
                                 ),
@@ -712,17 +713,17 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                                 child: Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFEF4444)
+                                    color: AppColors.error
                                         .withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: const Color(0xFFEF4444)
+                                      color: AppColors.error
                                           .withValues(alpha: 0.4),
                                     ),
                                   ),
                                   child: const Icon(
                                     Icons.close_rounded,
-                                    color: Color(0xFFEF4444),
+                                    color: AppColors.error,
                                     size: 20,
                                   ),
                                 ),
@@ -735,15 +736,15 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                                 horizontal: 10, vertical: 5),
                             decoration: BoxDecoration(
                               color: isApproved
-                                  ? const Color(0xFF10B981)
+                                  ? AppColors.success
                                       .withValues(alpha: 0.15)
-                                  : Colors.amber.withValues(alpha: 0.15),
+                                  : AppColors.warning.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
                                 color: isApproved
-                                    ? const Color(0xFF10B981)
+                                    ? AppColors.success
                                         .withValues(alpha: 0.5)
-                                    : Colors.amber.withValues(alpha: 0.5),
+                                    : AppColors.warning.withValues(alpha: 0.5),
                               ),
                             ),
                             child: Row(
@@ -755,8 +756,8 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                                       : Icons.hourglass_empty_rounded,
                                   size: 13,
                                   color: isApproved
-                                      ? const Color(0xFF10B981)
-                                      : Colors.amber,
+                                      ? AppColors.success
+                                      : AppColors.warning,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
@@ -765,8 +766,8 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                                       : (isAr ? 'قيد الانتظار' : 'Pending'),
                                   style: TextStyle(
                                     color: isApproved
-                                        ? const Color(0xFF10B981)
-                                        : Colors.amber,
+                                        ? AppColors.success
+                                        : AppColors.warning,
                                     fontSize: 11,
                                     fontWeight: FontWeight.bold,
                                     fontFamily: 'Cairo',
