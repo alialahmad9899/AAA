@@ -290,10 +290,10 @@ class VipServiceAdminController extends Controller
             $service['show_special_thanks'] = ($item['show_special_thanks'] ?? '0') === '1';
             $service['price'] = (float) $item['price'];
             $service['title_ar'] = trim($item['title_ar']);
-            $service['title_en'] = trim((string) ($item['title_en'] ?? '')) ?: $service['title_en'];
+            $service['title_en'] = trim((string) ($item['title_en'] ?? ''));
             $service['title'] = $service['title_ar'];
             $service['promo_ar'] = trim($item['promo_ar']);
-            $service['promo_en'] = trim((string) ($item['promo_en'] ?? '')) ?: $service['promo_en'];
+            $service['promo_en'] = trim((string) ($item['promo_en'] ?? ''));
             $service['description'] = $service['promo_ar'];
             $service['icon_key'] = $item['icon_key'];
             $service['sort_order'] = (int) $item['sort_order'];
