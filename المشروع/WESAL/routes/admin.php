@@ -40,6 +40,7 @@ use App\Http\Controllers\UpdateController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\Admin\VipSurveyAdminController;
 use App\Http\Controllers\Admin\VipServiceAdminController;
+use App\Http\Controllers\Admin\SupportTicketAdminController;
 
 /*
   |--------------------------------------------------------------------------
@@ -73,6 +74,13 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
 
     // Contact Us page
     Route::resource('/contact-us', ContactUsController::class);
+
+    // Mobile app support tickets (admin/staff only).
+    Route::controller(SupportTicketAdminController::class)->group(function () {
+        Route::get('/support-tickets', 'index')->name('admin.support-tickets.index');
+        Route::get('/support-tickets/{id}', 'show')->name('admin.support-tickets.show');
+        Route::post('/support-tickets/{id}/reply', 'reply')->name('admin.support-tickets.reply');
+    });
     Route::get('/contact-us/destroy/{id}', [ContactUsController::class, 'destroy'])->name('contact-us.delete');
 
     // Member Manage

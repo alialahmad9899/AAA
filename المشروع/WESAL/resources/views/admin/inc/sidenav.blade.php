@@ -357,6 +357,16 @@
                 </li>
                 @endcan
 
+                @if (auth()->user()->user_type === 'admin' || auth()->user()->user_type === 'staff')
+                <li class="aiz-side-nav-item">
+                    <a href="{{ route('admin.support-tickets.index') }}"
+                        class="aiz-side-nav-link {{ areActiveRoutes(['admin.support-tickets.index', 'admin.support-tickets.show']) }}">
+                        <i class="las la-life-ring aiz-side-nav-icon"></i>
+                        <span class="aiz-side-nav-text">تذاكر دعم التطبيق</span>
+                    </a>
+                </li>
+                @endif
+
 
                 @if (addon_activation('referral_system'))
                 @if (auth()->user()->can('set_referral_commission') ||

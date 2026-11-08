@@ -42,6 +42,7 @@ jobs:
             "المشروع/WESAL/app/Http/Controllers/Api/PackageController.php"
             "المشروع/WESAL/app/Http/Controllers/PackagePaymentController.php"
             "المشروع/WESAL/app/Http/Controllers/Admin/VipServiceAdminController.php"
+            "المشروع/WESAL/app/Http/Controllers/Admin/SupportTicketAdminController.php"
             "المشروع/WESAL/app/Http/Controllers/Api/SupportTicketController.php"
             "المشروع/WESAL/routes/api.php"
             "المشروع/WESAL/routes/admin.php"
