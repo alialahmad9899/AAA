@@ -6,6 +6,9 @@ use App\Models\ManualPaymentMethod;
 use App\Models\Member;
 use App\Models\Package;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
+use App\Services\PackagePresentation;
 use Redirect;
 use Validator;
 
@@ -56,7 +59,29 @@ class PackageController extends Controller
      */
     public function index()
     {
-        $packages      = Package::paginate(10);
+        // The app display order lives in the central presentation catalogue.
+        $allPackages = Package::all()->sort(function ($left, $right) {
+            $leftOrder = PackagePresentation::get((int) $left->id)['sort_order'];
+            $rightOrder = PackagePresentation::get((int) $right->id)['sort_order'];
+            return $leftOrder <=> $rightOrder ?: ((int) $left->id <=> (int) $right->id);
+        })->values();
+
+        foreach ($allPackages as $package) {
+            $presentation = PackagePresentation::get((int) $package->id);
+            $package->display_order = $presentation['sort_order'];
+            $package->display_description = $presentation['description_ar'];
+        }
+
+        $perPage = 10;
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+        $packages = new LengthAwarePaginator(
+            $allPackages->forPage($currentPage, $perPage)->values(),
+            $allPackages->count(),
+            $perPage,
+            $currentPage,
+            ['path' => LengthAwarePaginator::resolveCurrentPath(), 'query' => request()->query()]
+        );
+
         return view('admin.premium_packages.index', compact('packages'));
     }
 
@@ -78,9 +103,14 @@ class PackageController extends Controller
      */
     public function store(Request $request)
     {
-        $rules      = $this->package_rules;
-        $messages   = $this->package_messages;
-        $validator  = Validator::make($request->all(), $rules, $messages);
+        $rules = array_merge($this->package_rules, [
+            'name_en' => ['nullable', 'string', 'max:255'],
+            'description_ar' => ['nullable', 'string', 'max:1500'],
+            'description_en' => ['nullable', 'string', 'max:1500'],
+            'sort_order' => ['required', 'integer', 'min:0', 'max:9999'],
+        ]);
+        $messages = $this->package_messages;
+        $validator = Validator::make($request->all(), $rules, $messages);
         if ($validator->fails()) {
             flash(translate('Sorry! Something went wrong'))->error();
             return Redirect::back()->withErrors($validator);
@@ -104,12 +134,23 @@ class PackageController extends Controller
         $package->message_profile_quota = $request->message_profile_quota;
         $package->image              = $request->package_image;
 
-        if ($package->save()) {
+        try {
+            DB::transaction(function () use ($package, $request) {
+                $package->save();
+                PackagePresentation::save((int) $package->id, [
+                    'name_en' => $request->input('name_en'),
+                    'description_ar' => $request->input('description_ar'),
+                    'description_en' => $request->input('description_en'),
+                    'sort_order' => $request->input('sort_order'),
+                ]);
+            });
+
             flash(translate('New Package has been added successfully'))->success();
             return redirect()->route('packages.index');
-        } else {
+        } catch (\Throwable $exception) {
+            report($exception);
             flash(translate('Sorry! Something went wrong.'))->error();
-            return back();
+            return back()->withInput();
         }
     }
 
@@ -133,7 +174,8 @@ class PackageController extends Controller
     public function edit($id)
     {
         $package = Package::findOrFail(decrypt($id));
-        return view('admin.premium_packages.edit', compact('package'));
+        $presentation = PackagePresentation::get((int) $package->id);
+        return view('admin.premium_packages.edit', compact('package', 'presentation'));
     }
 
     /**
@@ -145,9 +187,14 @@ class PackageController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $rules      = $this->package_rules;
-        $messages   = $this->package_messages;
-        $validator  = Validator::make($request->all(), $rules, $messages);
+        $rules = array_merge($this->package_rules, [
+            'name_en' => ['nullable', 'string', 'max:255'],
+            'description_ar' => ['nullable', 'string', 'max:1500'],
+            'description_en' => ['nullable', 'string', 'max:1500'],
+            'sort_order' => ['required', 'integer', 'min:0', 'max:9999'],
+        ]);
+        $messages = $this->package_messages;
+        $validator = Validator::make($request->all(), $rules, $messages);
 
         if ($validator->fails()) {
             flash(translate('Sorry! Something went wrong'))->error();
@@ -172,26 +219,53 @@ class PackageController extends Controller
         $package->message_profile_quota = $request->message_profile_quota;
         $package->image              = $request->package_image;
         
-        if ($package->save()) {
+        try {
+            DB::transaction(function () use ($package, $request) {
+                $package->save();
+                PackagePresentation::save((int) $package->id, [
+                    'name_en' => $request->input('name_en'),
+                    'description_ar' => $request->input('description_ar'),
+                    'description_en' => $request->input('description_en'),
+                    'sort_order' => $request->input('sort_order'),
+                ]);
+            });
+
             flash(translate('Package info has been updated successfully'))->success();
             return redirect()->route('packages.index');
-        } else {
+        } catch (\Throwable $exception) {
+            report($exception);
             flash(translate('Sorry! Something went wrong.'))->error();
-            return back();
+            return back()->withInput();
         }
     }
 
     // Update Package Activate status
     public function update_status(Request $request)
     {
-        $package = Package::findOrFail($request->id);
-        $package->active = $request->status;
-        if ($package->save()) {
-            $msg = $package->status == 1 ? translate('Enabled') : translate('Disabled');
-            flash(translate('Package Status Updated successfully'))->success();
-            return 1;
+        $validated = $request->validate([
+            'id' => ['required', 'integer', 'exists:packages,id'],
+            'status' => ['required', 'in:0,1'],
+        ]);
+
+        $package = Package::findOrFail((int) $validated['id']);
+        $package->active = (int) $validated['status'];
+
+        if (!$package->save()) {
+            return response()->json([
+                'result' => false,
+                'message' => 'تعذر حفظ حالة الباقة.',
+            ], 500);
         }
-        return 0;
+
+        return response()->json([
+            'result' => true,
+            'id' => (int) $package->id,
+            'active' => (int) $package->active,
+            'message' => $package->active
+                ? 'تم إظهار الباقة في التطبيق.'
+                : 'تم إخفاء الباقة من التطبيق.',
+        ])->header('Cache-Control', 'no-store, private, max-age=0')
+          ->header('Pragma', 'no-cache');
     }
 
     /**
@@ -203,6 +277,7 @@ class PackageController extends Controller
     public function destroy($id)
     {
         if (Package::destroy($id)) {
+            PackagePresentation::forget((int) $id);
             flash(translate('Package info has been deleted successfully'))->success();
             return redirect()->route('packages.index');
         } else {
