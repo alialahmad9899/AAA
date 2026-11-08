@@ -217,10 +217,6 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
 
   /// 🟢 الخطوة الأولى: البدء بملء الاستبيان والمواصفات أولاً قبل الدفع
   void _startOrderWorkflow(dynamic service) {
-    final String serviceType = service['service_type'] ?? 'highlight_profile';
-    final double price =
-        double.tryParse(service['price']?.toString() ?? '0') ?? 0.0;
-    final String title = _getServiceTitle(service);
     final bool allowExternalContact =
         _isCatalogFlagEnabled(service['allow_external_contact']);
 
@@ -230,10 +226,6 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
       useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => _VipSpecificationsModal(
-        orderId: 0,
-        serviceType: serviceType,
-        serviceTitle: title,
-        price: price,
         allowExternalContact: allowExternalContact,
         isArabic: _isAr,
         currentLanguage: widget.currentLanguage,
@@ -1870,20 +1862,12 @@ class _VipPaymentModalSheetState extends State<_VipPaymentModalSheet> {
 // ============================================================================
 
 class _VipSpecificationsModal extends StatefulWidget {
-  final int orderId;
-  final String serviceType;
-  final String serviceTitle;
-  final double price;
   final bool allowExternalContact;
   final bool isArabic;
   final String currentLanguage;
   final Function(Map<String, dynamic> collectedSpecs) onProceedToPayment;
 
   const _VipSpecificationsModal({
-    required this.orderId,
-    required this.serviceType,
-    required this.serviceTitle,
-    required this.price,
     required this.allowExternalContact,
     required this.isArabic,
     required this.currentLanguage,
