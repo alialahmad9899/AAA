@@ -102,31 +102,57 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
   }
 
   String _getServiceTitle(dynamic item) {
+    final arabic = (item['title_ar'] ?? '').toString().trim();
+    final english = (item['title_en'] ?? '').toString().trim();
+    final fallback = (item['title'] ?? item['name'] ?? '').toString().trim();
+
     if (_isAr) {
-      return item['title_ar'] ?? item['title'] ?? item['name'] ?? '';
-    } else {
-      return item['title_en'] ?? item['title'] ?? item['name'] ?? '';
+      return arabic.isNotEmpty ? arabic : (english.isNotEmpty ? english : fallback);
     }
+    return english.isNotEmpty ? english : (arabic.isNotEmpty ? arabic : fallback);
   }
 
   String _getServicePromo(dynamic item) {
+    final arabic = (item['promo_ar'] ?? '').toString().trim();
+    final english = (item['promo_en'] ?? '').toString().trim();
+    final fallback = (item['description'] ?? '').toString().trim();
+
     if (_isAr) {
-      return item['promo_ar'] ?? item['description'] ?? '';
-    } else {
-      return item['promo_en'] ?? item['description'] ?? '';
+      return arabic.isNotEmpty ? arabic : (english.isNotEmpty ? english : fallback);
     }
+    return english.isNotEmpty ? english : (arabic.isNotEmpty ? arabic : fallback);
   }
 
   List<dynamic> _getIncludedList(dynamic item) {
+    final preferredKey = _isAr ? 'included_ar' : 'included_en';
+    final fallbackKey = _isAr ? 'included_en' : 'included_ar';
+    final legacyPreferredKey = _isAr ? 'features_ar' : 'features_en';
+    final legacyFallbackKey = _isAr ? 'features_en' : 'features_ar';
+
+    final preferred = item[preferredKey];
+    if (preferred is List && preferred.isNotEmpty) return preferred;
+
+    final legacyPreferred = item[legacyPreferredKey];
+    if (legacyPreferred is List && legacyPreferred.isNotEmpty) return legacyPreferred;
+
+    final fallback = item[fallbackKey];
+    if (fallback is List && fallback.isNotEmpty) return fallback;
+
+    final legacyFallback = item[legacyFallbackKey];
+    return legacyFallback is List ? legacyFallback : [];
+  }
+
+  String _getFeatureTitle(dynamic item) {
+    if (item is! Map) return item.toString();
+
+    final arabic = (item['title_ar'] ?? '').toString().trim();
+    final english = (item['title_en'] ?? '').toString().trim();
+    final generic = (item['title'] ?? '').toString().trim();
+
     if (_isAr) {
-      return item['included_ar'] is List
-          ? item['included_ar']
-          : (item['features_ar'] is List ? item['features_ar'] : []);
-    } else {
-      return item['included_en'] is List
-          ? item['included_en']
-          : (item['features_en'] is List ? item['features_en'] : []);
+      return arabic.isNotEmpty ? arabic : (generic.isNotEmpty ? generic : english);
     }
+    return english.isNotEmpty ? english : (generic.isNotEmpty ? generic : arabic);
   }
 
   IconData _getFeatureIcon(dynamic item, String text) {
@@ -637,9 +663,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                       ),
                       const SizedBox(height: 12),
                       ...included.map((itemText) {
-                        String text = itemText is Map
-                            ? (itemText['title'] ?? itemText['title_ar'] ?? itemText['title_en'] ?? '')
-                            : itemText.toString();
+                        String text = _getFeatureTitle(itemText);
                         IconData icon = _getFeatureIcon(itemText, text);
 
                         return Container(
@@ -1022,9 +1046,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
             ),
           const SizedBox(height: 14),
           ...included.take(2).map((itemText) {
-            String text = itemText is Map
-                ? (itemText['title'] ?? itemText['title_ar'] ?? itemText['title_en'] ?? '')
-                : itemText.toString();
+            String text = _getFeatureTitle(itemText);
             IconData icon = _getFeatureIcon(itemText, text);
 
             return Padding(
@@ -1107,10 +1129,24 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
     );
   }
 
+  String _getOrderServiceTitle(dynamic order) {
+    final serverTitle = (order['service_type_name'] ?? '').toString().trim();
+    if (serverTitle.isNotEmpty) return serverTitle;
+
+    final serviceType = (order['service_type'] ?? '').toString();
+    for (final service in _services) {
+      if (service is Map && service['service_type'] == serviceType) {
+        return _getServiceTitle(service);
+      }
+    }
+    return serviceType;
+  }
+
   Widget _buildOrderCard(dynamic order) {
     final String status =
         order['execution_status'] ?? order['status'] ?? 'pending';
     final String code = order['order_code'] ?? 'VIP-${order['id'] ?? '00'}';
+    final String serviceTitle = _getOrderServiceTitle(order);
 
     final Map<String, dynamic> specs = order['specifications'] is Map
         ? Map<String, dynamic>.from(order['specifications'])
@@ -1160,6 +1196,18 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                         fontFamily: 'Cairo',
                       ),
                     ),
+                    if (serviceTitle.isNotEmpty)
+                      Text(
+                        serviceTitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppColors.primaryTeal,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Cairo',
+                        ),
+                      ),
                     if (order['created_at'] != null)
                       Text(
                         order['created_at'].toString().split('T').first,

@@ -481,12 +481,16 @@ class VipServiceAdminController extends Controller
                 $iconKey = 'star';
             }
 
-            if ($titleAr !== '') {
-                $includedAr[] = ['title' => $titleAr, 'icon_key' => $iconKey];
-            }
-            if ($titleEn !== '') {
-                $includedEn[] = ['title' => $titleEn, 'icon_key' => $iconKey];
-            }
+            // Keep the same feature index in both languages. When one translation
+            // is missing, use the available title instead of shifting later icons.
+            $includedAr[] = [
+                'title' => $titleAr !== '' ? $titleAr : $titleEn,
+                'icon_key' => $iconKey,
+            ];
+            $includedEn[] = [
+                'title' => $titleEn !== '' ? $titleEn : $titleAr,
+                'icon_key' => $iconKey,
+            ];
         }
 
         return [$includedAr, $includedEn];

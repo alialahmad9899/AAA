@@ -148,7 +148,7 @@
                         <div><h6 class="mb-1">تفاصيل ومزايا الخدمة (البنود)</h6><small class="text-muted">أضف البند بالعربية والإنجليزية واختر أيقونته بشكل مستقل.</small></div>
                         <button type="button" class="btn btn-sm btn-outline-primary mt-2 mt-md-0" data-add-feature data-target="service-features-{{ $index }}" data-prefix="services[{{ $index }}][features]"><i class="las la-plus"></i> إضافة بند</button>
                     </div>
-                    <div id="service-features-{{ $index }}" data-feature-list>
+                    <div id="service-features-{{ $index }}" data-feature-list data-next-index="{{ count($featureRows) }}">
                         @foreach($featureRows as $featureIndex => $feature)
                             <div class="row align-items-end vip-feature-row border rounded p-2 mb-2">
                                 <div class="col-md-5 form-group mb-2">
@@ -216,7 +216,7 @@
                     <div><h6 class="mb-1">بنود الخدمة الجديدة</h6><small class="text-muted">يمكنك إضافة عدد من البنود، ولكل بند أيقونة خاصة.</small></div>
                     <button type="button" class="btn btn-sm btn-outline-primary mt-2 mt-md-0" data-add-feature data-target="new-service-features" data-prefix="features"><i class="las la-plus"></i> إضافة بند</button>
                 </div>
-                <div id="new-service-features" data-feature-list></div>
+                <div id="new-service-features" data-feature-list data-next-index="0"></div>
             </div>
             <button type="submit" class="btn btn-success btn-lg mt-3"><i class="las la-plus mr-1"></i> إضافة الخدمة إلى التطبيق</button>
         </form>
@@ -229,7 +229,8 @@ document.addEventListener('click', function (event) {
     if (addButton) {
         const list = document.getElementById(addButton.getAttribute('data-target'));
         const prefix = addButton.getAttribute('data-prefix');
-        const index = list.querySelectorAll('.vip-feature-row').length;
+        const index = Number(list.dataset.nextIndex || 0);
+        list.dataset.nextIndex = String(index + 1);
         const template = document.getElementById('vip-feature-row-template');
         const row = template.content.cloneNode(true);
         row.querySelectorAll('[data-feature-field]').forEach(function (field) {
