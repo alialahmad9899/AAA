@@ -36,6 +36,7 @@
             <p class="text-muted mb-0">تحكم كامل بالخدمات التي تظهر في تطبيق وصال: الاسم والتفاصيل والسعر والأيقونة والمزايا وترتيب كل بند.</p>
         </div>
         <div class="col-md-4 text-md-right mt-2 mt-md-0">
+            <a href="#add-vip-service" class="btn btn-primary mr-1"><i class="las la-plus"></i> إضافة خدمة جديدة</a>
             <a href="{{ route('admin.vip-services.index') }}" class="btn btn-light">طلبات الخدمات</a>
         </div>
     </div>
@@ -57,6 +58,7 @@
 
 <template id="vip-feature-row-template">
     <div class="row align-items-end vip-feature-row border rounded p-2 mb-2">
+        <div class="col-12 mb-2"><span class="badge badge-light" data-feature-number>بند جديد</span></div>
         <div class="col-md-5 form-group mb-2">
             <label>الميزة بالعربية</label>
             <input type="text" class="form-control" maxlength="180" data-feature-field="title_ar" placeholder="اكتب الميزة بالعربية">
@@ -184,6 +186,7 @@
                     <div id="service-features-{{ $index }}" data-feature-list data-next-index="{{ count($featureRows) }}">
                         @foreach($featureRows as $featureIndex => $feature)
                             <div class="row align-items-end vip-feature-row border rounded p-2 mb-2">
+                                <div class="col-12 mb-2"><span class="badge badge-light">بند {{ $featureIndex + 1 }}</span></div>
                                 <div class="col-md-5 form-group mb-2">
                                     <label>الميزة بالعربية</label>
                                     <input type="text" name="services[{{ $index }}][features][{{ $featureIndex }}][title_ar]" class="form-control" maxlength="180" value="{{ $feature['title_ar'] }}">
@@ -276,6 +279,8 @@ document.addEventListener('click', function (event) {
         row.querySelectorAll('[data-feature-field]').forEach(function (field) {
             field.name = prefix + '[' + index + '][' + field.getAttribute('data-feature-field') + ']';
         });
+        const featureNumber = row.querySelector('[data-feature-number]');
+        if (featureNumber) featureNumber.textContent = 'بند ' + (index + 1);
         list.appendChild(row);
         return;
     }
