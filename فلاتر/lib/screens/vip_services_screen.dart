@@ -101,6 +101,13 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
     }
   }
 
+  bool _isCatalogFlagEnabled(dynamic value) {
+    if (value == true) return true;
+    if (value is num) return value != 0;
+    final normalized = value?.toString().trim().toLowerCase();
+    return normalized == '1' || normalized == 'true' || normalized == 'yes';
+  }
+
   String _getServiceTitle(dynamic item) {
     final arabic = (item['title_ar'] ?? '').toString().trim();
     final english = (item['title_en'] ?? '').toString().trim();
@@ -214,6 +221,8 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
     final double price =
         double.tryParse(service['price']?.toString() ?? '0') ?? 0.0;
     final String title = _getServiceTitle(service);
+    final bool allowExternalContact =
+        _isCatalogFlagEnabled(service['allow_external_contact']);
 
     showModalBottomSheet(
       context: context,
@@ -225,6 +234,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
         serviceType: serviceType,
         serviceTitle: title,
         price: price,
+        allowExternalContact: allowExternalContact,
         isArabic: _isAr,
         currentLanguage: widget.currentLanguage,
         onProceedToPayment: (Map<String, dynamic> collectedSpecs) {
@@ -244,6 +254,8 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
     final double price =
         double.tryParse(service['price']?.toString() ?? '0') ?? 0.0;
     final String title = _getServiceTitle(service);
+    final bool showSpecialThanks =
+        _isCatalogFlagEnabled(service['show_special_thanks']);
 
     showModalBottomSheet(
       context: context,
@@ -261,7 +273,12 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
           Navigator.pop(ctx);
           if (mounted) {
             _fetchVipData(isRefresh: true);
-            _showOrderReceiptAndThankYouDialog(orderId, title, price, specs);
+            _showOrderReceiptAndThankYouDialog(
+              orderId,
+              title,
+              specs,
+              showSpecialThanks: showSpecialThanks,
+            );
           }
         },
       ),
@@ -269,16 +286,20 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
   }
 
   /// 🟢 الخطوة الثالثة: نافذة بروتوكول استلام الطلب + الشكر والتقدير وزر الفيسبوك
-  void _showOrderReceiptAndThankYouDialog(int orderId, String serviceTitle,
-      double price, Map<String, dynamic> specs) {
-    final bool isHundredDollarService =
-        price >= 90.0 || serviceTitle.contains('100');
-    final String contactMethod = specs['contact_method'] ?? 'whatsapp';
+  void _showOrderReceiptAndThankYouDialog(
+    int orderId,
+    String serviceTitle,
+    Map<String, dynamic> specs, {
+    required bool showSpecialThanks,
+  }) {
+    final String contactMethod = specs['contact_method'] ?? 'internal_app';
     String contactDisplay = '';
 
     if (contactMethod == 'whatsapp') {
       final phone = specs['full_phone_number'] ?? specs['phone_number'] ?? '';
       contactDisplay = _isAr ? 'واتساب ($phone)' : 'WhatsApp ($phone)';
+    } else if (contactMethod == 'internal_app') {
+      contactDisplay = _isAr ? 'داخل تطبيق وصال' : 'Inside Wesal app';
     } else {
       final link = specs['profile_link'] ?? '';
       contactDisplay = _isAr ? 'حساب/رابط ($link)' : 'Profile ($link)';
@@ -407,7 +428,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  if (isHundredDollarService) ...[
+                  if (showSpecialThanks) ...[
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
@@ -1853,6 +1874,7 @@ class _VipSpecificationsModal extends StatefulWidget {
   final String serviceType;
   final String serviceTitle;
   final double price;
+  final bool allowExternalContact;
   final bool isArabic;
   final String currentLanguage;
   final Function(Map<String, dynamic> collectedSpecs) onProceedToPayment;
@@ -1862,6 +1884,7 @@ class _VipSpecificationsModal extends StatefulWidget {
     required this.serviceType,
     required this.serviceTitle,
     required this.price,
+    required this.allowExternalContact,
     required this.isArabic,
     required this.currentLanguage,
     required this.onProceedToPayment,
@@ -1888,7 +1911,7 @@ class _VipSpecificationsModalState extends State<_VipSpecificationsModal> {
   final _partnerExpectationsController = TextEditingController();
   final _customRequirementsController = TextEditingController();
 
-  bool get isDirectContactAllowed => widget.price >= 25.0;
+  bool get isDirectContactAllowed => widget.allowExternalContact;
 
   String _selectedContactMethod = 'whatsapp';
 
