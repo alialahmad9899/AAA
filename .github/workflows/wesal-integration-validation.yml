@@ -64,7 +64,6 @@ jobs:
             "المشروع/WESAL/app/Http/Middleware/EmailVerifiedApi.php"
             "المشروع/WESAL/app/Services/PackagePresentation.php"
             "المشروع/WESAL/app/Http/Controllers/PackageController.php"
-            "المشروع/WESAL/app/Http/Controllers/Api/PackageController.php"
             "المشروع/WESAL/app/Http/Resources/PackageResource.php"
             "المشروع/WESAL/app/Http/Middleware/IsApiMember.php"
             "المشروع/WESAL/app/Http/Requests/PartnerExpectationRequest.php"
