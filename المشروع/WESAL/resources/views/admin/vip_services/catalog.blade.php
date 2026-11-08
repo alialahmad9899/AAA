@@ -272,6 +272,10 @@ document.addEventListener('click', function (event) {
     if (addButton) {
         const list = document.getElementById(addButton.getAttribute('data-target'));
         const prefix = addButton.getAttribute('data-prefix');
+        if (list.querySelectorAll('.vip-feature-row').length >= 30) {
+            window.alert('يمكن إضافة 30 بنداً كحد أقصى لكل خدمة.');
+            return;
+        }
         const index = Number(list.dataset.nextIndex || 0);
         list.dataset.nextIndex = String(index + 1);
         const template = document.getElementById('vip-feature-row-template');

@@ -341,6 +341,12 @@ class VipServiceAdminController extends Controller
         ]);
 
         $catalog = VipServiceCatalog::all();
+        if (count($catalog) >= 100) {
+            return back()->withInput()->withErrors([
+                'catalog' => 'وصل كتالوج الخدمات إلى الحد الأقصى (100 خدمة). احذف خدمة غير مستخدمة قبل إضافة خدمة أخرى.',
+            ]);
+        }
+
         $baseType = Str::slug($validated['title_en'] ?: $validated['title_ar'], '_');
         if (empty($baseType)) {
             $baseType = 'service_' . Str::lower(Str::random(8));
