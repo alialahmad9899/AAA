@@ -33,6 +33,7 @@ class VipServiceApi {
     {
       'id': 1,
       'service_type': 'highlight_profile',
+      'icon_key': 'campaign',
       'title_ar': 'خدمة نشر طلب زواج مميّز – منصة وصال',
       'title_en': 'Featured Marriage Proposal Service – Wesal',
       'price': 10.00,
@@ -57,6 +58,7 @@ class VipServiceApi {
     {
       'id': 2,
       'service_type': 'special_matchmaking',
+      'icon_key': 'user_search',
       'title_ar': 'خدمة البحث الخاص عن شريك الحياة – منصة وصال',
       'title_en': 'Custom Partner Search Service – Wesal',
       'price': 100.00,
@@ -81,6 +83,7 @@ class VipServiceApi {
     {
       'id': 3,
       'service_type': 'direct_contact',
+      'icon_key': 'message',
       'title_ar': 'خدمة التواصل المباشر خارج المنصة – منصة وصال',
       'title_en': 'Direct External Contact Service – Wesal',
       'price': 25.00,

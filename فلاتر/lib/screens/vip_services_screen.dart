@@ -14,6 +14,7 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/vip_service_api.dart';
+import '../utils/vip_service_icon.dart';
 import '../widgets/app_snackbar.dart';
 
 class VipServicesScreen extends StatefulWidget {
@@ -126,6 +127,13 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
           ? item['included_en']
           : (item['features_en'] is List ? item['features_en'] : []);
     }
+  }
+
+  IconData _getFeatureIcon(dynamic item, String text) {
+    if (item is Map && item['icon_key'] != null) {
+      return VipServiceIcon.fromKey(item['icon_key'].toString());
+    }
+    return _getIconForFeatureText(text);
   }
 
   IconData _getIconForFeatureText(String text) {
@@ -548,7 +556,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                           ),
                         ],
                       ),
-                      child: const Icon(Icons.workspace_premium_rounded,
+                      child: Icon(VipServiceIcon.fromKey(item['icon_key']?.toString()),
                           color: Colors.white, size: 28),
                     ),
                     const SizedBox(width: 14),
@@ -630,9 +638,9 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                       const SizedBox(height: 12),
                       ...included.map((itemText) {
                         String text = itemText is Map
-                            ? (itemText['title'] ?? '')
+                            ? (itemText['title'] ?? itemText['title_ar'] ?? itemText['title_en'] ?? '')
                             : itemText.toString();
-                        IconData icon = _getIconForFeatureText(text);
+                        IconData icon = _getFeatureIcon(itemText, text);
 
                         return Container(
                           margin: const EdgeInsets.only(bottom: 10),
@@ -946,7 +954,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                   border:
                       Border.all(color: AppColors.premiumGold.withValues(alpha: 0.3)),
                 ),
-                child: const Icon(Icons.auto_awesome_rounded,
+                child: Icon(VipServiceIcon.fromKey(item['icon_key']?.toString()),
                     color: AppColors.premiumGold, size: 24),
               ),
               const SizedBox(width: 12),
@@ -1015,9 +1023,9 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
           const SizedBox(height: 14),
           ...included.take(2).map((itemText) {
             String text = itemText is Map
-                ? (itemText['title'] ?? '')
+                ? (itemText['title'] ?? itemText['title_ar'] ?? itemText['title_en'] ?? '')
                 : itemText.toString();
-            IconData icon = _getIconForFeatureText(text);
+            IconData icon = _getFeatureIcon(itemText, text);
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
