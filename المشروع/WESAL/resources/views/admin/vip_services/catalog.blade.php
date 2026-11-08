@@ -148,12 +148,12 @@
                                 <input type="checkbox" name="services[{{ $index }}][active]" value="1" {{ $serviceActive ? 'checked' : '' }} {{ $serviceArchived ? 'disabled' : '' }}>
                                 إظهار الخدمة وقبول طلبات جديدة
                             </label>
-                            <input type="hidden" name="services[{{ $index }}][allow_external_contact]" value="0">
+                            <input type="hidden" name="services[{{ $index }}][allow_external_contact]" value="{{ $serviceArchived ? (!empty($service['allow_external_contact']) ? '1' : '0') : '0' }}">
                             <label class="d-block mb-1">
                                 <input type="checkbox" name="services[{{ $index }}][allow_external_contact]" value="1" {{ !empty($service['allow_external_contact']) ? 'checked' : '' }} {{ $serviceArchived ? 'disabled' : '' }}>
                                 إظهار حقول التواصل الخارجي (واتساب / رابط)
                             </label>
-                            <input type="hidden" name="services[{{ $index }}][show_special_thanks]" value="0">
+                            <input type="hidden" name="services[{{ $index }}][show_special_thanks]" value="{{ $serviceArchived ? (!empty($service['show_special_thanks']) ? '1' : '0') : '0' }}">
                             <label class="d-block mb-0">
                                 <input type="checkbox" name="services[{{ $index }}][show_special_thanks]" value="1" {{ !empty($service['show_special_thanks']) ? 'checked' : '' }} {{ $serviceArchived ? 'disabled' : '' }}>
                                 عرض بروتوكول الشكر الخاص بعد تسجيل الطلب
