@@ -36,6 +36,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
       'https://www.facebook.com/share/1PpDNVab2p/';
 
   bool _isLoading = true;
+  String? _servicesLoadError;
   List<dynamic> _services = [];
   List<dynamic> _myOrders = [];
 
@@ -60,9 +61,26 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
         await VipServiceApi.getUserOrders(lang: widget.currentLanguage);
 
     if (mounted) {
+      final servicesLoaded =
+          servicesRes['success'] == true && servicesRes['data'] is List;
+      final ordersLoaded =
+          ordersRes['success'] == true && ordersRes['data'] is List;
+
       setState(() {
-        _services = servicesRes['data'] ?? [];
-        _myOrders = ordersRes['data'] ?? [];
+        // Never retain or substitute a stale local catalogue after a failed fetch.
+        _services = servicesLoaded
+            ? List<dynamic>.from(servicesRes['data'] as List)
+            : <dynamic>[];
+        _servicesLoadError = servicesLoaded
+            ? null
+            : (servicesRes['message']?.toString().trim().isNotEmpty == true
+                ? servicesRes['message'].toString()
+                : (_isAr
+                    ? 'تعذر تحميل خدمات VIP من الخادم.'
+                    : 'Could not load VIP services from the server.'));
+        _myOrders = ordersLoaded
+            ? List<dynamic>.from(ordersRes['data'] as List)
+            : <dynamic>[];
         _isLoading = false;
       });
     }
@@ -901,7 +919,50 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
                           ],
                         ),
                         const SizedBox(height: 14),
-                        if (_services.isEmpty)
+                        if (_servicesLoadError != null)
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(18),
+                            decoration: BoxDecoration(
+                              color: AppColors.cardColor,
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(color: AppColors.lineColor),
+                            ),
+                            child: Column(
+                              children: [
+                                const Icon(Icons.cloud_off_rounded,
+                                    color: AppColors.textMuted, size: 32),
+                                const SizedBox(height: 10),
+                                Text(
+                                  _servicesLoadError!,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: AppColors.textDark,
+                                    fontFamily: 'Cairo',
+                                    height: 1.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                OutlinedButton.icon(
+                                  onPressed: () => _fetchVipData(isRefresh: true),
+                                  icon: const Icon(Icons.refresh_rounded),
+                                  label: Text(_isAr ? 'إعادة المحاولة' : 'Try again'),
+                                ),
+                                Text(
+                                  _isAr
+                                      ? 'يمكنك أيضاً سحب الشاشة إلى الأسفل لإعادة التحديث.'
+                                      : 'You can also pull down to refresh.',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: AppColors.textMuted,
+                                    fontSize: 11,
+                                    fontFamily: 'Cairo',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        else if (_services.isEmpty)
                           Center(
                             child: Padding(
                               padding: const EdgeInsets.all(20.0),
