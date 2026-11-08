@@ -137,39 +137,31 @@ class VipServiceApi {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final dynamic decoded = jsonDecode(response.body);
-        final validListResponse = decoded is List ||
-            _isSuccessfulResponse(response.statusCode, decoded);
-        if (!validListResponse) {
-          return {
-            'success': false,
-            'data': _getCopyOfDefaultServices(),
-            'is_fallback': true,
-            'message': decoded is Map ? decoded['message']?.toString() : null,
-          };
-        }
-        List<dynamic> extractedList = [];
+        List<dynamic>? extractedList;
 
         if (decoded is List) {
           extractedList = decoded;
-        } else if (decoded is Map<String, dynamic>) {
+        } else if (decoded is Map<String, dynamic> &&
+            _isSuccessfulResponse(response.statusCode, decoded)) {
           if (decoded['data'] is List) {
-            extractedList = decoded['data'];
+            extractedList = decoded['data'] as List<dynamic>;
           } else if (decoded['result'] is List) {
-            extractedList = decoded['result'];
+            extractedList = decoded['result'] as List<dynamic>;
           }
         }
 
-        if (extractedList.isNotEmpty) {
+        // A valid empty list is an intentional admin choice, not an API failure.
+        // Only fall back to local defaults when the request or response is invalid.
+        if (extractedList != null) {
           final List<Map<String, dynamic>> formattedList = [];
 
-          for (var item in extractedList) {
+          for (final item in extractedList) {
             if (item is Map) {
-              final Map<String, dynamic> service =
-                  Map<String, dynamic>.from(item);
-
+              final service = Map<String, dynamic>.from(item);
               final defaultMatch = _defaultVipServices.firstWhere(
-                (d) => d['service_type'] == service['service_type'],
-                orElse: () => {},
+                (defaultService) =>
+                    defaultService['service_type'] == service['service_type'],
+                orElse: () => <String, dynamic>{},
               );
 
               if (defaultMatch.isNotEmpty) {
@@ -184,8 +176,6 @@ class VipServiceApi {
             }
           }
 
-          // An empty list from a valid API response means the admin disabled
-          // every service except those currently active; do not resurrect defaults.
           return {'success': true, 'data': formattedList};
         }
       }
@@ -195,7 +185,12 @@ class VipServiceApi {
       }
     }
 
-    return {'success': false, 'is_fallback': true, 'data': _getCopyOfDefaultServices(), 'message': 'تعذر تحديث قائمة الخدمات من السيرفر'};
+    return {
+      'success': false,
+      'is_fallback': true,
+      'data': _getCopyOfDefaultServices(),
+      'message': 'تعذر تحديث قائمة الخدمات من السيرفر',
+    };
   }
 
   /// 🟢 2. جلب طلبات الخدمات الإضافية للمستخدم

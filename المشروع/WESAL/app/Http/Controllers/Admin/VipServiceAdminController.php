@@ -97,7 +97,7 @@ class VipServiceAdminController extends Controller
         // 🔔 إرسال إشعار لحظي (Push & DB) للمشترك بعد حفظ حالة التنفيذ.
         if ($order->user) {
             try {
-                $rejectionText = !empty($specs['rejection_reason']) ? "\\nالسبب: " . $specs['rejection_reason'] : '';
+                $rejectionText = !empty($specs['rejection_reason']) ? "\nالسبب: " . $specs['rejection_reason'] : '';
                 $statusTitles = [
                     'in_progress' => 'جاري تنفيذ طلبك 🚀',
                     'completed' => 'تم اكتمال تنفيذ الخدمة ✨',
@@ -287,7 +287,7 @@ class VipServiceAdminController extends Controller
 
         try {
             VipServiceCatalog::save($catalog);
-        } catch (\\Throwable $exception) {
+        } catch (\Throwable $exception) {
             Log::error('VIP service catalog update failed.', [
                 'admin_id' => auth()->id(),
                 'message' => $exception->getMessage(),
