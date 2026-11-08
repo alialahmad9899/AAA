@@ -135,6 +135,11 @@ class PackageController extends Controller
                     'description' => $this->formatPackageDescription($package, $lang),
                     'description_ar' => $presentation['description_ar'],
                     'description_en' => $presentation['description_en'],
+                    'features' => $lang === 'en' && !empty($presentation['features_en'])
+                        ? $presentation['features_en']
+                        : $presentation['features_ar'],
+                    'features_ar' => $presentation['features_ar'],
+                    'features_en' => $presentation['features_en'],
                     'sort_order' => $presentation['sort_order'],
                     'price' => $package->price,
                     'validity' => $package->validity,
@@ -174,6 +179,11 @@ class PackageController extends Controller
                 'description'          => $this->formatPackageDescription($package, $lang),
                 'description_ar'       => PackagePresentation::get((int) $package->id)['description_ar'],
                 'description_en'       => PackagePresentation::get((int) $package->id)['description_en'],
+                'features'             => $lang === 'en'
+                    ? PackagePresentation::get((int) $package->id)['features_en']
+                    : PackagePresentation::get((int) $package->id)['features_ar'],
+                'features_ar'          => PackagePresentation::get((int) $package->id)['features_ar'],
+                'features_en'          => PackagePresentation::get((int) $package->id)['features_en'],
                 'sort_order'           => PackagePresentation::get((int) $package->id)['sort_order'],
                 'price'                => $package->price,
                 'validity'             => $package->validity,
