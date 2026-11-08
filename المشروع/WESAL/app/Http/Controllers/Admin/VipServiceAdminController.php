@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
 
 class VipServiceAdminController extends Controller
 {
@@ -34,8 +35,9 @@ class VipServiceAdminController extends Controller
         }
 
         $orders = $query->paginate(15);
+        $services = VipServiceCatalog::all();
 
-        return view('admin.vip_services.index', compact('orders'));
+        return view('admin.vip_services.index', compact('orders', 'services'));
     }
 
     /**
@@ -219,16 +221,25 @@ class VipServiceAdminController extends Controller
     }
 
     /**
-     * عرض كتالوج خدمات VIP وإعداداته.
-     * هذه الإعدادات حساسة مالياً وتقتصر على حساب الأدمن.
+     * إدارة كتالوج خدمات التطبيق: الاسم والوصف والمزايا والأيقونة والسعر والترتيب.
      */
     public function catalog()
     {
         abort_unless(auth()->user() && auth()->user()->user_type === 'admin', 403);
 
-        $services = VipServiceCatalog::all();
+        $orderCounts = VipServiceOrder::query()
+            ->selectRaw('service_type, COUNT(*) as orders_count')
+            ->groupBy('service_type')
+            ->pluck('orders_count', 'service_type');
 
-        return view('admin.vip_services.catalog', compact('services'));
+        $services = array_map(function ($service) use ($orderCounts) {
+            $service['orders_count'] = (int) ($orderCounts[$service['service_type']] ?? 0);
+            return $service;
+        }, VipServiceCatalog::all());
+
+        $iconOptions = VipServiceCatalog::iconOptions();
+
+        return view('admin.vip_services.catalog', compact('services', 'iconOptions'));
     }
 
     public function updateCatalog(Request $request)
@@ -236,35 +247,40 @@ class VipServiceAdminController extends Controller
         abort_unless(auth()->user() && auth()->user()->user_type === 'admin', 403);
 
         $validated = $request->validate([
-            'services' => ['required', 'array', 'size:3'],
-            'services.*.service_type' => ['required', 'string', 'in:highlight_profile,direct_contact,special_matchmaking'],
+            'services' => ['required', 'array', 'min:1', 'max:100'],
+            'services.*.service_type' => ['required', 'string', 'regex:/^[a-z][a-z0-9_]{2,59}$/'],
             'services.*.active' => ['nullable', 'in:0,1'],
             'services.*.price' => ['required', 'numeric', 'min:0.01', 'max:100000'],
             'services.*.title_ar' => ['required', 'string', 'max:180'],
             'services.*.title_en' => ['nullable', 'string', 'max:180'],
             'services.*.promo_ar' => ['required', 'string', 'max:1500'],
             'services.*.promo_en' => ['nullable', 'string', 'max:1500'],
+            'services.*.included_ar_text' => ['nullable', 'string', 'max:5000'],
+            'services.*.included_en_text' => ['nullable', 'string', 'max:5000'],
+            'services.*.icon_key' => ['required', 'string', 'in:' . implode(',', array_keys(VipServiceCatalog::iconOptions()))],
+            'services.*.sort_order' => ['required', 'integer', 'min:0', 'max:9999'],
         ]);
 
-        $expectedTypes = array_column(VipServiceCatalog::defaults(), 'service_type');
+        $currentServices = VipServiceCatalog::all();
+        $expectedTypes = array_column($currentServices, 'service_type');
         $submittedTypes = array_column($validated['services'], 'service_type');
 
         if (count(array_unique($submittedTypes)) !== count($expectedTypes)
-            || array_diff($expectedTypes, $submittedTypes)) {
+            || array_diff($expectedTypes, $submittedTypes)
+            || array_diff($submittedTypes, $expectedTypes)) {
             return back()->withInput()->withErrors([
-                'services' => 'يجب إرسال كل أنواع الخدمات المعتمدة مرة واحدة فقط.',
+                'services' => 'تغيرت قائمة الخدمات أثناء التعديل. حدّث الصفحة ثم أعد المحاولة.',
             ]);
         }
 
-        $servicesByType = [];
+        $inputByType = [];
         foreach ($validated['services'] as $item) {
-            $servicesByType[$item['service_type']] = $item;
+            $inputByType[$item['service_type']] = $item;
         }
 
         $catalog = [];
-        foreach (VipServiceCatalog::defaults() as $service) {
-            $item = $servicesByType[$service['service_type']];
-
+        foreach ($currentServices as $service) {
+            $item = $inputByType[$service['service_type']];
             $service['active'] = ($item['active'] ?? '0') === '1';
             $service['price'] = (float) $item['price'];
             $service['title_ar'] = trim($item['title_ar']);
@@ -273,32 +289,181 @@ class VipServiceAdminController extends Controller
             $service['promo_ar'] = trim($item['promo_ar']);
             $service['promo_en'] = trim((string) ($item['promo_en'] ?? '')) ?: $service['promo_en'];
             $service['description'] = $service['promo_ar'];
-
+            $service['icon_key'] = $item['icon_key'];
+            $service['sort_order'] = (int) $item['sort_order'];
+            $service['included_ar'] = $this->parseFeatureLines($item['included_ar_text'] ?? '');
+            $service['included_en'] = $this->parseFeatureLines($item['included_en_text'] ?? '');
             $catalog[] = $service;
-        }
-
-        if (!count(array_filter($catalog, function ($service) {
-            return $service['active'];
-        }))) {
-            return back()->withInput()->withErrors([
-                'services' => 'يجب إبقاء خدمة واحدة على الأقل مفعّلة.',
-            ]);
         }
 
         try {
             VipServiceCatalog::save($catalog);
         } catch (\Throwable $exception) {
-            Log::error('VIP service catalog update failed.', [
+            Log::error('VIP service catalogue update failed.', [
                 'admin_id' => auth()->id(),
                 'message' => $exception->getMessage(),
             ]);
-
             return back()->withInput()->with('danger', 'تعذر حفظ كتالوج الخدمات.');
         }
 
         return redirect()
             ->route('admin.vip-services.catalog')
-            ->with('success', 'تم تحديث كتالوج خدمات VIP وأسعارها بنجاح.');
+            ->with('success', 'تم حفظ تفاصيل خدمات VIP ومزاياها وترتيبها بنجاح.');
+    }
+
+    /**
+     * إضافة خدمة جديدة إلى كتالوج الموبايل. ينشأ رمز داخلي فريد من اسمها.
+     */
+    public function addCatalogService(Request $request)
+    {
+        abort_unless(auth()->user() && auth()->user()->user_type === 'admin', 403);
+
+        $validated = $request->validate([
+            'title_ar' => ['required', 'string', 'max:180'],
+            'title_en' => ['nullable', 'string', 'max:180'],
+            'price' => ['required', 'numeric', 'min:0.01', 'max:100000'],
+            'promo_ar' => ['required', 'string', 'max:1500'],
+            'promo_en' => ['nullable', 'string', 'max:1500'],
+            'included_ar_text' => ['nullable', 'string', 'max:5000'],
+            'included_en_text' => ['nullable', 'string', 'max:5000'],
+            'icon_key' => ['required', 'string', 'in:' . implode(',', array_keys(VipServiceCatalog::iconOptions()))],
+            'sort_order' => ['required', 'integer', 'min:0', 'max:9999'],
+            'active' => ['nullable', 'in:0,1'],
+        ]);
+
+        $catalog = VipServiceCatalog::all();
+        $baseType = Str::slug($validated['title_en'] ?: $validated['title_ar'], '_');
+        if (empty($baseType)) {
+            $baseType = 'service_' . Str::lower(Str::random(8));
+        }
+        if (!preg_match('/^[a-z]/', $baseType)) {
+            $baseType = 'service_' . $baseType;
+        }
+        $serviceType = substr($baseType, 0, 45);
+        $existingTypes = array_column($catalog, 'service_type');
+        while (in_array($serviceType, $existingTypes, true)) {
+            $serviceType = substr($baseType, 0, 40) . '_' . Str::lower(Str::random(4));
+        }
+
+        $nextId = 1;
+        foreach ($catalog as $service) {
+            $nextId = max($nextId, ((int) ($service['id'] ?? 0)) + 1);
+        }
+
+        $titleAr = trim($validated['title_ar']);
+        $promoAr = trim($validated['promo_ar']);
+        $catalog[] = [
+            'id' => $nextId,
+            'service_type' => $serviceType,
+            'title' => $titleAr,
+            'title_ar' => $titleAr,
+            'title_en' => trim((string) ($validated['title_en'] ?? '')),
+            'price' => (float) $validated['price'],
+            'currency' => '$',
+            'description' => $promoAr,
+            'promo_ar' => $promoAr,
+            'promo_en' => trim((string) ($validated['promo_en'] ?? '')),
+            'included_ar' => $this->parseFeatureLines($validated['included_ar_text'] ?? ''),
+            'included_en' => $this->parseFeatureLines($validated['included_en_text'] ?? ''),
+            'icon_key' => $validated['icon_key'],
+            'sort_order' => (int) $validated['sort_order'],
+            'active' => ($validated['active'] ?? '0') === '1',
+            'archived' => false,
+            'is_custom' => true,
+        ];
+
+        try {
+            VipServiceCatalog::save($catalog);
+        } catch (\Throwable $exception) {
+            Log::error('VIP service creation failed.', [
+                'admin_id' => auth()->id(),
+                'service_type' => $serviceType,
+                'message' => $exception->getMessage(),
+            ]);
+            return back()->withInput()->with('danger', 'تعذر إضافة الخدمة الجديدة.');
+        }
+
+        return redirect()
+            ->route('admin.vip-services.catalog')
+            ->with('success', 'تمت إضافة الخدمة إلى الكتالوج بنجاح. ستظهر في تطبيق الموبايل إذا كانت مفعّلة.');
+    }
+
+    /**
+     * حذف الخدمة من القائمة أو أرشفتها عند وجود طلبات سابقة لحماية السجل المالي.
+     */
+    public function removeCatalogService($serviceType)
+    {
+        abort_unless(auth()->user() && auth()->user()->user_type === 'admin', 403);
+
+        $service = VipServiceCatalog::find($serviceType);
+        abort_unless($service, 404);
+
+        $hasOrders = VipServiceOrder::where('service_type', $serviceType)->exists();
+        $catalog = VipServiceCatalog::all();
+
+        if (!empty($service['is_custom']) && !$hasOrders) {
+            $catalog = array_values(array_filter($catalog, function ($item) use ($serviceType) {
+                return $item['service_type'] !== $serviceType;
+            }));
+            $message = 'تم حذف الخدمة من الكتالوج نهائياً؛ لم يكن لها أي طلب سابق.';
+        } else {
+            foreach ($catalog as &$item) {
+                if ($item['service_type'] === $serviceType) {
+                    $item['active'] = false;
+                    $item['archived'] = true;
+                }
+            }
+            unset($item);
+            $message = 'تمت أرشفة الخدمة وإخفاؤها من التطبيق مع الاحتفاظ بطلباتها السابقة.';
+        }
+
+        try {
+            VipServiceCatalog::save($catalog);
+        } catch (\Throwable $exception) {
+            Log::error('VIP service removal failed.', [
+                'admin_id' => auth()->id(),
+                'service_type' => $serviceType,
+                'message' => $exception->getMessage(),
+            ]);
+            return back()->with('danger', 'تعذر حذف الخدمة أو أرشفتها.');
+        }
+
+        return redirect()->route('admin.vip-services.catalog')->with('success', $message);
+    }
+
+    public function restoreCatalogService($serviceType)
+    {
+        abort_unless(auth()->user() && auth()->user()->user_type === 'admin', 403);
+
+        $catalog = VipServiceCatalog::all();
+        $found = false;
+        foreach ($catalog as &$item) {
+            if ($item['service_type'] === $serviceType) {
+                $item['active'] = true;
+                $item['archived'] = false;
+                $found = true;
+            }
+        }
+        unset($item);
+
+        abort_unless($found, 404);
+        VipServiceCatalog::save($catalog);
+
+        return redirect()->route('admin.vip-services.catalog')->with('success', 'تمت إعادة تفعيل الخدمة وإظهارها في التطبيق.');
+    }
+
+    private function parseFeatureLines($value): array
+    {
+        $lines = preg_split('/\r\n|\r|\n/', (string) $value) ?: [];
+        $features = [];
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line !== '') {
+                $features[] = $line;
+            }
+        }
+
+        return array_slice($features, 0, 30);
     }
 
     /**
