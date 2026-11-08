@@ -63,9 +63,11 @@
                 <div class="col-md-3">
                     <select class="form-control aiz-selectpicker" name="service_type" onchange="this.form.submit()">
                         <option value="">-- جميع أنواع الخدمات --</option>
-                        <option value="highlight_profile" {{ request('service_type') == 'highlight_profile' ? 'selected' : '' }}>نشر طلب مميز ($10)</option>
-                        <option value="direct_contact" {{ request('service_type') == 'direct_contact' ? 'selected' : '' }}>تواصل مباشر ($25)</option>
-                        <option value="special_matchmaking" {{ request('service_type') == 'special_matchmaking' ? 'selected' : '' }}>بحث خاص ($100)</option>
+                        @foreach($services as $service)
+                            <option value="{{ $service['service_type'] }}" {{ request('service_type') == $service['service_type'] ? 'selected' : '' }}>
+                                {{ $service['title_ar'] }} (${{ number_format($service['price'], 2) }})
+                            </option>
+                        @endforeach
                     </select>
                 </div>
 
@@ -110,17 +112,7 @@
                                 <span class="text-muted">عضو محذوف</span>
                             @endif
                         </td>
-                        <td>
-                            @if($order->service_type == 'highlight_profile')
-                                <span class="badge badge-inline badge-info">نشر طلب مميز</span>
-                            @elseif($order->service_type == 'direct_contact')
-                                <span class="badge badge-inline badge-warning">تواصل مباشر</span>
-                            @elseif($order->service_type == 'special_matchmaking')
-                                <span class="badge badge-inline badge-purple">بحث خاص</span>
-                            @else
-                                <span class="badge badge-inline badge-secondary">{{ $order->service_type }}</span>
-                            @endif
-                        </td>
+                        <td><span class="badge badge-inline badge-info">{{ $order->service_type_name }}</span></td>
                         <td class="font-weight-bold text-success">${{ number_format($order->amount, 2) }}</td>
                         <td><span class="badge badge-inline badge-outline-secondary">{{ strtoupper($order->payment_method ?? 'N/A') }}</span></td>
                         <td>

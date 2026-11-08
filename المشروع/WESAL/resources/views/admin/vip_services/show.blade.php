@@ -27,13 +27,8 @@
     $partnerExpectations = $specs['partner_expectations'] ?? '';
     $customRequirements  = $specs['custom_requirements'] ?? '';
     
-    // 3️⃣ ترجمة وتنسيق اسم الخدمة للعربية
-    $serviceNames = [
-        'highlight_profile'   => 'نشر طلب زواج مميز ($10)',
-        'direct_contact'      => 'تواصل مباشر خارج المنصة ($25)',
-        'special_matchmaking' => 'بحث وتوفيق خاص ($100)',
-    ];
-    $serviceTitle = $serviceNames[$order->service_type] ?? $order->service_type;
+    // اسم الخدمة مأخوذ من الكتالوج الحالي، بما فيه الخدمات المؤرشفة.
+    $serviceTitle = $order->service_type_name;
 
     // 4️⃣ ترجمة طريقة الدفع إلى اللغة العربية
     $paymentMethodNames = [
