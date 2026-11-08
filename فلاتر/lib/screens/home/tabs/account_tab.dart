@@ -17,6 +17,7 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import '../../../constants/colors.dart';
 
 import '../../../services/api_service.dart';
+import '../../../utils/package_catalog_utils.dart';
 import '../../../services/profile_cache_service.dart';
 import '../../../services/notification_service.dart';
 import '../../../models/member_profile_model.dart';
@@ -1450,44 +1451,11 @@ class _SubscriptionsModalContentState
     super.dispose();
   }
 
-  String _getTranslatedPackageName(String rawName, bool isArabic) {
-    final String clean = rawName.trim();
-    if (clean.isEmpty) return '';
-    if (!isArabic) {
-      final String lower = clean.toLowerCase();
-      if (lower.contains('أسبوعي') ||
-          lower.contains('اسبوعي') ||
-          lower.contains('weekly')) {
-        return 'Weekly Subscription';
-      } else if (lower.contains('شهري') ||
-          lower.contains('الشهري') ||
-          lower.contains('monthly')) {
-        return 'Monthly Subscription';
-      } else if (lower.contains('3') ||
-          lower.contains('ثلاث') ||
-          lower.contains('3-month')) {
-        return '3-Month Subscription';
-      } else if (lower.contains('سنوي') ||
-          lower.contains('السنوي') ||
-          lower.contains('yearly') ||
-          lower.contains('annual')) {
-        return 'Yearly Subscription';
-      } else if (lower.contains('أساسية') ||
-          lower.contains('اساسية') ||
-          lower.contains('basic')) {
-        return 'Basic Package';
-      } else if (lower.contains('vip') ||
-          lower.contains('ملكي') ||
-          lower.contains('royal')) {
-        return 'Royal VIP Package';
-      }
-    }
-    return rawName;
-  }
-
   Future<void> _loadSubscriptionData() async {
     try {
-      final pkgRes = await ApiService.getActivePackages();
+      final pkgRes = await ApiService.getActivePackages(
+        lang: widget.isArabic ? 'ar' : 'en',
+      );
       final methods = await ApiService.getManualPaymentMethods();
       final profile = await ApiService.getCurrentUserProfile();
 
@@ -1507,7 +1475,9 @@ class _SubscriptionsModalContentState
       if (mounted) {
         setState(() {
           _isFreeFemale = (pkgRes['is_free'] == true) || isFemaleUser;
-          _packages = (pkgRes['data'] is List) ? pkgRes['data'] : [];
+          _packages = PackageCatalogUtils.sortPackages(
+            pkgRes['data'] is List ? pkgRes['data'] as List : const [],
+          );
           final serverCurrencySymbol = pkgRes['currency_symbol']?.toString().trim();
           if (serverCurrencySymbol != null && serverCurrencySymbol.isNotEmpty) {
             _currencySymbol = serverCurrencySymbol;
@@ -1566,8 +1536,7 @@ class _SubscriptionsModalContentState
                 ? profile.basicInfo.packageName
                 : (widget.isArabic ? 'الباقة المميزة' : 'Active Package');
 
-            _activePackageName =
-                _getTranslatedPackageName(rawName, widget.isArabic);
+            _activePackageName = rawName;
             _remainingViewersQuota = profile.basicInfo.remainingProfileViewers;
           }
         }
@@ -2052,9 +2021,12 @@ class _SubscriptionsModalContentState
           ? (defaultPkg['price'] as num).toDouble()
           : (double.tryParse(defaultPkg['price']?.toString() ?? '0') ?? 0.0);
 
-      final String rawName =
-          defaultPkg['name']?.toString() ?? _activePackageName;
-      final String name = _getTranslatedPackageName(rawName, widget.isArabic);
+      final String packageName = PackageCatalogUtils.displayName(
+        Map<String, dynamic>.from(defaultPkg as Map),
+        isArabic: widget.isArabic,
+      );
+      final String name =
+          packageName.isNotEmpty ? packageName : _activePackageName;
 
       setState(() {
         _selectedPackageId = id;
@@ -2390,8 +2362,7 @@ class _SubscriptionsModalContentState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _getTranslatedPackageName(
-                          _activePackageName, widget.isArabic),
+                      _activePackageName,
                       style: const TextStyle(
                         color: AppColors.textDark,
                         fontSize: 16,
@@ -2545,10 +2516,19 @@ class _SubscriptionsModalContentState
                         : (int.tryParse(pkg['package_id']?.toString() ?? '0') ??
                             0)));
 
-            final String rawPkgName = pkg['name']?.toString() ??
-                (widget.isArabic ? 'باقة' : 'Package');
-            final String name =
-                _getTranslatedPackageName(rawPkgName, widget.isArabic);
+            final Map<String, dynamic> packageData =
+                Map<String, dynamic>.from(pkg as Map);
+            final String name = PackageCatalogUtils.displayName(
+              packageData,
+              isArabic: widget.isArabic,
+            );
+            final String rawPkgName = name.isNotEmpty
+                ? name
+                : (widget.isArabic ? 'باقة' : 'Package');
+            final String description = PackageCatalogUtils.displayDescription(
+              packageData,
+              isArabic: widget.isArabic,
+            );
 
             final double price = (pkg['price'] is num)
                 ? (pkg['price'] as num).toDouble()
@@ -2706,6 +2686,19 @@ class _SubscriptionsModalContentState
                         ),
                       ],
                     ),
+                    if (description.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Text(
+                          description,
+                          style: const TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 12,
+                            height: 1.5,
+                            fontFamily: 'Cairo',
+                          ),
+                        ),
+                      ),
                     const Divider(
                         color: AppColors.lineColor, height: 20),
                     _buildPackageFeatureRow(
