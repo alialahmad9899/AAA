@@ -40,6 +40,8 @@ jobs:
             "المشروع/WESAL/app/Http/Resources/ChatThreadResource.php"
             "المشروع/WESAL/app/Http/Resources/Chat/ChatViewResource.php"
             "المشروع/WESAL/app/Http/Controllers/Api/PackageController.php"
+            "المشروع/WESAL/app/Http/Controllers/PackagePaymentController.php"
+            "المشروع/WESAL/routes/admin.php"
             "المشروع/WESAL/app/Http/Controllers/Api/Payment/PaymentTypesController.php"
             "المشروع/WESAL/app/Http/Controllers/Api/Payment/StripeController.php"
             "المشروع/WESAL/app/Http/Controllers/Api/VipServiceApiController.php"

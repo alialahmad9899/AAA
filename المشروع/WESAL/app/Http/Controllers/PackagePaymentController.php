@@ -428,6 +428,9 @@ class PackagePaymentController extends Controller
                 if ((int) $payment->user_id !== (int) $user->id) {
                     throw new \RuntimeException('PAYMENT_OWNER_CHANGED');
                 }
+                if ($payment->payment_method !== 'manual_payment') {
+                    throw new \RuntimeException('PAYMENT_NOT_MANUAL');
+                }
                 if ($payment->payment_status !== 'Due') {
                     throw new \RuntimeException('PAYMENT_ALREADY_PROCESSED');
                 }
@@ -472,6 +475,10 @@ class PackagePaymentController extends Controller
                 flash(translate('This payment request has already been processed.'))->warning();
                 return back();
             }
+            if ($exception->getMessage() === 'PAYMENT_NOT_MANUAL') {
+                flash(translate('Only manual payment requests can be approved here.'))->warning();
+                return back();
+            }
             Log::error('Manual subscription payment approval failed.', [
                 'payment_id' => $id,
                 'message' => $exception->getMessage(),
@@ -504,26 +511,65 @@ class PackagePaymentController extends Controller
 
     public function manual_payment_reject(Request $request, $id)
     {
-        $request->validate(['reject_reason' => ['required', 'string', 'max:1000']]);
+        $validated = $request->validate([
+            'reject_reason' => ['required', 'string', 'max:1000'],
+        ]);
+        $rejectionReason = trim($validated['reject_reason']);
 
         try {
-            $payment = DB::transaction(function () use ($request, $id) {
+            $payment = DB::transaction(function () use ($rejectionReason, $id) {
                 $paymentReference = PackagePayment::select('user_id')->whereKey($id)->firstOrFail();
                 $user = User::whereKey($paymentReference->user_id)->lockForUpdate()->firstOrFail();
                 $payment = PackagePayment::whereKey($id)->lockForUpdate()->firstOrFail();
+
                 if ((int) $payment->user_id !== (int) $user->id) {
                     throw new \RuntimeException('PAYMENT_OWNER_CHANGED');
+                }
+                if ($payment->payment_method !== 'manual_payment') {
+                    throw new \RuntimeException('PAYMENT_NOT_MANUAL');
                 }
                 if ($payment->payment_status !== 'Due') {
                     throw new \RuntimeException('PAYMENT_ALREADY_PROCESSED');
                 }
+
+                // Preserve the member's note; keep the admin decision separate.
+                $paymentMetadata = json_decode((string) $payment->payment_details, true);
+                if (!is_array($paymentMetadata)) {
+                    $paymentMetadata = trim((string) $payment->payment_details) !== ''
+                        ? ['previous_details' => (string) $payment->payment_details]
+                        : [];
+                }
+                $paymentMetadata['admin_review'] = [
+                    'status' => 'rejected',
+                    'reason' => $rejectionReason,
+                    'reviewed_by' => auth()->id(),
+                    'reviewed_at' => now()->toIso8601String(),
+                ];
+
+                $payment->payment_details = json_encode(
+                    $paymentMetadata,
+                    JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE
+                );
                 $payment->payment_status = 'Rejected';
-                $payment->custom_payment_details = $request->reject_reason;
                 $payment->save();
+
                 return $payment;
             });
         } catch (\Throwable $exception) {
-            flash(translate('This payment request has already been processed.'))->warning();
+            if ($exception->getMessage() === 'PAYMENT_ALREADY_PROCESSED') {
+                flash(translate('This payment request has already been processed.'))->warning();
+                return back();
+            }
+            if ($exception->getMessage() === 'PAYMENT_NOT_MANUAL') {
+                flash(translate('Only manual payment requests can be rejected here.'))->warning();
+                return back();
+            }
+
+            Log::error('Manual subscription payment rejection failed.', [
+                'payment_id' => $id,
+                'message' => $exception->getMessage(),
+            ]);
+            flash(translate('The payment could not be rejected. No changes were committed.'))->error();
             return back();
         }
 
@@ -531,7 +577,7 @@ class PackagePaymentController extends Controller
         $package = Package::withTrashed()->find($payment->package_id);
         if ($user) {
             $packageName = $package ? $package->name : 'الباقة المطلوبة';
-            $message = 'عذراً، تم رفض طلب الدفع الخاص بباقة ' . $packageName . '. السبب: ' . $request->reject_reason;
+            $message = 'عذراً، تم رفض طلب الدفع الخاص بباقة ' . $packageName . '. السبب: ' . $rejectionReason;
             SubscriptionNotificationService::send(
                 $user,
                 'payment_rejected',

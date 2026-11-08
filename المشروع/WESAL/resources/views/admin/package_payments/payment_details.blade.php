@@ -4,6 +4,12 @@
 </div>
 
 <div class="modal-body" dir="rtl" style="text-align: right;">
+  @php
+      $paymentMetadata = json_decode((string) $package_payment->payment_details, true);
+      $adminRejectionReason = is_array($paymentMetadata)
+          ? data_get($paymentMetadata, 'admin_review.reason')
+          : null;
+  @endphp
   <table class="table table-bordered">
         <tbody>
             <tr>
@@ -33,8 +39,14 @@
             </tr>
             <tr>
                 <th>ملاحظات العضو</th>
-                <td>{{ $package_payment->custom_payment_details ?? 'لا يوجد ملاحظات' }}</td>
+                <td>{{ $package_payment->custom_payment_details ?: 'لا توجد ملاحظات' }}</td>
             </tr>
+            @if($package_payment->payment_status == 'Rejected' && !empty($adminRejectionReason))
+                <tr>
+                    <th class="text-danger">سبب الرفض الإداري</th>
+                    <td class="text-danger">{{ $adminRejectionReason }}</td>
+                </tr>
+            @endif
         </tbody>
   </table>
 </div>
@@ -42,9 +54,12 @@
 {{-- أزرار الإجراء (القبول والرفض) --}}
 <div class="modal-footer" id="action-buttons">
     @if($package_payment->payment_status == 'Due')
-      <a href="{{ route('manual_payment_accept', $package_payment->id) }}" class="btn btn-sm btn-success">
-          <i class="las la-check-circle"></i> قبول وتفعيل الباقة
-      </a>
+      <form action="{{ route('manual_payment_accept', $package_payment->id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('هل تريد تأكيد الحوالة وتفعيل الباقة؟');">
+          @csrf
+          <button type="submit" class="btn btn-sm btn-success">
+              <i class="las la-check-circle"></i> قبول وتفعيل الباقة
+          </button>
+      </form>
       <button type="button" class="btn btn-sm btn-danger" onclick="showRejectForm()">
           <i class="las la-times-circle"></i> رفض الحوالة
       </button>
