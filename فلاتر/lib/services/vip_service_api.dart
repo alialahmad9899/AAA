@@ -28,98 +28,6 @@ class VipServiceApi {
     return response;
   }
 
-  /// 🟢 القائمة المعتمدة للخدمات الـ 3 بالمزايا المتاحة فقط
-  static final List<Map<String, dynamic>> _defaultVipServices = [
-    {
-      'id': 1,
-      'service_type': 'highlight_profile',
-      'icon_key': 'campaign',
-      'allow_external_contact': false,
-      'show_special_thanks': false,
-      'title_ar': 'خدمة نشر طلب زواج مميّز – منصة وصال',
-      'title_en': 'Featured Marriage Proposal Service – Wesal',
-      'price': 10.00,
-      'currency': '\$',
-      'promo_ar':
-          '✨ فرصة أكبر لوصول طلبك إلى الأشخاص المناسبين، بطريقة مميزة وآمنة مع منصة وصال.',
-      'promo_en':
-          '✨ Higher reach for your proposal to suitable people in a safe and distinguished way.',
-      'included_ar': [
-        'منشور تفصيلي بمواصفاتك والشريك المطلوب على فيسبوك وتيك توك',
-        'إنتاج فيديو خاص ومميز يعرض طلبك بطريقة جذابة',
-        'نشر رابط بروفايلك للوصول المباشر والتواصل الآمن داخل التطبيق',
-        'الحفاظ على الخصوصية الكاملة وتأمين بياناتك الشخصية'
-      ],
-      'included_en': [
-        'Detailed post on Wesal Facebook and TikTok pages',
-        'Custom video creation showcasing your proposal',
-        'Direct profile link for safe in-app messaging',
-        'Full privacy & profile protection'
-      ],
-    },
-    {
-      'id': 2,
-      'service_type': 'special_matchmaking',
-      'icon_key': 'user_search',
-      'allow_external_contact': true,
-      'show_special_thanks': true,
-      'title_ar': 'خدمة البحث الخاص عن شريك الحياة – منصة وصال',
-      'title_en': 'Custom Partner Search Service – Wesal',
-      'price': 100.00,
-      'currency': '\$',
-      'promo_ar':
-          '✨ أنت تحدد مواصفاتك، ونحن نتولى مهمة البحث! فريق وصال يتولى البحث عن الشريك المناسب لك.',
-      'promo_en':
-          '✨ You specify your expectations, and our team handles the personalized search for you!',
-      'included_ar': [
-        'بحث مخصص ويدوي نيابة عنك بواسطة فريق منصة وصال',
-        'البحث الشامل في قاعدة بيانات المشتركين والمهتمين بالزواج',
-        'ربط مباشر وآمن وتنسيق التواصل بين الطرفين داخل التطبيق',
-        'خصوصية تامة وشديدة طوال فترة البحث والدراسة'
-      ],
-      'included_en': [
-        'Manual dedicated search by Wesal matchmaking team',
-        'Deep searching through entire registered user database',
-        'Direct safe connection and coordination inside the app',
-        '100% strict privacy protection throughout search'
-      ],
-    },
-    {
-      'id': 3,
-      'service_type': 'direct_contact',
-      'icon_key': 'message',
-      'allow_external_contact': true,
-      'show_special_thanks': false,
-      'title_ar': 'خدمة التواصل المباشر خارج المنصة – منصة وصال',
-      'title_en': 'Direct External Contact Service – Wesal',
-      'price': 25.00,
-      'currency': '\$',
-      'promo_ar':
-          '✨ وسّع فرصك في العثور على شريك الحياة المناسب، واجعل طلبك يصل للمزيد عبر الواتساب! ❤️',
-      'promo_en':
-          '✨ Expand your chances of finding the right partner through direct external contact! ❤️',
-      'included_ar': [
-        'منشور تفصيلي وفيديو مخصص على صفحات وصال (فيسبوك وتيك توك)',
-        'نشر رابط بروفايلك الشخصي على المنصة',
-        'إتاحة التواصل المباشر خارج التطبيق عبر الواتساب للمهتمين',
-        'التحكم الكامل بأسلوب التواصل واختيار ما يناسبك'
-      ],
-      'included_en': [
-        'Detailed post and video on Wesal social channels',
-        'Attaching your personal profile link',
-        'Allowing direct external WhatsApp contact for interested users',
-        'Full control over your preferred contact method'
-      ],
-    },
-  ];
-
-  /// 🟢 دالة مساعدة لإنشاء نسخة جديدة من الخدمات الافتراضية لمنع التعديل المباشر
-  static List<Map<String, dynamic>> _getCopyOfDefaultServices() {
-    return _defaultVipServices.map((service) {
-      return Map<String, dynamic>.from(service);
-    }).toList();
-  }
-
   static Future<Map<String, String>> _getHeaders({String? lang}) async {
     final token = await ApiService.getToken();
     final prefs = await SharedPreferences.getInstance();
@@ -135,71 +43,109 @@ class VipServiceApi {
     };
   }
 
-  /// 🟢 1. جلب قائمة الخدمات الإضافية VIP
+  /// تحليل استجابة كتالوج VIP دون إدخال بيانات محلية بديلة.
+  /// القائمة الفارغة استجابة صحيحة إذا قرر الأدمن إيقاف جميع الخدمات.
+  @visibleForTesting
+  static Map<String, dynamic> parseServicesListResponse({
+    required int statusCode,
+    required String body,
+  }) {
+    Map<String, dynamic> failure(String message) => {
+          'success': false,
+          'data': <dynamic>[],
+          'message': message,
+          'status_code': statusCode,
+        };
+
+    dynamic decoded;
+    try {
+      decoded = jsonDecode(body);
+    } catch (_) {
+      return failure('استجابة خادم خدمات VIP غير مفهومة (HTTP $statusCode).');
+    }
+
+    if (statusCode < 200 || statusCode >= 300) {
+      final serverMessage = decoded is Map
+          ? (decoded['message'] ?? decoded['error'] ?? '').toString().trim()
+          : '';
+      if (serverMessage.isNotEmpty) return failure(serverMessage);
+      if (statusCode == 401 || statusCode == 403) {
+        return failure('تعذر التحقق من صلاحية الوصول إلى خدمات VIP (HTTP $statusCode).');
+      }
+      return failure('تعذر تحميل خدمات VIP من الخادم (HTTP $statusCode).');
+    }
+
+    List<dynamic>? extractedList;
+    if (decoded is List) {
+      extractedList = decoded;
+    } else if (decoded is Map) {
+      final envelope = Map<String, dynamic>.from(decoded);
+      if (!_isSuccessfulResponse(statusCode, envelope)) {
+        final serverMessage =
+            (envelope['message'] ?? envelope['error'] ?? '').toString().trim();
+        return failure(serverMessage.isNotEmpty
+            ? serverMessage
+            : 'رفض الخادم تحميل قائمة خدمات VIP.');
+      }
+
+      if (envelope['data'] is List) {
+        extractedList = envelope['data'] as List<dynamic>;
+      } else if (envelope['result'] is List) {
+        extractedList = envelope['result'] as List<dynamic>;
+      }
+    }
+
+    if (extractedList == null) {
+      return failure('لم تصل قائمة خدمات VIP بصيغة صحيحة من الخادم.');
+    }
+
+    final services = <Map<String, dynamic>>[];
+    for (final item in extractedList) {
+      if (item is! Map) {
+        return failure('تحتوي استجابة خدمات VIP على عنصر غير صالح.');
+      }
+      services.add(Map<String, dynamic>.from(item));
+    }
+
+    return {'success': true, 'data': services};
+  }
+
+  /// جلب قائمة الخدمات مباشرة من الخادم؛ لا نعرض قائمة ثابتة عند فشل الاتصال.
   static Future<Map<String, dynamic>> getServicesList({String? lang}) async {
     try {
       final headers = await _getHeaders(lang: lang);
-      final Uri url = Uri.parse('${ApiService.baseUrl}/vip-services/list');
+      headers['Cache-Control'] = 'no-cache, no-store, max-age=0';
+      headers['Pragma'] = 'no-cache';
+
+      final baseUrl = Uri.parse('${ApiService.baseUrl}/vip-services/list');
+      final url = baseUrl.replace(queryParameters: {
+        ...baseUrl.queryParameters,
+        '_ts': DateTime.now().microsecondsSinceEpoch.toString(),
+      });
 
       final response =
           await http.get(url, headers: headers).timeout(_timeoutDuration);
+      final result = parseServicesListResponse(
+        statusCode: response.statusCode,
+        body: response.body,
+      );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final dynamic decoded = jsonDecode(response.body);
-        List<dynamic>? extractedList;
-
-        if (decoded is List) {
-          extractedList = decoded;
-        } else if (decoded is Map<String, dynamic> &&
-            _isSuccessfulResponse(response.statusCode, decoded)) {
-          if (decoded['data'] is List) {
-            extractedList = decoded['data'] as List<dynamic>;
-          } else if (decoded['result'] is List) {
-            extractedList = decoded['result'] as List<dynamic>;
-          }
-        }
-
-        // A valid empty list is an intentional admin choice, not an API failure.
-        // Only fall back to local defaults when the request or response is invalid.
-        if (extractedList != null) {
-          final List<Map<String, dynamic>> formattedList = [];
-
-          for (final item in extractedList) {
-            if (item is Map) {
-              final service = Map<String, dynamic>.from(item);
-              final defaultMatch = _defaultVipServices.firstWhere(
-                (defaultService) =>
-                    defaultService['service_type'] == service['service_type'],
-                orElse: () => <String, dynamic>{},
-              );
-
-              if (defaultMatch.isNotEmpty) {
-                service['promo_ar'] ??= defaultMatch['promo_ar'];
-                service['promo_en'] ??= defaultMatch['promo_en'];
-                service['included_ar'] ??= defaultMatch['included_ar'];
-                service['included_en'] ??= defaultMatch['included_en'];
-                service['title_ar'] ??= defaultMatch['title_ar'];
-                service['title_en'] ??= defaultMatch['title_en'];
-              }
-              formattedList.add(service);
-            }
-          }
-
-          return {'success': true, 'data': formattedList};
-        }
+      if (result['success'] != true && kDebugMode) {
+        debugPrint('❌ [VIP catalogue] ${result['message']}');
       }
+      return result;
     } catch (e) {
       if (kDebugMode) {
         debugPrint('❌ [API ERROR getServicesList]: $e');
       }
+      return {
+        'success': false,
+        'data': <dynamic>[],
+        'message': e is TimeoutException
+            ? 'انتهت مهلة الاتصال بخدمات VIP. حاول مجدداً.'
+            : 'تعذر الاتصال بخادم خدمات VIP. تحقق من الإنترنت ثم أعد المحاولة.',
+      };
     }
-
-    return {
-      'success': false,
-      'is_fallback': true,
-      'data': _getCopyOfDefaultServices(),
-      'message': 'تعذر تحديث قائمة الخدمات من السيرفر',
-    };
   }
 
   /// 🟢 2. جلب طلبات الخدمات الإضافية للمستخدم
