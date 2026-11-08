@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Setting;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class VipServiceCatalog
 {
@@ -223,16 +224,39 @@ class VipServiceCatalog
 
     public static function save(array $services): void
     {
-        $setting = Setting::where('type', self::SETTING_KEY)->first();
-        if (!$setting) {
-            $setting = new Setting();
-            $setting->type = self::SETTING_KEY;
-        }
-        $setting->value = json_encode(
+        $payload = json_encode(
             array_values($services),
             JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE
         );
-        $setting->save();
+
+        if (!is_string($payload)) {
+            throw new \RuntimeException('Unable to encode VIP service catalogue.');
+        }
+
+        DB::transaction(function () use ($payload) {
+            $setting = Setting::where('type', self::SETTING_KEY)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$setting) {
+                $setting = new Setting();
+                $setting->type = self::SETTING_KEY;
+            }
+
+            $setting->value = $payload;
+            if ($setting->save() !== true) {
+                throw new \RuntimeException('VIP service catalogue was not saved.');
+            }
+        });
+
+        // Flush after the transaction commits, then verify the persisted value.
         Cache::forget('settings');
+        $storedPayload = Setting::where('type', self::SETTING_KEY)->value('value');
+
+        if (!is_string($storedPayload)
+            || !hash_equals(hash('sha256', $payload), hash('sha256', $storedPayload))) {
+            Cache::forget('settings');
+            throw new \RuntimeException('VIP service catalogue read-back verification failed.');
+        }
     }
 }
