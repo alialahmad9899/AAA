@@ -1,6 +1,10 @@
 @extends('admin.layouts.app')
 @section('content')
 
+<div class="alert alert-info mt-2 mb-3">
+    <strong><i class="las la-info-circle"></i> مزامنة التطبيق:</strong>
+    الباقات الموقوفة تبقى هنا في لوحة الإدارة حتى تستطيع إعادة تفعيلها، لكنها لا تظهر في قائمة الباقات داخل التطبيق. ترتيب التطبيق مستقل عن ترتيب السجلات.
+</div>
 <div class="alert" style="color: #004085;background-color: #cce5ff;border-color: #b8daff;margin-bottom:0;margin-top:10px;">
         <strong class="fs-15">{{ translate('Scheduled Expiration Task')}}:</strong>
         <br>
@@ -36,7 +40,7 @@
                 <table class="table aiz-table mb-0">
                     <thead>
                         <tr>
-                            <th>#</th>
+                            <th><i class="las la-sort-numeric-down"></i> ترتيب التطبيق</th>
                             <th>{{translate('Image')}}</th>
                             <th>{{translate('Name')}}</th>
                             <th data-breakpoints="md">{{translate('Price')}}</th>
@@ -49,11 +53,16 @@
                 <tbody>
                 @foreach($packages as $key => $package)
                 <tr>
-                  <td>{{ ($key+1) + ($packages->currentPage() - 1)*$packages->perPage() }}</td>
+                  <td><span class="badge badge-inline badge-light px-3 py-2"><i class="las la-sort-numeric-down mr-1"></i>{{ $package->display_order }}</span></td>
                     <td>
                         <img class="img-md" src="{{ uploaded_asset($package->image) }}" height="45px" alt="{{translate('photo')}}">
                     </td>
-                    <td>{{ $package->name }}</td>
+                    <td>
+                        <strong>{{ $package->name }}</strong>
+                        @if(!empty($package->display_description))
+                            <small class="text-muted d-block">{{ \Illuminate\Support\Str::limit($package->display_description, 110) }}</small>
+                        @endif
+                    </td>
                     <td>{{ $package->price }}</td>
                     
                     {{-- البيانات الخاصة بحصة الرسائل --}}
@@ -104,21 +113,31 @@
 @section('script')
     <script>
         function update_status(el) {
-            if (el.checked) {
-                var status = 1;
-            } else {
-                var status = 0;
-            }
+            var requestedStatus = el.checked ? 1 : 0;
+            var previousStatus = !el.checked;
+            el.disabled = true;
+
             $.post('{{ route('packages.update_status') }}', {
                 _token: '{{ csrf_token() }}',
                 id: el.value,
-                status: status
-            }, function (data) {
-                if (data == 1) {
-                    location.reload();
-                } else {
-                    AIZ.plugins.notify('danger', 'Something went wrong');
+                status: requestedStatus
+            }).done(function (data) {
+                if (data && data.result === true && Number(data.active) === requestedStatus) {
+                    AIZ.plugins.notify('success', data.message || 'تم تحديث حالة الباقة');
+                    window.location.reload();
+                    return;
                 }
+
+                el.checked = previousStatus;
+                el.disabled = false;
+                AIZ.plugins.notify('danger', (data && data.message) || 'تعذر تحديث حالة الباقة');
+            }).fail(function (xhr) {
+                el.checked = previousStatus;
+                el.disabled = false;
+                var message = xhr.responseJSON && xhr.responseJSON.message
+                    ? xhr.responseJSON.message
+                    : 'تعذر الاتصال بالخادم؛ لم يتم تغيير حالة الباقة';
+                AIZ.plugins.notify('danger', message);
             });
         }
     </script>
