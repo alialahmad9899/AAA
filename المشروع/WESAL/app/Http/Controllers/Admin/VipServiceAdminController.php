@@ -250,6 +250,8 @@ class VipServiceAdminController extends Controller
             'services' => ['required', 'array', 'min:1', 'max:100'],
             'services.*.service_type' => ['required', 'string', 'regex:/^[a-z][a-z0-9_]{2,59}$/'],
             'services.*.active' => ['nullable', 'in:0,1'],
+            'services.*.allow_external_contact' => ['nullable', 'in:0,1'],
+            'services.*.show_special_thanks' => ['nullable', 'in:0,1'],
             'services.*.price' => ['required', 'numeric', 'min:0.01', 'max:100000'],
             'services.*.title_ar' => ['required', 'string', 'max:180'],
             'services.*.title_en' => ['nullable', 'string', 'max:180'],
@@ -284,6 +286,8 @@ class VipServiceAdminController extends Controller
         foreach ($currentServices as $service) {
             $item = $inputByType[$service['service_type']];
             $service['active'] = ($item['active'] ?? '0') === '1';
+            $service['allow_external_contact'] = ($item['allow_external_contact'] ?? '0') === '1';
+            $service['show_special_thanks'] = ($item['show_special_thanks'] ?? '0') === '1';
             $service['price'] = (float) $item['price'];
             $service['title_ar'] = trim($item['title_ar']);
             $service['title_en'] = trim((string) ($item['title_en'] ?? '')) ?: $service['title_en'];
@@ -332,6 +336,8 @@ class VipServiceAdminController extends Controller
             'icon_key' => ['required', 'string', 'in:' . implode(',', array_keys(VipServiceCatalog::iconOptions()))],
             'sort_order' => ['required', 'integer', 'min:0', 'max:9999'],
             'active' => ['nullable', 'in:0,1'],
+            'allow_external_contact' => ['nullable', 'in:0,1'],
+            'show_special_thanks' => ['nullable', 'in:0,1'],
         ]);
 
         $catalog = VipServiceCatalog::all();
@@ -371,6 +377,8 @@ class VipServiceAdminController extends Controller
             'included_en' => $includedEn,
             'icon_key' => $validated['icon_key'],
             'sort_order' => (int) $validated['sort_order'],
+            'allow_external_contact' => ($validated['allow_external_contact'] ?? '0') === '1',
+            'show_special_thanks' => ($validated['show_special_thanks'] ?? '0') === '1',
             'active' => ($validated['active'] ?? '0') === '1',
             'archived' => false,
             'is_custom' => true,

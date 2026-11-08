@@ -59,6 +59,8 @@ class VipServiceCatalog
                 'icon' => static_asset('assets/img/vip/highlight.png'),
                 'icon_key' => 'campaign',
                 'sort_order' => 10,
+                'allow_external_contact' => false,
+                'show_special_thanks' => false,
                 'active' => true,
                 'archived' => false,
                 'is_custom' => false,
@@ -89,6 +91,8 @@ class VipServiceCatalog
                 'icon' => static_asset('assets/img/vip/matchmaking.png'),
                 'icon_key' => 'user_search',
                 'sort_order' => 20,
+                'allow_external_contact' => true,
+                'show_special_thanks' => true,
                 'active' => true,
                 'archived' => false,
                 'is_custom' => false,
@@ -119,6 +123,8 @@ class VipServiceCatalog
                 'icon' => static_asset('assets/img/vip/social.png'),
                 'icon_key' => 'message',
                 'sort_order' => 30,
+                'allow_external_contact' => true,
+                'show_special_thanks' => false,
                 'active' => true,
                 'archived' => false,
                 'is_custom' => false,
@@ -181,6 +187,8 @@ class VipServiceCatalog
             ? $service['icon_key']
             : 'star';
         $service['sort_order'] = (int) ($service['sort_order'] ?? 100);
+        $service['allow_external_contact'] = filter_var($service['allow_external_contact'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $service['show_special_thanks'] = filter_var($service['show_special_thanks'] ?? false, FILTER_VALIDATE_BOOLEAN);
         $service['active'] = filter_var($service['active'] ?? true, FILTER_VALIDATE_BOOLEAN);
         $service['archived'] = filter_var($service['archived'] ?? false, FILTER_VALIDATE_BOOLEAN);
         $service['is_custom'] = filter_var($service['is_custom'] ?? false, FILTER_VALIDATE_BOOLEAN);

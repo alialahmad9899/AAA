@@ -143,7 +143,22 @@
                     <div class="col-md-4 form-group">
                         <label>السعر بالدولار الأمريكي *</label>
                         <input type="number" name="services[{{ $index }}][price]" class="form-control" min="0.01" max="100000" step="0.01" required value="{{ old('services.'.$index.'.price', $service['price']) }}">
-                        <div class="mt-2"><label class="mb-0"><input type="checkbox" name="services[{{ $index }}][active]" value="1" {{ $serviceActive ? 'checked' : '' }} {{ $serviceArchived ? 'disabled' : '' }}> إظهار الخدمة وقبول طلبات جديدة</label></div>
+                        <div class="mt-2">
+                            <label class="d-block mb-1">
+                                <input type="checkbox" name="services[{{ $index }}][active]" value="1" {{ $serviceActive ? 'checked' : '' }} {{ $serviceArchived ? 'disabled' : '' }}>
+                                إظهار الخدمة وقبول طلبات جديدة
+                            </label>
+                            <input type="hidden" name="services[{{ $index }}][allow_external_contact]" value="0">
+                            <label class="d-block mb-1">
+                                <input type="checkbox" name="services[{{ $index }}][allow_external_contact]" value="1" {{ !empty($service['allow_external_contact']) ? 'checked' : '' }} {{ $serviceArchived ? 'disabled' : '' }}>
+                                إظهار حقول التواصل الخارجي (واتساب / رابط)
+                            </label>
+                            <input type="hidden" name="services[{{ $index }}][show_special_thanks]" value="0">
+                            <label class="d-block mb-0">
+                                <input type="checkbox" name="services[{{ $index }}][show_special_thanks]" value="1" {{ !empty($service['show_special_thanks']) ? 'checked' : '' }} {{ $serviceArchived ? 'disabled' : '' }}>
+                                عرض بروتوكول الشكر الخاص بعد تسجيل الطلب
+                            </label>
+                        </div>
                     </div>
                     <div class="col-md-8 form-group">
                         <label>التفاصيل المختصرة بالإنجليزية</label>
@@ -226,7 +241,14 @@
                     <label>الأيقونة الرئيسية</label>
                     <select name="icon_key" class="form-control" required>@foreach($iconOptions as $key => $label)<option value="{{ $key }}" {{ old('icon_key', 'star') === $key ? 'selected' : '' }}>{{ $label }}</option>@endforeach</select>
                     <label class="mt-2">ترتيب الظهور</label><input type="number" name="sort_order" class="form-control" min="0" max="9999" value="{{ old('sort_order', 40) }}" required>
-                    <div class="mt-2"><input type="hidden" name="active" value="0"><label><input type="checkbox" name="active" value="1" checked> تفعيل فور الإضافة</label></div>
+                    <div class="mt-2">
+                        <input type="hidden" name="active" value="0">
+                        <label class="d-block"><input type="checkbox" name="active" value="1" checked> تفعيل فور الإضافة</label>
+                        <input type="hidden" name="allow_external_contact" value="0">
+                        <label class="d-block"><input type="checkbox" name="allow_external_contact" value="1"> تتطلب وسيلة تواصل خارجية (واتساب / رابط)</label>
+                        <input type="hidden" name="show_special_thanks" value="0">
+                        <label class="d-block"><input type="checkbox" name="show_special_thanks" value="1"> عرض بروتوكول الشكر الخاص بعد الطلب</label>
+                    </div>
                 </div>
             </div>
             <div class="border-top pt-3 mt-2">
