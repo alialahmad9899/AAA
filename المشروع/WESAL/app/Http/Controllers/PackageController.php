@@ -17,8 +17,8 @@ class PackageController extends Controller
     public function __construct()
     {
         $this->middleware(['permission:show_packages'])->only('index');
-        $this->middleware(['permission:add_package'])->only('create');
-        $this->middleware(['permission:edit_package'])->only('edit');
+        $this->middleware(['permission:add_package'])->only(['create', 'store']);
+        $this->middleware(['permission:edit_package'])->only(['edit', 'update', 'update_status']);
         $this->middleware(['permission:delete_package'])->only('destroy');
 
         $this->package_rules = [
