@@ -35,6 +35,31 @@ void main() {
           'Custom English Package');
     });
 
+    test('uses configured benefits in the selected language', () {
+      const package = {
+        'features_ar': ['ميزة عربية أولى', 'ميزة عربية ثانية'],
+        'features_en': ['First English benefit'],
+      };
+
+      expect(
+        PackageCatalogUtils.displayFeatures(package, isArabic: true),
+        ['ميزة عربية أولى', 'ميزة عربية ثانية'],
+      );
+      expect(
+        PackageCatalogUtils.displayFeatures(package, isArabic: false),
+        ['First English benefit'],
+      );
+    });
+
+    test('falls back to the localized generic feature list', () {
+      const package = {'features': ['Shared benefit']};
+
+      expect(
+        PackageCatalogUtils.displayFeatures(package, isArabic: true),
+        ['Shared benefit'],
+      );
+    });
+
     test('uses the localized description', () {
       const package = {
         'description': 'Generic description',
