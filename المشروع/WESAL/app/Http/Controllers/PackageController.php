@@ -107,6 +107,8 @@ class PackageController extends Controller
             'name_en' => ['nullable', 'string', 'max:255'],
             'description_ar' => ['nullable', 'string', 'max:1500'],
             'description_en' => ['nullable', 'string', 'max:1500'],
+            'features_ar' => ['nullable', 'string', 'max:5000'],
+            'features_en' => ['nullable', 'string', 'max:5000'],
             'sort_order' => ['required', 'integer', 'min:0', 'max:9999'],
         ]);
         $messages = $this->package_messages;
@@ -141,6 +143,8 @@ class PackageController extends Controller
                     'name_en' => $request->input('name_en'),
                     'description_ar' => $request->input('description_ar'),
                     'description_en' => $request->input('description_en'),
+                    'features_ar' => $request->input('features_ar'),
+                    'features_en' => $request->input('features_en'),
                     'sort_order' => $request->input('sort_order'),
                 ]);
             });
@@ -191,6 +195,8 @@ class PackageController extends Controller
             'name_en' => ['nullable', 'string', 'max:255'],
             'description_ar' => ['nullable', 'string', 'max:1500'],
             'description_en' => ['nullable', 'string', 'max:1500'],
+            'features_ar' => ['nullable', 'string', 'max:5000'],
+            'features_en' => ['nullable', 'string', 'max:5000'],
             'sort_order' => ['required', 'integer', 'min:0', 'max:9999'],
         ]);
         $messages = $this->package_messages;
