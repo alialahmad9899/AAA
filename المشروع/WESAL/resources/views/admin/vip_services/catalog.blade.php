@@ -42,6 +42,25 @@
     </div>
 </div>
 
+@if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ session('success') }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="إغلاق"><span aria-hidden="true">&times;</span></button>
+    </div>
+@endif
+@if(session('danger'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ session('danger') }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="إغلاق"><span aria-hidden="true">&times;</span></button>
+    </div>
+@endif
+@if(session('warning'))
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        {{ session('warning') }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="إغلاق"><span aria-hidden="true">&times;</span></button>
+    </div>
+@endif
+
 <div class="row mb-4">
     <div class="col-md-4 mb-2"><div class="card border-0 shadow-sm h-100"><div class="card-body d-flex align-items-center"><div class="bg-soft-success rounded-circle p-3 mr-3"><i class="las la-check-circle text-success la-2x"></i></div><div><div class="text-muted small">الخدمات الظاهرة في التطبيق</div><div class="h3 mb-0">{{ $activeCount }}</div></div></div></div></div>
     <div class="col-md-4 mb-2"><div class="card border-0 shadow-sm h-100"><div class="card-body d-flex align-items-center"><div class="bg-soft-secondary rounded-circle p-3 mr-3"><i class="las la-layer-group text-secondary la-2x"></i></div><div><div class="text-muted small">إجمالي الخدمات</div><div class="h3 mb-0">{{ count($services) }}</div></div></div></div></div>
