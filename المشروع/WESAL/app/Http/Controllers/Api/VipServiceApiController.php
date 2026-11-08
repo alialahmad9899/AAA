@@ -266,25 +266,75 @@ class VipServiceApiController extends Controller
 
         $validator = Validator::make($request->all(), [
             'specifications' => 'required|array',
-            'specifications.contact_method' => 'nullable|string|in:whatsapp,facebook,instagram,telegram',
-            'specifications.country_code' => 'nullable|string',
-            'specifications.phone_number' => 'nullable|string',
-            'specifications.profile_link' => 'nullable|string',
-            'specifications.custom_requirements' => 'nullable|string',
+            'specifications.contact_method' => 'nullable|string|in:internal_app,whatsapp,facebook,instagram,telegram',
+            'specifications.country_code' => 'nullable|string|max:8',
+            'specifications.phone_number' => 'nullable|string|max:30',
+            'specifications.full_phone_number' => 'nullable|string|max:40',
+            'specifications.profile_link' => 'nullable|string|max:1000',
+            'specifications.custom_requirements' => 'nullable|string|max:5000',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['result' => false, 'message' => $validator->errors()->first()], 400);
         }
 
+        // The catalogue remains the source of truth for contact behaviour, even
+        // when an order was paid before its service was archived.
+        $service = VipServiceCatalog::find((string) $order->service_type);
+        if (!$service) {
+            return response()->json([
+                'result' => false,
+                'message' => 'تعذر العثور على إعدادات الخدمة المرتبطة بهذا الطلب.',
+            ], 422);
+        }
+
+        $allowExternalContact = !empty($service['allow_external_contact']);
+        $submittedSpecs = $request->input('specifications', []);
+        if ($allowExternalContact) {
+            $contactMethod = (string) ($submittedSpecs['contact_method'] ?? '');
+            if (!in_array($contactMethod, ['whatsapp', 'facebook', 'instagram', 'telegram'], true)) {
+                return response()->json([
+                    'result' => false,
+                    'message' => 'يرجى اختيار طريقة التواصل المطلوبة لهذه الخدمة.',
+                ], 422);
+            }
+
+            if ($contactMethod === 'whatsapp'
+                && trim((string) ($submittedSpecs['phone_number'] ?? '')) === '') {
+                return response()->json([
+                    'result' => false,
+                    'message' => 'يرجى إدخال رقم واتساب صالح لإكمال الطلب.',
+                ], 422);
+            }
+
+            if ($contactMethod !== 'whatsapp'
+                && trim((string) ($submittedSpecs['profile_link'] ?? '')) === '') {
+                return response()->json([
+                    'result' => false,
+                    'message' => 'يرجى إدخال رابط الحساب أو اسم المستخدم لإكمال الطلب.',
+                ], 422);
+            }
+        }
+
         $existingSpecs = is_array($order->specifications) ? $order->specifications : [];
-        
-        // دمج البيانات الجديدة والتأكد من وصول كافة تفاصيل التواصل للوحة التحكم
-        $newSpecs = array_merge($existingSpecs, $request->specifications, [
+
+        // Trust the catalogue flag, not a client-supplied has_direct_contact value.
+        $newSpecs = array_merge($existingSpecs, $submittedSpecs, [
+            'has_direct_contact' => $allowExternalContact,
             'profile_url' => url('/member-profile/' . $user->id),
             'user_full_name' => trim($user->first_name . ' ' . $user->last_name),
             'updated_at' => now()->toDateTimeString(),
         ]);
+
+        if (!$allowExternalContact) {
+            $newSpecs['contact_method'] = 'internal_app';
+            unset(
+                $newSpecs['country_code'],
+                $newSpecs['phone_number'],
+                $newSpecs['full_phone_number'],
+                $newSpecs['profile_link']
+            );
+        }
 
         $order->specifications = $newSpecs;
         $order->save();
