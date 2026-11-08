@@ -255,8 +255,10 @@ class VipServiceAdminController extends Controller
             'services.*.title_en' => ['nullable', 'string', 'max:180'],
             'services.*.promo_ar' => ['required', 'string', 'max:1500'],
             'services.*.promo_en' => ['nullable', 'string', 'max:1500'],
-            'services.*.included_ar_text' => ['nullable', 'string', 'max:5000'],
-            'services.*.included_en_text' => ['nullable', 'string', 'max:5000'],
+            'services.*.features' => ['nullable', 'array', 'max:30'],
+            'services.*.features.*.title_ar' => ['nullable', 'string', 'max:180'],
+            'services.*.features.*.title_en' => ['nullable', 'string', 'max:180'],
+            'services.*.features.*.icon_key' => ['nullable', 'string', 'in:' . implode(',', array_keys(VipServiceCatalog::iconOptions()))],
             'services.*.icon_key' => ['required', 'string', 'in:' . implode(',', array_keys(VipServiceCatalog::iconOptions()))],
             'services.*.sort_order' => ['required', 'integer', 'min:0', 'max:9999'],
         ]);
@@ -291,8 +293,7 @@ class VipServiceAdminController extends Controller
             $service['description'] = $service['promo_ar'];
             $service['icon_key'] = $item['icon_key'];
             $service['sort_order'] = (int) $item['sort_order'];
-            $service['included_ar'] = $this->parseFeatureLines($item['included_ar_text'] ?? '');
-            $service['included_en'] = $this->parseFeatureLines($item['included_en_text'] ?? '');
+            [$service['included_ar'], $service['included_en']] = $this->normaliseFeatureRows($item['features'] ?? []);
             $catalog[] = $service;
         }
 
@@ -324,8 +325,10 @@ class VipServiceAdminController extends Controller
             'price' => ['required', 'numeric', 'min:0.01', 'max:100000'],
             'promo_ar' => ['required', 'string', 'max:1500'],
             'promo_en' => ['nullable', 'string', 'max:1500'],
-            'included_ar_text' => ['nullable', 'string', 'max:5000'],
-            'included_en_text' => ['nullable', 'string', 'max:5000'],
+            'features' => ['nullable', 'array', 'max:30'],
+            'features.*.title_ar' => ['nullable', 'string', 'max:180'],
+            'features.*.title_en' => ['nullable', 'string', 'max:180'],
+            'features.*.icon_key' => ['nullable', 'string', 'in:' . implode(',', array_keys(VipServiceCatalog::iconOptions()))],
             'icon_key' => ['required', 'string', 'in:' . implode(',', array_keys(VipServiceCatalog::iconOptions()))],
             'sort_order' => ['required', 'integer', 'min:0', 'max:9999'],
             'active' => ['nullable', 'in:0,1'],
@@ -352,6 +355,7 @@ class VipServiceAdminController extends Controller
 
         $titleAr = trim($validated['title_ar']);
         $promoAr = trim($validated['promo_ar']);
+        [$includedAr, $includedEn] = $this->normaliseFeatureRows($validated['features'] ?? []);
         $catalog[] = [
             'id' => $nextId,
             'service_type' => $serviceType,
@@ -363,8 +367,8 @@ class VipServiceAdminController extends Controller
             'description' => $promoAr,
             'promo_ar' => $promoAr,
             'promo_en' => trim((string) ($validated['promo_en'] ?? '')),
-            'included_ar' => $this->parseFeatureLines($validated['included_ar_text'] ?? ''),
-            'included_en' => $this->parseFeatureLines($validated['included_en_text'] ?? ''),
+            'included_ar' => $includedAr,
+            'included_en' => $includedEn,
             'icon_key' => $validated['icon_key'],
             'sort_order' => (int) $validated['sort_order'],
             'active' => ($validated['active'] ?? '0') === '1',
@@ -452,18 +456,40 @@ class VipServiceAdminController extends Controller
         return redirect()->route('admin.vip-services.catalog')->with('success', 'تمت إعادة تفعيل الخدمة وإظهارها في التطبيق.');
     }
 
-    private function parseFeatureLines($value): array
+    /**
+     * تحويل صفوف المزايا إلى قائمتين متوافقتين مع نموذج Flutter الحالي.
+     * كل ميزة تحمل نصاً عربياً وإنجليزياً ومفتاح أيقونة خاصاً بها.
+     */
+    private function normaliseFeatureRows(array $rows): array
     {
-        $lines = preg_split('/\r\n|\r|\n/', (string) $value) ?: [];
-        $features = [];
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if ($line !== '') {
-                $features[] = $line;
+        $includedAr = [];
+        $includedEn = [];
+
+        foreach (array_slice($rows, 0, 30) as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $titleAr = trim((string) ($row['title_ar'] ?? ''));
+            $titleEn = trim((string) ($row['title_en'] ?? ''));
+            if ($titleAr === '' && $titleEn === '') {
+                continue;
+            }
+
+            $iconKey = (string) ($row['icon_key'] ?? 'star');
+            if (!array_key_exists($iconKey, VipServiceCatalog::iconOptions())) {
+                $iconKey = 'star';
+            }
+
+            if ($titleAr !== '') {
+                $includedAr[] = ['title' => $titleAr, 'icon_key' => $iconKey];
+            }
+            if ($titleEn !== '') {
+                $includedEn[] = ['title' => $titleEn, 'icon_key' => $iconKey];
             }
         }
 
-        return array_slice($features, 0, 30);
+        return [$includedAr, $includedEn];
     }
 
     /**
