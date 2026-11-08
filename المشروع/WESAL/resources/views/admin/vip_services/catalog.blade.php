@@ -21,7 +21,7 @@
     <div class="row align-items-center">
         <div class="col-md-8">
             <h1 class="h3">إدارة كتالوج خدمات VIP</h1>
-            <p class="text-muted mb-0">تحكم كامل بالخدمات التي تظهر في تطبيق وصال: التفاصيل والمزايا والأيقونة والسعر والترتيب.</p>
+            <p class="text-muted mb-0">تحكم كامل بالخدمات التي تظهر في تطبيق وصال: الاسم والتفاصيل والسعر والأيقونة والمزايا وترتيب كل بند.</p>
         </div>
         <div class="col-md-4 text-md-right mt-2 mt-md-0">
             <a href="{{ route('admin.vip-services.index') }}" class="btn btn-light">طلبات الخدمات</a>
@@ -37,27 +37,65 @@
 
 <div class="alert alert-info">
     <i class="las la-info-circle mr-1"></i>
-    تفاصيل ومزايا كل خدمة تظهر في التطبيق كما تُكتب هنا. الخدمة التي لديها طلبات سابقة تُؤرشف عند إلغائها حتى لا تضيع بيانات الطلبات.
+    كل ميزة تُحفظ كبند مستقل مع عنوان عربي وإنجليزي وأيقونة. الخدمة المؤرشفة تختفي من التطبيق، لكن تبقى بيانات الطلبات السابقة محفوظة.
 </div>
-
 @if($errors->any())
-<div class="alert alert-danger"><strong>يرجى مراجعة البيانات:</strong><ul class="mb-0 mt-2">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
+    <div class="alert alert-danger"><strong>يرجى مراجعة البيانات:</strong><ul class="mb-0 mt-2">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
 @endif
+
+<template id="vip-feature-row-template">
+    <div class="row align-items-end vip-feature-row border rounded p-2 mb-2">
+        <div class="col-md-5 form-group mb-2">
+            <label>الميزة بالعربية</label>
+            <input type="text" class="form-control" maxlength="180" data-feature-field="title_ar" placeholder="اكتب الميزة بالعربية">
+        </div>
+        <div class="col-md-5 form-group mb-2">
+            <label>Feature in English</label>
+            <input type="text" class="form-control" maxlength="180" data-feature-field="title_en" placeholder="Write the feature in English">
+        </div>
+        <div class="col-md-2 form-group mb-2">
+            <label>أيقونة البند</label>
+            <select class="form-control" data-feature-field="icon_key">
+                @foreach($iconOptions as $key => $label)
+                    <option value="{{ $key }}">{{ $label }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-12 text-right">
+            <button type="button" class="btn btn-sm btn-outline-danger" data-remove-feature><i class="las la-trash"></i> حذف هذا البند</button>
+        </div>
+    </div>
+</template>
 
 <form action="{{ route('admin.vip-services.catalog.update') }}" method="POST">
     @csrf
     @foreach($services as $index => $service)
         @php
-            $includedAr = implode("\n", $service['included_ar'] ?? []);
-            $includedEn = implode("\n", $service['included_en'] ?? []);
+            $arItems = $service['included_ar'] ?? [];
+            $enItems = $service['included_en'] ?? [];
+            $featureRows = [];
+            $featureCount = max(count($arItems), count($enItems));
+            for ($featureIndex = 0; $featureIndex < $featureCount; $featureIndex++) {
+                $arItem = $arItems[$featureIndex] ?? '';
+                $enItem = $enItems[$featureIndex] ?? '';
+                $featureRows[] = [
+                    'title_ar' => is_array($arItem) ? ($arItem['title'] ?? '') : $arItem,
+                    'title_en' => is_array($enItem) ? ($enItem['title'] ?? '') : $enItem,
+                    'icon_key' => is_array($arItem) ? ($arItem['icon_key'] ?? 'star') : 'star',
+                ];
+            }
             $serviceArchived = !empty($service['archived']);
             $serviceActive = !empty($service['active']) && !$serviceArchived;
         @endphp
+
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap">
                 <div class="d-flex align-items-center">
                     <span class="rounded-circle bg-soft-warning text-warning p-3 mr-3"><i class="las {{ $iconClasses[$service['icon_key']] ?? 'la-star' }} la-2x"></i></span>
-                    <div><h5 class="mb-1">{{ $service['title_ar'] ?: $service['service_type'] }}</h5><small class="text-muted">{{ $service['service_type'] }} · #{{ $service['id'] ?? '-' }}</small></div>
+                    <div>
+                        <h5 class="mb-1">{{ $service['title_ar'] ?: $service['service_type'] }}</h5>
+                        <small class="text-muted">{{ $service['service_type'] }} · #{{ $service['id'] ?? '-' }}</small>
+                    </div>
                 </div>
                 <div class="mt-2 mt-md-0">
                     @if($serviceArchived)<span class="badge badge-secondary">مؤرشفة</span>
@@ -69,6 +107,7 @@
             <div class="card-body">
                 <input type="hidden" name="services[{{ $index }}][service_type]" value="{{ $service['service_type'] }}">
                 <input type="hidden" name="services[{{ $index }}][active]" value="0">
+
                 <div class="row">
                     <div class="col-md-6 form-group">
                         <label>اسم الخدمة بالعربية *</label>
@@ -93,26 +132,50 @@
                         <textarea name="services[{{ $index }}][promo_en]" class="form-control" rows="3" maxlength="1500">{{ old('services.'.$index.'.promo_en', $service['promo_en']) }}</textarea>
                     </div>
                     <div class="col-md-4 form-group">
-                        <label>الأيقونة الرئيسية</label>
+                        <label>الأيقونة الرئيسية للخدمة</label>
                         <select name="services[{{ $index }}][icon_key]" class="form-control" required>
                             @foreach($iconOptions as $key => $label)
                                 <option value="{{ $key }}" {{ $service['icon_key'] === $key ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
                         </select>
-                        <label class="mt-2">ترتيب الظهور</label>
+                        <label class="mt-2">ترتيب ظهور الخدمة</label>
                         <input type="number" name="services[{{ $index }}][sort_order]" class="form-control" min="0" max="9999" required value="{{ old('services.'.$index.'.sort_order', $service['sort_order']) }}">
                     </div>
-                    <div class="col-md-6 form-group">
-                        <label>المزايا والتفاصيل الكاملة بالعربية</label>
-                        <textarea name="services[{{ $index }}][included_ar_text]" class="form-control" rows="6" maxlength="5000" placeholder="اكتب كل ميزة في سطر مستقل">{{ old('services.'.$index.'.included_ar_text', $includedAr) }}</textarea>
-                        <small class="text-muted">كل سطر يظهر كبند مستقل في نافذة عرض المزايا داخل التطبيق.</small>
+                </div>
+
+                <div class="border-top pt-3 mt-2">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap mb-2">
+                        <div><h6 class="mb-1">تفاصيل ومزايا الخدمة (البنود)</h6><small class="text-muted">أضف البند بالعربية والإنجليزية واختر أيقونته بشكل مستقل.</small></div>
+                        <button type="button" class="btn btn-sm btn-outline-primary mt-2 mt-md-0" data-add-feature data-target="service-features-{{ $index }}" data-prefix="services[{{ $index }}][features]"><i class="las la-plus"></i> إضافة بند</button>
                     </div>
-                    <div class="col-md-6 form-group">
-                        <label>المزايا والتفاصيل الكاملة بالإنجليزية</label>
-                        <textarea name="services[{{ $index }}][included_en_text]" class="form-control" rows="6" maxlength="5000" placeholder="One feature per line">{{ old('services.'.$index.'.included_en_text', $includedEn) }}</textarea>
+                    <div id="service-features-{{ $index }}" data-feature-list>
+                        @foreach($featureRows as $featureIndex => $feature)
+                            <div class="row align-items-end vip-feature-row border rounded p-2 mb-2">
+                                <div class="col-md-5 form-group mb-2">
+                                    <label>الميزة بالعربية</label>
+                                    <input type="text" name="services[{{ $index }}][features][{{ $featureIndex }}][title_ar]" class="form-control" maxlength="180" value="{{ $feature['title_ar'] }}">
+                                </div>
+                                <div class="col-md-5 form-group mb-2">
+                                    <label>Feature in English</label>
+                                    <input type="text" name="services[{{ $index }}][features][{{ $featureIndex }}][title_en]" class="form-control" maxlength="180" value="{{ $feature['title_en'] }}">
+                                </div>
+                                <div class="col-md-2 form-group mb-2">
+                                    <label>أيقونة البند</label>
+                                    <select name="services[{{ $index }}][features][{{ $featureIndex }}][icon_key]" class="form-control">
+                                        @foreach($iconOptions as $key => $label)
+                                            <option value="{{ $key }}" {{ $feature['icon_key'] === $key ? 'selected' : '' }}>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-12 text-right">
+                                    <button type="button" class="btn btn-sm btn-outline-danger" data-remove-feature><i class="las la-trash"></i> حذف هذا البند</button>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
-                <div class="border-top pt-3">
+
+                <div class="border-top pt-3 mt-3">
                     <small class="text-muted d-block mb-2">النوع البرمجي ثابت لحماية سجل الطلبات: {{ $service['service_type'] }}</small>
                     @if($serviceArchived)
                         <button type="submit" class="btn btn-sm btn-outline-success" formaction="{{ route('admin.vip-services.catalog.restore', $service['service_type']) }}" formmethod="POST" onclick="return confirm('إعادة تفعيل هذه الخدمة؟');">إعادة تفعيل الخدمة</button>
@@ -143,17 +206,44 @@
                 <div class="col-md-8 form-group"><label>تفاصيل الخدمة بالإنجليزية</label><textarea name="promo_en" class="form-control" rows="3" maxlength="1500">{{ old('promo_en') }}</textarea></div>
                 <div class="col-md-4 form-group">
                     <label>الأيقونة الرئيسية</label>
-                    <select name="icon_key" class="form-control" required>
-                        @foreach($iconOptions as $key => $label)<option value="{{ $key }}" {{ old('icon_key', 'star') === $key ? 'selected' : '' }}>{{ $label }}</option>@endforeach
-                    </select>
+                    <select name="icon_key" class="form-control" required>@foreach($iconOptions as $key => $label)<option value="{{ $key }}" {{ old('icon_key', 'star') === $key ? 'selected' : '' }}>{{ $label }}</option>@endforeach</select>
                     <label class="mt-2">ترتيب الظهور</label><input type="number" name="sort_order" class="form-control" min="0" max="9999" value="{{ old('sort_order', 40) }}" required>
                     <div class="mt-2"><input type="hidden" name="active" value="0"><label><input type="checkbox" name="active" value="1" checked> تفعيل فور الإضافة</label></div>
                 </div>
-                <div class="col-md-6 form-group"><label>مزايا الخدمة بالعربية</label><textarea name="included_ar_text" class="form-control" rows="6" maxlength="5000" placeholder="ميزة في كل سطر">{{ old('included_ar_text') }}</textarea></div>
-                <div class="col-md-6 form-group"><label>مزايا الخدمة بالإنجليزية</label><textarea name="included_en_text" class="form-control" rows="6" maxlength="5000" placeholder="One feature per line">{{ old('included_en_text') }}</textarea></div>
             </div>
-            <button type="submit" class="btn btn-success btn-lg"><i class="las la-plus mr-1"></i> إضافة الخدمة إلى التطبيق</button>
+            <div class="border-top pt-3 mt-2">
+                <div class="d-flex justify-content-between align-items-center flex-wrap mb-2">
+                    <div><h6 class="mb-1">بنود الخدمة الجديدة</h6><small class="text-muted">يمكنك إضافة عدد من البنود، ولكل بند أيقونة خاصة.</small></div>
+                    <button type="button" class="btn btn-sm btn-outline-primary mt-2 mt-md-0" data-add-feature data-target="new-service-features" data-prefix="features"><i class="las la-plus"></i> إضافة بند</button>
+                </div>
+                <div id="new-service-features" data-feature-list></div>
+            </div>
+            <button type="submit" class="btn btn-success btn-lg mt-3"><i class="las la-plus mr-1"></i> إضافة الخدمة إلى التطبيق</button>
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('click', function (event) {
+    const addButton = event.target.closest('[data-add-feature]');
+    if (addButton) {
+        const list = document.getElementById(addButton.getAttribute('data-target'));
+        const prefix = addButton.getAttribute('data-prefix');
+        const index = list.querySelectorAll('.vip-feature-row').length;
+        const template = document.getElementById('vip-feature-row-template');
+        const row = template.content.cloneNode(true);
+        row.querySelectorAll('[data-feature-field]').forEach(function (field) {
+            field.name = prefix + '[' + index + '][' + field.getAttribute('data-feature-field') + ']';
+        });
+        list.appendChild(row);
+        return;
+    }
+
+    const removeButton = event.target.closest('[data-remove-feature]');
+    if (removeButton) {
+        const row = removeButton.closest('.vip-feature-row');
+        if (row) row.remove();
+    }
+});
+</script>
 @endsection
