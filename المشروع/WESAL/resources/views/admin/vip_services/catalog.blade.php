@@ -251,11 +251,11 @@
                     <label class="mt-2">ترتيب الظهور</label><input type="number" name="sort_order" class="form-control" min="0" max="9999" value="{{ old('sort_order', 40) }}" required>
                     <div class="mt-2">
                         <input type="hidden" name="active" value="0">
-                        <label class="d-block"><input type="checkbox" name="active" value="1" checked> تفعيل فور الإضافة</label>
+                        <label class="d-block"><input type="checkbox" name="active" value="1" {{ old('active', '1') == '1' ? 'checked' : '' }}> تفعيل فور الإضافة</label>
                         <input type="hidden" name="allow_external_contact" value="0">
-                        <label class="d-block"><input type="checkbox" name="allow_external_contact" value="1"> تتطلب وسيلة تواصل خارجية (واتساب / رابط)</label>
+                        <label class="d-block"><input type="checkbox" name="allow_external_contact" value="1" {{ old('allow_external_contact', '0') == '1' ? 'checked' : '' }}> تتطلب وسيلة تواصل خارجية (واتساب / رابط)</label>
                         <input type="hidden" name="show_special_thanks" value="0">
-                        <label class="d-block"><input type="checkbox" name="show_special_thanks" value="1"> عرض بروتوكول الشكر الخاص بعد الطلب</label>
+                        <label class="d-block"><input type="checkbox" name="show_special_thanks" value="1" {{ old('show_special_thanks', '0') == '1' ? 'checked' : '' }}> عرض بروتوكول الشكر الخاص بعد الطلب</label>
                     </div>
                 </div>
             </div>
