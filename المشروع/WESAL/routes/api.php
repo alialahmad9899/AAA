@@ -43,6 +43,8 @@ Route::group(['namespace' => 'Api', 'middleware' => ['app_language']], function 
 
     Route::get('/home', 'HomeController@home');
     Route::get('/packages', 'PackageController@active_packages');
+    // Public service catalogue; purchase and order routes remain member-authenticated.
+    Route::get('/vip-services/list', 'VipServiceApiController@getServicesList')->name('api.vip-services.list');
     Route::post('/package-details', 'PackageController@package_details');
     Route::get('/happy-stories', 'HappyStoryController@happy_stories');
     Route::post('/story-details', 'HappyStoryController@story_details');
@@ -272,8 +274,7 @@ Route::group(['namespace' => 'Api', 'middleware' => ['app_language']], function 
             // 🌟 مسار حفظ استبيان باقة VIP المخصص لتطبيق الموبايل
             Route::post('/vip-survey/store', 'VipSurveyController@store');
 
-            // 💎 مسارات الخدمات الإضافية VIP لتطبيق الهاتف
-            Route::get('/vip-services/list', 'VipServiceApiController@getServicesList');
+            // 💎 مسارات طلبات ودفع خدمات VIP (تبقى محمية بمصادقة العضو)
             Route::get('/vip-services/my-orders', 'VipServiceApiController@getUserOrders');
             Route::post('/vip-services/stripe-intent', 'VipServiceApiController@createStripePaymentIntent');
             Route::post('/vip-services/stripe-confirm', 'VipServiceApiController@confirmStripePayment');
