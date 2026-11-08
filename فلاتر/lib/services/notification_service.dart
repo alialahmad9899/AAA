@@ -142,6 +142,7 @@ class NotificationService {
   static Future<bool>? _syncInProgress;
   static String? _pendingFcmToken;
   static final Set<String> _processedMessageIds = <String>{};
+  static final Set<String> _handledNotificationTapIds = <String>{};
   static final Set<String> _messagesBeingHandled = <String>{};
 
   /// تهيئة الخدمة مرة واحدة فقط طوال عمر التطبيق.
@@ -462,6 +463,9 @@ class NotificationService {
     while (_processedMessageIds.length > 100) {
       _processedMessageIds.remove(_processedMessageIds.first);
     }
+    while (_handledNotificationTapIds.length > 100) {
+      _handledNotificationTapIds.remove(_handledNotificationTapIds.first);
+    }
   }
 
   static Future<void> _handleNotificationTap(
@@ -471,8 +475,13 @@ class NotificationService {
     final String dedupeId = messageId?.trim().isNotEmpty == true
         ? messageId!.trim()
         : jsonEncode(data);
-    if (_processedMessageIds.contains(dedupeId) ||
-        !_messagesBeingHandled.add(dedupeId)) {
+    // Receiving an FCM message and tapping its visible notification are
+    // separate events. Do not block the tap merely because onMessage ran first.
+    if (!claimNotificationTap(
+      dedupeId,
+      handled: _handledNotificationTapIds,
+      inProgress: _messagesBeingHandled,
+    )) {
       return;
     }
 
@@ -489,7 +498,7 @@ class NotificationService {
 
       final bool pushed = await _pushWhenNavigatorReady(destination);
       if (pushed) {
-        _processedMessageIds.add(dedupeId);
+        _handledNotificationTapIds.add(dedupeId);
         _trimProcessedMessageIds();
       }
     } catch (error, stackTrace) {

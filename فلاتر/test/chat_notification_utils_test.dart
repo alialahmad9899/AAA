@@ -23,6 +23,29 @@ void main() {
       expect(chatNotificationId(0, 'message-a', 1), 'message-a'.hashCode);
     });
 
+    test('allows tapping a notification already received in foreground', () {
+      final receivedMessageIds = <String>{'fcm-123'};
+      final handledTaps = <String>{};
+      final inProgressTaps = <String>{};
+      expect(
+        claimNotificationTap(
+          'fcm-123',
+          handled: handledTaps,
+          inProgress: inProgressTaps,
+        ),
+        isTrue,
+      );
+      expect(
+        claimNotificationTap(
+          'fcm-123',
+          handled: handledTaps,
+          inProgress: inProgressTaps,
+        ),
+        isFalse,
+      );
+      expect(receivedMessageIds, contains('fcm-123'));
+    });
+
     test('parses silent flags sent through FCM data fields', () {
       expect(isSilentChatNotification('true'), isTrue);
       expect(isSilentChatNotification(1), isTrue);

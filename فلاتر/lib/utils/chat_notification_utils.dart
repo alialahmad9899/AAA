@@ -32,3 +32,12 @@ bool isSilentChatNotification(dynamic value) {
   final normalized = value?.toString().trim().toLowerCase() ?? '';
   return normalized == '1' || normalized == 'true' || normalized == 'yes';
 }
+
+bool claimNotificationTap(
+  String id, {
+  required Set<String> handled,
+  required Set<String> inProgress,
+}) {
+  if (handled.contains(id)) return false;
+  return inProgress.add(id);
+}
