@@ -22,8 +22,16 @@ class VipServiceApiController extends Controller
      */
     public function getServicesList()
     {
-        // لا نعرض الخدمات المعطلة؛ السعر والبيانات يحددهما الخادم.
-        return $this->response_data(VipServiceCatalog::active());
+        // هذا الكتالوج لا يحتوي بيانات أعضاء، لذلك لا يحتاج إلى جلسة عضو.
+        // تبقى عمليات الطلب والدفع محمية بمصادقة Sanctum في routes/api.php.
+        return response()->json([
+            'result' => true,
+            'data' => VipServiceCatalog::active(),
+        ], 200, [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0, private',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ]);
     }
 
     /**
