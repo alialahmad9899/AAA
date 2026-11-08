@@ -250,12 +250,12 @@ class SupportTicketController extends Controller
             });
 
             return $this->success_message('Reply has been sent successfully');
-        } catch (\\Illuminate\\Database\\Eloquent\\ModelNotFoundException $exception) {
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $exception) {
             return response()->json([
                 'result' => false,
                 'message' => 'التذكرة غير موجودة.',
             ], 404);
-        } catch (\\Throwable $exception) {
+        } catch (\Throwable $exception) {
             Log::error('Support ticket reply failed.', [
                 'user_id' => auth()->id(),
                 'ticket_id' => $validated['support_ticket_id'],

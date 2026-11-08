@@ -152,10 +152,10 @@ class VipServiceAdminController extends Controller
                 $order = VipServiceOrder::whereKey($id)->lockForUpdate()->firstOrFail();
 
                 if ($order->payment_method !== 'sham_cash') {
-                    throw new \\RuntimeException('VIP_PAYMENT_METHOD_NOT_REVIEWABLE');
+                    throw new \RuntimeException('VIP_PAYMENT_METHOD_NOT_REVIEWABLE');
                 }
                 if ($order->payment_status !== 'pending_verification') {
-                    throw new \\RuntimeException('VIP_PAYMENT_ALREADY_REVIEWED');
+                    throw new \RuntimeException('VIP_PAYMENT_ALREADY_REVIEWED');
                 }
 
                 $specs = is_array($order->specifications) ? $order->specifications : [];
@@ -171,7 +171,7 @@ class VipServiceAdminController extends Controller
                 $order->specifications = $specs;
                 $order->save();
             });
-        } catch (\\Throwable $exception) {
+        } catch (\Throwable $exception) {
             if (in_array($exception->getMessage(), [
                 'VIP_PAYMENT_METHOD_NOT_REVIEWABLE',
                 'VIP_PAYMENT_ALREADY_REVIEWED',
@@ -204,7 +204,7 @@ class VipServiceAdminController extends Controller
                         'payment_status' => $order->payment_status,
                     ]);
                 }
-            } catch (\\Throwable $exception) {
+            } catch (\Throwable $exception) {
                 Log::error('VIP payment review notification failed.', [
                     'order_id' => $order->id,
                     'message' => $exception->getMessage(),
