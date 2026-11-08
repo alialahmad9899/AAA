@@ -66,8 +66,33 @@ class PackagePresentation
             'name_en' => trim((string) ($values['name_en'] ?? '')),
             'description_ar' => trim((string) ($values['description_ar'] ?? '')),
             'description_en' => trim((string) ($values['description_en'] ?? '')),
+            'features_ar' => self::normaliseFeatures($values['features_ar'] ?? []),
+            'features_en' => self::normaliseFeatures($values['features_en'] ?? []),
             'sort_order' => max(0, min(9999, (int) ($values['sort_order'] ?? ($packageId * 10)))),
         ];
+    }
+
+    private static function normaliseFeatures($values): array
+    {
+        if (is_string($values)) {
+            $values = preg_split('/\\R/u', $values) ?: [];
+        }
+        if (!is_array($values)) {
+            return [];
+        }
+
+        $features = [];
+        foreach ($values as $value) {
+            $line = trim((string) $value);
+            if ($line !== '') {
+                $features[] = $line;
+            }
+            if (count($features) >= 30) {
+                break;
+            }
+        }
+
+        return array_values($features);
     }
 
     private static function persist(array $stored): void
