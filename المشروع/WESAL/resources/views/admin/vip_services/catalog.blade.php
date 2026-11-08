@@ -15,6 +15,18 @@
         'shield' => 'la-shield-alt', 'gift' => 'la-gift', 'link' => 'la-link',
         'support' => 'la-headset', 'star' => 'la-star',
     ];
+    $inferFeatureIcon = function ($text) {
+        $text = mb_strtolower((string) $text);
+        if (str_contains($text, 'فيديو') || str_contains($text, 'video')) return 'video';
+        if (str_contains($text, 'فيسبوك') || str_contains($text, 'تيك توك') || str_contains($text, 'منشور') || str_contains($text, 'social') || str_contains($text, 'post')) return 'campaign';
+        if (str_contains($text, 'واتساب') || str_contains($text, 'تواصل') || str_contains($text, 'رسالة') || str_contains($text, 'contact') || str_contains($text, 'whatsapp')) return 'message';
+        if (str_contains($text, 'رابط') || str_contains($text, 'بروفايل') || str_contains($text, 'link') || str_contains($text, 'profile')) return 'link';
+        if (str_contains($text, 'خصوصية') || str_contains($text, 'حماية') || str_contains($text, 'تأمين') || str_contains($text, 'privacy') || str_contains($text, 'security')) return 'shield';
+        if (str_contains($text, 'بحث') || str_contains($text, 'search') || str_contains($text, 'database')) return 'user_search';
+        if (str_contains($text, 'توفيق') || str_contains($text, 'ربط') || str_contains($text, 'تنسيق') || str_contains($text, 'match')) return 'handshake';
+        if (str_contains($text, 'ميزة') || str_contains($text, 'هدية') || str_contains($text, 'gift')) return 'gift';
+        return 'star';
+    };
 @endphp
 
 <div class="aiz-titlebar mt-2 mb-4">
@@ -78,10 +90,16 @@
             for ($featureIndex = 0; $featureIndex < $featureCount; $featureIndex++) {
                 $arItem = $arItems[$featureIndex] ?? '';
                 $enItem = $enItems[$featureIndex] ?? '';
+                $featureTitleAr = is_array($arItem) ? ($arItem['title'] ?? '') : $arItem;
+                $featureTitleEn = is_array($enItem) ? ($enItem['title'] ?? '') : $enItem;
                 $featureRows[] = [
-                    'title_ar' => is_array($arItem) ? ($arItem['title'] ?? '') : $arItem,
-                    'title_en' => is_array($enItem) ? ($enItem['title'] ?? '') : $enItem,
-                    'icon_key' => is_array($arItem) ? ($arItem['icon_key'] ?? 'star') : 'star',
+                    'title_ar' => $featureTitleAr,
+                    'title_en' => $featureTitleEn,
+                    'icon_key' => is_array($arItem)
+                        ? ($arItem['icon_key'] ?? 'star')
+                        : (is_array($enItem)
+                            ? ($enItem['icon_key'] ?? $inferFeatureIcon($featureTitleAr ?: $featureTitleEn))
+                            : $inferFeatureIcon($featureTitleAr ?: $featureTitleEn)),
                 ];
             }
             $serviceArchived = !empty($service['archived']);
