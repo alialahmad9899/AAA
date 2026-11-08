@@ -1630,11 +1630,14 @@ class ApiService {
   static Future<Map<String, dynamic>> getActivePackages({String? lang}) async {
     try {
       final headers = await _getHeaders(lang: lang);
+      headers['Cache-Control'] = 'no-cache, no-store, max-age=0';
+      headers['Pragma'] = 'no-cache';
       final prefs = await SharedPreferences.getInstance();
       final String currentLang =
           lang ?? prefs.getString('app_language') ?? 'ar';
+      final int cacheBuster = DateTime.now().millisecondsSinceEpoch;
       final Uri url = Uri.parse(
-          '$baseUrl/packages?lang=$currentLang&app_language=$currentLang');
+          '$baseUrl/packages?lang=$currentLang&app_language=$currentLang&_t=$cacheBuster');
       if (kDebugMode) debugPrint('🌐 [API GET] ActivePackages -> $url');
 
       final response =
