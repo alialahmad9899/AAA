@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Notification;
+use App\Models\ChatThread;
+use Illuminate\Support\Facades\Cache;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\Controller;
@@ -53,8 +55,21 @@ class NotificationController extends Controller
             ->where('notifiable_id', auth()->id())
             ->get();
 
+        // Remove legacy chat rows as well; message counters are not bell alerts.
+        $nonChatNotifications = $rawNotifications->reject(function ($item) {
+            $data = is_string($item->data)
+                ? json_decode($item->data, true)
+                : (array) $item->data;
+            $type = strtolower((string) (
+                $data['type'] ?? $data['notification_type'] ?? ''
+            ));
+            return str_contains($type, 'chat')
+                || str_contains($type, 'message')
+                || str_contains($type, 'conversation');
+        });
+
         // تصفية السجلات المكررة بناءً على الرسالة والنوع ووقت الدقيقة
-        $uniqueNotifications = $rawNotifications->unique(function ($item) {
+        $uniqueNotifications = $nonChatNotifications->unique(function ($item) {
             $data = is_string($item->data) ? json_decode($item->data, true) : (array)$item->data;
             $msg = $data['message'] ?? '';
             $type = $data['type'] ?? $item->type;
@@ -75,6 +90,85 @@ class NotificationController extends Controller
 
         return NotificationResource::collection($paginated)->additional([
             'result' => true
+        ]);
+    }
+
+
+    /**
+     * Store the active conversation for a short period. The mobile client
+     * renews this heartbeat while the conversation is open.
+     */
+    public function update_chat_presence(Request $request)
+    {
+        $validated = $request->validate([
+            'thread_id' => 'required|integer|min:0',
+        ]);
+        $threadId = (int) $validated['thread_id'];
+        $userId = (int) auth()->id();
+
+        if ($threadId > 0) {
+            $ownsThread = ChatThread::whereKey($threadId)
+                ->where(function ($query) use ($userId) {
+                    $query->where('sender_user_id', $userId)
+                        ->orWhere('receiver_user_id', $userId);
+                })
+                ->exists();
+
+            if (!$ownsThread) {
+                return response()->json([
+                    'result' => false,
+                    'message' => 'المحادثة غير موجودة أو غير مصرح بها.',
+                ], 404);
+            }
+
+            Cache::put(
+                'wesal:active-chat:' . $userId,
+                $threadId,
+                now()->addSeconds(45)
+            );
+        } else {
+            Cache::forget('wesal:active-chat:' . $userId);
+        }
+
+        return response()->json(['result' => true]);
+    }
+
+    /**
+     * Persist the current member's mute preference for one owned conversation.
+     */
+    public function set_chat_mute(Request $request)
+    {
+        $validated = $request->validate([
+            'chat_thread_id' => 'required|integer|min:1',
+            'muted' => 'required|boolean',
+        ]);
+        $threadId = (int) $validated['chat_thread_id'];
+        $userId = (int) auth()->id();
+
+        $ownsThread = ChatThread::whereKey($threadId)
+            ->where(function ($query) use ($userId) {
+                $query->where('sender_user_id', $userId)
+                    ->orWhere('receiver_user_id', $userId);
+            })
+            ->exists();
+
+        if (!$ownsThread) {
+            return response()->json([
+                'result' => false,
+                'message' => 'المحادثة غير موجودة أو غير مصرح بها.',
+            ], 404);
+        }
+
+        $key = 'wesal:chat-muted:' . $userId . ':' . $threadId;
+        if ($request->boolean('muted')) {
+            Cache::forever($key, true);
+        } else {
+            Cache::forget($key);
+        }
+
+        return response()->json([
+            'result' => true,
+            'muted' => $request->boolean('muted'),
         ]);
     }
 

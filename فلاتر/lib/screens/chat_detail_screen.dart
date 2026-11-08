@@ -17,7 +17,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/chat_model.dart';
 import '../models/member_profile_model.dart';
 import '../services/api_service.dart';
+import '../services/chat_local_store.dart';
 import '../utils/chat_time_utils.dart';
+import '../utils/chat_activity_state.dart';
 import '../widgets/app_snackbar.dart';
 import '../widgets/bottom_system_inset.dart';
 import '../widgets/package_badge_widget.dart';
@@ -46,8 +48,17 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   final ScrollController _scrollController = ScrollController();
   final FocusNode _inputFocusNode = FocusNode();
   final ImagePicker _picker = ImagePicker();
+  final TextEditingController _messageSearchController = TextEditingController();
 
   late int _activeThreadId;
+  int _currentUserId = 0;
+  double? _savedScrollOffset;
+  Timer? _scrollPositionSaveTimer;
+  bool _hasRestoredScrollPosition = false;
+  bool _isChatMuted = false;
+  bool _showMessageSearch = false;
+  bool _isSearchingSavedMessages = false;
+  List<ChatMessageModel> _messageSearchResults = [];
   List<ChatMessageModel> _messages = [];
   ChatRulesModel? _chatRules;
   bool _isLoading = false;
@@ -132,21 +143,17 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     _activeThreadId = widget.thread.id;
     WidgetsBinding.instance.addObserver(this);
     _scrollController.addListener(_scrollListener);
-    _startMessageRefreshTimer();
-
     _inputFocusNode.addListener(_onFocusChange);
 
-    if (_activeThreadId > 0 && _globalMessagesCache.containsKey(_activeThreadId)) {
+    if (_activeThreadId > 0 &&
+        _globalMessagesCache.containsKey(_activeThreadId)) {
       _messages = List.from(_globalMessagesCache[_activeThreadId]!);
       _isLoading = false;
     } else {
       _isLoading = true;
     }
 
-    _loadMessages(
-      silent: _messages.isNotEmpty,
-      preserveHistory: _messages.isNotEmpty,
-    );
+    unawaited(_initializeChatExperience());
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkAndShowMaleWarningDialog();
@@ -164,26 +171,85 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   @override
   void dispose() {
     _messageRefreshTimer?.cancel();
+    _scrollPositionSaveTimer?.cancel();
+    if (_scrollController.hasClients && _currentUserId > 0) {
+      unawaited(ChatLocalStore.saveScrollOffset(
+        _currentUserId,
+        _activeThreadId,
+        _scrollController.offset,
+      ));
+    }
+    if (ChatActivityState.activeThreadId.value == _activeThreadId) {
+      ChatActivityState.activeThreadId.value = null;
+    }
+    unawaited(ApiService.updateChatPresence(threadId: 0));
     WidgetsBinding.instance.removeObserver(this);
     _scrollController.removeListener(_scrollListener);
     _inputFocusNode.removeListener(_onFocusChange);
     _messageController.dispose();
     _captionController.dispose();
+    _messageSearchController.dispose();
     _scrollController.dispose();
     _inputFocusNode.dispose();
     super.dispose();
   }
 
+  Future<void> _initializeChatExperience() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _currentUserId = prefs.getInt('user_id') ?? 0;
+      if (_currentUserId > 0 && _activeThreadId > 0) {
+        final cachedMessages = await ChatLocalStore.getMessages(
+          _currentUserId,
+          _activeThreadId,
+          currentUserId: _currentUserId,
+        );
+        _savedScrollOffset = await ChatLocalStore.getScrollOffset(
+          _currentUserId,
+          _activeThreadId,
+        );
+        final muted = await ChatLocalStore.isMuted(
+          _currentUserId,
+          _activeThreadId,
+        );
+        if (!mounted) return;
+        setState(() {
+          _isChatMuted = muted;
+          if (_messages.isEmpty && cachedMessages.isNotEmpty) {
+            _messages = cachedMessages;
+            _globalMessagesCache[_activeThreadId] =
+                List<ChatMessageModel>.from(cachedMessages);
+            _isLoading = false;
+          }
+        });
+      }
+    } catch (error) {
+      debugPrint('[Chat Local State] $error');
+    }
+
+    if (!mounted) return;
+    ChatActivityState.activeThreadId.value = _activeThreadId;
+    unawaited(ApiService.updateChatPresence(threadId: _activeThreadId));
+    unawaited(ApiService.syncChatMuteSettings());
+    _startMessageRefreshTimer();
+    await _loadMessages(
+      silent: _messages.isNotEmpty,
+      preserveHistory: _messages.isNotEmpty,
+    );
+  }
+
   void _startMessageRefreshTimer() {
     _messageRefreshTimer?.cancel();
-    if (_activeThreadId <= 0) {
-      return;
-    }
+    if (_activeThreadId <= 0) return;
     _messageRefreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
-      if (!mounted || WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed ||
-          _isSending || _isLoadingMore) {
+      if (!mounted ||
+          WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed ||
+          _isSending ||
+          _isLoadingMore) {
         return;
       }
+      ChatActivityState.activeThreadId.value = _activeThreadId;
+      unawaited(ApiService.updateChatPresence(threadId: _activeThreadId));
       _loadMessages(silent: true, preserveHistory: true);
     });
   }
@@ -191,12 +257,198 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      ChatActivityState.activeThreadId.value = _activeThreadId;
+      unawaited(ApiService.updateChatPresence(threadId: _activeThreadId));
+      unawaited(ApiService.syncChatMuteSettings());
       _loadMessages(silent: true, preserveHistory: true);
       _startMessageRefreshTimer();
     } else {
       _messageRefreshTimer?.cancel();
       _messageRefreshTimer = null;
+      ChatActivityState.activeThreadId.value = null;
+      unawaited(ApiService.updateChatPresence(threadId: 0));
     }
+  }
+
+  void _saveReadPositionSoon() {
+    if (_currentUserId <= 0 ||
+        _activeThreadId <= 0 ||
+        !_scrollController.hasClients ||
+        _isLoadingMore) {
+      return;
+    }
+    _scrollPositionSaveTimer?.cancel();
+    _scrollPositionSaveTimer = Timer(const Duration(milliseconds: 350), () {
+      if (!_scrollController.hasClients) return;
+      unawaited(ChatLocalStore.saveScrollOffset(
+        _currentUserId,
+        _activeThreadId,
+        _scrollController.offset,
+      ));
+    });
+  }
+
+  void _restoreSavedReadPosition() {
+    if (_hasRestoredScrollPosition) return;
+    _hasRestoredScrollPosition = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+      final max = _scrollController.position.maxScrollExtent;
+      final saved = _savedScrollOffset;
+      if (saved != null && saved.isFinite) {
+        _scrollController.jumpTo(saved.clamp(0.0, max).toDouble());
+      } else {
+        _scrollToBottom();
+      }
+    });
+  }
+
+  void _toggleMessageSearch() {
+    setState(() {
+      _showMessageSearch = !_showMessageSearch;
+      _messageSearchResults = [];
+      _messageSearchController.clear();
+    });
+  }
+
+  Future<void> _searchSavedMessages(String query) async {
+    final cleanQuery = query.trim();
+    if (cleanQuery.isEmpty) {
+      if (mounted) setState(() => _messageSearchResults = []);
+      return;
+    }
+    setState(() => _isSearchingSavedMessages = true);
+    try {
+      final cached = await ChatLocalStore.searchMessages(
+        _currentUserId,
+        _activeThreadId,
+        cleanQuery,
+        currentUserId: _currentUserId,
+      );
+      final visibleMatches = _messages.where((message) =>
+          message.message.toLowerCase().contains(cleanQuery.toLowerCase()));
+      final byId = <int, ChatMessageModel>{
+        for (final message in cached) message.id: message,
+        for (final message in visibleMatches) message.id: message,
+      };
+      final results = byId.values.toList()
+        ..sort((left, right) => left.id.compareTo(right.id));
+      if (mounted && _messageSearchController.text.trim() == cleanQuery) {
+        setState(() => _messageSearchResults = results);
+      }
+    } catch (error) {
+      debugPrint('[Chat Message Search] $error');
+    } finally {
+      if (mounted) setState(() => _isSearchingSavedMessages = false);
+    }
+  }
+
+  Widget _buildMessageSearchBar() {
+    if (!_showMessageSearch) return const SizedBox.shrink();
+    final count = _messageSearchResults.length;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: _messageSearchController,
+            autofocus: true,
+            onChanged: _searchSavedMessages,
+            style: const TextStyle(
+              color: AppColors.textDark,
+              fontFamily: 'Cairo',
+              fontSize: 13,
+            ),
+            decoration: InputDecoration(
+              hintText: _isArabic
+                  ? 'ابحث داخل الرسائل المحفوظة...'
+                  : 'Search saved messages...',
+              hintStyle: const TextStyle(
+                color: AppColors.textMuted,
+                fontFamily: 'Cairo',
+                fontSize: 12,
+              ),
+              prefixIcon: const Icon(
+                Icons.search_rounded,
+                color: AppColors.primaryTeal,
+                size: 20,
+              ),
+              suffixIcon: IconButton(
+                tooltip: _isArabic ? 'إغلاق البحث' : 'Close search',
+                onPressed: _toggleMessageSearch,
+                icon: const Icon(Icons.close_rounded,
+                    color: AppColors.textMuted, size: 19),
+              ),
+              filled: true,
+              fillColor: AppColors.cardColor,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: AppColors.lineColor),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: AppColors.lineColor),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(
+                    color: AppColors.primaryTeal, width: 1.2),
+              ),
+            ),
+          ),
+          if (_messageSearchController.text.trim().isNotEmpty)
+            Padding(
+              padding: const EdgeInsetsDirectional.only(start: 8, top: 5),
+              child: Text(
+                _isSearchingSavedMessages
+                    ? (_isArabic ? 'جارٍ البحث...' : 'Searching...')
+                    : (_isArabic ? 'نتائج البحث: $count' : 'Results: $count'),
+                style: const TextStyle(
+                  color: AppColors.textMuted,
+                  fontFamily: 'Cairo',
+                  fontSize: 11,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _toggleChatMute() async {
+    final nextMuted = !_isChatMuted;
+    if (_currentUserId <= 0) {
+      final prefs = await SharedPreferences.getInstance();
+      _currentUserId = prefs.getInt('user_id') ?? 0;
+    }
+    if (_currentUserId > 0) {
+      await ChatLocalStore.setMuted(
+        _currentUserId,
+        _activeThreadId,
+        nextMuted,
+      );
+    }
+    if (mounted) setState(() => _isChatMuted = nextMuted);
+
+    final synced = await ApiService.setChatMuted(
+      threadId: _activeThreadId,
+      muted: nextMuted,
+    );
+    if (!mounted) return;
+    AppSnackBar.show(
+      context: context,
+      type: synced ? NotificationType.success : NotificationType.info,
+      isArabic: _isArabic,
+      messageAr: synced
+          ? (nextMuted ? 'تم كتم إشعارات هذه المحادثة' : 'تم إلغاء كتم المحادثة')
+          : 'تم حفظ الإعداد محلياً وستتم مزامنته عند عودة الاتصال',
+      messageEn: synced
+          ? (nextMuted ? 'Conversation muted' : 'Conversation unmuted')
+          : 'Preference saved locally and will sync when connection returns',
+    );
   }
 
   /// 🟢 معالجة إغلاق الشاشة وإرجاع النتيجة بشكل آمن
@@ -451,6 +703,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   }
 
   void _scrollListener() {
+    _saveReadPositionSoon();
     if (_scrollController.hasClients &&
         _scrollController.position.pixels <= 30 &&
         !_isLoadingMore &&
@@ -537,8 +790,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         _hasMessageLoadError = false;
         _messageLoadError = '';
       });
-      if (!silent ||
-          (preserveHistory && wasNearBottom &&
+      if (!_hasRestoredScrollPosition) {
+        _restoreSavedReadPosition();
+      } else if (!silent ||
+          (preserveHistory &&
+              wasNearBottom &&
               displayedMessages.length > previousMessageCount)) {
         _scrollToBottom();
       }
@@ -583,6 +839,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         _messages.first.id,
         widget.thread.userId,
         lang: widget.currentLanguage,
+        threadId: _activeThreadId,
       );
       final List<ChatMessageModel> oldMsgs =
           result['messages'] is List ? result['messages'] : <ChatMessageModel>[];
@@ -834,6 +1091,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
 
         if (newThreadId != null && newThreadId > 0) {
           _activeThreadId = newThreadId;
+          ChatActivityState.activeThreadId.value = newThreadId;
+          unawaited(ApiService.updateChatPresence(threadId: newThreadId));
           _startMessageRefreshTimer();
         }
         _messages.removeWhere((message) => message.id == tempMsg.id);
@@ -1199,6 +1458,52 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                           onTap: () {
                             Navigator.pop(context);
                             _showBlockConfirmationDialog();
+                          },
+                        ),
+                      ),
+                      const Divider(color: AppColors.lineColor, height: 24),
+                      Material(
+                        color: Colors.transparent,
+                        child: ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryTeal.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Icon(
+                              _isChatMuted
+                                  ? Icons.notifications_active_outlined
+                                  : Icons.notifications_off_outlined,
+                              color: AppColors.primaryTeal,
+                              size: 22,
+                            ),
+                          ),
+                          title: Text(
+                            _isArabic
+                                ? (_isChatMuted ? 'إلغاء كتم المحادثة' : 'كتم المحادثة')
+                                : (_isChatMuted ? 'Unmute conversation' : 'Mute conversation'),
+                            style: const TextStyle(
+                              color: AppColors.textDark,
+                              fontFamily: 'Cairo',
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                          subtitle: Text(
+                            _isArabic
+                                ? 'إيقاف تنبيهات هذه المحادثة فقط مع استمرار استقبال الرسائل'
+                                : 'Silence alerts for this conversation only',
+                            style: const TextStyle(
+                              color: AppColors.textMuted,
+                              fontSize: 12,
+                              fontFamily: 'Cairo',
+                            ),
+                          ),
+                          onTap: () {
+                            Navigator.pop(context);
+                            _toggleChatMute();
                           },
                         ),
                       ),
@@ -1608,6 +1913,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
 
   @override
   Widget build(BuildContext context) {
+    final bool hasMessageSearch =
+        _showMessageSearch && _messageSearchController.text.trim().isNotEmpty;
+    final List<ChatMessageModel> visibleMessages =
+        hasMessageSearch ? _messageSearchResults : _messages;
     return PopScope<bool>(
       canPop: _canPopNow,
       onPopInvokedWithResult: (didPop, result) {
@@ -1622,6 +1931,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
             child: Column(
               children: [
                 _buildHeader(),
+                _buildMessageSearchBar(),
                 _buildRulesBanner(),
                 if (_isLoadingMore)
                   const Padding(
@@ -1649,7 +1959,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                               color: AppColors.primaryTeal,
                             ),
                           )
-                        : _messages.isEmpty
+                        : (_messages.isEmpty && !hasMessageSearch)
                             ? _hasMessageLoadError
                                 ? Center(
                                     child: Padding(
@@ -1732,15 +2042,32 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                                       ),
                                     ),
                                   )
-                            : ListView.builder(
+                            : hasMessageSearch && visibleMessages.isEmpty
+                                ? Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(24),
+                                      child: Text(
+                                        _isArabic
+                                            ? 'لا توجد رسائل محفوظة تطابق هذا البحث'
+                                            : 'No saved messages match this search',
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          color: AppColors.textMuted,
+                                          fontFamily: 'Cairo',
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : ListView.builder(
                                 controller: _scrollController,
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 14,
                                   vertical: 12,
                                 ),
-                                itemCount: _messages.length,
+                                itemCount: visibleMessages.length,
                                 itemBuilder: (context, index) {
-                                  final msg = _messages[index];
+                                  final msg = visibleMessages[index];
                                   return RepaintBoundary(
                                     key: ValueKey(msg.id),
                                     child: msg.isMe
@@ -1911,6 +2238,26 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                       ),
                     ),
                   ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Material(
+            color: AppColors.sectionBackground,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: _toggleMessageSearch,
+              child: SizedBox(
+                width: 40,
+                height: 40,
+                child: Icon(
+                  _showMessageSearch
+                      ? Icons.search_off_rounded
+                      : Icons.search_rounded,
+                  color: AppColors.primaryTeal,
+                  size: 20,
                 ),
               ),
             ),

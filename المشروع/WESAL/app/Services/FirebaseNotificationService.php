@@ -103,15 +103,36 @@ class FirebaseNotificationService
         // دمج الحقول الأساسية مع الحقول المخصصة الممررة
         $dataPayload = array_merge($defaultData, $formattedExtraData);
 
-        // 5. إعدادات قناة التنبيهات والأيقونة لنظام Android (تم ضبط الأيقونة على ic_launcher المتوفرة بالفيسبوك/فلاتر)
+        $type = strtolower((string) ($formattedExtraData['type'] ?? ''));
+        $isChatNotification = str_contains($type, 'chat')
+            || str_contains($type, 'message')
+            || str_contains($type, 'conversation');
+        $isSilent = in_array(
+            strtolower((string) ($formattedExtraData['silent'] ?? 'false')),
+            ['1', 'true', 'yes'],
+            true
+        );
+        $notificationTag = $formattedExtraData['notification_tag'] ?? null;
+
+        // 5. Android channels are split so quiet replacements remain quiet.
         $androidNotificationConfig = [
-            "channel_id"              => "wesal_high_importance_channel",
-            "icon"                    => "@mipmap/ic_launcher",
-            "sound"                   => "default",
-            "default_sound"           => true,
-            "default_vibrate_timings" => true,
-            "notification_priority"   => "PRIORITY_MAX"
+            "channel_id" => $isChatNotification
+                ? ($isSilent ? "wesal_chat_silent_channel" : "wesal_chat_alert_channel")
+                : "wesal_high_importance_channel",
+            "icon" => "@mipmap/ic_launcher",
+            "notification_priority" => $isSilent ? "PRIORITY_LOW" : "PRIORITY_MAX"
         ];
+        if (!$isSilent) {
+            $androidNotificationConfig["sound"] = "default";
+            $androidNotificationConfig["default_sound"] = true;
+            $androidNotificationConfig["default_vibrate_timings"] = true;
+        } else {
+            $androidNotificationConfig["default_sound"] = false;
+            $androidNotificationConfig["default_vibrate_timings"] = false;
+        }
+        if (!empty($notificationTag)) {
+            $androidNotificationConfig["tag"] = substr((string) $notificationTag, 0, 64);
+        }
 
         // في حال توفر رابط صورة، يتم إدراجها ضمن إشعار أندرويد لظهورها بصورة موسعة
         if (isset($formattedExtraData['photo']) && !empty($formattedExtraData['photo'])) {
@@ -148,13 +169,25 @@ class FirebaseNotificationService
                                 "title" => (string) $title,
                                 "body"  => (string) $body,
                             ],
-                            "sound" => "default",
-                            "badge" => 1,
                         ]
                     ]
                 ]
             ]
         ];
+
+        if (!$isSilent) {
+            $payload['message']['apns']['payload']['aps']['sound'] = 'default';
+        }
+        if (!$isChatNotification) {
+            $payload['message']['apns']['payload']['aps']['badge'] = 1;
+        }
+        if ($isChatNotification && !empty($notificationTag)) {
+            $payload['message']['apns']['headers'] = [
+                'apns-collapse-id' => substr((string) $notificationTag, 0, 64),
+            ];
+            $payload['message']['apns']['payload']['aps']['thread-id'] =
+                (string) $notificationTag;
+        }
 
         // إرفاق الصورة في إشعار أجهزة iOS إن وجدت
         if (isset($formattedExtraData['photo']) && !empty($formattedExtraData['photo'])) {

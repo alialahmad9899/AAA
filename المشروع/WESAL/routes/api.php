@@ -222,6 +222,8 @@ Route::group(['namespace' => 'Api', 'middleware' => ['app_language']], function 
             Route::post('/chat-reply', 'ChatController@chat_reply');
             Route::post('/chat/old-messages', 'ChatController@get_old_messages');
             Route::post('/chat-delete', 'ChatController@chat_delete');
+            Route::post('/chat-presence', 'NotificationController@update_chat_presence');
+            Route::post('/chat-mute', 'NotificationController@set_chat_mute');
 
             // Member
             Route::get('/member-info/{id}', 'MemberController@member_info');

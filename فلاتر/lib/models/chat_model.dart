@@ -185,6 +185,20 @@ class ChatThreadModel {
     return '';
   }
 
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'user_id': userId,
+        'member_name': name,
+        'member_photo': image,
+        'member_gender': gender,
+        'last_message': lastMessage,
+        'last_message_at': time,
+        'unseen_message_count': unreadCount,
+        'is_online': isOnline,
+        'last_seen': lastSeen,
+        'package_name': packageName,
+      };
+
   factory ChatThreadModel.fromJson(Map<String, dynamic> json) {
     final rawId = json['id'] ?? json['chat_thread_id'] ?? json['thread_id'];
     final int parsedId =
@@ -297,6 +311,16 @@ class ChatMessageModel {
     required this.isSeen,
     this.attachmentUrl,
   });
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'sender_user_id': senderId,
+        'message': message,
+        'created_at': time,
+        'seen': isSeen ? 1 : 0,
+        'is_me': isMe,
+        if (attachmentUrl != null) 'attachment': attachmentUrl,
+      };
 
   factory ChatMessageModel.fromJson(
       Map<String, dynamic> json, int partnerUserId,

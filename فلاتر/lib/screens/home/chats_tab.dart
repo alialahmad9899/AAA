@@ -10,9 +10,11 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../constants/colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../models/chat_model.dart';
 import '../../services/api_service.dart';
+import '../../services/chat_local_store.dart';
 import '../../utils/chat_time_utils.dart';
 import '../../widgets/app_snackbar.dart';
 import '../../widgets/app_empty_state.dart';
@@ -44,6 +46,7 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
   // 1. المتغيرات المحلية وحالة الشاشة
   // --------------------------------------------------------------------------
   List<ChatThreadModel> _chatThreads = [];
+  Map<int, bool> _mutedThreads = {};
   bool _isChatsLoading = true;
   String? _chatsErrorMessage;
   int _chatFetchCounter = 0;
@@ -106,6 +109,7 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      unawaited(ApiService.syncChatMuteSettings());
       _checkSubscriptionAndFetch();
     }
   }
@@ -118,26 +122,22 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
   Future<void> _checkSubscriptionAndFetch() async {
     if (!mounted) return;
 
+    // Load the cached conversation list first; profile/plan lookup is
+    // independent and must not hold the chat tab behind a network spinner.
+    unawaited(_fetchChats());
+    setState(() => _isCheckingSubscription = false);
+
     try {
       final profile = await ApiService.getCurrentUserProfile();
-      if (mounted) {
+      if (mounted && profile != null) {
         setState(() {
-          if (profile != null) {
-            _isSubscribedOrFemale =
-                profile.isFemale || profile.isSubscribedActive;
-          }
-          _isCheckingSubscription = false;
+          _isSubscribedOrFemale =
+              profile.isFemale || profile.isSubscribedActive;
         });
       }
-    } catch (_) {
-      if (mounted) {
-        setState(() {
-          _isCheckingSubscription = false;
-        });
-      }
+    } catch (error) {
+      debugPrint('[Chats Tab] Subscription lookup unavailable: $error');
     }
-
-    _fetchChats();
   }
 
   /// تحليل الطابع الزمني المطلق، مع دعم النصوص النسبية القديمة.
@@ -153,7 +153,9 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
     if (parsedDate.year == 2000) return _translateRawTimeFallback(rawTime);
 
     final now = DateTime.now();
-    final difference = now.difference(parsedDate);
+    final difference = now.isBefore(parsedDate)
+        ? Duration.zero
+        : now.difference(parsedDate);
 
     if (difference.inSeconds < 60) {
       return isArabicLocale ? 'الآن' : 'Now';
@@ -251,6 +253,14 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
     }
     try {
       final threads = await ApiService.getChatThreads();
+      Map<int, bool> mutedSettings = {};
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final accountId = prefs.getInt('user_id') ?? 0;
+        mutedSettings = await ChatLocalStore.getMuteSettings(accountId);
+      } catch (cacheError) {
+        debugPrint('[Chats Tab] Could not load mute preferences: $cacheError');
+      }
       threads.sort((a, b) {
         final timeOrder = _parseChatTimeToDateTime(b.time)
             .compareTo(_parseChatTimeToDateTime(a.time));
@@ -259,6 +269,7 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
       if (mounted && currentFetch == _chatFetchCounter) {
         setState(() {
           _chatThreads = threads;
+          _mutedThreads = mutedSettings;
           _isChatsLoading = false;
           if (!silent) _chatsErrorMessage = null;
         });
@@ -556,6 +567,47 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
                     fontFamily: 'Cairo',
                   ),
                 ),
+                if (_chatThreads.fold<int>(
+                      0,
+                      (total, thread) => total + thread.unreadCount,
+                    ) >
+                    0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 9,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color:
+                            AppColors.primaryTeal.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.mark_chat_unread_rounded,
+                            color: AppColors.primaryTeal,
+                            size: 13,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            isArabicLocale
+                                ? 'رسائل غير مقروءة: ${_chatThreads.fold<int>(0, (total, thread) => total + thread.unreadCount)}'
+                                : 'Unread messages: ${_chatThreads.fold<int>(0, (total, thread) => total + thread.unreadCount)}',
+                            style: const TextStyle(
+                              color: AppColors.primaryTeal,
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: 'Cairo',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -1132,6 +1184,15 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
                                                     ),
                                                   ),
                                                   const SizedBox(height: 6),
+                                                  if (_mutedThreads[chat.id] == true)
+                                                    const Padding(
+                                                      padding: EdgeInsets.only(bottom: 5),
+                                                      child: Icon(
+                                                        Icons.notifications_off_outlined,
+                                                        color: AppColors.textMuted,
+                                                        size: 14,
+                                                      ),
+                                                    ),
                                                   if (chat.unreadCount > 0)
                                                     Container(
                                                       constraints:

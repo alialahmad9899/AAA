@@ -9,6 +9,13 @@ void main() {
       expect(parsed, isNotNull);
       expect(parsed!.isUtc, isFalse);
     });
+    test('keeps offset-aware ISO timestamps in device local time', () {
+      final raw = '2026-11-08T13:45:00Z';
+      expect(
+        parseChatTimestamp(raw, now: now),
+        DateTime.parse(raw).toLocal(),
+      );
+    });
     test('parses Arabic plural minutes', () {
       expect(parseChatTimestamp('منذ ٥ دقائق', now: now),
           now.subtract(const Duration(minutes: 5)));

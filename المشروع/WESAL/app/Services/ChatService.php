@@ -5,15 +5,14 @@ namespace App\Services;
 use App\Models\Chat;
 use App\Models\ChatThread;
 use App\Models\User;
-use App\Notifications\DbStoreNotification;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Route;
 
 class ChatService
 {
     /**
-     * Persist one message and dispatch its in-app and push notifications once.
+     * Persist a chat message and send one grouped push notification when needed.
+     * Chat messages are intentionally not added to the general notification center.
      */
     public function store(array $data, $attachments)
     {
@@ -23,7 +22,9 @@ class ChatService
         $message = $data['message'] ?? '';
 
         if ($attachments != null) {
-            $attachment = is_array($attachments) ? implode(',', $attachments) : $attachments;
+            $attachment = is_array($attachments)
+                ? implode(',', $attachments)
+                : $attachments;
         }
 
         $chat = Chat::create([
@@ -34,69 +35,80 @@ class ChatService
             'seen' => 0,
         ]);
 
-        // Notification failures must never turn an already-saved message into
-        // an apparent send failure or trigger the client to retry and duplicate it.
         try {
-            if ($chatThreadId) {
-                ChatThread::where('id', $chatThreadId)->update(['updated_at' => now()]);
-                $thread = ChatThread::find($chatThreadId);
-                if ($thread) {
-                    $receiverId = (int) $thread->sender_user_id === (int) $senderUserId
-                        ? $thread->receiver_user_id
-                        : $thread->sender_user_id;
-                    $receiver = User::find($receiverId);
-                    $sender = auth()->user();
-                    $senderName = $sender
-                        ? trim(($sender->first_name ?? '') . ' ' . ($sender->last_name ?? ''))
-                        : 'مستخدم وصال';
-                    $notificationTitle = 'رسالة جديدة من ' . $senderName;
-                    $notificationBody = trim((string) $message) !== ''
-                        ? $message
-                        : 'أرسل لك ملفاً مرفقاً';
+            if (!$chatThreadId) return $chat;
 
-                    if ($receiver) {
-                        try {
-                            if (!empty($receiver->fcm_token)) {
-                                FirebaseNotificationService::sendPushNotification(
-                                    $receiver->fcm_token,
-                                    $notificationTitle,
-                                    $notificationBody,
-                                    [
-                                        'type' => 'chat_message',
-                                        'notification_type' => 'chat_message',
-                                        'thread_id' => $thread->id,
-                                        'chat_thread_id' => $thread->id,
-                                        'info_id' => $thread->id,
-                                        'sender_id' => $senderUserId,
-                                    ]
-                                );
-                            }
-                        } catch (\Throwable $pushError) {
-                            Log::warning('[Chat FCM Notification Error]: ' . $pushError->getMessage());
-                        }
+            ChatThread::where('id', $chatThreadId)
+                ->update(['updated_at' => now()]);
+            $thread = ChatThread::find($chatThreadId);
+            if (!$thread) return $chat;
 
-                        try {
-                            $notificationId = unique_notify_id();
-                            $targetRoute = Route::has('chat.index')
-                                ? route('chat.index')
-                                : url('/api/member/chat-list');
-                            Notification::send($receiver, new DbStoreNotification(
-                                'chat_message',
-                                $notificationId,
-                                $senderUserId,
-                                $thread->id,
-                                $notificationBody,
-                                $targetRoute,
-                                $notificationTitle
-                            ));
-                        } catch (\Throwable $databaseNotificationError) {
-                            Log::warning('[Chat Database Notification Error]: ' . $databaseNotificationError->getMessage());
-                        }
-                    }
-                }
+            $receiverId = (int) $thread->sender_user_id === (int) $senderUserId
+                ? $thread->receiver_user_id
+                : $thread->sender_user_id;
+            $receiver = User::find($receiverId);
+            if (!$receiver || empty($receiver->fcm_token)) return $chat;
+
+            // The recipient is already reading this exact chat: update the
+            // message list silently through the open screen's refresh timer.
+            $activeThreadId = (int) Cache::get(
+                'wesal:active-chat:' . $receiverId,
+                0
+            );
+            $isMuted = (bool) Cache::get(
+                'wesal:chat-muted:' . $receiverId . ':' . $thread->id,
+                false
+            );
+            if ($activeThreadId === (int) $thread->id || $isMuted) {
+                return $chat;
             }
-        } catch (\Throwable $notificationSetupError) {
-            Log::warning('[Chat Notification Setup Error]: ' . $notificationSetupError->getMessage());
+
+            $sender = auth()->user();
+            $senderName = $sender
+                ? trim(($sender->first_name ?? '') . ' ' . ($sender->last_name ?? ''))
+                : 'مستخدم وصال';
+            if ($senderName === '') $senderName = 'مستخدم وصال';
+
+            $unreadCount = Chat::where('chat_thread_id', $thread->id)
+                ->where('sender_user_id', '!=', $receiverId)
+                ->where('seen', 0)
+                ->count();
+            $notificationBody = $unreadCount > 1
+                ? 'لديك ' . $unreadCount . ' رسائل جديدة'
+                : (trim((string) $message) !== ''
+                    ? $message
+                    : 'أرسل لك ملفاً مرفقاً');
+
+            // Reuse the operating-system notification identity. The first
+            // update is audible; rapid subsequent updates are quiet replacements.
+            $windowKey = 'wesal:chat-push-window:' . $receiverId . ':' . $thread->id;
+            $isFirstInWindow = Cache::add(
+                $windowKey,
+                true,
+                now()->addSeconds(60)
+            );
+
+            FirebaseNotificationService::sendPushNotification(
+                $receiver->fcm_token,
+                'رسالة جديدة من ' . $senderName,
+                $notificationBody,
+                [
+                    'type' => 'chat_message',
+                    'notification_type' => 'chat_message',
+                    'thread_id' => $thread->id,
+                    'chat_thread_id' => $thread->id,
+                    'info_id' => $thread->id,
+                    'sender_id' => $senderUserId,
+                    'notification_tag' => 'wesal_chat_' . $thread->id,
+                    'silent' => $isFirstInWindow ? 'false' : 'true',
+                ]
+            );
+        } catch (\Throwable $notificationError) {
+            // A failed push must never turn a saved message into a failed send,
+            // otherwise the client may retry and create a duplicate message.
+            Log::warning(
+                '[Chat Push Notification Error]: ' . $notificationError->getMessage()
+            );
         }
 
         return $chat;

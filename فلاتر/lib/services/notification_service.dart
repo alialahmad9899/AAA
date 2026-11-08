@@ -25,15 +25,37 @@ import '../screens/notifications_screen.dart';
 import '../screens/support_ticket_detail_screen.dart';
 import 'api_service.dart';
 import 'fcm_service.dart';
+import '../utils/chat_notification_utils.dart';
+import '../utils/chat_activity_state.dart';
 
 const AndroidNotificationChannel _notificationChannel =
     AndroidNotificationChannel(
   'wesal_high_importance_channel',
   'إشعارات تطبيق وصال',
-  description: 'إشعارات الرسائل والطلبات والتنبيهات المهمة في تطبيق وصال',
+  description: 'إشعارات الطلبات والتنبيهات المهمة في تطبيق وصال',
   importance: Importance.max,
   playSound: true,
   enableVibration: true,
+);
+
+const AndroidNotificationChannel _chatAlertChannel =
+    AndroidNotificationChannel(
+  'wesal_chat_alert_channel',
+  'رسائل وصال',
+  description: 'تنبيه أول رسالة جديدة في المحادثة',
+  importance: Importance.high,
+  playSound: true,
+  enableVibration: true,
+);
+
+const AndroidNotificationChannel _silentChatChannel =
+    AndroidNotificationChannel(
+  'wesal_chat_silent_channel',
+  'تحديثات المحادثات',
+  description: 'تحديثات هادئة للرسائل ضمن المحادثات',
+  importance: Importance.low,
+  playSound: false,
+  enableVibration: false,
 );
 
 /// معالج رسائل الخلفية. لا يعيد عرض رسائل notification القادمة من FCM لأن
@@ -44,8 +66,10 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     WidgetsFlutterBinding.ensureInitialized();
     await Firebase.initializeApp();
 
-    // الرسائل ذات notification payload يعرضها نظام التشغيل تلقائياً.
+    // رسائل المحادثات ذات notification payload يعرضها النظام تلقائياً،
+    // ورسائلها data-only لا تنشئ إشعاراً محلياً مستقلاً حتى لا تتكرر.
     if (message.notification != null) return;
+    if (isChatNotificationType(message.data)) return;
 
     final String title =
         message.data['title']?.toString().trim() ?? '';
@@ -166,10 +190,12 @@ class NotificationService {
         );
         _localNotificationsInitialized = true;
 
-        await _localNotifications
+        final androidNotifications = _localNotifications
             .resolvePlatformSpecificImplementation<
-                AndroidFlutterLocalNotificationsPlugin>()
-            ?.createNotificationChannel(_notificationChannel);
+                AndroidFlutterLocalNotificationsPlugin>();
+        await androidNotifications?.createNotificationChannel(_notificationChannel);
+        await androidNotifications?.createNotificationChannel(_chatAlertChannel);
+        await androidNotifications?.createNotificationChannel(_silentChatChannel);
       } catch (error) {
         debugPrint('[Notifications] Local notifications setup failed: $error');
       }
@@ -243,8 +269,20 @@ class NotificationService {
     final String? messageId = message.messageId;
     if (messageId != null && !_processedMessageIds.add(messageId)) return;
     _trimProcessedMessageIds();
-    foregroundMessageVersion.value++;
 
+    final bool isChatMessage = isChatNotificationType(message.data);
+    final int threadId = chatThreadIdFromNotification(message.data);
+    if (isChatMessage &&
+        threadId > 0 &&
+        ChatActivityState.activeThreadId.value == threadId) {
+      // The user is already reading this conversation. Do not cover it with
+      // a local alert and do not increment the general notification counter.
+      return;
+    }
+    if (!isChatMessage) foregroundMessageVersion.value++;
+
+    final bool isSilent = isChatMessage &&
+        isSilentChatNotification(message.data['silent']);
     final String title = (message.notification?.title ??
             message.data['title']?.toString() ??
             '')
@@ -260,26 +298,31 @@ class NotificationService {
     }
 
     final AndroidNotification? android = message.notification?.android;
+    final AndroidNotificationChannel selectedChannel = !isChatMessage
+        ? _notificationChannel
+        : (isSilent ? _silentChatChannel : _chatAlertChannel);
     await _localNotifications.show(
-      messageId?.hashCode ?? message.hashCode,
+      isChatMessage
+          ? chatNotificationId(threadId, messageId, message.hashCode)
+          : (messageId?.hashCode ?? message.hashCode),
       title,
       body,
       NotificationDetails(
         android: AndroidNotificationDetails(
-          _notificationChannel.id,
-          _notificationChannel.name,
-          channelDescription: _notificationChannel.description,
+          selectedChannel.id,
+          selectedChannel.name,
+          channelDescription: selectedChannel.description,
           icon: android?.smallIcon ?? '@mipmap/ic_launcher',
-          importance: Importance.max,
-          priority: Priority.high,
-          playSound: true,
-          enableVibration: true,
+          importance: isSilent ? Importance.low : Importance.max,
+          priority: isSilent ? Priority.low : Priority.high,
+          playSound: !isSilent,
+          enableVibration: !isSilent,
           styleInformation: BigTextStyleInformation(body),
         ),
-        iOS: const DarwinNotificationDetails(
+        iOS: DarwinNotificationDetails(
           presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
+          presentBadge: !isChatMessage,
+          presentSound: !isSilent,
         ),
       ),
       payload: jsonEncode(message.data),

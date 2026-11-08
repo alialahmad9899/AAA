@@ -11,6 +11,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -21,6 +22,7 @@ import '../models/notification_model.dart';
 import '../models/member_profile_model.dart';
 import '../models/support_ticket_model.dart';
 import 'profile_cache_service.dart';
+import 'chat_local_store.dart';
 
 // ============================================================================
 // دوال معالجة الـ JSON في خلفية النظام (Top-Level Isolates Parsers)
@@ -3079,15 +3081,55 @@ class ApiService {
   }
 
   // 6. المحادثات والدردشة (Chat API)
+  static Future<Map<String, dynamic>?> _cachedChatMessagesResponse(
+    int threadId,
+  ) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final accountId = prefs.getInt('user_id') ?? 0;
+      final cached = await ChatLocalStore.getMessages(
+        accountId,
+        threadId,
+        currentUserId: accountId,
+      );
+      if (cached.isEmpty) return null;
+      return {
+        'success': true,
+        'status': 'cached',
+        'is_cached': true,
+        'messages': cached,
+        'has_more_old_messages': false,
+        'chat_rules': null,
+      };
+    } catch (error) {
+      if (kDebugMode) {
+        debugPrint('⚠️ [Chat Cache] Could not read messages: $error');
+      }
+      return null;
+    }
+  }
+
   static Future<List<ChatThreadModel>> getChatThreads({String? lang}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final accountId = prefs.getInt('user_id') ?? 0;
+
+    try {
+      final connectivity = await Connectivity().checkConnectivity();
+      if (connectivity.contains(ConnectivityResult.none)) {
+        final cached = await ChatLocalStore.getThreads(accountId);
+        if (cached.isNotEmpty) return cached;
+      }
+    } catch (_) {}
+
     try {
       final headers = await _getHeaders(lang: lang);
       final int ts = DateTime.now().millisecondsSinceEpoch;
       final Uri url = Uri.parse('$baseUrl/member/chat-list?_t=$ts');
       if (kDebugMode) debugPrint('🌐 [API GET] ChatThreads -> $url');
 
-      final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+      final response = await http
+          .get(url, headers: headers)
+          .timeout(const Duration(seconds: 8));
       if (kDebugMode) debugPrint('📥 [API RESPONSE ${response.statusCode}]');
 
       if (response.statusCode != 200 && response.statusCode != 201) {
@@ -3108,16 +3150,28 @@ class ApiService {
           uri: url,
         );
       }
-      final bool containsThreadList = decoded is List ||
+      final containsThreadList = decoded is List ||
           (decoded is Map &&
               ['data', 'chat_threads', 'chats', 'threads']
                   .any((key) => decoded[key] is List));
       if (!containsThreadList) {
         throw const FormatException('هيكل استجابة المحادثات غير متوقع');
       }
-      return await compute(_parseChatThreadsIsolate, response.body);
-    } catch (e) {
-      if (kDebugMode) debugPrint('❌ [API ERROR getChatThreads]: $e');
+      final threads = await compute(_parseChatThreadsIsolate, response.body);
+      if (accountId > 0) {
+        try {
+          await ChatLocalStore.saveThreads(accountId, threads);
+        } catch (cacheError) {
+          if (kDebugMode) {
+            debugPrint('⚠️ [Chat Cache] Could not save threads: $cacheError');
+          }
+        }
+      }
+      return threads;
+    } catch (error) {
+      if (kDebugMode) debugPrint('❌ [API ERROR getChatThreads]: $error');
+      final cached = await ChatLocalStore.getThreads(accountId);
+      if (cached.isNotEmpty) return cached;
       rethrow;
     }
   }
@@ -3125,6 +3179,14 @@ class ApiService {
   static Future<Map<String, dynamic>> getChatMessages(
       int threadId, int partnerUserId,
       {String? lang}) async {
+    try {
+      final connectivity = await Connectivity().checkConnectivity();
+      if (connectivity.contains(ConnectivityResult.none)) {
+        final cached = await _cachedChatMessagesResponse(threadId);
+        if (cached != null) return cached;
+      }
+    } catch (_) {}
+
     try {
       final headers = await _getHeaders(lang: lang);
       final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -3214,13 +3276,33 @@ class ApiService {
               Map<String, dynamic>.from(data['chat_rules']));
         }
 
+        final orderedMessages = parsedMessages.reversed.toList();
+        if (currentUserId > 0 && threadId > 0) {
+          try {
+            await ChatLocalStore.saveMessages(
+              currentUserId,
+              threadId,
+              orderedMessages,
+            );
+          } catch (cacheError) {
+            if (kDebugMode) {
+              debugPrint('⚠️ [Chat Cache] Could not save messages: $cacheError');
+            }
+          }
+        }
         return {
           'success': true,
           'status': 'success',
-          'messages': parsedMessages.reversed.toList(),
+          'messages': orderedMessages,
           'has_more_old_messages': threadData['has_more_old_messages'] == true,
           'chat_rules': chatRules,
         };
+      }
+      if (response.statusCode >= 500 ||
+          response.statusCode == 408 ||
+          response.statusCode == 429) {
+        final cached = await _cachedChatMessagesResponse(threadId);
+        if (cached != null) return cached;
       }
       return {
         'success': false,
@@ -3229,8 +3311,10 @@ class ApiService {
         'messages': <ChatMessageModel>[],
         'chat_rules': null,
       };
-    } catch (e) {
-      if (kDebugMode) debugPrint('❌ [API ERROR getChatMessages]: $e');
+    } catch (error) {
+      if (kDebugMode) debugPrint('❌ [API ERROR getChatMessages]: $error');
+      final cached = await _cachedChatMessagesResponse(threadId);
+      if (cached != null) return cached;
       return {
         'success': false,
         'status': 'network_error',
@@ -3243,7 +3327,7 @@ class ApiService {
 
   static Future<Map<String, dynamic>> getOldMessages(
       int firstMessageId, int partnerUserId,
-      {String? lang}) async {
+      {String? lang, int? threadId}) async {
     try {
       final headers = await _getHeaders(lang: lang);
       final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -3267,6 +3351,27 @@ class ApiService {
       }
 
       if (response.statusCode != 200 && response.statusCode != 201) {
+        if (response.statusCode >= 500 ||
+            response.statusCode == 408 ||
+            response.statusCode == 429) {
+          final prefs = await SharedPreferences.getInstance();
+          final accountId = prefs.getInt('user_id') ?? 0;
+          final cached = await ChatLocalStore.getOlderMessages(
+            accountId,
+            threadId ?? 0,
+            firstMessageId,
+            partnerUserId,
+          );
+          final messages = cached['messages'] as List<ChatMessageModel>;
+          if (messages.isNotEmpty) {
+            return {
+              'success': true,
+              'is_cached': true,
+              'messages': messages,
+              'has_more': cached['has_more'] == true,
+            };
+          }
+        }
         return {
           'success': false,
           'message': 'تعذر تحميل الرسائل السابقة (HTTP ${response.statusCode})',
@@ -3294,18 +3399,98 @@ class ApiService {
                 currentUserId: currentUserId,
               ))
           .toList();
+      final orderedMessages = parsed.reversed.toList();
+      if (currentUserId > 0 && (threadId ?? 0) > 0) {
+        try {
+          await ChatLocalStore.saveMessages(
+            currentUserId,
+            threadId!,
+            orderedMessages,
+          );
+        } catch (cacheError) {
+          if (kDebugMode) {
+            debugPrint('⚠️ [Chat Cache] Could not save older messages: $cacheError');
+          }
+        }
+      }
       return {
         'success': true,
-        'messages': parsed.reversed.toList(),
+        'messages': orderedMessages,
         'has_more': decoded['has_more'] == true,
       };
     } catch (e) {
       if (kDebugMode) debugPrint('❌ [API ERROR getOldMessages]: $e');
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final accountId = prefs.getInt('user_id') ?? 0;
+        final cached = await ChatLocalStore.getOlderMessages(
+          accountId,
+          threadId ?? 0,
+          firstMessageId,
+          partnerUserId,
+        );
+        final messages = cached['messages'] as List<ChatMessageModel>;
+        if (messages.isNotEmpty) {
+          return {
+            'success': true,
+            'is_cached': true,
+            'messages': messages,
+            'has_more': cached['has_more'] == true,
+          };
+        }
+      } catch (cacheError) {
+        if (kDebugMode) {
+          debugPrint('⚠️ [Chat Cache] Could not read older messages: $cacheError');
+        }
+      }
       return {
         'success': false,
         'message': 'تعذر الاتصال بالسيرفر لتحميل الرسائل السابقة',
         'messages': <ChatMessageModel>[],
       };
+    }
+  }
+
+  static Future<bool> updateChatPresence({required int threadId}) async {
+    try {
+      final response = await post(
+        '/member/chat-presence',
+        {'thread_id': threadId},
+      );
+      return isSuccessfulResult(response);
+    } catch (error) {
+      if (kDebugMode) debugPrint('⚠️ [Chat Presence] $error');
+      return false;
+    }
+  }
+
+  static Future<bool> setChatMuted({
+    required int threadId,
+    required bool muted,
+  }) async {
+    try {
+      final response = await post('/member/chat-mute', {
+        'chat_thread_id': threadId,
+        'muted': muted,
+      });
+      return isSuccessfulResult(response);
+    } catch (error) {
+      if (kDebugMode) debugPrint('⚠️ [Chat Mute] $error');
+      return false;
+    }
+  }
+
+  static Future<void> syncChatMuteSettings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final accountId = prefs.getInt('user_id') ?? 0;
+      if (accountId <= 0) return;
+      final settings = await ChatLocalStore.getMuteSettings(accountId);
+      for (final entry in settings.entries) {
+        await setChatMuted(threadId: entry.key, muted: entry.value);
+      }
+    } catch (error) {
+      if (kDebugMode) debugPrint('⚠️ [Chat Mute Sync] $error');
     }
   }
 
@@ -3485,29 +3670,34 @@ class ApiService {
       }
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        final bool succeeded = data is Map && data['result'] != null
+            ? data['result'] == true
+            : true;
+        if (succeeded) {
+          final prefs = await SharedPreferences.getInstance();
+          await ChatLocalStore.deleteThread(
+            prefs.getInt('user_id') ?? 0,
+            threadId,
+          );
+        }
         return {
-          'success':
-              (data is Map && data['result'] != null) ? data['result'] : true,
+          'success': succeeded,
           'message': (data is Map && data['message'] != null)
               ? data['message']
               : 'تم حذف المحادثة بنجاح',
         };
-      } else {
-        return {
-          'success': false,
-          'message': (data is Map && data['message'] != null)
-              ? data['message']
-              : 'تعذر حذف المحادثة من السيرفر',
-        };
       }
-    } catch (e) {
-      if (kDebugMode) debugPrint('❌ [API ERROR deleteChatThread]: $e');
+      return {
+        'success': false,
+        'message': (data is Map && data['message'] != null)
+            ? data['message']
+            : 'تعذر حذف المحادثة من السيرفر',
+      };
+    } catch (error) {
+      if (kDebugMode) debugPrint('❌ [API ERROR deleteChatThread]: $error');
       return {'success': false, 'message': 'تعذر الاتصال بالسيرفر'};
     }
   }
-
-  // 7. التجاهل والإبلاغ والإشعارات
-
   static Future<List<MemberModel>> getIgnoredUserList({String? lang}) async {
     try {
       final headers = await _getHeaders(lang: lang);
