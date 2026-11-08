@@ -17,6 +17,7 @@ use App\Services\FirebaseNotificationService;
 use App\Utility\EmailUtility;
 use App\Utility\MemberUtility;
 use App\Utility\SubscriptionUtility;
+use App\Services\PackagePresentation;
 use App\Services\SubscriptionNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -46,12 +47,21 @@ class PackageController extends Controller
      */
     private function formatPackageName($package, string $lang): string
     {
-        if ($lang === 'en' && !empty($package->name_en)) {
-            return $package->name_en;
+        $presentation = PackagePresentation::get((int) $package->id);
+        if ($lang === 'en') {
+            return $presentation['name_en']
+                ?: ($package->name_en ?? $package->name ?? '');
         }
 
-        // Preserve the exact official package name stored by administration.
         return $package->name ?? '';
+    }
+
+    private function formatPackageDescription($package, string $lang): string
+    {
+        $presentation = PackagePresentation::get((int) $package->id);
+        return ($lang === 'en' && !empty($presentation['description_en']))
+            ? $presentation['description_en']
+            : $presentation['description_ar'];
     }
 
     /**
@@ -100,34 +110,51 @@ class PackageController extends Controller
                 'is_free' => true,
                 'message' => $freeMessage,
                 'data'    => []
-            ], 200);
+            ], 200)->header('Cache-Control', 'no-store, private, max-age=0')
+              ->header('Pragma', 'no-cache');
         }
 
         // للذكور -> إرجاع الباقات النشطة مع تحديد الاسم بحسب اللغة بأسلوب مضمون
-        $packages = Package::where('active', '1')->where('price', '>', 0)->where('validity', '>', 0)->get()->map(function ($package) use ($lang) {
-            return [
-                'id'                   => $package->id,
-                'name'                 => $this->formatPackageName($package, $lang),
-                'name_ar'              => $package->name,
-                'name_en'              => $package->name_en ?? '',
-                'price'                => $package->price,
-                'validity'             => $package->validity,
-                'express_interest'     => $package->express_interest,
-                'photo_gallery'        => $package->photo_gallery,
-                'contact'              => $package->contact,
-                'profile_viewers_view' => $package->profile_viewers_view,
-                'profile_image_view'   => $package->profile_image_view,
-                'gallery_image_view'   => $package->gallery_image_view,
-                'message_profile_quota' => $package->message_profile_quota,
-                'auto_profile_match'    => (int) ($package->auto_profile_match ?? 0),
-            ];
-        });
+        $packages = Package::where('active', '1')
+            ->where('price', '>', 0)
+            ->where('validity', '>', 0)
+            ->get()
+            ->sort(function ($left, $right) {
+                $leftOrder = PackagePresentation::get((int) $left->id)['sort_order'];
+                $rightOrder = PackagePresentation::get((int) $right->id)['sort_order'];
+                return $leftOrder <=> $rightOrder ?: ((int) $left->id <=> (int) $right->id);
+            })
+            ->values()
+            ->map(function ($package) use ($lang) {
+                $presentation = PackagePresentation::get((int) $package->id);
+                return [
+                    'id' => (int) $package->id,
+                    'name' => $this->formatPackageName($package, $lang),
+                    'name_ar' => $package->name,
+                    'name_en' => $presentation['name_en'] ?: ($package->name_en ?? ''),
+                    'description' => $this->formatPackageDescription($package, $lang),
+                    'description_ar' => $presentation['description_ar'],
+                    'description_en' => $presentation['description_en'],
+                    'sort_order' => $presentation['sort_order'],
+                    'price' => $package->price,
+                    'validity' => $package->validity,
+                    'express_interest' => $package->express_interest,
+                    'photo_gallery' => $package->photo_gallery,
+                    'contact' => $package->contact,
+                    'profile_viewers_view' => $package->profile_viewers_view,
+                    'profile_image_view' => $package->profile_image_view,
+                    'gallery_image_view' => $package->gallery_image_view,
+                    'message_profile_quota' => $package->message_profile_quota,
+                    'auto_profile_match' => (int) ($package->auto_profile_match ?? 0),
+                ];
+            });
 
         return response()->json([
             'result'  => true,
             'is_free' => false,
             'data'    => $packages
-        ], 200);
+        ], 200)->header('Cache-Control', 'no-store, private, max-age=0')
+          ->header('Pragma', 'no-cache');
     }
 
     /**
@@ -143,7 +170,11 @@ class PackageController extends Controller
                 'id'                   => $package->id,
                 'name'                 => $this->formatPackageName($package, $lang),
                 'name_ar'              => $package->name,
-                'name_en'              => $package->name_en ?? '',
+                'name_en'              => PackagePresentation::get((int) $package->id)['name_en'] ?: ($package->name_en ?? ''),
+                'description'          => $this->formatPackageDescription($package, $lang),
+                'description_ar'       => PackagePresentation::get((int) $package->id)['description_ar'],
+                'description_en'       => PackagePresentation::get((int) $package->id)['description_en'],
+                'sort_order'           => PackagePresentation::get((int) $package->id)['sort_order'],
                 'price'                => $package->price,
                 'validity'             => $package->validity,
                 'express_interest'     => $package->express_interest,
@@ -157,7 +188,8 @@ class PackageController extends Controller
             return response()->json([
                 'result' => true,
                 'data'   => $formattedPackage
-            ], 200);
+            ], 200)->header('Cache-Control', 'no-store, private, max-age=0')
+              ->header('Pragma', 'no-cache');
         }
 
         $errorMessage = ($lang === 'en') ? 'Sorry!!, Invalid Data.' : 'عفواً، البيانات غير صالحة.';
