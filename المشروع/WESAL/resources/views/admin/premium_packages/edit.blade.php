@@ -22,6 +22,31 @@
                         </div>
 
                         <div class="form-group row">
+                            <label class="col-md-3 col-form-label" for="name_en">اسم الباقة بالإنجليزية</label>
+                            <div class="col-md-9">
+                                <input type="text" name="name_en" id="name_en" value="{{ old('name_en', $presentation['name_en']) }}" class="form-control" maxlength="255" placeholder="Package name in English">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-md-3 col-form-label" for="description_ar">وصف الباقة بالعربية</label>
+                            <div class="col-md-9">
+                                <textarea name="description_ar" id="description_ar" class="form-control" rows="3" maxlength="1500">{{ old('description_ar', $presentation['description_ar']) }}</textarea>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-md-3 col-form-label" for="description_en">وصف الباقة بالإنجليزية</label>
+                            <div class="col-md-9">
+                                <textarea name="description_en" id="description_en" class="form-control" rows="3" maxlength="1500">{{ old('description_en', $presentation['description_en']) }}</textarea>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-md-3 col-form-label" for="sort_order"><i class="las la-sort-numeric-down"></i> ترتيب الظهور في التطبيق</label>
+                            <div class="col-md-9">
+                                <input type="number" name="sort_order" id="sort_order" class="form-control" min="0" max="9999" required value="{{ old('sort_order', $presentation['sort_order']) }}">
+                                <small class="text-muted">الرقم الأصغر يظهر أولاً. عند تساوي الرقم تُرتب الباقات حسب رقمها.</small>
+                            </div>
+                        </div>
+                        <div class="form-group row">
                             <label class="col-md-3 col-form-label">{{translate('Price')}}</label>
                             <div class="col-md-9">
                                 <div class="input-group">
