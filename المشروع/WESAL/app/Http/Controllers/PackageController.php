@@ -232,6 +232,8 @@ class PackageController extends Controller
                     'name_en' => $request->input('name_en'),
                     'description_ar' => $request->input('description_ar'),
                     'description_en' => $request->input('description_en'),
+                    'features_ar' => $request->input('features_ar'),
+                    'features_en' => $request->input('features_en'),
                     'sort_order' => $request->input('sort_order'),
                 ]);
             });
