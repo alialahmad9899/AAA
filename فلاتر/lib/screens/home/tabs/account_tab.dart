@@ -1472,12 +1472,29 @@ class _SubscriptionsModalContentState
         _parseSubscriptionValidity(profile);
       }
 
+      final packageItems = PackageCatalogUtils.sortPackages(
+        pkgRes['data'] is List ? pkgRes['data'] as List : const [],
+      );
+
       if (mounted) {
         setState(() {
           _isFreeFemale = (pkgRes['is_free'] == true) || isFemaleUser;
-          _packages = PackageCatalogUtils.sortPackages(
-            pkgRes['data'] is List ? pkgRes['data'] as List : const [],
-          );
+          _packages = packageItems;
+          final bool selectedPackageStillAvailable =
+              _selectedPackageId == null ||
+              packageItems.any((package) {
+                final packageId = int.tryParse(
+                      (package['id'] ?? package['package_id'] ?? '0').toString(),
+                    ) ??
+                    0;
+                return packageId == _selectedPackageId;
+              });
+          if (!selectedPackageStillAvailable) {
+            _selectedPackageId = null;
+            _selectedAmount = 0;
+            _selectedPackageName = '';
+            _showPaymentStep = false;
+          }
           final serverCurrencySymbol = pkgRes['currency_symbol']?.toString().trim();
           if (serverCurrencySymbol != null && serverCurrencySymbol.isNotEmpty) {
             _currencySymbol = serverCurrencySymbol;
@@ -2492,8 +2509,11 @@ class _SubscriptionsModalContentState
   }
 
   Widget _buildMalePackagesView() {
-    return SingleChildScrollView(
-      child: Column(
+    return RefreshIndicator(
+      onRefresh: _loadSubscriptionData,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (_hasActiveSubscription) _buildActiveSubscriptionCard(),
@@ -2729,6 +2749,7 @@ class _SubscriptionsModalContentState
             );
           }),
         ],
+        ),
       ),
     );
   }
