@@ -158,6 +158,9 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     Route::controller(VipServiceAdminController::class)->group(function () {
         Route::get('/vip-services/catalog', 'catalog')->name('admin.vip-services.catalog');
         Route::post('/vip-services/catalog', 'updateCatalog')->name('admin.vip-services.catalog.update');
+        Route::post('/vip-services/catalog/add', 'addCatalogService')->name('admin.vip-services.catalog.add');
+        Route::post('/vip-services/catalog/{serviceType}/remove', 'removeCatalogService')->name('admin.vip-services.catalog.remove');
+        Route::post('/vip-services/catalog/{serviceType}/restore', 'restoreCatalogService')->name('admin.vip-services.catalog.restore');
         Route::get('/vip-services/orders', 'index')->name('admin.vip-services.index');
         Route::get('/vip-services/orders/{id}', 'show')->name('admin.vip-services.show');
         Route::post('/vip-services/orders/{id}/status', 'updateStatus')->name('admin.vip-services.update_status');

@@ -33,6 +33,10 @@ class VipServiceOrder extends Model
         'amount' => 'double',
     ];
 
+    protected $appends = [
+        'service_type_name',
+    ];
+
     /**
      * علاقة الطلب مع المستخدم Owner
      */
@@ -62,12 +66,7 @@ class VipServiceOrder extends Model
      */
     public function getServiceTypeNameAttribute()
     {
-        $types = [
-            'highlight_profile' => 'خدمة نشر طلب زواج مميّز',
-            'direct_contact' => 'خدمة التواصل المباشر خارج المنصة',
-            'special_matchmaking' => 'خدمة البحث الخاص عن شريك الحياة',
-        ];
-
-        return $types[$this->service_type] ?? $this->service_type;
+        $service = \App\Services\VipServiceCatalog::find((string) $this->service_type);
+        return $service['title_ar'] ?? $service['title'] ?? $this->service_type;
     }
 }

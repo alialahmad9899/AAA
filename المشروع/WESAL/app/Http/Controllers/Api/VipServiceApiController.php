@@ -32,7 +32,7 @@ class VipServiceApiController extends Controller
     public function createStripePaymentIntent(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'service_type' => 'required|string|in:highlight_profile,direct_contact,special_matchmaking',
+            'service_type' => ['required', 'string', 'regex:/^[a-z][a-z0-9_]{2,59}$/'],
         ]);
 
         if ($validator->fails()) {
@@ -181,7 +181,7 @@ class VipServiceApiController extends Controller
     public function submitShamCashPayment(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'service_type' => 'required|string|in:highlight_profile,direct_contact,special_matchmaking',
+            'service_type' => ['required', 'string', 'regex:/^[a-z][a-z0-9_]{2,59}$/'],
             'account_name' => 'required|string',
             'payment_proof' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:8192',
         ]);
