@@ -52,4 +52,19 @@ class PackageCatalogUtils {
     if (preferredText.isNotEmpty) return preferredText;
     return package['description']?.toString().trim() ?? '';
   }
+
+  static List<String> displayFeatures(
+    Map<String, dynamic> package, {
+    required bool isArabic,
+  }) {
+    final preferred = isArabic ? package['features_ar'] : package['features_en'];
+    final source = preferred is List
+        ? preferred
+        : (package['features'] is List ? package['features'] as List : const []);
+    return source
+        .map((item) => item?.toString().trim() ?? '')
+        .where((item) => item.isNotEmpty)
+        .take(30)
+        .toList(growable: false);
+  }
 }
