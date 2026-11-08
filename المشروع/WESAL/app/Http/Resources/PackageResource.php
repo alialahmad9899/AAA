@@ -35,7 +35,12 @@ class PackageResource extends JsonResource
             'description'          => $description,
             'description_ar'       => $presentation['description_ar'],
             'description_en'       => $presentation['description_en'],
-            'sort_order'           => $presentation['sort_order'],
+            'features'              => $lang === 'en' && !empty($presentation['features_en'])
+                ? $presentation['features_en']
+                : $presentation['features_ar'],
+            'features_ar'           => $presentation['features_ar'],
+            'features_en'           => $presentation['features_en'],
+            'sort_order'            => $presentation['sort_order'],
             'image'                => uploaded_asset($this->image) ?? static_asset('assets/img/placeholder.jpg'),
             'express_interest'     => $this->express_interest,
             'photo_gallery'        => $this->photo_gallery,
