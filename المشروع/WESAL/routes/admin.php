@@ -151,6 +151,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
         Route::get('/vip-services/orders', 'index')->name('admin.vip-services.index');
         Route::get('/vip-services/orders/{id}', 'show')->name('admin.vip-services.show');
         Route::post('/vip-services/orders/{id}/status', 'updateStatus')->name('admin.vip-services.update_status');
+        Route::post('/vip-services/orders/{id}/payment-status', 'updatePaymentStatus')->name('admin.vip-services.update_payment_status');
     });
 
     // Wallet

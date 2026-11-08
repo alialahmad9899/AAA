@@ -7,6 +7,7 @@ use App\Models\VipServiceOrder;
 use App\Services\FirebaseNotificationService;
 use App\Notifications\DbStoreNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
@@ -50,72 +51,170 @@ class VipServiceAdminController extends Controller
      */
     public function updateStatus(Request $request, $id)
     {
-        $request->validate([
+        $validated = $request->validate([
             'execution_status' => 'required|string|in:pending,in_progress,completed,cancelled',
             'rejection_reason' => 'nullable|string|max:1000',
         ]);
+        $newStatus = $validated['execution_status'];
+
+        try {
+            DB::transaction(function () use ($id, $validated, $newStatus) {
+                $order = VipServiceOrder::whereKey($id)->lockForUpdate()->firstOrFail();
+
+                // بدء التنفيذ أو إكماله لا يُثبت الدفع. يجب مراجعة الدفع أولاً.
+                if (in_array($newStatus, ['in_progress', 'completed'], true)
+                    && $order->payment_status !== 'paid') {
+                    throw new \RuntimeException('VIP_PAYMENT_NOT_VERIFIED');
+                }
+
+                $specs = is_array($order->specifications) ? $order->specifications : [];
+                if ($newStatus === 'cancelled' && !empty(trim((string) ($validated['rejection_reason'] ?? '')))) {
+                    $specs['rejection_reason'] = trim($validated['rejection_reason']);
+                } elseif ($newStatus !== 'cancelled') {
+                    unset($specs['rejection_reason']);
+                }
+
+                $order->execution_status = $newStatus;
+                $order->specifications = $specs;
+                $order->save();
+            });
+        } catch (\Throwable $exception) {
+            if ($exception->getMessage() === 'VIP_PAYMENT_NOT_VERIFIED') {
+                return back()->with('warning', 'لا يمكن بدء تنفيذ الخدمة قبل تأكيد استلام المبلغ ومراجعته.');
+            }
+
+            Log::error('VIP execution status update failed.', [
+                'order_id' => $id,
+                'message' => $exception->getMessage(),
+            ]);
+            return back()->with('danger', 'تعذر تحديث حالة تنفيذ الخدمة.');
+        }
 
         $order = VipServiceOrder::with('user')->findOrFail($id);
-        $oldStatus = $order->execution_status;
-        $newStatus = $request->execution_status;
-
-        $order->execution_status = $newStatus;
-
-        // دمج سبب الرفض داخل مصفوفة المواصفات في حال تم رفض الطلب
         $specs = is_array($order->specifications) ? $order->specifications : [];
-        if ($newStatus === 'cancelled' && $request->filled('rejection_reason')) {
-            $specs['rejection_reason'] = trim($request->rejection_reason);
-        } elseif ($newStatus !== 'cancelled') {
-            unset($specs['rejection_reason']);
-        }
-        $order->specifications = $specs;
 
-        // إذا وافق الأدمن يدويًا على الطلب، نحدث حالة الدفع إلى مدفوع
-        if (in_array($newStatus, ['in_progress', 'completed']) && $order->payment_status !== 'paid') {
-            $order->payment_status = 'paid';
-            $order->paid_at = now();
-        }
-
-        $order->save();
-
-        // 🔔 إرسال إشعار لحظي (Push & DB) للمشترك عبر التطبيق
+        // 🔔 إرسال إشعار لحظي (Push & DB) للمشترك بعد حفظ حالة التنفيذ.
         if ($order->user) {
             try {
-                $rejectionText = !empty($specs['rejection_reason']) ? "\nالسبب: " . $specs['rejection_reason'] : '';
-
+                $rejectionText = !empty($specs['rejection_reason']) ? "\\nالسبب: " . $specs['rejection_reason'] : '';
                 $statusTitles = [
                     'in_progress' => 'جاري تنفيذ طلبك 🚀',
                     'completed' => 'تم اكتمال تنفيذ الخدمة ✨',
                     'cancelled' => 'تحديث بشأن طلب خدمة VIP ❌',
                     'pending' => 'طلبك قيد المراجعة ⏳',
                 ];
-
                 $statusMessages = [
                     'in_progress' => "بدأ فريق العمل بتنفيذ طلب الخدمة VIP الخاص بك ({$order->order_code}).",
                     'completed' => "تم تنفيذ طلب الخدمة VIP بنجاح! شكراً لاختيارك منصة وصال.",
                     'cancelled' => "تعذر إكمال طلب الخدمة VIP ({$order->order_code}).{$rejectionText}",
                     'pending' => "طلب الخدمة VIP ({$order->order_code}) قيد المراجعة والتدقيق حالياً.",
                 ];
-
                 $title = $statusTitles[$newStatus] ?? 'تحديث خدمة VIP';
                 $message = $statusMessages[$newStatus] ?? 'تم تحديث حالة طلبك.';
 
-                Notification::send($order->user, new DbStoreNotification('vip_service_status', unique_notify_id(), null, $order->id, $message, '', $title));
+                Notification::send($order->user, new DbStoreNotification(
+                    'vip_service_status', unique_notify_id(), null, $order->id, $message, '', $title
+                ));
 
                 if (get_setting('firebase_push_notification') == 1 && !empty($order->user->fcm_token)) {
                     FirebaseNotificationService::sendPushNotification($order->user->fcm_token, $title, $message, [
                         'type' => 'vip_service_update',
                         'order_id' => $order->id,
                         'execution_status' => $order->execution_status,
-                        'rejection_reason' => $specs['rejection_reason'] ?? ''
+                        'rejection_reason' => $specs['rejection_reason'] ?? '',
                     ]);
                 }
-            } catch (\Exception $e) {
-                Log::error('❌ خطأ أثناء إرسال إشعار تحديث VIP: ' . $e->getMessage());
+            } catch (\Throwable $exception) {
+                Log::error('VIP execution notification failed.', [
+                    'order_id' => $order->id,
+                    'message' => $exception->getMessage(),
+                ]);
             }
         }
 
-        return back()->with('success', 'تم تحديث حالة الطلب وإشعار المشترك بنجاح! 🚀');
+        return back()->with('success', 'تم تحديث حالة تنفيذ الطلب وإشعار المشترك.');
+    }
+
+    /**
+     * تأكيد أو رفض حوالة شام كاش يدوياً. لا تتغير حالة الدفع من نموذج التنفيذ.
+     */
+    public function updatePaymentStatus(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'payment_status' => 'required|string|in:paid,rejected',
+            'rejection_reason' => 'required_if:payment_status,rejected|nullable|string|max:1000',
+        ]);
+        $newStatus = $validated['payment_status'];
+        $rejectionReason = trim((string) ($validated['rejection_reason'] ?? ''));
+
+        try {
+            DB::transaction(function () use ($id, $newStatus, $rejectionReason) {
+                $order = VipServiceOrder::whereKey($id)->lockForUpdate()->firstOrFail();
+
+                if ($order->payment_method !== 'sham_cash') {
+                    throw new \\RuntimeException('VIP_PAYMENT_METHOD_NOT_REVIEWABLE');
+                }
+                if ($order->payment_status !== 'pending_verification') {
+                    throw new \\RuntimeException('VIP_PAYMENT_ALREADY_REVIEWED');
+                }
+
+                $specs = is_array($order->specifications) ? $order->specifications : [];
+                $specs['payment_review'] = [
+                    'status' => $newStatus,
+                    'reason' => $newStatus === 'rejected' ? $rejectionReason : null,
+                    'reviewed_by' => auth()->id(),
+                    'reviewed_at' => now()->toIso8601String(),
+                ];
+
+                $order->payment_status = $newStatus;
+                $order->paid_at = $newStatus === 'paid' ? now() : null;
+                $order->specifications = $specs;
+                $order->save();
+            });
+        } catch (\\Throwable $exception) {
+            if (in_array($exception->getMessage(), [
+                'VIP_PAYMENT_METHOD_NOT_REVIEWABLE',
+                'VIP_PAYMENT_ALREADY_REVIEWED',
+            ], true)) {
+                return back()->with('warning', 'لا يمكن مراجعة عملية الدفع هذه أو تمت مراجعتها مسبقاً.');
+            }
+
+            Log::error('VIP payment review failed.', [
+                'order_id' => $id,
+                'message' => $exception->getMessage(),
+            ]);
+            return back()->with('danger', 'تعذر حفظ مراجعة الدفع.');
+        }
+
+        $order = VipServiceOrder::with('user')->findOrFail($id);
+        if ($order->user) {
+            $title = $newStatus === 'paid' ? 'تم تأكيد دفع خدمة VIP' : 'تم رفض حوالة خدمة VIP';
+            $message = $newStatus === 'paid'
+                ? "تم تأكيد استلام مبلغ طلب خدمة VIP ({$order->order_code}). أصبح الطلب جاهزاً لمراجعة التنفيذ."
+                : "تعذر تأكيد حوالة طلب خدمة VIP ({$order->order_code}). السبب: {$rejectionReason}";
+
+            try {
+                Notification::send($order->user, new DbStoreNotification(
+                    'vip_service_payment', unique_notify_id(), null, $order->id, $message, '', $title
+                ));
+                if (get_setting('firebase_push_notification') == 1 && !empty($order->user->fcm_token)) {
+                    FirebaseNotificationService::sendPushNotification($order->user->fcm_token, $title, $message, [
+                        'type' => 'vip_service_payment',
+                        'order_id' => $order->id,
+                        'payment_status' => $order->payment_status,
+                    ]);
+                }
+            } catch (\\Throwable $exception) {
+                Log::error('VIP payment review notification failed.', [
+                    'order_id' => $order->id,
+                    'message' => $exception->getMessage(),
+                ]);
+            }
+        }
+
+        return back()->with('success', $newStatus === 'paid'
+            ? 'تم تأكيد الدفع بنجاح.'
+            : 'تم رفض الحوالة وإبلاغ العضو بالسبب.');
     }
 
     /**

@@ -259,9 +259,17 @@
                             <span class="status-badge-custom bg-soft-success text-success">
                                 <i class="las la-check-circle font-size-16"></i> مدفوع بنجاح
                             </span>
+                        @elseif($order->payment_status == 'rejected')
+                            <span class="status-badge-custom bg-soft-danger text-danger">
+                                <i class="las la-times-circle font-size-16"></i> مرفوض
+                            </span>
+                        @elseif($order->payment_status == 'pending_verification')
+                            <span class="status-badge-custom bg-soft-warning text-warning">
+                                <i class="las la-clock font-size-16"></i> بانتظار مراجعة الحوالة
+                            </span>
                         @else
                             <span class="status-badge-custom bg-soft-warning text-warning">
-                                <i class="las la-clock font-size-16"></i> معلق / قيد التوثيق
+                                <i class="las la-clock font-size-16"></i> بانتظار الدفع
                             </span>
                         @endif
                     </div>
@@ -313,8 +321,8 @@
                         <label class="font-weight-bold text-dark font-size-13">حالة التنفيذ الجديدة:</label>
                         <select name="execution_status" id="execution_status_select" class="form-control custom-form-control" onchange="toggleRejectionBox()">
                             <option value="pending" {{ $order->execution_status == 'pending' ? 'selected' : '' }}>⏳ قيد الانتظار / قيد المراجعة</option>
-                            <option value="in_progress" {{ $order->execution_status == 'in_progress' ? 'selected' : '' }}>🚀 جاري التنفيذ (مقبول)</option>
-                            <option value="completed" {{ $order->execution_status == 'completed' ? 'selected' : '' }}>✨ مكتمل بنجاح</option>
+                            <option value="in_progress" {{ $order->execution_status == 'in_progress' ? 'selected' : '' }} {{ $order->payment_status != 'paid' ? 'disabled' : '' }}>🚀 جاري التنفيذ (مقبول)</option>
+                            <option value="completed" {{ $order->execution_status == 'completed' ? 'selected' : '' }} {{ $order->payment_status != 'paid' ? 'disabled' : '' }}>✨ مكتمل بنجاح</option>
                             <option value="cancelled" {{ $order->execution_status == 'cancelled' ? 'selected' : '' }}>❌ مرفوض / ملغى</option>
                         </select>
                     </div>
@@ -328,6 +336,31 @@
                         <span>حفظ التحديث وإرسال إشعار للمشترك</span> 📲
                     </button>
                 </form>
+
+                @if($order->payment_method === 'sham_cash' && $order->payment_status === 'pending_verification')
+                    <hr class="my-4">
+                    <form action="{{ route('admin.vip-services.update_payment_status', $order->id) }}" method="POST">
+                        @csrf
+                        <div class="form-group mb-3">
+                            <label class="font-weight-bold text-dark font-size-13">مراجعة حوالة شام كاش:</label>
+                            <select name="payment_status" class="form-control custom-form-control" required>
+                                <option value="paid">تأكيد استلام المبلغ</option>
+                                <option value="rejected">رفض الحوالة</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="font-weight-bold text-danger font-size-13">سبب الرفض (مطلوب عند اختيار الرفض):</label>
+                            <textarea name="rejection_reason" class="form-control custom-form-control" rows="3" maxlength="1000" placeholder="اكتب سبب رفض الحوالة ليصل إلى العضو..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success btn-block">
+                            <i class="las la-money-check-alt"></i> حفظ قرار مراجعة الدفع
+                        </button>
+                    </form>
+                @elseif($order->payment_status === 'rejected' && !empty($specs['payment_review']['reason']))
+                    <div class="alert alert-danger mt-3 mb-0">
+                        <strong>سبب رفض الحوالة:</strong> {{ $specs['payment_review']['reason'] }}
+                    </div>
+                @endif
             </div>
         </div>
     </div>

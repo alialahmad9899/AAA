@@ -42,7 +42,9 @@
                     <select class="form-control aiz-selectpicker" name="payment_status" onchange="this.form.submit()">
                         <option value="">-- جميع حالات الدفع --</option>
                         <option value="paid" {{ request('payment_status') == 'paid' ? 'selected' : '' }}>مدفوع (Paid)</option>
+                        <option value="pending_verification" {{ request('payment_status') == 'pending_verification' ? 'selected' : '' }}>بانتظار مراجعة الحوالة</option>
                         <option value="pending_payment" {{ request('payment_status') == 'pending_payment' ? 'selected' : '' }}>في انتظار الدفع</option>
+                        <option value="rejected" {{ request('payment_status') == 'rejected' ? 'selected' : '' }}>مرفوض</option>
                     </select>
                 </div>
 
@@ -124,8 +126,14 @@
                         <td>
                             @if($order->payment_status == 'paid')
                                 <span class="badge badge-inline badge-success">مدفوع 🟢</span>
+                            @elseif($order->payment_status == 'pending_verification')
+                                <span class="badge badge-inline badge-warning">بانتظار التحقق</span>
+                            @elseif($order->payment_status == 'rejected')
+                                <span class="badge badge-inline badge-danger">مرفوض 🔴</span>
+                            @elseif($order->payment_status == 'pending_payment')
+                                <span class="badge badge-inline badge-secondary">بانتظار الدفع</span>
                             @else
-                                <span class="badge badge-inline badge-danger">معلق 🔴</span>
+                                <span class="badge badge-inline badge-danger">{{ $order->payment_status }}</span>
                             @endif
                         </td>
                         <td>

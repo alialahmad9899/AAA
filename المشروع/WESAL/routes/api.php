@@ -95,17 +95,6 @@ Route::group(['namespace' => 'Api', 'middleware' => ['app_language']], function 
         Route::post('/member/verification-info-store', 'MemberController@store_verification_info');
     });
 
-    // 👑 👑 مسارات الخدمات الإضافية VIP المباشرة الموثقة (المسارات المطلوبة لتطبيق الهاتف)
-    Route::group(['middleware' => ['auth:sanctum']], function () {
-        Route::get('/vip-services/list', 'VipServiceApiController@getServicesList');
-        Route::get('/vip-services/my-orders', 'VipServiceApiController@getUserOrders');
-        Route::post('/vip-services/create-order', 'VipServiceApiController@createOrder');
-        Route::post('/vip-services/stripe-intent', 'VipServiceApiController@createStripePaymentIntent');
-        Route::post('/vip-services/stripe-confirm', 'VipServiceApiController@confirmStripePayment');
-        Route::post('/vip-services/sham-cash-submit', 'VipServiceApiController@submitShamCashPayment');
-        Route::post('/vip-services/submit-specifications/{id}', 'VipServiceApiController@submitSpecifications');
-    });
-
     Route::group(['middleware' => ['auth:sanctum', 'api_member']], function () {
         Route::post('/update-device-token', 'AuthController@update_device_token');
         Route::get('/app-check', 'AuthController@checkedData');
@@ -286,7 +275,6 @@ Route::group(['namespace' => 'Api', 'middleware' => ['app_language']], function 
             // 💎 مسارات الخدمات الإضافية VIP لتطبيق الهاتف
             Route::get('/vip-services/list', 'VipServiceApiController@getServicesList');
             Route::get('/vip-services/my-orders', 'VipServiceApiController@getUserOrders');
-            Route::post('/vip-services/create-order', 'VipServiceApiController@createOrder');
             Route::post('/vip-services/stripe-intent', 'VipServiceApiController@createStripePaymentIntent');
             Route::post('/vip-services/stripe-confirm', 'VipServiceApiController@confirmStripePayment');
             Route::post('/vip-services/sham-cash-submit', 'VipServiceApiController@submitShamCashPayment');

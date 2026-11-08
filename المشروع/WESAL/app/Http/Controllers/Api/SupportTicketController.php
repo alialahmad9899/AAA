@@ -12,6 +12,8 @@ use App\Models\ContactUs;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class SupportTicketController extends Controller
 {
@@ -71,8 +73,16 @@ class SupportTicketController extends Controller
                 return response()->json([
                     'result'  => false,
                     'message' => 'جدول التذاكر غير موجود في قاعدة البيانات، يرجى إنشاء الجداول أولاً.'
-                ], 200);
+                ], 503);
             }
+
+            $validated = $request->validate([
+                'subject' => ['required', 'string', 'max:255'],
+                'description' => ['required', 'string', 'max:10000'],
+                'support_category_id' => ['nullable', 'integer'],
+                'category_id' => ['nullable', 'integer'],
+                'attachment' => ['nullable', 'file', 'max:8192'],
+            ]);
 
             $attachment = null;
 
@@ -82,7 +92,7 @@ class SupportTicketController extends Controller
             }
 
             // 3. التحقق من القسم المطلوب
-            $category_id = $request->support_category_id ?? $request->category_id ?? 1;
+            $category_id = $validated['support_category_id'] ?? $validated['category_id'] ?? 1;
 
             // إذا لم يكن القسم موجوداً يتم اختيار أول قسم متاح أو إنشاؤه
             if (!SupportCategory::find($category_id)) {
@@ -102,7 +112,7 @@ class SupportTicketController extends Controller
 
             // 4. حفظ كائن التذكرة في جدول support_tickets للتطبيق
             $support_ticket                      = new SupportTicket;
-            $support_ticket->subject             = $request->subject;
+            $support_ticket->subject             = $validated['subject'];
             $support_ticket->support_category_id = $category_id;
             $support_ticket->sender_user_id      = auth()->id();
 
@@ -110,8 +120,8 @@ class SupportTicketController extends Controller
                 $support_ticket->assigned_user_id = $default_agent;
             }
 
-            $support_ticket->ticket_id   = date('Ymd-His');
-            $support_ticket->description = $request->description;
+            $support_ticket->ticket_id   = now()->format('Ymd-His') . '-' . Str::upper(Str::random(6));
+            $support_ticket->description = $validated['description'];
             $support_ticket->attachments = $attachment;
             $support_ticket->status      = '0';
             $support_ticket->seen        = '0';
@@ -141,8 +151,8 @@ class SupportTicketController extends Controller
                 ContactUs::create([
                     'name'        => $userName,
                     'email'       => $userEmail,
-                    'subject'     => $request->subject,
-                    'description' => $request->description,
+                    'subject'     => $validated['subject'],
+                    'description' => $validated['description'],
                     'status'      => 0,
                 ]);
             } catch (\Exception $ex) {
@@ -169,7 +179,7 @@ class SupportTicketController extends Controller
     public function show($id)
     {
         try {
-            $support_ticket       = SupportTicket::findOrFail($id);
+            $support_ticket       = SupportTicket::where('sender_user_id', auth()->id())->findOrFail($id);
             $support_ticket->seen = '1';
             $support_ticket->save();
 
@@ -207,39 +217,54 @@ class SupportTicketController extends Controller
      */
     public function ticket_reply(Request $request)
     {
+        $validated = $request->validate([
+            'support_ticket_id' => ['required', 'integer'],
+            'reply' => ['required', 'string', 'max:10000'],
+            'attachment' => ['nullable', 'file', 'max:8192'],
+        ]);
+
         try {
             $attachments = null;
-
             if ($request->hasFile('attachment')) {
                 $uploaded = upload_api_file($request->file('attachment'));
                 $attachments = is_array($uploaded) ? implode(',', $uploaded) : $uploaded;
             }
 
-            $support_ticket = SupportTicket::findOrFail($request->support_ticket_id);
+            DB::transaction(function () use ($validated, $attachments) {
+                // A member may only reply to a ticket they own.
+                $supportTicket = SupportTicket::where('sender_user_id', auth()->id())
+                    ->lockForUpdate()
+                    ->findOrFail($validated['support_ticket_id']);
 
-            $ticket_reply                    = new SupportTicketReply;
-            $ticket_reply->support_ticket_id = $request->support_ticket_id;
-            $ticket_reply->replied_user_id   = auth()->user()->id;
-            $ticket_reply->reply             = $request->reply;
-            $ticket_reply->attachments       = $attachments;
+                $ticketReply = new SupportTicketReply();
+                $ticketReply->support_ticket_id = $supportTicket->id;
+                $ticketReply->replied_user_id = auth()->id();
+                $ticketReply->reply = $validated['reply'];
+                $ticketReply->attachments = $attachments;
+                $ticketReply->save();
 
-            if ($ticket_reply->save()) {
-                if (auth()->user()->user_type == 'admin' || auth()->user()->user_type == 'staff') {
-                    $support_ticket->status = $request->status;
-                    $support_ticket->save();
-                } else {
-                    $support_ticket->status = "0";
-                    $support_ticket->save();
-                }
-                return $this->success_message('Reply has been sent successfully');
-            } else {
-                return $this->failure_message('Sorry! Something went wrong.');
-            }
-        } catch (\Exception $e) {
+                // A member reply reopens the ticket for the support team.
+                $supportTicket->status = '0';
+                $supportTicket->seen = '0';
+                $supportTicket->save();
+            });
+
+            return $this->success_message('Reply has been sent successfully');
+        } catch (\\Illuminate\\Database\\Eloquent\\ModelNotFoundException $exception) {
             return response()->json([
-                'result'  => false,
-                'message' => 'تعذر إرسال الرد: ' . $e->getMessage()
-            ], 200);
+                'result' => false,
+                'message' => 'التذكرة غير موجودة.',
+            ], 404);
+        } catch (\\Throwable $exception) {
+            Log::error('Support ticket reply failed.', [
+                'user_id' => auth()->id(),
+                'ticket_id' => $validated['support_ticket_id'],
+                'message' => $exception->getMessage(),
+            ]);
+            return response()->json([
+                'result' => false,
+                'message' => 'تعذر إرسال الرد حالياً.',
+            ], 500);
         }
     }
 
