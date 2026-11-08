@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Services\PackagePresentation;
 
 class PackageResource extends JsonResource
 {
@@ -17,16 +18,24 @@ class PackageResource extends JsonResource
         // 1. تحديد لغة الطلب الحالية (سواء من معلمة Query ?lang=en أو من ترويسة Accept-Language)
         $lang = $request->query('lang', $request->header('Accept-Language', 'ar'));
 
-        // 2. اختيار اسم الباقة المناسب بحسب اللغة المحددة مع توفر خيار بديل (Fallback)
-        $packageName = ($lang === 'en' && !empty($this->name_en)) 
-            ? $this->name_en 
+        // 2. Load the multilingual, admin-managed package presentation fields.
+        $presentation = PackagePresentation::get((int) $this->id);
+        $packageName = ($lang === 'en' && !empty($presentation['name_en']))
+            ? $presentation['name_en']
             : $this->name;
+        $description = ($lang === 'en' && !empty($presentation['description_en']))
+            ? $presentation['description_en']
+            : $presentation['description_ar'];
 
         return [
             'package_id'           => $this->id,
             'name'                 => $packageName,
             'name_ar'              => $this->name,
-            'name_en'              => $this->name_en ?? '',
+            'name_en'              => $presentation['name_en'] ?: ($this->name_en ?? ''),
+            'description'          => $description,
+            'description_ar'       => $presentation['description_ar'],
+            'description_en'       => $presentation['description_en'],
+            'sort_order'           => $presentation['sort_order'],
             'image'                => uploaded_asset($this->image) ?? static_asset('assets/img/placeholder.jpg'),
             'express_interest'     => $this->express_interest,
             'photo_gallery'        => $this->photo_gallery,
