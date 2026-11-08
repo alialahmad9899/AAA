@@ -7,6 +7,7 @@ use App\Models\VipServiceOrder;
 use App\Models\User;
 use App\Notifications\DbStoreNotification;
 use App\Services\FirebaseNotificationService;
+use App\Services\VipServiceCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
@@ -21,37 +22,8 @@ class VipServiceApiController extends Controller
      */
     public function getServicesList()
     {
-        $services = [
-            [
-                'id' => 1,
-                'service_type' => 'highlight_profile',
-                'title' => 'خدمة نشر طلب زواج مميّز – منصة وصال',
-                'price' => 10.00,
-                'currency' => '$',
-                'description' => 'منشور تفصيلي وفيديو مخصص على فيسبوك وتيك توك مع نشر رابط البروفايل للتواصل الآمن داخل التطبيق وبدون نشر رقم الهاتف.',
-                'icon' => static_asset('assets/img/vip/highlight.png'),
-            ],
-            [
-                'id' => 2,
-                'service_type' => 'direct_contact',
-                'title' => 'خدمة التواصل المباشر خارج المنصة – منصة وصال',
-                'price' => 25.00,
-                'currency' => '$',
-                'description' => 'منشور تفصيلي وفيديو على فيسبوك وتيك توك مع إتاحة وسيلة التواصل المباشر الخارجي وفق آلية التنسيق مع مراعاة الخصوصية.',
-                'icon' => static_asset('assets/img/vip/social.png'),
-            ],
-            [
-                'id' => 3,
-                'service_type' => 'special_matchmaking',
-                'title' => 'خدمة البحث الخاص عن شريك الحياة – منصة وصال',
-                'price' => 100.00,
-                'currency' => '$',
-                'description' => 'بحث مخصص بواسطة فريق منصة وصال في قاعدة البيانات الممتدة والربط المباشر والآمن داخل التطبيق بخصوصية تامة بدون نشر علني.',
-                'icon' => static_asset('assets/img/vip/matchmaking.png'),
-            ],
-        ];
-
-        return $this->response_data($services);
+        // لا نعرض الخدمات المعطلة؛ السعر والبيانات يحددهما الخادم.
+        return $this->response_data(VipServiceCatalog::active());
     }
 
     /**
@@ -68,12 +40,16 @@ class VipServiceApiController extends Controller
         }
 
         $user = Auth::user();
-        $servicePrices = [
-            'highlight_profile' => 10.00,
-            'direct_contact' => 25.00,
-            'special_matchmaking' => 100.00,
-        ];
-        $amount = $servicePrices[$request->service_type];
+        $service = VipServiceCatalog::findActive($request->service_type);
+        if (!$service) {
+            return response()->json([
+                'result' => false,
+                'message' => 'هذه الخدمة غير متاحة حالياً.',
+            ], 422);
+        }
+
+        // السعر يُقرأ حصراً من إعدادات الخادم ولا يُقبل من التطبيق.
+        $amount = (float) $service['price'];
         $orderCode = 'VIP-' . date('Ymd-His') . '-' . rand(100, 999);
 
         // إنشاء سجل الطلب بحالة "في انتظار الدفع"
@@ -215,12 +191,16 @@ class VipServiceApiController extends Controller
         }
 
         $user = Auth::user();
-        $servicePrices = [
-            'highlight_profile' => 10.00,
-            'direct_contact' => 25.00,
-            'special_matchmaking' => 100.00,
-        ];
-        $amount = $servicePrices[$request->service_type];
+        $service = VipServiceCatalog::findActive($request->service_type);
+        if (!$service) {
+            return response()->json([
+                'result' => false,
+                'message' => 'هذه الخدمة غير متاحة حالياً.',
+            ], 422);
+        }
+
+        // السعر يُقرأ حصراً من إعدادات الخادم ولا يُقبل من التطبيق.
+        $amount = (float) $service['price'];
         $orderCode = 'VIP-SHAM-' . date('Ymd-His') . '-' . rand(100, 999);
 
         $proofPath = null;

@@ -184,9 +184,9 @@ class VipServiceApi {
             }
           }
 
-          if (formattedList.isNotEmpty) {
-            return {'success': true, 'data': formattedList};
-          }
+          // An empty list from a valid API response means the admin disabled
+          // every service except those currently active; do not resurrect defaults.
+          return {'success': true, 'data': formattedList};
         }
       }
     } catch (e) {

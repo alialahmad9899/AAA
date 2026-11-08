@@ -49,6 +49,7 @@ jobs:
             "المشروع/WESAL/app/Http/Controllers/Api/Payment/PaymentTypesController.php"
             "المشروع/WESAL/app/Http/Controllers/Api/Payment/StripeController.php"
             "المشروع/WESAL/app/Http/Controllers/Api/VipServiceApiController.php"
+            "المشروع/WESAL/app/Services/VipServiceCatalog.php"
             "المشروع/WESAL/app/Utility/SubscriptionUtility.php"
             "المشروع/WESAL/routes/api.php"
             "المشروع/WESAL/app/Http/Resources/ActiveUserResource.php"

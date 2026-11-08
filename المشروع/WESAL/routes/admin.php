@@ -156,6 +156,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
 
     // 👑 مسارات إدارة طلبات خدمات VIP الإضافية
     Route::controller(VipServiceAdminController::class)->group(function () {
+        Route::get('/vip-services/catalog', 'catalog')->name('admin.vip-services.catalog');
+        Route::post('/vip-services/catalog', 'updateCatalog')->name('admin.vip-services.catalog.update');
         Route::get('/vip-services/orders', 'index')->name('admin.vip-services.index');
         Route::get('/vip-services/orders/{id}', 'show')->name('admin.vip-services.show');
         Route::post('/vip-services/orders/{id}/status', 'updateStatus')->name('admin.vip-services.update_status');

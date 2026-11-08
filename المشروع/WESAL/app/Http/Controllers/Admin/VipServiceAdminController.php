@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\VipServiceOrder;
+use App\Services\VipServiceCatalog;
 use App\Services\FirebaseNotificationService;
 use App\Notifications\DbStoreNotification;
 use Illuminate\Http\Request;
@@ -215,6 +216,89 @@ class VipServiceAdminController extends Controller
         return back()->with('success', $newStatus === 'paid'
             ? 'تم تأكيد الدفع بنجاح.'
             : 'تم رفض الحوالة وإبلاغ العضو بالسبب.');
+    }
+
+    /**
+     * عرض كتالوج خدمات VIP وإعداداته.
+     * هذه الإعدادات حساسة مالياً وتقتصر على حساب الأدمن.
+     */
+    public function catalog()
+    {
+        abort_unless(auth()->user() && auth()->user()->user_type === 'admin', 403);
+
+        $services = VipServiceCatalog::all();
+
+        return view('admin.vip_services.catalog', compact('services'));
+    }
+
+    public function updateCatalog(Request $request)
+    {
+        abort_unless(auth()->user() && auth()->user()->user_type === 'admin', 403);
+
+        $validated = $request->validate([
+            'services' => ['required', 'array', 'size:3'],
+            'services.*.service_type' => ['required', 'string', 'in:highlight_profile,direct_contact,special_matchmaking'],
+            'services.*.active' => ['nullable', 'in:0,1'],
+            'services.*.price' => ['required', 'numeric', 'min:0.01', 'max:100000'],
+            'services.*.title_ar' => ['required', 'string', 'max:180'],
+            'services.*.title_en' => ['nullable', 'string', 'max:180'],
+            'services.*.promo_ar' => ['required', 'string', 'max:1500'],
+            'services.*.promo_en' => ['nullable', 'string', 'max:1500'],
+        ]);
+
+        $expectedTypes = array_column(VipServiceCatalog::defaults(), 'service_type');
+        $submittedTypes = array_column($validated['services'], 'service_type');
+
+        if (count(array_unique($submittedTypes)) !== count($expectedTypes)
+            || array_diff($expectedTypes, $submittedTypes)) {
+            return back()->withInput()->withErrors([
+                'services' => 'يجب إرسال كل أنواع الخدمات المعتمدة مرة واحدة فقط.',
+            ]);
+        }
+
+        $servicesByType = [];
+        foreach ($validated['services'] as $item) {
+            $servicesByType[$item['service_type']] = $item;
+        }
+
+        $catalog = [];
+        foreach (VipServiceCatalog::defaults() as $service) {
+            $item = $servicesByType[$service['service_type']];
+
+            $service['active'] = ($item['active'] ?? '0') === '1';
+            $service['price'] = (float) $item['price'];
+            $service['title_ar'] = trim($item['title_ar']);
+            $service['title_en'] = trim((string) ($item['title_en'] ?? ''));
+            $service['title'] = $service['title_ar'];
+            $service['promo_ar'] = trim($item['promo_ar']);
+            $service['promo_en'] = trim((string) ($item['promo_en'] ?? ''));
+            $service['description'] = $service['promo_ar'];
+
+            $catalog[] = $service;
+        }
+
+        if (!count(array_filter($catalog, function ($service) {
+            return $service['active'];
+        }))) {
+            return back()->withInput()->withErrors([
+                'services' => 'يجب إبقاء خدمة واحدة على الأقل مفعّلة.',
+            ]);
+        }
+
+        try {
+            VipServiceCatalog::save($catalog);
+        } catch (\\Throwable $exception) {
+            Log::error('VIP service catalog update failed.', [
+                'admin_id' => auth()->id(),
+                'message' => $exception->getMessage(),
+            ]);
+
+            return back()->withInput()->with('danger', 'تعذر حفظ كتالوج الخدمات.');
+        }
+
+        return redirect()
+            ->route('admin.vip-services.catalog')
+            ->with('success', 'تم تحديث كتالوج خدمات VIP وأسعارها بنجاح.');
     }
 
     /**

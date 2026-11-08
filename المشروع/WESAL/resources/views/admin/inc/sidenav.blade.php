@@ -367,6 +367,16 @@
                 </li>
                 @endif
 
+                @if (auth()->user()->user_type === 'admin')
+                <li class="aiz-side-nav-item">
+                    <a href="{{ route('admin.vip-services.catalog') }}"
+                        class="aiz-side-nav-link {{ areActiveRoutes(['admin.vip-services.catalog']) }}">
+                        <i class="las la-crown aiz-side-nav-icon"></i>
+                        <span class="aiz-side-nav-text">إدارة كتالوج خدمات VIP</span>
+                    </a>
+                </li>
+                @endif
+
 
                 @if (addon_activation('referral_system'))
                 @if (auth()->user()->can('set_referral_commission') ||
