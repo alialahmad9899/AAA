@@ -104,8 +104,12 @@
                             : $inferFeatureIcon($featureTitleAr ?: $featureTitleEn)),
                 ];
             }
+            $featureRows = old('services.'.$index.'.features', $featureRows);
+            $featureRows = is_array($featureRows) ? array_values($featureRows) : [];
             $serviceArchived = !empty($service['archived']);
-            $serviceActive = !empty($service['active']) && !$serviceArchived;
+            $serviceActive = old('services.'.$index.'.active', (!empty($service['active']) && !$serviceArchived) ? '1' : '0') == '1';
+            $allowExternal = old('services.'.$index.'.allow_external_contact', !empty($service['allow_external_contact']) ? '1' : '0') == '1';
+            $showSpecialThanks = old('services.'.$index.'.show_special_thanks', !empty($service['show_special_thanks']) ? '1' : '0') == '1';
         @endphp
 
         <div class="card border-0 shadow-sm mb-4">
@@ -152,12 +156,12 @@
                             </label>
                             <input type="hidden" name="services[{{ $index }}][allow_external_contact]" value="{{ $serviceArchived ? (!empty($service['allow_external_contact']) ? '1' : '0') : '0' }}">
                             <label class="d-block mb-1">
-                                <input type="checkbox" name="services[{{ $index }}][allow_external_contact]" value="1" {{ !empty($service['allow_external_contact']) ? 'checked' : '' }} {{ $serviceArchived ? 'disabled' : '' }}>
+                                <input type="checkbox" name="services[{{ $index }}][allow_external_contact]" value="1" {{ $allowExternal ? 'checked' : '' }} {{ $serviceArchived ? 'disabled' : '' }}>
                                 إظهار حقول التواصل الخارجي (واتساب / رابط)
                             </label>
                             <input type="hidden" name="services[{{ $index }}][show_special_thanks]" value="{{ $serviceArchived ? (!empty($service['show_special_thanks']) ? '1' : '0') : '0' }}">
                             <label class="d-block mb-0">
-                                <input type="checkbox" name="services[{{ $index }}][show_special_thanks]" value="1" {{ !empty($service['show_special_thanks']) ? 'checked' : '' }} {{ $serviceArchived ? 'disabled' : '' }}>
+                                <input type="checkbox" name="services[{{ $index }}][show_special_thanks]" value="1" {{ $showSpecialThanks ? 'checked' : '' }} {{ $serviceArchived ? 'disabled' : '' }}>
                                 عرض بروتوكول الشكر الخاص بعد تسجيل الطلب
                             </label>
                         </div>
@@ -170,7 +174,7 @@
                         <label>الأيقونة الرئيسية للخدمة</label>
                         <select name="services[{{ $index }}][icon_key]" class="form-control" required>
                             @foreach($iconOptions as $key => $label)
-                                <option value="{{ $key }}" {{ $service['icon_key'] === $key ? 'selected' : '' }}>{{ $label }}</option>
+                                <option value="{{ $key }}" {{ old('services.'.$index.'.icon_key', $service['icon_key']) === $key ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
                         </select>
                         <label class="mt-2">ترتيب ظهور الخدمة</label>
@@ -232,6 +236,7 @@
         <p class="text-muted mb-0">الخدمة الجديدة ستظهر في تطبيق الموبايل بنفس بطاقة التفاصيل وخيارات الطلب والدفع.</p>
     </div>
     <div class="card-body">
+        @php $newFeatureRows = old('features', []); @endphp
         <form action="{{ route('admin.vip-services.catalog.add') }}" method="POST">
             @csrf
             <div class="row">
@@ -259,7 +264,32 @@
                     <div><h6 class="mb-1">بنود الخدمة الجديدة</h6><small class="text-muted">يمكنك إضافة عدد من البنود، ولكل بند أيقونة خاصة.</small></div>
                     <button type="button" class="btn btn-sm btn-outline-primary mt-2 mt-md-0" data-add-feature data-target="new-service-features" data-prefix="features"><i class="las la-plus"></i> إضافة بند</button>
                 </div>
-                <div id="new-service-features" data-feature-list data-next-index="0"></div>
+                <div id="new-service-features" data-feature-list data-next-index="{{ count($newFeatureRows) }}">
+                    @foreach($newFeatureRows as $featureIndex => $feature)
+                        <div class="row align-items-end vip-feature-row border rounded p-2 mb-2">
+                            <div class="col-12 mb-2"><span class="badge badge-light">بند {{ $featureIndex + 1 }}</span></div>
+                            <div class="col-md-5 form-group mb-2">
+                                <label>الميزة بالعربية</label>
+                                <input type="text" name="features[{{ $featureIndex }}][title_ar]" class="form-control" maxlength="180" value="{{ $feature['title_ar'] ?? '' }}">
+                            </div>
+                            <div class="col-md-5 form-group mb-2">
+                                <label>Feature in English</label>
+                                <input type="text" name="features[{{ $featureIndex }}][title_en]" class="form-control" maxlength="180" value="{{ $feature['title_en'] ?? '' }}">
+                            </div>
+                            <div class="col-md-2 form-group mb-2">
+                                <label>أيقونة البند</label>
+                                <select name="features[{{ $featureIndex }}][icon_key]" class="form-control">
+                                    @foreach($iconOptions as $key => $label)
+                                        <option value="{{ $key }}" {{ ($feature['icon_key'] ?? 'star') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-12 text-right">
+                                <button type="button" class="btn btn-sm btn-outline-danger" data-remove-feature><i class="las la-trash"></i> حذف هذا البند</button>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
             </div>
             <button type="submit" class="btn btn-success btn-lg mt-3"><i class="las la-plus mr-1"></i> إضافة الخدمة إلى التطبيق</button>
         </form>
