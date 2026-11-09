@@ -46,7 +46,8 @@ return [
     |
     */
 
-    'expiration' => null,
+    // Mobile bearer tokens expire after 30 days; clients must sign in again.
+    'expiration' => 43200,
 
     /*
     |--------------------------------------------------------------------------
