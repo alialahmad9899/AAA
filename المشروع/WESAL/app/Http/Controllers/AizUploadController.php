@@ -318,9 +318,9 @@ class AizUploadController extends Controller
             }
 
             $signaturesByExtension = [
-                'zip' => ["PK\\x03\\x04", "PK\\x05\\x06", "PK\\x07\\x08"],
-                'rar' => ["Rar!\\x1A\\x07\\x00", "Rar!\\x1A\\x07\\x01\\x00"],
-                '7z' => ["7z\\xBC\\xAF\\x27\\x1C"],
+                'zip' => ["PK\x03\x04", "PK\x05\x06", "PK\x07\x08"],
+                'rar' => ["Rar!\x1A\x07\x00", "Rar!\x1A\x07\x01\x00"],
+                '7z' => ["7z\xBC\xAF\x27\x1C"],
             ];
 
             foreach ($signaturesByExtension[$extension] ?? [] as $expectedSignature) {
