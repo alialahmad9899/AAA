@@ -536,7 +536,8 @@ class HomeController extends Controller
     public function reset_password_with_code(Request $request)
     {
         $validated = $request->validate([
-            'email' => 'nullable|email|max:255',
+            // The legacy phone reset view submits its number in the email field.
+            'email' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:32',
             'email_or_phone' => 'nullable|string|max:255',
             'code' => 'nullable|string|regex:/^\d{6}$/',
