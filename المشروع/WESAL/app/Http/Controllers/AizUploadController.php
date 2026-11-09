@@ -16,6 +16,7 @@ class AizUploadController extends Controller
     {
         // All uploader endpoints read or mutate user-owned files.
         $this->middleware('auth');
+        $this->middleware('throttle:uploader-upload')->only('upload');
         $this->middleware(['permission:show_uploaded_files'])->only('index');
     }
 
