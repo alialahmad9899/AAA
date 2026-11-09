@@ -251,13 +251,6 @@ class ProfileMatchController extends Controller
         }
     }
 
-    /**
-     * عرض قائمة الأعضاء المتطابقين للمستخدم الحالي (شاملة لجميع الأعضاء والمجانيين)
-     *
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
-     */
-    }
-
     public function myMatchedProfiles()
     {
         $user = auth()->user();
