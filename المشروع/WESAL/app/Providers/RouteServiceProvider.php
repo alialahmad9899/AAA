@@ -137,8 +137,77 @@ class RouteServiceProvider extends ServiceProvider
     protected function configureRateLimiting()
     {
         RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(1000)->by(optional($request->user())->id ?: $request->ip());
+            $identity = $request->user()
+                ? 'user:' . $request->user()->getAuthIdentifier()
+                : 'ip:' . ($request->ip() ?: 'unknown');
+
+            // Keep routine app browsing responsive while avoiding an excessive
+            // generic allowance of 1,000 requests per minute.
+            return Limit::perMinute(300)->by($identity);
         });
-        
-    }
-}
+
+        RateLimiter::for('auth-login', function (Request $request) {
+            $ip = 'login-ip:' . ($request->ip() ?: 'unknown');
+            $account = 'login-account:' . hash('sha256', strtolower(trim((string) $request->input('email_or_phone', 'unknown'))));
+
+            return [
+                Limit::perMinute(30)->by($ip),
+                Limit::perMinute(5)->by($account),
+            ];
+        });
+
+        RateLimiter::for('auth-google', function (Request $request) {
+            return Limit::perMinute(15)->by('google-ip:' . ($request->ip() ?: 'unknown'));
+        });
+
+        RateLimiter::for('auth-signup', function (Request $request) {
+            return Limit::perHour(15)->by('signup-ip:' . ($request->ip() ?: 'unknown'));
+        });
+
+        RateLimiter::for('password-reset-request', function (Request $request) {
+            $ip = 'reset-request-ip:' . ($request->ip() ?: 'unknown');
+            $identity = 'reset-request-account:' . hash('sha256', strtolower(trim((string) $request->input('email_or_phone', 'unknown'))));
+
+            return [
+                Limit::perHour(15)->by($ip),
+                Limit::perHour(3)->by($identity),
+            ];
+        });
+
+        RateLimiter::for('password-reset-attempt', function (Request $request) {
+            $ip = 'reset-attempt-ip:' . ($request->ip() ?: 'unknown');
+            $identity = 'reset-attempt-account:' . hash('sha256', strtolower(trim((string) $request->input('email_or_phone', 'unknown'))));
+
+            return [
+                Limit::perMinute(20)->by($ip),
+                Limit::perHour(10)->by($identity),
+            ];
+        });
+
+        RateLimiter::for('verification-resend', function (Request $request) {
+            $userId = $request->user() ? $request->user()->getAuthIdentifier() : 'guest';
+
+            return [
+                Limit::perHour(15)->by('verification-resend-ip:' . ($request->ip() ?: 'unknown')),
+                Limit::perHour(5)->by('verification-resend-user:' . $userId),
+            ];
+        });
+
+        RateLimiter::for('registration-code-send', function (Request $request) {
+            $recipient = strtolower(trim((string) ($request->input('email') ?: $request->input('phone', 'unknown'))));
+
+            return [
+                Limit::perHour(15)->by('registration-code-ip:' . ($request->ip() ?: 'unknown')),
+                Limit::perHour(3)->by('registration-code-recipient:' . hash('sha256', $recipient)),
+            ];
+        });
+
+        RateLimiter::for('registration-code-check', function (Request $request) {
+            $recipient = strtolower(trim((string) ($request->input('email') ?: $request->input('phone', 'unknown'))));
+
+            return [
+                Limit::perMinute(20)->by('registration-check-ip:' . ($request->ip() ?: 'unknown')),
+                Limit::perMinute(10)->by('registration-check-recipient:' . hash('sha256', $recipient)),
+            ];
+        });
+    }}
