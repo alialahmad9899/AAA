@@ -40,6 +40,6 @@ class Address extends Model
 
     public function city()
     {
-        return $this->belongsTo(City::class)->withTrashed();
+        return $this->belongsTo(City::class, 'city_id');
     }
 }
