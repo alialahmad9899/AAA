@@ -184,6 +184,16 @@ class RouteServiceProvider extends ServiceProvider
             ];
         });
 
+        RateLimiter::for('password-reset-web', function (Request $request) {
+            $ip = 'web-reset-ip:' . ($request->ip() ?: 'unknown');
+            $identity = 'web-reset-account:' . hash('sha256', strtolower(trim((string) $request->input('email', 'unknown'))));
+
+            return [
+                Limit::perHour(15)->by($ip),
+                Limit::perHour(5)->by($identity),
+            ];
+        });
+
         RateLimiter::for('verification-resend', function (Request $request) {
             $userId = $request->user() ? $request->user()->getAuthIdentifier() : 'guest';
 
