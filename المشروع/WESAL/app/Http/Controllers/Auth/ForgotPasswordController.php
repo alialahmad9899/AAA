@@ -8,6 +8,7 @@ use App\Utility\EmailUtility;
 use App\Utility\SmsUtility;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Security\PasswordResetCode;
 
 class ForgotPasswordController extends Controller
 {
@@ -24,6 +25,11 @@ class ForgotPasswordController extends Controller
 
     use SendsPasswordResetEmails;
 
+    public function __construct()
+    {
+        $this->middleware('throttle:password-reset-web')->only('sendResetLinkEmail');
+    }
+
     /**
      * Send a reset link to the given user.
      *
@@ -33,33 +39,46 @@ class ForgotPasswordController extends Controller
 
     public function sendResetLinkEmail(Request $request)
     {
-        if (filter_var($request->email, FILTER_VALIDATE_EMAIL)) {
-            $user = User::where('email', $request->email)->first();
-            if ($user != null) {
-                $user->verification_code = rand(100000,999999);
-                $user->save();
+        $validated = $request->validate([
+            'email' => 'required|string|max:255',
+        ]);
 
-                EmailUtility::password_reset_email($user, $user->verification_code);
-                return view('auth.passwords.reset');
-            }
-            else {
-                flash(translate('No account exists with this email'))->error();
-                return back();
+        $identity = trim($validated['email']);
+        $user = filter_var($identity, FILTER_VALIDATE_EMAIL)
+            ? User::where('email', strtolower($identity))->first()
+            : User::where('phone', $identity)->first();
+
+        if ($user) {
+            $issued = PasswordResetCode::issue(10);
+            $user->password_reset_code_hash = $issued['hash'];
+            $user->password_reset_code_expires_at = $issued['expires_at'];
+            $user->verification_code = null;
+            $user->save();
+
+            try {
+                if (filter_var($identity, FILTER_VALIDATE_EMAIL)) {
+                    EmailUtility::password_reset_email($user, $issued['code']);
+                } else {
+                    SmsUtility::password_reset($user, $issued['code']);
+                }
+            } catch (\Throwable $exception) {
+                \Log::warning('Web password reset delivery failed.', [
+                    'user_id' => $user->id,
+                    'channel' => filter_var($identity, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone',
+                    'exception' => get_class($exception),
+                ]);
+
+                $user->password_reset_code_hash = null;
+                $user->password_reset_code_expires_at = null;
+                $user->save();
             }
         }
-        else{
-            $user = User::where('phone', $request->email)->first();
-            if ($user != null) {
-                $user->verification_code = rand(100000,999999);
-                $user->save();
 
-                SmsUtility::password_reset($user , $user->verification_code);
-                return view('addons.otp_systems.frontend.auth.passwords.reset_with_phone');
-            }
-            else {
-                flash(translate('No account exists with this phone number'))->error();
-                return back();
-            }
-        }
+        // Same response and view for existing and unknown identities to prevent enumeration.
+        return view('auth.passwords.reset', [
+            'email' => $identity,
+            'reset_notice' => translate('If the account exists, a reset code has been sent.'),
+        ]);
     }
+
 }
