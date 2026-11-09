@@ -84,7 +84,7 @@ class MemberRegistrationVerificationController extends Controller
         $validated = $request->validate([
             'email' => 'nullable|email|max:255|required_without:phone',
             'phone' => 'nullable|string|max:24|required_without:email',
-            'country_code' => 'required_with:phone|string|max:8',
+            'country_code' => 'nullable|string|max:8',
             'code' => ['required', 'string', 'regex:/^\\d{6}$/'],
         ]);
 
@@ -94,8 +94,12 @@ class MemberRegistrationVerificationController extends Controller
         if (!empty($validated['email'])) {
             $query->where('email', strtolower(trim($validated['email'])));
         } else {
-            $phone = '+' . ltrim((string) $validated['country_code'], '+')
-                . preg_replace('/\\D+/', '', $validated['phone']);
+            $phoneDigits = preg_replace('/\\D+/', '', $validated['phone']);
+            $countryCode = preg_replace('/\\D+/', '', (string) ($validated['country_code'] ?? ''));
+            $phone = '+' . ($countryCode !== '' ? $countryCode : $phoneDigits);
+            if ($countryCode !== '') {
+                $phone .= preg_replace('/\\D+/', '', $validated['phone']);
+            }
             $query->where('phone', $phone);
         }
 
