@@ -221,6 +221,16 @@ class RouteServiceProvider extends ServiceProvider
             ];
         });
 
+        RateLimiter::for('uploader-upload', function (Request $request) {
+            $userId = $request->user() ? $request->user()->getAuthIdentifier() : 'guest';
+
+            return [
+                Limit::perMinute(6)->by('upload-user-minute:' . $userId),
+                Limit::perHour(30)->by('upload-user-hour:' . $userId),
+                Limit::perMinute(20)->by('upload-ip-minute:' . ($request->ip() ?: 'unknown')),
+            ];
+        });
+
         RateLimiter::for('profile-match-maintenance', function (Request $request) {
             $userId = $request->user() ? $request->user()->getAuthIdentifier() : 'guest';
 
