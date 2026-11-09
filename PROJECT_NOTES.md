@@ -1316,3 +1316,26 @@
 - CORS مقيد إلى النطاقات الرسمية الافتراضية، مع إمكانية إضافة نطاقات أخرى عبر CORS_ALLOWED_ORIGINS، وملف cors.php ضمن lint workflow.
 - أحدث backend run على commit 94cc859: PHP lint نجح، وجميع أربع مجموعات PHPUnit نجحت عند التشغيل القريب (32 tests / 108 assertions). Flutter لا يتغير في هذه التعديلات؛ آخر full workflow ناجح run 42697775619، بينما استمرت بعض التشغيلات اللاحقة في انتظار إعداد Flutter/جلب الاعتمادات. راجع أحدث Actions run قبل نشر الدفعة.
 - لم يتم النشر أو تشغيل أي migration على قاعدة الإنتاج.
+
+
+## 2026-11-10 — إصلاح خطأ matched-profile وعلاج تأخير أول إطار في Flutter
+### التشخيص من السجلات المرسلة
+- سجل Laravel كرر الاستثناء نفسه ثلاث مرات خلال 3 ثوانٍ: \`Call to undefined relationship [city] on model [App\\Models\\Address]\`. الـ stack traces تشير إلى \`SmartMatchingService::scoreCandidates()\` عند تحميل \`addresses.city\` من endpoint \`/api/member/matched-profile\` للمستخدم 58.
+- سجل Flutter أظهر أن بناء APK وتثبيته نجحا، وأن تحديث FCM device token رجع HTTP 200، وأن جلب الملف الشخصي والحساب والمحادثات الظاهرة رجع HTTP 200. فشل matched-profile رجع HTTP 500 خمس مرات، وهو نفس استثناء Laravel وليس خطأ Flutter منفصلاً.
+- نسخة \`Address.php\` على main كانت تحتوي دالة \`city()\` لكنها كانت تستدعي \`withTrashed()\` مع \`City\` الذي لا يستخدم SoftDeletes؛ وهذا تركيب غير صحيح. سجل الإنتاج يثبت أن النسخة المنشورة وقت الاختبار لا تتضمن العلاقة المحمّلة أصلاً، ما يعني أن ملف الإنتاج لا يطابق نسخة المصدر الحالية أو أنه لم يُنشر.
+- تحذيرات \`Width is zero\` و\`Parcel ... binder\` وخصائص \`vendor.*\` صادرة من محرك Android/الجهاز وليست استثناءات Laravel أو Dart مثبتة. رسائل \`Skipped frames\` تعني إسقاط إطارات/تأخر عرض، وسجل التشغيل كان لنسخة \`app-debug.apk\` على جهاز TECNO؛ لا تكفي وحدها لتحديد دالة UI بعينها كسبب.
+### الإصلاح
+- تحديث \`Address::city()\` ليستخدم \`belongsTo(City::class, 'city_id')\` صراحةً وإزالة \`withTrashed()\` غير الصالح لهذا النموذج. لا Migration ولا تعديل بيانات قاعدة البيانات.
+- نقل تهيئة Firebase وNotificationService ومزامنة FCM token في \`main.dart\` إلى ما بعد أول إطار؛ أصبح تشغيل التطبيق وقراءة التوكن المحلي ثم \`runApp()\` يسبق طلب إذن الإشعارات واتصال مزامنة FCM، حتى لا ينتظر ظهور الواجهة هذه الخطوات.
+- إضافة اختبار مصدر PHP يثبت ربط \`Address.city\` بالمفتاح \`city_id\` ويمنع إعادة \`withTrashed()\` في علاقة City، وإضافته إلى فحص PHP وPHPUnit في CI.
+### الملفات المعدلة
+- \`المشروع/WESAL/app/Models/Address.php\`
+- \`فلاتر/lib/main.dart\`
+- \`المشروع/WESAL/tests/Unit/AddressCityRelationshipTest.php\` (جديد)
+- \`.github/workflows/wesal-integration-validation.yml\`
+- \`PROJECT_NOTES.md\`
+### التحقق والحدود
+- يجب التحقق من PHP lint واختبار \`AddressCityRelationshipTest\` ثم \`dart analyze --fatal-infos\` و\`flutter test\` في GitHub Actions قبل اعتبار الدفعة ناجحة بالكامل.
+- لم يتم تشغيل التطبيق على جهاز فعلي بعد التعديل، لذلك لم يُدّعَ اختفاء كل رسائل \`Skipped frames\`؛ التغيير يزيل انتظار Firebase/إذن الإشعارات/مزامنة FCM من مسار أول رسم، ويحتاج قياساً على build release لتقييم الأداء النهائي.
+- لم يُنشر \`Address.php\` إلى Hostinger، ولم تُشغّل migrations أو تعديلات SQL. لا بد أن تستلم الاستضافة ملف Address.php المصحح من هذه الدفعة حتى يزول الخطأ الحي؛ مجرد تحديث Flutter لا يصلح استثناء Laravel.
+- لم تُجر أي تعديلات على الموقع العام أو واجهاته.
