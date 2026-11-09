@@ -56,7 +56,7 @@ use App\Http\Controllers\Admin\SupportTicketAdminController;
 Route::controller(UpdateController::class)->group(function () {
     Route::post('/update', 'step0')->name('update');
     Route::get('/update/step1', 'step1')->name('update.step1');
-    Route::get('/update/step2', 'step2')->name('update.step2');
+    Route::post('/update/step2', 'step2')->name('update.step2');
     Route::get('/update/step3', 'step3')->name('update.step3');
     Route::post('/purchase_code', 'purchase_code')->name('update.code');
 });
@@ -89,7 +89,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
         Route::get('/members/member_list/{id}', 'index')->name('members.index');
         Route::post('/members/block', 'block')->name('members.block');
         Route::post('/members/blocking_reason', 'blocking_reason')->name('members.blocking_reason');
-        Route::get('/members/login/{id}', 'login')->name('members.login');
+        Route::post('/members/login/{id}', 'login')->name('members.login');
 
         Route::get('/deleted_members', 'deleted_members')->name('deleted_members');
         Route::get('/members/destroy/{id}', 'destroy')->name('members.destroy');
