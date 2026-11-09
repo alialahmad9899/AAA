@@ -19,7 +19,12 @@ class ProfileMatchController extends Controller
     public function __construct()
     {
         // The bulk recalculation route is an administrator-only maintenance action.
-        $this->middleware(['auth', 'admin', 'throttle:profile-match-maintenance'])->only('match_profiles');
+        $this->middleware('auth')->only('match_profiles');
+        $this->middleware(function ($request, $next) {
+            abort_unless($request->user() && $request->user()->user_type === 'admin', 403);
+            return $next($request);
+        })->only('match_profiles');
+        $this->middleware('throttle:profile-match-maintenance')->only('match_profiles');
         $this->middleware('throttle:profile-match-personal')->only('myMatchedProfiles');
     }
 
