@@ -16,6 +16,13 @@ use App\Models\User;
 
 class ProfileMatchController extends Controller
 {
+    public function __construct()
+    {
+        // The bulk recalculation route is an administrator-only maintenance action.
+        $this->middleware(['auth', 'admin', 'throttle:profile-match-maintenance'])->only('match_profiles');
+        $this->middleware('throttle:profile-match-personal')->only('myMatchedProfiles');
+    }
+
     /**
      * حساب وتحديث نسب التطابق الذكي للأعضاء بناءً على شروط الإقامة والديانة الأساسية
      *
@@ -23,6 +30,24 @@ class ProfileMatchController extends Controller
      * @return void
      */
     public function match_profiles($user_id = '')
+    {
+        if ($user_id !== '' && !ctype_digit((string) $user_id)) {
+            abort(404);
+        }
+
+        $this->rebuildMatchesForUser($user_id);
+
+        return response()->json([
+            'result' => true,
+            'message' => translate('Profile matching recalculation completed.'),
+        ]);
+    }
+
+    /**
+     * Recalculate matches for one member or all members.
+     * Callers are responsible for authorization before requesting a bulk run.
+     */
+    private function rebuildMatchesForUser($user_id = '')
     {
         if (empty($user_id)) {
             $users = User::where('user_type', 'member')
@@ -231,6 +256,8 @@ class ProfileMatchController extends Controller
      *
      * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
      */
+    }
+
     public function myMatchedProfiles()
     {
         $user = auth()->user();
@@ -242,7 +269,7 @@ class ProfileMatchController extends Controller
         // تم إلغاء شرط auto_profile_match للسماح لجميع المستويات بالظهور ورؤية المطابقات
         
         // تحديث المطابقة المباشرة لهذا العضو بآخر البيانات
-        $this->match_profiles($user->id);
+        $this->rebuildMatchesForUser($user->id);
 
         // جلب قائمة الأعضاء المطابقين الذين حققوا الشروط الإلزامية
         $matchedProfiles = ProfileMatch::where('user_id', $user->id)
@@ -264,4 +291,10 @@ class ProfileMatchController extends Controller
 
         return view('frontend.member.matched_profiles', compact('matchedProfiles'));
     }
+    /** Retired public migration URL; no profile schema migration is exposed over HTTP. */
+    public function migrate_profiles()
+    {
+        abort(404);
+    }
+
 }
