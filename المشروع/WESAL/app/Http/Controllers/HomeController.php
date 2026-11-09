@@ -38,7 +38,8 @@ class HomeController extends Controller
      */
     public function __construct()
     {
-        //$this->middleware('auth');
+        // Password recovery must be rate-limited without changing public page behavior.
+        $this->middleware('throttle:password-reset-web')->only('reset_password_with_code');
     }
 
     /**
@@ -552,27 +553,39 @@ class HomeController extends Controller
 
     public function reset_password_with_code(Request $request)
     {
-        if (($user = User::where('email', $request->email)->where('verification_code', $request->code)->first()) != null) {
-            if ($request->password == $request->password_confirmation) {
-                $user->password = Hash::make($request->password);
-                $user->email_verified_at = date('Y-m-d h:m:s');
-                $user->save();
-                auth()->login($user, true);
+        $validated = $request->validate([
+            'email' => 'required|email|max:255',
+            'code' => 'required|string|max:255',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
 
-                flash(translate('Password updated successfully'))->success();
+        $user = User::where('email', $validated['email'])->first();
+        $storedCode = $user ? (string) $user->verification_code : '';
 
-                if (auth()->user()->user_type == 'admin' || auth()->user()->user_type == 'staff') {
-                    return redirect()->route('admin.dashboard');
-                }
-                return redirect()->route('home');
-            } else {
-                flash("Password and confirm password didn't match")->warning();
-                return back();
-            }
-        } else {
-            flash("Verification code mismatch")->error();
+        if (!$user || $storedCode === ''
+            || !hash_equals($storedCode, (string) $validated['code'])) {
+            flash(translate('Verification code mismatch'))->error();
             return back();
         }
+
+        $user->password = Hash::make($validated['password']);
+        $user->verification_code = null;
+        $user->setRememberToken(Str::random(60));
+        $user->save();
+
+        // Revoke mobile bearer tokens after a password reset.
+        $user->tokens()->delete();
+
+        auth()->login($user, true);
+        $request->session()->regenerate();
+
+        flash(translate('Password updated successfully'))->success();
+
+        if (in_array($user->user_type, ['admin', 'staff'], true)) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        return redirect()->route('home');
     }
 
     function clearCache()
