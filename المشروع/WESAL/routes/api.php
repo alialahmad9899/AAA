@@ -24,7 +24,7 @@ Route::group(['namespace' => 'Api', 'middleware' => ['app_language']], function 
     Route::post('/auth/google', 'AuthController@googleSignIn')->middleware('throttle:auth-google');
 
     Route::post('/forgot/password', 'AuthController@forgotPassword')->middleware('throttle:password-reset-request');
-    Route::post('/verify/code', 'AuthController@verifyCode')->middleware("auth:sanctum");
+    Route::post('/verify/code', 'AuthController@verifyCode')->middleware(['auth:sanctum', 'throttle:verification-code-check']);
     Route::get('/resend-verify/code', 'AuthController@resendVerifyCode')->middleware(['auth:sanctum', 'throttle:verification-resend']);
     Route::post('/reset/password', 'AuthController@resetPassword')->middleware('throttle:password-reset-attempt');
     Route::post('social-login', 'AuthController@socialLogin')->middleware('throttle:auth-google');
