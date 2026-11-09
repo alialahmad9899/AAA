@@ -14,62 +14,104 @@ class MemberRegistrationVerificationController extends Controller
    
     public function sendRegVerificationCode(Request $request)
     {
+        $validated = $request->validate([
+            'email' => 'nullable|email|max:255|required_without:phone',
+            'phone' => 'nullable|string|max:24|required_without:email',
+            'country_code' => 'required_with:phone|string|max:8',
+        ]);
 
-        $email = $request->email ?? null;
-        $phone = $request->phone != null ? '+' . $request->country_code . $request->phone : null;
-        if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            if (User::where('email', $email)->first() != null) {
-                return response()->json(['status' => 0, 'message' => translate('Email already exists.')]);
-            }
-        } elseif (User::where('phone', $phone)->first() != null) {
-            return response()->json(['status' => 0, 'message' => translate('Phone already exists.')]);
+        $email = !empty($validated['email']) ? strtolower(trim($validated['email'])) : null;
+        $phone = !empty($validated['phone'])
+            ? '+' . ltrim((string) $validated['country_code'], '+') . preg_replace('/\\D+/', '', $validated['phone'])
+            : null;
+
+        if ($email && User::where('email', $email)->exists()) {
+            return response()->json(['status' => 0, 'message' => translate('Email already exists.')], 409);
+        }
+        if ($phone && User::where('phone', $phone)->exists()) {
+            return response()->json(['status' => 0, 'message' => translate('Phone already exists.')], 409);
         }
 
-        $verificationCode = rand(100000, 999999);
+        $verificationCode = (string) random_int(100000, 999999);
         $customerVerification = RegistrationVerificationCode::updateOrCreate(
             ['email' => $email, 'phone' => $phone],
-            ['code' => $verificationCode]
+            [
+                'code' => $verificationCode,
+                'is_verified' => 0,
+                'expires_at' => now()->addMinutes(15),
+            ]
         );
-        $success = 1;
 
-        if ($email) {
-            try {
-                EmailUtility::email_verification_for_registration_user('email_registration_verification', $email, $verificationCode);
-            } catch (\Exception $e) {
-                $success = 0;
-            }
-        } elseif ($phone != null && addon_activation('otp_system') && (get_sms_template('mobile_registration_verification', 'status') == 1)) {
-            try {
+        $sent = false;
+        try {
+            if ($email) {
+                EmailUtility::email_verification_for_registration_user(
+                    'email_registration_verification',
+                    $email,
+                    $verificationCode
+                );
+                $sent = true;
+            } elseif ($phone
+                && addon_activation('otp_system')
+                && get_sms_template('mobile_registration_verification', 'status') == 1) {
                 SmsUtility::mobile_registration_verification($phone, $verificationCode);
-            } catch (\Exception $e) {
-                $success = 0;
+                $sent = true;
             }
+        } catch (\\Throwable $exception) {
+            \\Log::warning('Registration verification code delivery failed.', [
+                'channel' => $email ? 'email' : 'phone',
+                'exception' => get_class($exception),
+            ]);
         }
 
+        if (!$sent) {
+            $customerVerification->delete();
 
-        if ($success) {
-            return response()->json(['status' => 1, 'message' => translate('Verification code sent successfully.')]);
-        } else {
-            return response()->json(['status' => 0, 'message' => translate('Verification code sending failed.')]);
+            return response()->json([
+                'status' => 0,
+                'message' => translate('Verification code sending failed.'),
+            ], 503);
         }
+
+        return response()->json([
+            'status' => 1,
+            'message' => translate('Verification code sent successfully.'),
+        ]);
     }
 
     public function regVerifyCodeConfirmation(Request $request)
     {
-        $email = isset($request->email) ? $request->email : null;
-        $phone = isset($request->phone) ? $request->phone  : null;
+        $validated = $request->validate([
+            'email' => 'nullable|email|max:255|required_without:phone',
+            'phone' => 'nullable|string|max:24|required_without:email',
+            'code' => ['required', 'string', 'regex:/^\\d{6}$/'],
+        ]);
 
-        $customerVerification = RegistrationVerificationCode::where('code', $request->code);
-        $customerVerification = $request->email != null ?
-            $customerVerification->where('email', $email) :
-            $customerVerification->where('phone', $phone);
-        $customerVerification = $customerVerification->first();
-        if ($customerVerification == null) {
-            return response()->json(['status' => 0, 'message' => translate('Verification Code did not match')]);
+        $query = RegistrationVerificationCode::where('code', $validated['code'])
+            ->where('expires_at', '>', now());
+
+        if (!empty($validated['email'])) {
+            $query->where('email', strtolower(trim($validated['email'])));
         } else {
-            $customerVerification->is_verified = 1;
-            $customerVerification->save();
-            return response()->json(['status' => 1, 'message' => translate('Verification Successful')]);
+            $phone = preg_replace('/\\D+/', '', (string) $validated['phone']);
+            $query->where('phone', 'like', '%' . $phone);
         }
+
+        $customerVerification = $query->first();
+        if (!$customerVerification) {
+            return response()->json([
+                'status' => 0,
+                'message' => translate('Verification Code did not match or has expired.'),
+            ], 422);
+        }
+
+        $customerVerification->is_verified = 1;
+        $customerVerification->save();
+
+        return response()->json([
+            'status' => 1,
+            'message' => translate('Verification Successful'),
+        ]);
     }
+
 }
