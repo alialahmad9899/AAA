@@ -221,6 +221,24 @@ class RouteServiceProvider extends ServiceProvider
             ];
         });
 
+        RateLimiter::for('profile-match-maintenance', function (Request $request) {
+            $userId = $request->user() ? $request->user()->getAuthIdentifier() : 'guest';
+
+            return [
+                Limit::perMinute(1)->by('profile-match-admin-ip:' . ($request->ip() ?: 'unknown')),
+                Limit::perHour(4)->by('profile-match-admin-user:' . $userId),
+            ];
+        });
+
+        RateLimiter::for('profile-match-personal', function (Request $request) {
+            $userId = $request->user() ? $request->user()->getAuthIdentifier() : 'guest';
+
+            return [
+                Limit::perMinute(10)->by('profile-match-user:' . $userId),
+                Limit::perMinute(20)->by('profile-match-ip:' . ($request->ip() ?: 'unknown')),
+            ];
+        });
+
         RateLimiter::for('registration-code-check', function (Request $request) {
             $recipient = strtolower(trim((string) ($request->input('email') ?: $request->input('phone', 'unknown'))));
 
