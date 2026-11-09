@@ -164,12 +164,53 @@ class VipServiceCatalog
             $services[] = self::normalise($item);
         }
 
-        usort($services, function ($left, $right) {
-            $order = ((int) ($left['sort_order'] ?? 0)) <=> ((int) ($right['sort_order'] ?? 0));
-            return $order !== 0 ? $order : ((int) ($left['id'] ?? 0) <=> (int) ($right['id'] ?? 0));
+        return self::sortByOrder($services);
+    }
+
+    /**
+     * Sort by the admin-controlled value. Equal values keep their submitted order;
+     * internal database IDs must never override the administrator's visual order.
+     */
+    public static function sortByOrder(array $services): array
+    {
+        $indexed = [];
+        foreach (array_values($services) as $position => $service) {
+            if (!is_array($service)) {
+                continue;
+            }
+            $indexed[] = [
+                'position' => $position,
+                'service' => $service,
+            ];
+        }
+
+        usort($indexed, function ($left, $right) {
+            $leftOrder = (int) ($left['service']['sort_order'] ?? 100);
+            $rightOrder = (int) ($right['service']['sort_order'] ?? 100);
+            $comparison = $leftOrder <=> $rightOrder;
+
+            return $comparison !== 0
+                ? $comparison
+                : ($left['position'] <=> $right['position']);
         });
 
-        return $services;
+        return array_values(array_map(function ($item) {
+            return $item['service'];
+        }, $indexed));
+    }
+
+    /**
+     * Persist unique order values in tens so ties cannot make the app order
+     * depend on service IDs or database insertion order.
+     */
+    public static function normaliseOrder(array $services): array
+    {
+        $ordered = self::sortByOrder($services);
+        foreach ($ordered as $index => $service) {
+            $ordered[$index]['sort_order'] = ($index + 1) * 10;
+        }
+
+        return $ordered;
     }
 
     private static function normalise(array $service): array
@@ -198,9 +239,11 @@ class VipServiceCatalog
 
     public static function active(): array
     {
-        return array_values(array_filter(self::all(), function ($service) {
+        $active = array_values(array_filter(self::all(), function ($service) {
             return !empty($service['active']) && empty($service['archived']);
         }));
+
+        return self::sortByOrder($active);
     }
 
     public static function find(string $serviceType): ?array
@@ -224,8 +267,10 @@ class VipServiceCatalog
 
     public static function save(array $services): void
     {
+        $services = self::normaliseOrder($services);
+
         $payload = json_encode(
-            array_values($services),
+            $services,
             JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE
         );
 

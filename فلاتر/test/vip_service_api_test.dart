@@ -31,6 +31,31 @@ void main() {
       );
     });
 
+    test('sorts returned services by sort_order instead of internal IDs', () {
+      final services = VipServiceApi.sortServicesByOrder([
+        {'service_type': 'last', 'id': 1, 'sort_order': 30},
+        {'service_type': 'first', 'id': 99, 'sort_order': 10},
+        {'service_type': 'middle', 'id': 2, 'sort_order': 20},
+      ]);
+
+      expect(
+        services.map((service) => service['service_type']).toList(),
+        ['first', 'middle', 'last'],
+      );
+    });
+
+    test('keeps received order stable when sort values are equal', () {
+      final services = VipServiceApi.sortServicesByOrder([
+        {'service_type': 'second', 'sort_order': 10},
+        {'service_type': 'first', 'sort_order': 10},
+      ]);
+
+      expect(
+        services.map((service) => service['service_type']).toList(),
+        ['second', 'first'],
+      );
+    });
+
     test('keeps an intentionally empty server catalogue empty', () {
       final response = VipServiceApi.parseServicesListResponse(
         statusCode: 200,

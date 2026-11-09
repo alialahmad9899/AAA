@@ -28,6 +28,28 @@ class VipServiceApi {
     return response;
   }
 
+  /// Keep VIP cards in the same explicit order saved by the admin catalogue.
+  /// Equal or missing sort values retain the order received from the server.
+  @visibleForTesting
+  static List<Map<String, dynamic>> sortServicesByOrder(
+    List<Map<String, dynamic>> services,
+  ) {
+    final indexed = services.asMap().entries.toList();
+    indexed.sort((left, right) {
+      final leftOrder = _readSortOrder(left.value['sort_order']);
+      final rightOrder = _readSortOrder(right.value['sort_order']);
+      final comparison = leftOrder.compareTo(rightOrder);
+      return comparison != 0 ? comparison : left.key.compareTo(right.key);
+    });
+
+    return indexed.map((entry) => entry.value).toList();
+  }
+
+  static int _readSortOrder(dynamic value) {
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString().trim() ?? '') ?? 100;
+  }
+
   static Future<Map<String, String>> _getHeaders({String? lang}) async {
     final token = await ApiService.getToken();
     final prefs = await SharedPreferences.getInstance();
@@ -107,7 +129,10 @@ class VipServiceApi {
       services.add(Map<String, dynamic>.from(item));
     }
 
-    return {'success': true, 'data': services};
+    return {
+      'success': true,
+      'data': sortServicesByOrder(services),
+    };
   }
 
   /// جلب قائمة الخدمات مباشرة من الخادم؛ لا نعرض قائمة ثابتة عند فشل الاتصال.
