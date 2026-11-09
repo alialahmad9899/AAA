@@ -80,8 +80,8 @@ Route::controller(HomeController::class)->group(function () {
     Route::get('/happy-stories', 'happy_stories')->name('happy_stories');
     Route::get('/story_details/{id}', 'story_details')->name('story_details');
     Route::get('/users/blocked', 'user_account_blocked')->name('user.blocked');
-    Route::post('/registration/verification-code-send', 'sendRegVerificationCode')->name('verification_code_send');
-    Route::post('/registration/verification-code-confirmation', 'regVerifyCodeConfirmation')->name('verify_code_confirmation');
+    Route::post('/registration/verification-code-send', 'sendRegVerificationCode')->middleware('throttle:registration-code-send')->name('verification_code_send');
+    Route::post('/registration/verification-code-confirmation', 'regVerifyCodeConfirmation')->middleware('throttle:registration-code-check')->name('verify_code_confirmation');
 });
 
 // Uploader
