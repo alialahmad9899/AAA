@@ -6,6 +6,7 @@ use Notification;
 use App\Models\User;
 use App\Models\Member;
 use App\Models\Package;
+use App\Models\RegistrationVerificationCode;
 use App\Rules\RecaptchaRule;
 use Illuminate\Http\Request;
 use App\Models\EmailTemplate;
@@ -172,8 +173,44 @@ class RegisterController extends Controller
 
         $this->validator($request->all())->validate();
 
+        $registrationVerification = null;
+        if ((string) get_setting('registration_verification') === '1') {
+            $verificationQuery = RegistrationVerificationCode::where('is_verified', 1)
+                ->where('expires_at', '>', now());
+
+            if (filter_var($request->email, FILTER_VALIDATE_EMAIL)) {
+                $verificationQuery->where('email', strtolower(trim((string) $request->email)));
+            } elseif ($request->filled('phone')) {
+                $countryCode = preg_replace('/\\D+/', '', (string) $request->input('country_code', ''));
+                $phoneDigits = preg_replace('/\\D+/', '', (string) $request->phone);
+                $verifiedPhone = '+' . $countryCode . $phoneDigits;
+                $verificationQuery->where('phone', $verifiedPhone);
+            } else {
+                $verificationQuery->whereRaw('1 = 0');
+            }
+
+            $registrationVerification = $verificationQuery->latest('id')->first();
+            if (!$registrationVerification) {
+                $message = translate('Please verify your email address or phone number before registering.');
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'errors' => ['verification_code' => [$message]],
+                    ], 422);
+                }
+
+                flash($message)->error();
+                return back()->withInput();
+            }
+        }
+
         $user = $this->create($request->all());
-        
+
+        // A verified registration code is single-use and is removed only after
+        // the account has been created successfully.
+        if ($registrationVerification) {
+            $registrationVerification->delete();
+        }
+
         $this->guard()->login($user, true);
 
         try {
