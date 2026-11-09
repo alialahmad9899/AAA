@@ -18,7 +18,7 @@ Route::post('/verification', 'OTPVerificationController@verify_phone')->name('ve
 Route::get('/verification/phone/code/resend', 'OTPVerificationController@resend_verificcation_code')->name('verification.phone.resend');
 
 //Forgot password phone
-Route::post('/password/reset/submit', 'OTPVerificationController@reset_password_with_code')->name('password.update.phone');
+Route::post('/password/reset/submit', 'HomeController@reset_password_with_code')->middleware('throttle:password-reset-web')->name('password.update.phone');
 
 //Admin
 Route::group(['prefix' =>'admin', 'middleware' => ['auth', 'admin']], function(){
