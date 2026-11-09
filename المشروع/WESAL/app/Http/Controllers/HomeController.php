@@ -626,8 +626,8 @@ class HomeController extends Controller
 
         $email = !empty($validated['email']) ? strtolower(trim($validated['email'])) : null;
         $phone = !empty($validated['phone'])
-            ? '+' . ltrim(preg_replace('/\\D+/', '', (string) ($validated['country_code'] ?? '')), '')
-                . preg_replace('/\\D+/', '', $validated['phone'])
+            ? '+' . preg_replace('/\D+/', '', (string) ($validated['country_code'] ?? ''))
+                . preg_replace('/\D+/', '', $validated['phone'])
             : null;
 
         if ($email && User::where('email', $email)->exists()) {
@@ -672,8 +672,8 @@ class HomeController extends Controller
                 SmsUtility::mobile_registration_verification($phone, $verificationCode);
                 $sent = true;
             }
-        } catch (\\Throwable $exception) {
-            \\Log::warning('Web registration verification delivery failed.', [
+        } catch (\Throwable $exception) {
+            \Log::warning('Web registration verification delivery failed.', [
                 'channel' => $email ? 'email' : 'phone',
                 'exception' => get_class($exception),
             ]);
@@ -699,7 +699,7 @@ class HomeController extends Controller
             'email' => 'nullable|email|max:255|required_without:phone',
             'phone' => 'nullable|string|max:24|required_without:email',
             'country_code' => 'nullable|string|max:8',
-            'code' => ['required', 'string', 'regex:/^\\d{6}$/'],
+            'code' => ['required', 'string', 'regex:/^\d{6}$/'],
         ]);
 
         $query = RegistrationVerificationCode::where('expires_at', '>', now())
@@ -708,8 +708,8 @@ class HomeController extends Controller
         if (!empty($validated['email'])) {
             $query->where('email', strtolower(trim($validated['email'])));
         } else {
-            $phone = '+' . ltrim(preg_replace('/\\D+/', '', (string) ($validated['country_code'] ?? '')), '')
-                . preg_replace('/\\D+/', '', $validated['phone']);
+            $phone = '+' . preg_replace('/\D+/', '', (string) ($validated['country_code'] ?? ''))
+                . preg_replace('/\D+/', '', $validated['phone']);
             $query->where('phone', $phone);
         }
 
