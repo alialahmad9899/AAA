@@ -70,6 +70,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'password_reset_code_expires_at' => 'datetime',
     ];
 
     public function member()
