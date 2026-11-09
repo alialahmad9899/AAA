@@ -21,7 +21,10 @@
                         <div class="text-center">
 
                          @if ($_SERVER['SERVER_NAME'] == 'localhost' || $_SERVER['SERVER_NAME'] == '127.0.0.1')
-                            <a href="{{ route('update.step2') }}" class="btn btn-install text-uppercase">Update Now</a>
+                            <form method="POST" action="{{ route('update.step2') }}">
+                                @csrf
+                                <button type="submit" class="btn btn-install text-uppercase">Update Now</button>
+                            </form>
                         @else
                             <a href="{{ route('update.step1') }}" class="btn btn-install text-uppercase">Next Step</a>
                         @endif
