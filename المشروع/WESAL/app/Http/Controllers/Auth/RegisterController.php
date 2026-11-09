@@ -95,7 +95,7 @@ class RegisterController extends Controller
                     'password'    => Hash::make($data['password']),
                     'code'        => unique_code(),
                     'approved'    => $approval,
-                    'verification_code' => rand(100000, 999999)
+                    'verification_code' => random_int(100000, 999999)
                 ]);
             } else {
                 $user = User::create([
