@@ -57,8 +57,8 @@ class MemberRegistrationVerificationController extends Controller
                 SmsUtility::mobile_registration_verification($phone, $verificationCode);
                 $sent = true;
             }
-        } catch (\\Throwable $exception) {
-            \\Log::warning('Registration verification code delivery failed.', [
+        } catch (\Throwable $exception) {
+            \Log::warning('Registration verification code delivery failed.', [
                 'channel' => $email ? 'email' : 'phone',
                 'exception' => get_class($exception),
             ]);
@@ -84,6 +84,7 @@ class MemberRegistrationVerificationController extends Controller
         $validated = $request->validate([
             'email' => 'nullable|email|max:255|required_without:phone',
             'phone' => 'nullable|string|max:24|required_without:email',
+            'country_code' => 'required_with:phone|string|max:8',
             'code' => ['required', 'string', 'regex:/^\\d{6}$/'],
         ]);
 
@@ -93,8 +94,9 @@ class MemberRegistrationVerificationController extends Controller
         if (!empty($validated['email'])) {
             $query->where('email', strtolower(trim($validated['email'])));
         } else {
-            $phone = preg_replace('/\\D+/', '', (string) $validated['phone']);
-            $query->where('phone', 'like', '%' . $phone);
+            $phone = '+' . ltrim((string) $validated['country_code'], '+')
+                . preg_replace('/\\D+/', '', $validated['phone']);
+            $query->where('phone', $phone);
         }
 
         $customerVerification = $query->first();
