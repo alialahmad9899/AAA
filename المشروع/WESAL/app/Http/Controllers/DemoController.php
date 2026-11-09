@@ -2,65 +2,40 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use DB;
-use Schema;
-use ZipArchive;
-use File;
-
 class DemoController extends Controller
 {
-    public function __construct()
-    {
-        ini_set('memory_limit', '2048M');
-        ini_set('max_execution_time', 600);
-
-    }
-
+    /**
+     * The legacy demo endpoints can import SQL, drop every table, or replace
+     * uploaded files. They are retired for production and intentionally fail
+     * closed even when a stale DEMO_MODE setting is left enabled.
+     */
     public function cron_1()
     {
-        if (env('DEMO_MODE') != 'On') {
-            return back();
-        }
-        $this->drop_all_tables();
-        $this->import_demo_sql();
+        abort(404);
     }
 
     public function cron_2()
     {
-        if (env('DEMO_MODE') != 'On') {
-            return back();
-        }
-        $this->remove_folder();
-        $this->extract_uploads();
+        abort(404);
     }
-
 
     public function drop_all_tables()
     {
-        Schema::disableForeignKeyConstraints();
-        foreach (DB::select('SHOW TABLES') as $table) {
-            $table_array = get_object_vars($table);
-            Schema::drop($table_array[key($table_array)]);
-        }
+        abort(404);
     }
 
     public function import_demo_sql()
     {
-        $sql_path = base_path('demo.sql');
-        DB::unprepared(file_get_contents($sql_path));
+        abort(404);
     }
 
     public function extract_uploads()
     {
-        $zip = new ZipArchive;
-        $zip->open(base_path('public/uploads.zip'));
-        $zip->extractTo('public/uploads');
-
+        abort(404);
     }
 
     public function remove_folder()
     {
-        File::deleteDirectory(base_path('public/uploads'));
+        abort(404);
     }
 }
