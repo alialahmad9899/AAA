@@ -17,18 +17,18 @@ use Illuminate\Support\Facades\Route;
 
 Route::group(['namespace' => 'Api', 'middleware' => ['app_language']], function () {
     // Authentication
-    Route::post('/signup', 'AuthController@signup');
-    Route::post('/signin', 'AuthController@signin');
+    Route::post('/signup', 'AuthController@signup')->middleware('throttle:auth-signup');
+    Route::post('/signin', 'AuthController@signin')->middleware('throttle:auth-login');
     
     // 🟢 مسار تسجيل الدخول بواسطة جوجل الخاص بتطبيق الموبايل
-    Route::post('/auth/google', 'AuthController@googleSignIn');
+    Route::post('/auth/google', 'AuthController@googleSignIn')->middleware('throttle:auth-google');
 
-    Route::post('/forgot/password', 'AuthController@forgotPassword');
+    Route::post('/forgot/password', 'AuthController@forgotPassword')->middleware('throttle:password-reset-request');
     Route::post('/verify/code', 'AuthController@verifyCode')->middleware("auth:sanctum");
-    Route::get('/resend-verify/code', 'AuthController@resendVerifyCode')->middleware("auth:sanctum");
-    Route::post('/reset/password', 'AuthController@resetPassword');
-    Route::post('social-login', 'AuthController@socialLogin');
-    Route::get('user-by-token', 'AuthController@getUserByToken');
+    Route::get('/resend-verify/code', 'AuthController@resendVerifyCode')->middleware(['auth:sanctum', 'throttle:verification-resend']);
+    Route::post('/reset/password', 'AuthController@resetPassword')->middleware('throttle:password-reset-attempt');
+    Route::post('social-login', 'AuthController@socialLogin')->middleware('throttle:auth-google');
+    Route::get('user-by-token', 'AuthController@getUserByToken')->middleware('auth:sanctum');
 
     Route::get('/home/slider', 'HomeController@home_slider');
     Route::get('/home/banner', 'HomeController@home_banner');
@@ -77,8 +77,8 @@ Route::group(['namespace' => 'Api', 'middleware' => ['app_language']], function 
         return view("frontend.google_recaptcha.app_recaptcha");
     });
 
-    Route::post('/registration/verification-code-send', 'MemberRegistrationVerificationController@sendRegVerificationCode');
-    Route::post('/registration/verification-code-confirmation', 'MemberRegistrationVerificationController@regVerifyCodeConfirmation');
+    Route::post('/registration/verification-code-send', 'MemberRegistrationVerificationController@sendRegVerificationCode')->middleware('throttle:registration-code-send');
+    Route::post('/registration/verification-code-confirmation', 'MemberRegistrationVerificationController@regVerifyCodeConfirmation')->middleware('throttle:registration-code-check');
 
     // Payment callbacks exposed to guests are limited to Stripe only.
     Route::group(['namespace' => 'Payment'], function () {
