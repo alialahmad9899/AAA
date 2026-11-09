@@ -194,6 +194,15 @@ class RouteServiceProvider extends ServiceProvider
             ];
         });
 
+        RateLimiter::for('verification-code-check', function (Request $request) {
+            $userId = $request->user() ? $request->user()->getAuthIdentifier() : 'guest';
+
+            return [
+                Limit::perMinute(20)->by('verification-check-ip:' . ($request->ip() ?: 'unknown')),
+                Limit::perMinute(10)->by('verification-check-user:' . $userId),
+            ];
+        });
+
         RateLimiter::for('verification-resend', function (Request $request) {
             $userId = $request->user() ? $request->user()->getAuthIdentifier() : 'guest';
 
