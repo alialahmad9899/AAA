@@ -4,6 +4,7 @@
 // الوصف: نقطة الانطلاق الرئيسية مع إضافة المعالجة التلقائية للروابط العميقة (App Links)
 // ============================================================================
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:app_links/app_links.dart';
@@ -22,28 +23,29 @@ import 'services/fcm_service.dart';
 import 'services/api_service.dart';
 
 void main() async {
-  // 1. تهيئة محرك Flutter لضمان عمل كافة الخدمات قبل رسم الواجهات
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 2. تهيئة خدمات Firebase الإشعارية
+  // Read the local login token before the first frame. Do not hold the first
+  // render for notification permission prompts or the FCM token HTTP sync.
+  final String? token = await ApiService.getToken();
+  final bool isLoggedIn = token != null && token.trim().isNotEmpty;
+
+  runApp(MyApp(isLoggedIn: isLoggedIn));
+
+  // Start optional services after the app can paint.
+  _setupDeepLinks();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    unawaited(_initializeNotificationServices());
+  });
+}
+
+Future<void> _initializeNotificationServices() async {
   try {
     await Firebase.initializeApp();
     await NotificationService.initialize();
   } catch (e) {
     debugPrint('⚠️ خطأ أثناء تهيئة Firebase والإشعارات: $e');
   }
-
-  // 3. تهيئة الاستماع للروابط العميقة (Deep Links) عند تشغيل التطبيق
-  _setupDeepLinks();
-
-  // 4. قراءة توكن المستخدم من التخزين المشفر الآمن (FlutterSecureStorage عبر ApiService)
-  final String? token = await ApiService.getToken();
-
-  // 5. التحقق من حالة تسجيل الدخول (وجود توكن صالح وغير فارغ)
-  final bool isLoggedIn = token != null && token.trim().isNotEmpty;
-
-  // تشغيل التطبيق وتمرير حالة تسجيل الدخول للشاشة الابتدائية
-  runApp(MyApp(isLoggedIn: isLoggedIn));
 }
 
 /// دالة مخصصة للالتقاط والاستجابة للروابط العميقة المفتوحة
