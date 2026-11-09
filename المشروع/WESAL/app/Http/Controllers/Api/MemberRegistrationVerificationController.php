@@ -21,9 +21,9 @@ class MemberRegistrationVerificationController extends Controller
         ]);
 
         $email = !empty($validated['email']) ? strtolower(trim($validated['email'])) : null;
-        $phone = !empty($validated['phone'])
-            ? '+' . ltrim((string) $validated['country_code'], '+') . preg_replace('/\\D+/', '', $validated['phone'])
-            : null;
+        $countryCode = preg_replace('/\D+/', '', (string) ($validated['country_code'] ?? ''));
+        $phoneDigits = preg_replace('/\D+/', '', (string) ($validated['phone'] ?? ''));
+        $phone = $phoneDigits !== '' ? '+' . $countryCode . $phoneDigits : null;
 
         if ($email && User::where('email', $email)->exists()) {
             return response()->json(['status' => 0, 'message' => translate('Email already exists.')], 409);
@@ -95,7 +95,7 @@ class MemberRegistrationVerificationController extends Controller
             'email' => 'nullable|email|max:255|required_without:phone',
             'phone' => 'nullable|string|max:24|required_without:email',
             'country_code' => 'nullable|string|max:8',
-            'code' => ['required', 'string', 'regex:/^\\d{6}$/'],
+            'code' => ['required', 'string', 'regex:/^\d{6}$/'],
         ]);
 
         $query = RegistrationVerificationCode::where('expires_at', '>', now())
@@ -104,11 +104,11 @@ class MemberRegistrationVerificationController extends Controller
         if (!empty($validated['email'])) {
             $query->where('email', strtolower(trim($validated['email'])));
         } else {
-            $phoneDigits = preg_replace('/\\D+/', '', $validated['phone']);
-            $countryCode = preg_replace('/\\D+/', '', (string) ($validated['country_code'] ?? ''));
+            $phoneDigits = preg_replace('/\D+/', '', $validated['phone']);
+            $countryCode = preg_replace('/\D+/', '', (string) ($validated['country_code'] ?? ''));
             $phone = '+' . ($countryCode !== '' ? $countryCode : $phoneDigits);
             if ($countryCode !== '') {
-                $phone .= preg_replace('/\\D+/', '', $validated['phone']);
+                $phone .= preg_replace('/\D+/', '', $validated['phone']);
             }
             $query->where('phone', $phone);
         }
