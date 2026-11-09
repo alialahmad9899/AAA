@@ -60,7 +60,7 @@ class PasswordResetCodeTest extends TestCase
 
     public function test_only_four_to_six_digit_codes_can_be_hashed(): void
     {
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         PasswordResetCode::forCode('123');
     }
 }
