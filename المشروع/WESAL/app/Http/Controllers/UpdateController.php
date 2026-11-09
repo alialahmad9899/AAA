@@ -67,9 +67,29 @@ class UpdateController extends Controller
             return back();
         }
 
-        // Reject absolute paths, traversal entries, and Unix symlinks before extraction.
+        // Reject unexpectedly large archives before extraction to reduce ZIP-bomb risk.
+        if ($zip->numFiles > 20000) {
+            $zip->close();
+            flash(translate('The update archive contains too many files.'))->error();
+            return back();
+        }
+
+        $totalUncompressedBytes = 0;
+        // Reject absolute paths, traversal entries, Unix symlinks, and oversized entries.
         $safeArchive = true;
         for ($index = 0; $index < $zip->numFiles; $index++) {
+            $entryStats = $zip->statIndex($index);
+            if (!is_array($entryStats) || !isset($entryStats['size']) || (int) $entryStats['size'] < 0) {
+                $safeArchive = false;
+                break;
+            }
+
+            $totalUncompressedBytes += (int) $entryStats['size'];
+            if ($totalUncompressedBytes > 1073741824) {
+                $safeArchive = false;
+                break;
+            }
+
             $entry = str_replace('\\', '/', (string) $zip->getNameIndex($index));
             $segments = explode('/', $entry);
 
