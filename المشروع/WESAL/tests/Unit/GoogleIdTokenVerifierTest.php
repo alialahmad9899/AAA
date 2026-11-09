@@ -47,6 +47,34 @@ class GoogleIdTokenVerifierTest extends TestCase
         self::assertSame('member@gmail.com', $claims['email']);
     }
 
+    public function test_accepts_google_jwk_modulus_and_exponent_keys(): void
+    {
+        $details = openssl_pkey_get_details($this->privateKey);
+        self::assertIsArray($details);
+        self::assertArrayHasKey('rsa', $details);
+
+        $jwk = [
+            'keys' => [[
+                'kty' => 'RSA',
+                'alg' => 'RS256',
+                'use' => 'sig',
+                'kid' => 'test-key-id',
+                'n' => $this->encode($details['rsa']['n']),
+                'e' => $this->encode($details['rsa']['e']),
+            ]],
+        ];
+
+        $verifier = new GoogleIdTokenVerifier(
+            fn (): array => $jwk,
+            ['wesal-test-client']
+        );
+
+        $claims = $verifier->verify($this->makeToken($this->validClaims()));
+
+        self::assertIsArray($claims);
+        self::assertSame('google-subject-123', $claims['sub']);
+    }
+
     public function test_rejects_a_token_for_an_unconfigured_audience(): void
     {
         $claims = $this->validClaims();
