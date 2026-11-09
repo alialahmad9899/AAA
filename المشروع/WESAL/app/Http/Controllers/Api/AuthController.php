@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Api\Controller;
 use App\Http\Controllers\OTPVerificationController;
 use App\Http\Requests\AuthRequest;
+use App\Security\GoogleIdTokenVerifier;
+use App\Security\PasswordResetCode;
 use App\Http\Resources\Profile\MaritialStatusResource;
 use App\Models\EmailTemplate;
 use App\Models\MaritalStatus;
@@ -25,8 +27,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Laravel\Sanctum\PersonalAccessToken;
-use Socialite;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use App\Rules\RecaptchaRule;
@@ -202,168 +202,144 @@ class AuthController extends Controller
      */
     public function signin(Request $request)
     {
-        $user = User::where('email', $request->email_or_phone)
-            ->orWhere('phone', $request->email_or_phone)
+        $validated = $request->validate([
+            'email_or_phone' => 'required|string|max:255',
+            'password' => 'required|string|max:4096',
+        ]);
+
+        $identity = trim($validated['email_or_phone']);
+        $user = User::where('email', $identity)
+            ->orWhere('phone', $identity)
             ->first();
 
-        if ($request->has('identity_matrix') && !empty($request->identity_matrix)) {
-            if (\App\Utility\MemberUtility::member_check($request->identity_matrix) == false) {
-                return response()->json(['result' => false, 'message' => 'Identity matrix error', 'user' => null], 401);
-            }
+        if ($request->filled('identity_matrix')
+            && \App\Utility\MemberUtility::member_check($request->input('identity_matrix')) === false) {
+            return response()->json([
+                'result' => false,
+                'message' => translate('Unauthorized'),
+                'user' => null,
+            ], 401);
         }
 
-        if ($user != null) {
-            if (Hash::check($request->password, $user->password)) {
-                $fcmToken = $request->fcm_token ?? $request->device_token;
-                if ($fcmToken) {
-                    $user->fcm_token = $fcmToken;
-                    $user->save();
-                }
-
-                return $this->authResponse($user);
-            }
-            return response()->json(['result' => false, 'message' => translate('Unauthorized'), 'user' => null], 401);
+        if (!$user || !Hash::check($validated['password'], $user->password)) {
+            return response()->json([
+                'result' => false,
+                'message' => translate('Unauthorized'),
+                'user' => null,
+            ], 401);
         }
-        return response()->json(['result' => false, 'message' => translate('User not found'), 'user' => null], 401);
+
+        $fcmToken = $request->input('fcm_token') ?? $request->input('device_token');
+        if (is_string($fcmToken) && $fcmToken !== '') {
+            $user->fcm_token = $fcmToken;
+            $user->save();
+        }
+
+        return $this->authResponse($user);
     }
 
+    /**
+     * Google Sign-In: the ID token is verified server-side before account lookup.
+     */
     /**
      * Google Sign-In Direct API Endpoint
      */
     public function googleSignIn(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'name' => 'nullable|string',
-            'google_id' => 'required|string',
+        $validated = $request->validate([
+            'id_token' => 'required|string|max:8192',
         ]);
 
-        if ($validator->fails()) {
+        $claims = app(GoogleIdTokenVerifier::class)->verify($validated['id_token']);
+        if (!$claims) {
             return response()->json([
                 'result' => false,
-                'message' => $validator->errors()->first(),
+                'message' => translate('Google sign-in could not be verified. Please try again.'),
                 'user' => null,
-            ], 422);
+            ], 401);
         }
 
-        $email = strtolower(trim($request->email));
-        $googleId = $request->google_id;
+        // Never trust email or google_id sent separately by the mobile client.
+        $email = strtolower(trim((string) $claims['email']));
+        $googleId = (string) $claims['sub'];
 
-        $user = User::where('email', $email)
-            ->orWhere('provider_id', $googleId)
-            ->first();
+        $user = User::where('provider_id', $googleId)->first();
+        if (!$user) {
+            $userByEmail = User::where('email', $email)->first();
+
+            if ($userByEmail && !empty($userByEmail->provider_id)
+                && !hash_equals((string) $userByEmail->provider_id, $googleId)) {
+                return response()->json([
+                    'result' => false,
+                    'message' => translate('This account is linked to another Google identity. Sign in using the original method.'),
+                    'user' => null,
+                ], 409);
+            }
+
+            // Google only guarantees ongoing control of the email for Gmail and
+            // hosted Workspace accounts. External addresses must not be silently
+            // linked to an existing local account using an old email claim.
+            $domain = substr(strrchr($email, '@') ?: '', 1);
+            $googleHostedDomain = $claims['hd'] ?? null;
+            $googleControlsEmail = strcasecmp($domain, 'gmail.com') === 0
+                || (is_string($googleHostedDomain) && $googleHostedDomain !== '');
+
+            if ($userByEmail && !$googleControlsEmail) {
+                return response()->json([
+                    'result' => false,
+                    'message' => translate('Sign in with your password before linking this Google account.'),
+                    'user' => null,
+                ], 409);
+            }
+
+            $user = $userByEmail;
+        }
 
         if ($user) {
             if (empty($user->provider_id)) {
                 $user->provider_id = $googleId;
             }
+
             if (empty($user->email_verified_at)) {
-                $user->email_verified_at = date('Y-m-d H:i:s');
+                $user->email_verified_at = Carbon::now();
             }
 
-            $fcmToken = $request->fcm_token ?? $request->device_token;
-            if ($fcmToken) {
+            $fcmToken = $request->input('fcm_token') ?? $request->input('device_token');
+            if (is_string($fcmToken) && $fcmToken !== '') {
                 $user->fcm_token = $fcmToken;
             }
             $user->save();
 
             return $this->authResponse($user);
-        } else {
-            return response()->json([
-                'result' => false,
-                'is_registered' => false,
-                'message' => translate('User not found. Please complete registration.'),
-                'google_data' => [
-                    'email' => $email,
-                    'name' => $request->name ?? '',
-                    'google_id' => $googleId,
-                ]
-            ], 200);
         }
+
+        return response()->json([
+            'result' => false,
+            'is_registered' => false,
+            'message' => translate('User not found. Please complete registration.'),
+            'google_data' => [
+                'email' => $email,
+                'name' => is_string($claims['name'] ?? null) ? $claims['name'] : '',
+                'google_id' => $googleId,
+            ],
+        ], 200);
     }
 
     /**
-     * Social Login
+     * Legacy provider login accepted client-supplied identity fields without
+     * provider token verification. Use the verified /auth/google endpoint.
      */
     public function socialLogin(Request $request)
     {
-        if (!$request->provider) {
-            return response()->json([
-                'result' => false,
-                'message' => translate('User not found'),
-                'user' => null,
-            ]);
-        }
-
-        switch ($request->social_provider) {
-            case 'facebook':
-                $social_user = Socialite::driver('facebook')->fields(['name', 'first_name', 'last_name', 'email']);
-                break;
-            case 'google':
-                $social_user = Socialite::driver('google')->scopes(['profile', 'email']);
-                break;
-            case 'twitter':
-                $social_user = Socialite::driver('twitter');
-                break;
-            case 'apple':
-                $social_user = Socialite::driver('sign-in-with-apple')->scopes(['name', 'email']);
-                break;
-            default:
-                $social_user = null;
-        }
-        if ($social_user == null) {
-            return response()->json(['result' => false, 'message' => translate('No social provider matches'), 'user' => null]);
-        }
-
-        $existingUserByProviderId = User::where('provider_id', $request->provider)->first();
-
-        if ($existingUserByProviderId) {
-            $fcmToken = $request->fcm_token ?? $request->device_token;
-            if ($fcmToken) {
-                $existingUserByProviderId->fcm_token = $fcmToken;
-            }
-            $existingUserByProviderId->save();
-
-            return $this->authResponse($existingUserByProviderId);
-        } else {
-            $newUser                     = new User;
-            $newUser->first_name         = $request->name;
-            $newUser->email              = $request->email;
-            $newUser->email_verified_at  = date('Y-m-d H:i:s');
-            $newUser->provider_id        = $request->provider;
-            $newUser->code               = unique_code();
-            $newUser->membership         = 1;
-            $newUser->approved           = get_setting('member_verification') == 1 ? 0 : 1;
-            
-            $fcmToken = $request->fcm_token ?? $request->device_token;
-            if ($fcmToken) {
-                $newUser->fcm_token = $fcmToken;
-            }
-            
-            $newUser->save();
-
-            $member                             = new Member;
-            $member->user_id                    = $newUser->id;
-            $member->gender                     = null;
-            $member->on_behalves_id             = null;
-            $member->birthday                   = null;
-
-            $package                            = Package::where('id', 1)->first();
-            $member->current_package_id         = $package->id;
-            $member->remaining_interest         = $package->express_interest;
-            $member->remaining_photo_gallery    = $package->photo_gallery;
-            $member->remaining_contact_view     = $package->contact;
-            $member->remaining_profile_viewer_view  = $package->profile_viewers_view;
-            $member->remaining_profile_image_view   = $package->profile_image_view;
-            $member->remaining_gallery_image_view   = $package->gallery_image_view;
-            $member->auto_profile_match         = $package->auto_profile_match;
-            $member->package_validity           = Date('Y-m-d', strtotime($package->validity . " days"));
-            $member->save();
-
-            return $this->authResponse($newUser);
-        }
+        return response()->json([
+            'result' => false,
+            'message' => translate('This legacy social sign-in endpoint is disabled. Use verified sign-in.'),
+        ], 410);
     }
 
+    /**
+     * Log Out using api
+     */
     /**
      * Log Out using api
      */
@@ -385,7 +361,8 @@ class AuthController extends Controller
     protected function authResponse($user)
     {
         $maritial_status = MaritalStatus::where('id', $user->member->marital_status_id ?? 0)->first();
-        $token = $user->createToken('API Token')->plainTextToken;
+        $expiresAt = now()->addMinutes((int) config('sanctum.expiration', 43200));
+        $token = $user->createToken('API Token', ['*'], $expiresAt)->plainTextToken;
         $age = Carbon::parse($user->member->birthday ?? now())->age;
         $photoUrl = uploaded_asset($user->photo) ?: uploaded_asset($user->avatar_original ?? null);
 
@@ -394,7 +371,7 @@ class AuthController extends Controller
             'message' => translate('Successfully logged in'),
             'access_token' => $token,
             'token_type' => 'Bearer',
-            'expires_at' => null,
+            'expires_at' => $expiresAt->toIso8601String(),
             'user' => [
                 'id' => $user->id,
                 'type' => $user->user_type,
@@ -410,7 +387,7 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'birthday' => $age,
                 'height' => $user->physical_attributes ? $user->physical_attributes->height : 0,
-                'marital_status_id' => $maritial_status ? new MaritialStatusResource($maritial_status) :  new MaritialStatusResource($maritial_status),
+                'marital_status_id' => $maritial_status ? new MaritialStatusResource($maritial_status) : new MaritialStatusResource($maritial_status),
                 'avatar' => $user->avatar ?? '',
                 'photo' => $photoUrl ?? '',
                 'avatar_original' => $photoUrl ?? '',
@@ -421,114 +398,166 @@ class AuthController extends Controller
 
     public function forgotPassword(Request $request)
     {
-        if ($request->send_code_by == 'email') {
-            $this->validate($request, [
-                'email_or_phone' => 'required|email',
-            ]);
-            $user = User::where('email', $request->email_or_phone)->first();
-        } else {
-            $this->validate($request, [
-                'email_or_phone' => 'required',
-            ]);
-            $user = User::where('phone', $request->email_or_phone)->first();
-        }
+        $validated = $request->validate([
+            'send_code_by' => 'required|in:email,phone',
+            'email_or_phone' => 'required|string|max:255',
+        ]);
+
+        $identity = trim($validated['email_or_phone']);
+        $user = $validated['send_code_by'] === 'email'
+            ? User::where('email', $identity)->first()
+            : User::where('phone', $identity)->first();
+
+        // Same response for existing and non-existing accounts to avoid enumeration.
         if ($user) {
-            $user->verification_code = rand(100000, 999999);
-            $user->save();
-            if ($request->send_code_by == 'phone') {
-                $otpController = new OTPVerificationController();
-                $otpController->send_code($user);
-            } else {
-                try {
-                    $user->notify(new AppEmailVerificationNotification($user));
-                } catch (\Exception $e) {
-                    return response()->json(
-                        [
-                            'result' => false,
-                            'message' => translate('SMTP not configured properly. Please contact with admin'),
-                        ],
-                        404,
-                    );
+            try {
+                if ($validated['send_code_by'] === 'phone') {
+                    $otpController = new OTPVerificationController();
+                    $otpController->send_code($user);
+                    $user->refresh();
+
+                    $issuedCode = PasswordResetCode::forCode((string) $user->verification_code);
+                } else {
+                    $issuedCode = PasswordResetCode::issue();
+                    $user->verification_code = $issuedCode['code'];
                 }
+
+                $user->password_reset_code_hash = $issuedCode['hash'];
+                $user->password_reset_code_expires_at = $issuedCode['expires_at'];
+                $user->save();
+
+                if ($validated['send_code_by'] === 'email') {
+                    $user->notify(new AppEmailVerificationNotification($user));
+                }
+
+                // Keep only the slow hash and expiry in the database after delivery.
+                $user->verification_code = null;
+                $user->save();
+            } catch (\Throwable $exception) {
+                \Log::warning('Password reset delivery failed.', [
+                    'user_id' => $user->id,
+                    'channel' => $validated['send_code_by'],
+                    'exception' => get_class($exception),
+                ]);
+
+                $user->verification_code = null;
+                $user->password_reset_code_hash = null;
+                $user->password_reset_code_expires_at = null;
+                $user->save();
             }
-        } else {
-            return response()->json(
-                [
-                    'result' => false,
-                    'message' => translate('User is not found'),
-                ],
-                404,
-            );
         }
 
-        return response()->json(
-            [
-                'result' => true,
-                'message' => translate('A code is sent'),
-            ],
-            200,
-        );
+        return response()->json([
+            'result' => true,
+            'message' => translate('If the account exists, a password reset code has been sent.'),
+        ], 200);
     }
 
     public function verifyCode(Request $request)
     {
-        $user = auth()->user();
+        $user = $request->user();
 
-        $this->validate($request, [
-            'verification_code' => 'required',
+        $validated = $request->validate([
+            'verification_code' => 'required|string|regex:/^\d{4,6}$/',
         ]);
-        if ($user && $user->verification_code == $request->verification_code) {
+
+        $storedCode = $user ? (string) $user->verification_code : '';
+        if ($user && $storedCode !== '' && hash_equals($storedCode, $validated['verification_code'])) {
             $user->email_verified_at = Carbon::now();
             $user->verification_code = null;
-
             $user->save();
+
             return $this->success_message('Your account is now verified');
         }
+
         return $this->failure_message('Verification code does not match!!');
     }
 
     public function resendVerifyCode(Request $request)
     {
-        $user = auth()->user();
-        $user->verification_code = rand(1000, 999999);
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['result' => false, 'message' => translate('Unauthenticated.')], 401);
+        }
+
+        $user->verification_code = (string) random_int(1000, 999999);
         $user->save();
+
         try {
             $user->notify(new VerificationCode($user));
-        } catch (\Exception $e) {
+        } catch (\Throwable $exception) {
+            \Log::warning('Verification code resend failed.', [
+                'user_id' => $user->id,
+                'exception' => get_class($exception),
+            ]);
+            return response()->json([
+                'result' => false,
+                'message' => translate('Unable to send the verification code. Please try again later.'),
+            ], 503);
         }
-        return response()->json(
-            [
-                'result' => true,
-                'message' => 'OTP resend successfull.',
 
-            ],
-            200
-        );
+        return response()->json([
+            'result' => true,
+            'message' => 'OTP resend successfull.',
+        ], 200);
     }
 
     public function resetPassword(Request $request)
     {
-        $this->validate($request, [
+        $validated = $request->validate([
+            'send_code_by' => 'required|in:email,phone',
+            'email_or_phone' => 'required|string|max:255',
+            'verification_code' => ['required', 'string', 'regex:/^\d{4,6}$/'],
             'password' => 'required|string|min:8|confirmed',
         ]);
 
-        if ($request->send_code_by == 'phone' && !empty($request->email_or_phone)) {
-            $user = User::where('phone', $request->email_or_phone)->first();
-        } elseif ($request->send_code_by == 'email' && !empty($request->email_or_phone)) {
-            $user = User::where('email', $request->email_or_phone)->first();
+        $identity = trim($validated['email_or_phone']);
+        $user = $validated['send_code_by'] === 'phone'
+            ? User::where('phone', $identity)->first()
+            : User::where('email', $identity)->first();
+
+        if (!$user || !PasswordResetCode::isValid(
+            $validated['verification_code'],
+            $user->password_reset_code_hash,
+            $user->password_reset_code_expires_at
+        )) {
+            return response()->json([
+                'result' => false,
+                'message' => translate('The reset code is invalid or expired. Request a new code.'),
+            ], 422);
         }
 
-        if (!$user) {
-            return $this->failure_message('User not found!!');
-        }
-        if ($user->verification_code == $request->verification_code) {
-            $user->password = Hash::make($request['password']);
-            $user->verification_code = null;
-            $user->save();
+        $updated = DB::transaction(function () use ($user, $validated) {
+            $lockedUser = User::whereKey($user->id)->lockForUpdate()->first();
+            if (!$lockedUser || !PasswordResetCode::isValid(
+                $validated['verification_code'],
+                $lockedUser->password_reset_code_hash,
+                $lockedUser->password_reset_code_expires_at
+            )) {
+                return false;
+            }
 
-            return $this->success_message('Password has been updated, you can login now');
+            $lockedUser->password = Hash::make($validated['password']);
+            $lockedUser->verification_code = null;
+            $lockedUser->password_reset_code_hash = null;
+            $lockedUser->password_reset_code_expires_at = null;
+            $lockedUser->setRememberToken(Str::random(60));
+            $lockedUser->save();
+
+            // A password reset invalidates every previously issued mobile token.
+            $lockedUser->tokens()->delete();
+
+            return true;
+        });
+
+        if (!$updated) {
+            return response()->json([
+                'result' => false,
+                'message' => translate('The reset code is invalid or expired. Request a new code.'),
+            ], 422);
         }
-        return $this->failure_message('Verification code does not match.');
+
+        return $this->success_message('Password has been updated, you can login now');
     }
 
     public function authData($user)
@@ -575,14 +604,39 @@ class AuthController extends Controller
         );
     }
 
-    public function getUserByToken()
+    public function getUserByToken(Request $request)
     {
-        $token = PersonalAccessToken::findToken(request()->bearerToken());
-        $user = null;
-        if ($token) {
-            $user = $token->tokenable;
-            return $this->authData($user);
+        return $this->authData($request->user());
+    }
+
+    public function update_device_token(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json([
+                'result' => false,
+                'message' => translate('Unauthenticated.'),
+            ], 401);
         }
+
+        $fcmToken = $request->input('fcm_token') ?? $request->input('device_token');
+        if (!is_string($fcmToken) || trim($fcmToken) === '' || strlen($fcmToken) > 4096) {
+            return response()->json([
+                'result' => false,
+                'message' => translate('A valid device token is required.'),
+            ], 422);
+        }
+
+        $user->fcm_token = $fcmToken;
+        $user->save();
+
+        return response()->json([
+            'result' => true,
+            'message' => translate('device token updated'),
+        ]);
+    }
+}
+}
         return response()->json(
             ['user' => $user]
         );
