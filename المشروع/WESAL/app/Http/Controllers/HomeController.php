@@ -20,6 +20,8 @@ use App\Models\IgnoredUser;
 use App\Models\ProfileMatch;
 use App\Models\ProfileViewer;
 use App\Models\RegistrationVerificationCode;
+use App\Security\PasswordResetCode;
+use Illuminate\Support\Facades\DB;
 use App\Utility\EmailUtility;
 use App\Utility\SmsUtility;
 use Notification;
@@ -534,29 +536,71 @@ class HomeController extends Controller
     public function reset_password_with_code(Request $request)
     {
         $validated = $request->validate([
-            'email' => 'required|email|max:255',
-            'code' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:32',
+            'email_or_phone' => 'nullable|string|max:255',
+            'code' => 'nullable|string|regex:/^\d{6}$/',
+            'verification_code' => 'nullable|string|regex:/^\d{6}$/',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
-        $user = User::where('email', $validated['email'])->first();
-        $storedCode = $user ? (string) $user->verification_code : '';
+        $identity = trim((string) (
+            $validated['email']
+            ?? $validated['phone']
+            ?? $validated['email_or_phone']
+            ?? ''
+        ));
+        $code = (string) (
+            $validated['code']
+            ?? $validated['verification_code']
+            ?? ''
+        );
 
-        if (!$user || $storedCode === ''
-            || !hash_equals($storedCode, (string) $validated['code'])) {
-            flash(translate('Verification code mismatch'))->error();
-            return back();
+        if ($identity === '' || $code === '') {
+            flash(translate('The reset code is invalid or expired. Request a new code.'))->error();
+            return back()->withInput($request->except(['password', 'password_confirmation', 'code', 'verification_code']));
         }
 
-        $user->password = Hash::make($validated['password']);
-        $user->verification_code = null;
-        $user->setRememberToken(Str::random(60));
-        $user->save();
+        $user = filter_var($identity, FILTER_VALIDATE_EMAIL)
+            ? User::where('email', strtolower($identity))->first()
+            : User::where('phone', $identity)->first();
 
-        // Revoke mobile bearer tokens after a password reset.
-        $user->tokens()->delete();
+        if (!$user || !PasswordResetCode::isValid(
+            $code,
+            $user->password_reset_code_hash,
+            $user->password_reset_code_expires_at
+        )) {
+            flash(translate('The reset code is invalid or expired. Request a new code.'))->error();
+            return back()->withInput($request->except(['password', 'password_confirmation', 'code', 'verification_code']));
+        }
 
-        auth()->login($user, true);
+        $updated = DB::transaction(function () use ($user, $validated, $code) {
+            $lockedUser = User::whereKey($user->id)->lockForUpdate()->first();
+            if (!$lockedUser || !PasswordResetCode::isValid(
+                $code,
+                $lockedUser->password_reset_code_hash,
+                $lockedUser->password_reset_code_expires_at
+            )) {
+                return false;
+            }
+
+            $lockedUser->password = Hash::make($validated['password']);
+            $lockedUser->password_reset_code_hash = null;
+            $lockedUser->password_reset_code_expires_at = null;
+            $lockedUser->verification_code = null;
+            $lockedUser->setRememberToken(Str::random(60));
+            $lockedUser->save();
+            $lockedUser->tokens()->delete();
+
+            return true;
+        });
+
+        if (!$updated) {
+            flash(translate('The reset code is invalid or expired. Request a new code.'))->error();
+            return back()->withInput($request->except(['password', 'password_confirmation', 'code', 'verification_code']));
+        }
+
+        auth()->login($user->fresh(), true);
         $request->session()->regenerate();
 
         flash(translate('Password updated successfully'))->success();
