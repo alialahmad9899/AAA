@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Api\Controller;
-use App\Http\Controllers\OTPVerificationController;
 use App\Http\Requests\AuthRequest;
 use App\Security\GoogleIdTokenVerifier;
 use App\Security\PasswordResetCode;
@@ -21,6 +20,7 @@ use App\Notifications\VerificationCode;
 use App\Services\MemberService;
 use App\Services\UserService;
 use App\Utility\EmailUtility;
+use App\Utility\SmsUtility;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -405,46 +405,39 @@ class AuthController extends Controller
 
         $identity = trim($validated['email_or_phone']);
         $user = $validated['send_code_by'] === 'email'
-            ? User::where('email', $identity)->first()
+            ? User::where('email', strtolower($identity))->first()
             : User::where('phone', $identity)->first();
 
-        // Same response for existing and non-existing accounts to avoid enumeration.
+        // The same response is returned whether or not the account exists.
         if ($user) {
+            $issuedCode = PasswordResetCode::issue(10);
+            $user->password_reset_code_hash = $issuedCode['hash'];
+            $user->password_reset_code_expires_at = $issuedCode['expires_at'];
+
+            // Keep the code only in memory for the existing notification templates.
+            $user->verification_code = $issuedCode['code'];
+            $user->save();
+
             try {
                 if ($validated['send_code_by'] === 'phone') {
-                    $otpController = new OTPVerificationController();
-                    $otpController->send_code($user);
-                    $user->refresh();
-
-                    $issuedCode = PasswordResetCode::forCode((string) $user->verification_code);
+                    SmsUtility::password_reset($user, $issuedCode['code']);
                 } else {
-                    $issuedCode = PasswordResetCode::issue();
-                    $user->verification_code = $issuedCode['code'];
-                }
-
-                $user->password_reset_code_hash = $issuedCode['hash'];
-                $user->password_reset_code_expires_at = $issuedCode['expires_at'];
-                $user->save();
-
-                if ($validated['send_code_by'] === 'email') {
                     $user->notify(new AppEmailVerificationNotification($user));
                 }
-
-                // Keep only the slow hash and expiry in the database after delivery.
-                $user->verification_code = null;
-                $user->save();
             } catch (\Throwable $exception) {
-                \Log::warning('Password reset delivery failed.', [
+                \Log::warning('API password reset delivery failed.', [
                     'user_id' => $user->id,
                     'channel' => $validated['send_code_by'],
                     'exception' => get_class($exception),
                 ]);
 
-                $user->verification_code = null;
                 $user->password_reset_code_hash = null;
                 $user->password_reset_code_expires_at = null;
-                $user->save();
             }
+
+            // Never leave the raw recovery code in the database after delivery.
+            $user->verification_code = null;
+            $user->save();
         }
 
         return response()->json([
@@ -452,6 +445,7 @@ class AuthController extends Controller
             'message' => translate('If the account exists, a password reset code has been sent.'),
         ], 200);
     }
+
 
     public function verifyCode(Request $request)
     {
