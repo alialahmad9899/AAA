@@ -60,12 +60,6 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-//demo
-Route::controller(DemoController::class)->group(function () {
-    Route::get('/demo/cron_1', 'cron_1');
-    Route::get('/demo/cron_2', 'cron_2');
-});
-
 Auth::routes();
 
 Route::controller(HomeController::class)->group(function () {
@@ -102,7 +96,6 @@ Route::controller(AizUploadController::class)->group(function () {
     Route::delete('/aiz-uploader/destroy/{id}', 'destroy');
     Route::post('/aiz-uploader/get_file_by_ids', 'get_preview_files');
     Route::get('/aiz-uploader/download/{id}', 'attachment_download')->name('download_attachment');
-    Route::get('/migrate/database', 'migrate_database');
 });
 
 Auth::routes(['verify' => true]);
@@ -346,10 +339,7 @@ Route::controller(PhonepeController::class)->group(function () {
     Route::any('/phonepe/callbackUrl', 'phonepe_callbackUrl')->name('phonepe.callbackUrl');
 });
 
-Route::get('/customer-profile/admin', 'HomeController@profile_edit')->name('profile.edit');
-
 Route::get('/match_profiles', 'ProfileMatchController@match_profiles')->name('match_profiles');
-Route::get('/migrate/profiles/', 'ProfileMatchController@migrate_profiles');
 
 //Custom page
 Route::get('/{slug}', 'PageController@show_custom_page')->name('custom-pages.show_custom_page');
