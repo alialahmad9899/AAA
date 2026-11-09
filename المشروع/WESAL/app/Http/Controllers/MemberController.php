@@ -914,10 +914,18 @@ class MemberController extends Controller
         return $blocked_reason;
     }
 
-    public function login($id)
+    public function login(Request $request, $id)
     {
-        $user = User::findOrFail(decrypt($id));
+        // Staff permissions must not allow switching into a member account.
+        abort_unless(Auth::check() && Auth::user()->user_type === 'admin', 403);
+
+        $memberId = decrypt($id);
+        $user = User::where('user_type', 'member')->findOrFail($memberId);
+
+        $request->session()->put('admin_impersonator_id', Auth::id());
         auth()->login($user, true);
+        $request->session()->regenerate();
+
         return redirect()->route('dashboard');
     }
 
