@@ -272,63 +272,9 @@ class AizUploadController extends Controller
         //Download project attachment
     public function file_info(Request $request)
     {
+        abort_unless($this->canManageAllUploads(), 403);
         $file = Upload::findOrFail($request['id']);
-        return view('admin.uploaded_files.info',compact('file'));
-    }
-
-    private function canManageAllUploads(): bool
-    {
-        $user = Auth::user();
-
-        return $user && (
-            $user->user_type === 'admin'
-            || (method_exists($user, 'can') && $user->can('show_uploaded_files'))
-        );
-    }
-
-    private function canAccessUpload(Upload $upload): bool
-    {
-        return Auth::check()
-            && ((int) $upload->user_id === (int) Auth::id() || $this->canManageAllUploads());
-    }
-
-    private function isUploadMimeAllowed($file, string $type, string $extension): bool
-    {
-        $mime = strtolower((string) $file->getMimeType());
-
-        if ($type === 'image') {
-            return in_array($mime, ['image/jpeg', 'image/png', 'image/gif', 'image/webp'], true);
-        }
-        if ($type === 'video') {
-            return str_starts_with($mime, 'video/');
-        }
-        if ($type === 'audio') {
-            return str_starts_with($mime, 'audio/');
-        }
-        if ($type === 'archive') {
-            return in_array($mime, [
-                'application/zip',
-                'application/x-zip-compressed',
-                'application/x-rar-compressed',
-                'application/vnd.rar',
-                'application/x-7z-compressed',
-                'application/octet-stream',
-            ], true);
-        }
-
-        $documentMimes = [
-            'txt' => ['text/plain'],
-            'doc' => ['application/msword', 'application/x-ole-storage'],
-            'docx' => ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip'],
-            'pdf' => ['application/pdf'],
-            'csv' => ['text/csv', 'text/plain', 'application/csv', 'application/vnd.ms-excel'],
-            'xml' => ['application/xml', 'text/xml', 'text/plain'],
-            'ods' => ['application/vnd.oasis.opendocument.spreadsheet', 'application/zip'],
-            'xls' => ['application/vnd.ms-excel', 'application/x-ole-storage'],
-            'xlsx' => ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/zip'],
-        ];
-
-        return in_array($mime, $documentMimes[$extension] ?? [], true);
+        return view('admin.uploaded_files.info', compact('file'));
     }
 
     private function canManageAllUploads(): bool
