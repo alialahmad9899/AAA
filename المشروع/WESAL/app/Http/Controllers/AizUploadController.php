@@ -307,14 +307,29 @@ class AizUploadController extends Controller
             return str_starts_with($mime, 'audio/');
         }
         if ($type === 'archive') {
-            return in_array($mime, [
-                'application/zip',
-                'application/x-zip-compressed',
-                'application/x-rar-compressed',
-                'application/vnd.rar',
-                'application/x-7z-compressed',
-                'application/octet-stream',
-            ], true);
+            $realPath = $file->getRealPath();
+            if (!$realPath || !is_file($realPath)) {
+                return false;
+            }
+
+            $signature = file_get_contents($realPath, false, null, 0, 8);
+            if (!is_string($signature)) {
+                return false;
+            }
+
+            $signaturesByExtension = [
+                'zip' => ["PK\\x03\\x04", "PK\\x05\\x06", "PK\\x07\\x08"],
+                'rar' => ["Rar!\\x1A\\x07\\x00", "Rar!\\x1A\\x07\\x01\\x00"],
+                '7z' => ["7z\\xBC\\xAF\\x27\\x1C"],
+            ];
+
+            foreach ($signaturesByExtension[$extension] ?? [] as $expectedSignature) {
+                if (str_starts_with($signature, $expectedSignature)) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         $documentMimes = [
@@ -326,6 +341,7 @@ class AizUploadController extends Controller
             'xml' => ['application/xml', 'text/xml', 'text/plain'],
             'ods' => ['application/vnd.oasis.opendocument.spreadsheet', 'application/zip'],
             'xls' => ['application/vnd.ms-excel', 'application/x-ole-storage'],
+            'xlr' => ['application/vnd.ms-excel', 'application/x-ole-storage'],
             'xlsx' => ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/zip'],
         ];
 
