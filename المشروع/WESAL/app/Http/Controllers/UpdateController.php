@@ -50,6 +50,7 @@ class UpdateController extends Controller
         // The update archive must have been uploaded by this authenticated admin.
         $upload = Upload::whereKey($validated['update_zip'])
             ->where('user_id', $request->user()->id)
+            ->where('extension', 'zip')
             ->firstOrFail();
 
         $publicRoot = realpath(public_path());
