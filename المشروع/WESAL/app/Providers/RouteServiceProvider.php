@@ -210,4 +210,5 @@ class RouteServiceProvider extends ServiceProvider
                 Limit::perMinute(10)->by('registration-check-recipient:' . hash('sha256', $recipient)),
             ];
         });
-    }}
+    }
+}
