@@ -159,7 +159,14 @@ class GoogleIdTokenVerifier
     {
         if ($this->certificateProvider !== null) {
             $provided = ($this->certificateProvider)();
-            return is_array($provided) ? $provided : [];
+            if (!is_array($provided)) {
+                return [];
+            }
+
+            // Tests may inject a ready PEM map or the same JWKS shape Google publishes.
+            return isset($provided['keys']) && is_array($provided['keys'])
+                ? $this->certificatesFromJwks($provided['keys'])
+                : $provided;
         }
 
         return Cache::remember(self::CERTIFICATE_CACHE_KEY, now()->addHour(), function (): array {
@@ -176,28 +183,111 @@ class GoogleIdTokenVerifier
                 throw new \RuntimeException('Google signing certificate response is invalid.');
             }
 
-            $certificates = [];
-            foreach ($keys as $key) {
-                if (!is_array($key)
-                    || ($key['kty'] ?? null) !== 'RSA'
-                    || ($key['alg'] ?? null) !== 'RS256'
-                    || empty($key['kid'])
-                    || !isset($key['x5c'][0])
-                    || !is_string($key['x5c'][0])) {
-                    continue;
-                }
-
-                $certificates[$key['kid']] = "-----BEGIN CERTIFICATE-----\n"
-                    . chunk_split($key['x5c'][0], 64, "\n")
-                    . "-----END CERTIFICATE-----\n";
-            }
-
+            $certificates = $this->certificatesFromJwks($keys);
             if ($certificates === []) {
-                throw new \RuntimeException('No usable Google signing certificates were returned.');
+                throw new \RuntimeException('No usable Google signing keys were returned.');
             }
 
             return $certificates;
         });
+    }
+
+    /**
+     * @param array<int, mixed> $keys
+     * @return array<string, string>
+     */
+    private function certificatesFromJwks(array $keys): array
+    {
+        $certificates = [];
+
+        foreach ($keys as $key) {
+            if (!is_array($key)
+                || ($key['kty'] ?? null) !== 'RSA'
+                || ($key['alg'] ?? null) !== 'RS256'
+                || (($key['use'] ?? 'sig') !== 'sig')
+                || empty($key['kid'])
+                || !is_string($key['kid'])) {
+                continue;
+            }
+
+            if (isset($key['x5c'][0]) && is_string($key['x5c'][0])) {
+                $certificates[$key['kid']] = "-----BEGIN CERTIFICATE-----\n"
+                    . chunk_split($key['x5c'][0], 64, "\n")
+                    . "-----END CERTIFICATE-----\n";
+                continue;
+            }
+
+            if (!empty($key['n']) && !empty($key['e'])
+                && is_string($key['n']) && is_string($key['e'])) {
+                $pem = $this->jwkRsaToPem($key['n'], $key['e']);
+                if ($pem !== null) {
+                    $certificates[$key['kid']] = $pem;
+                }
+            }
+        }
+
+        return $certificates;
+    }
+
+    /**
+     * Convert an RSA JWK modulus/exponent into a SubjectPublicKeyInfo PEM.
+     */
+    private function jwkRsaToPem(string $modulus, string $exponent): ?string
+    {
+        $n = $this->decodeBase64Url($modulus);
+        $e = $this->decodeBase64Url($exponent);
+
+        if ($n === false || $e === false || $n === '' || $e === '') {
+            return null;
+        }
+
+        $rsaPublicKey = $this->derSequence(
+            $this->derInteger($n) . $this->derInteger($e)
+        );
+        $rsaEncryptionAlgorithm = $this->derSequence(
+            "\x06\x09\x2A\x86\x48\x86\xF7\x0D\x01\x01\x01"
+            . "\x05\x00"
+        );
+        $subjectPublicKeyInfo = $this->derSequence(
+            $rsaEncryptionAlgorithm
+            . $this->derWrap("\x03", "\x00" . $rsaPublicKey)
+        );
+
+        return "-----BEGIN PUBLIC KEY-----\n"
+            . chunk_split(base64_encode($subjectPublicKeyInfo), 64, "\n")
+            . "-----END PUBLIC KEY-----\n";
+    }
+
+    private function derInteger(string $value): string
+    {
+        // ASN.1 INTEGERs are signed; prepend zero when the highest bit is set.
+        if ((ord($value[0]) & 0x80) !== 0) {
+            $value = "\x00" . $value;
+        }
+
+        return $this->derWrap("\x02", $value);
+    }
+
+    private function derSequence(string $value): string
+    {
+        return $this->derWrap("\x30", $value);
+    }
+
+    private function derWrap(string $tag, string $value): string
+    {
+        $length = strlen($value);
+        if ($length < 128) {
+            $encodedLength = chr($length);
+        } else {
+            $lengthBytes = '';
+            while ($length > 0) {
+                $lengthBytes = chr($length & 0xff) . $lengthBytes;
+                $length >>= 8;
+            }
+            $encodedLength = chr(0x80 | strlen($lengthBytes)) . $lengthBytes;
+        }
+
+        return $tag . $encodedLength . $value;
     }
 
     private function decodeBase64Url(string $value)
