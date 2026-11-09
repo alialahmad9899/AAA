@@ -12,7 +12,13 @@ class PublicBasicInformation extends BasicInformation
     {
         $data = parent::toArray($request);
 
-        unset($data['phone'], $data['email'], $data['contact_details']);
+        unset(
+            $data['phone'],
+            $data['email'],
+            $data['contact_details'],
+            $data['can_express_interest'],
+            $data['remaining_interests']
+        );
 
         return $data;
     }

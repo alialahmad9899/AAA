@@ -1841,28 +1841,41 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                       ),
                       child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: _isInterestSent
-                              ? AppColors.success
-                              : AppColors.primaryTeal,
+                          backgroundColor: _isSendingInterest
+                              ? AppColors.primaryTeal
+                              : (_isInterestSent
+                                  ? AppColors.success
+                                  : AppColors.primaryTeal),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(18),
                           ),
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                         ),
-                        icon: Icon(
-                          _isInterestSent
-                              ? Icons.check_circle_rounded
-                              : Icons.favorite_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
+                        icon: _isSendingInterest
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Icon(
+                                _isInterestSent
+                                    ? Icons.check_circle_rounded
+                                    : Icons.favorite_rounded,
+                                color: Colors.white,
+                                size: 20,
+                              ),
                         label: Text(
-                          _isInterestSent
-                              ? (_isArabic ? 'تم الإرسال' : 'Interest Sent')
-                              : (_isArabic
-                                  ? 'إرسال اهتمام'
-                                  : 'Express Interest'),
+                          _isSendingInterest
+                              ? (_isArabic ? 'جارٍ الإرسال' : 'Sending...')
+                              : _isInterestSent
+                                  ? (_isArabic ? 'تم الإرسال' : 'Interest Sent')
+                                  : (_isArabic
+                                      ? 'إرسال اهتمام'
+                                      : 'Express Interest'),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -1872,7 +1885,9 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                             fontSize: 14,
                           ),
                         ),
-                        onPressed: _sendExpressInterest,
+                        onPressed: (_isSendingInterest || _isInterestSent)
+                            ? null
+                            : _sendExpressInterest,
                       ),
                     ),
                   ),

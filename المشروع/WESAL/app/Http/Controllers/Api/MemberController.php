@@ -29,6 +29,56 @@ use Laravel\Sanctum\PersonalAccessToken;
 class MemberController extends Controller
 {
     /**
+     * Attach sent/received interest state to visible profiles in one bounded query.
+     */
+    private function attachInterestStatusToProfiles($profiles, User $viewer)
+    {
+        $profiles = collect($profiles);
+        $viewerId = (int) $viewer->id;
+        $profileIds = $profiles->pluck('id')
+            ->map(static function ($id) {
+                return (int) $id;
+            })
+            ->filter(static function ($id) {
+                return $id > 0;
+            })
+            ->unique()
+            ->values();
+
+        if ($profileIds->isEmpty()) {
+            return $profiles;
+        }
+
+        $interestRows = ExpressInterest::query()
+            ->where(function ($query) use ($viewerId, $profileIds) {
+                $query->where(function ($sent) use ($viewerId, $profileIds) {
+                    $sent->where('interested_by', $viewerId)
+                        ->whereIn('user_id', $profileIds);
+                })->orWhere(function ($received) use ($viewerId, $profileIds) {
+                    $received->where('user_id', $viewerId)
+                        ->whereIn('interested_by', $profileIds);
+                });
+            })
+            ->get(['user_id', 'interested_by']);
+
+        $interestedIds = [];
+        foreach ($interestRows as $interest) {
+            $otherUserId = (int) $interest->interested_by === $viewerId
+                ? (int) $interest->user_id
+                : (int) $interest->interested_by;
+            if ($otherUserId > 0) {
+                $interestedIds[$otherUserId] = true;
+            }
+        }
+
+        $profiles->each(function ($profile) use ($interestedIds) {
+            $profile->setAttribute('is_interested', isset($interestedIds[(int) $profile->id]));
+        });
+
+        return $profiles;
+    }
+
+    /**
      * جلب أعضاء الجنس الآخر، مع تشغيل محرك التوافق الموحد عند تفعيل المطابقة الذكية.
      * لا نفرض اعتماداً إدارياً على مستخدمي الموبايل؛ نستبعد فقط الحسابات المحظورة/المعطلة.
      */
@@ -64,6 +114,7 @@ class MemberController extends Controller
             }
 
             $matches = app(SmartMatchingService::class)->getMatches($user);
+            $matches = $this->attachInterestStatusToProfiles($matches, $user);
 
             return ActiveUserResource::collection($matches)->additional([
                 'result' => true,
@@ -99,6 +150,7 @@ class MemberController extends Controller
             $usersQuery->get(),
             false
         );
+        $members = $this->attachInterestStatusToProfiles($members, $user);
 
         return ActiveUserResource::collection($members)->additional([
             'result' => true,

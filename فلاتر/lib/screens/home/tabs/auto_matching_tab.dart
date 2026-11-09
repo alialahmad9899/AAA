@@ -53,7 +53,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
   bool _isModalActive = false;
   bool _isMatchFilterEnabled = false;
 
-  int? _likingUserId;
+  final Set<int> _likingUserIds = {};
   final Set<int> _likedUserIds = {};
   int _fetchCounter = 0;
 
@@ -246,6 +246,9 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
       if (mounted && currentRequestToken == _fetchCounter) {
         setState(() {
           _matchedMembers = members;
+          _likedUserIds
+            ..clear()
+            ..addAll(members.where((member) => member.isInterested).map((member) => member.id));
           _currentProfileIndex = 0;
           _isLoading = false;
         });
@@ -286,6 +289,9 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
             if (mounted && currentRequestToken == _fetchCounter) {
               setState(() {
                 _matchedMembers = members;
+                _likedUserIds
+                  ..clear()
+                  ..addAll(members.where((member) => member.isInterested).map((member) => member.id));
                 _isLoading = false;
               });
             }
@@ -298,8 +304,8 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
     }
   }
 
-  void _navigateToProfile(MemberModel member) {
-    Navigator.push(
+  Future<void> _navigateToProfile(MemberModel member) async {
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => MemberProfileScreen(
@@ -309,6 +315,10 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
         ),
       ),
     );
+
+    if (mounted) {
+      await _fetchMatches();
+    }
   }
 
   void _startDirectChat(MemberModel member) {
@@ -338,15 +348,13 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
   }
 
   void _triggerLikeAnimation(MemberModel member) async {
-    if (_likingUserId != null || _likedUserIds.contains(member.id)) return;
-
-    if (!_isSubscribedOrFemale && _likedUserIds.length >= 5) {
-      _showLikeQuotaModal();
+    if (_likingUserIds.contains(member.id) || _likedUserIds.contains(member.id)) {
       return;
     }
 
+    // Laravel is authoritative for quotas; local cards may be filtered.
     setState(() {
-      _likingUserId = member.id;
+      _likingUserIds.add(member.id);
       _likedUserIds.add(member.id);
       _showHeartOverlay = true;
     });
@@ -419,7 +427,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
     } finally {
       if (mounted) {
         setState(() {
-          _likingUserId = null;
+          _likingUserIds.remove(member.id);
         });
       }
     }
@@ -977,6 +985,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
     }
 
     final member = _matchedMembers[_currentProfileIndex];
+    final bool isLiking = _likingUserIds.contains(member.id);
     final bool isLiked = _likedUserIds.contains(member.id);
 
     return Padding(
@@ -1009,19 +1018,25 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
             },
           ),
           _buildActionItem(
-            icon: isLiked
-                ? Icons.check_circle_rounded
-                : Icons.favorite_rounded,
-            label: isLiked
-                ? widget.txt('liked_already')
-                : widget.txt('express_interest'),
+            icon: isLiking
+                ? Icons.hourglass_top_rounded
+                : isLiked
+                    ? Icons.check_circle_rounded
+                    : Icons.favorite_rounded,
+            label: isLiking
+                ? (_isAr ? 'جارٍ الإرسال' : 'Sending...')
+                : isLiked
+                    ? widget.txt('liked_already')
+                    : widget.txt('express_interest'),
             backgroundColor: isLiked
                 ? AppColors.sectionBackground
                 : AppColors.accentLight.withValues(alpha: 0.42),
             iconColor: isLiked ? AppColors.textMuted : AppColors.primaryTeal,
             borderColor: isLiked ? AppColors.lineColor : AppColors.accentWarm,
             prominent: true,
-            onTap: isLiked ? null : () => _triggerLikeAnimation(member),
+            onTap: (isLiked || isLiking)
+                ? null
+                : () => _triggerLikeAnimation(member),
           ),
           _buildActionItem(
             icon: Icons.chat_bubble_rounded,

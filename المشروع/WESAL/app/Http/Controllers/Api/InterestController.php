@@ -42,10 +42,10 @@ class InterestController extends Controller
      */
     public function express_interest(Request $request)
     {
-        $sender_id = auth()->user()->id;
-        $target_id = $request->user_id;
+        $sender_id = (int) auth()->id();
+        $target_id = filter_var($request->input('user_id'), FILTER_VALIDATE_INT);
 
-        if (!$target_id) {
+        if (!$target_id || $target_id < 1 || $target_id === $sender_id) {
             return response()->json([
                 'result'  => false,
                 'status'  => 'invalid_member',
@@ -53,29 +53,19 @@ class InterestController extends Controller
             ], 400);
         }
 
-        // 🟢 1. الفحص القبلي: التأكد من صلاحية الإعجاب
-        if (!MemberUtility::can_express_interest($sender_id)) {
-            return response()->json([
-                'result'  => false,
-                'status'  => 'package_required',
-                'message' => 'لقد استنفدت الإعجابات المجانية الـ 5 المتاحة لك. يرجى الاشتراك في إحدى باقات وصال المميزة لمتابعة إبداء الاهتمام ورؤية التوافق.'
-            ], 403);
-        }
-
-        $target_user = User::find($target_id);
+        $target_user = User::where('user_type', 'member')->find($target_id);
         if (!$target_user) {
             return response()->json([
                 'result'  => false,
                 'status'  => 'invalid_member',
                 'message' => 'تعذر العثور على حساب العضو المطلوب.'
-            ], 440);
+            ], 404);
         }
 
-        // 🟢 2. التحقق مما إذا كان قد تم إرسال اهتمام سابقاً من أحد الطرفين
+        // Check both directions before quota: a saved request is idempotent.
         $already_sent = ExpressInterest::where('user_id', $target_id)
             ->where('interested_by', $sender_id)
             ->exists();
-
         $already_received = ExpressInterest::where('user_id', $sender_id)
             ->where('interested_by', $target_id)
             ->exists();
@@ -88,7 +78,16 @@ class InterestController extends Controller
             ], 200);
         }
 
-        // 🟢 3. تنفيذ عملية الإعجاب عبر الخدمة المركزية (تتولى الحفظ والإشعارات بدون تكرار)
+        if (!MemberUtility::can_express_interest($sender_id)) {
+            return response()->json([
+                'result'  => false,
+                'status'  => 'package_required',
+                'message' => 'لقد استنفدت الإعجابات المجانية الـ 5 المتاحة لك. يرجى الاشتراك في إحدى باقات وصال المميزة لمتابعة إبداء الاهتمام ورؤية التوافق.'
+            ], 403);
+        }
+
+        // InterestService locks the sender and checks quota/duplicates inside
+        // a transaction. Recheck after false to catch a concurrent saved request.
         $interestService = new InterestService();
         $new_interest = $interestService->store($target_id);
 
@@ -98,6 +97,29 @@ class InterestController extends Controller
                 'status'  => 'success',
                 'message' => 'تم إرسال طلب الاهتمام بنجاح!'
             ], 200);
+        }
+
+        $already_sent = ExpressInterest::where('user_id', $target_id)
+            ->where('interested_by', $sender_id)
+            ->exists();
+        $already_received = ExpressInterest::where('user_id', $sender_id)
+            ->where('interested_by', $target_id)
+            ->exists();
+
+        if ($already_sent || $already_received) {
+            return response()->json([
+                'result'  => false,
+                'status'  => 'already_expressed',
+                'message' => 'لقد قمت بإبداء الاهتمام بهذا العضو سابقاً.'
+            ], 200);
+        }
+
+        if (!MemberUtility::can_express_interest($sender_id)) {
+            return response()->json([
+                'result'  => false,
+                'status'  => 'package_required',
+                'message' => 'لقد استنفدت الإعجابات المجانية الـ 5 المتاحة لك. يرجى الاشتراك في إحدى باقات وصال المميزة لمتابعة إبداء الاهتمام ورؤية التوافق.'
+            ], 403);
         }
 
         return response()->json([

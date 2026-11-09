@@ -689,29 +689,26 @@ class MemberProfileModel {
       parsedCanChat = true;
     }
 
-    bool parsedCanExpressInterest = json['can_express_interest'] == true ||
-        json['can_express_interest'] == 1 ||
-        json['can_express_interest'] == '1' ||
-        basicMap['can_express_interest'] == true ||
-        basicMap['can_express_interest'] == 1 ||
-        basicMap['can_express_interest'] == '1';
+    // Viewer-scoped values are read only from the public response root.
+    // Never infer viewer state from the target owner's nested quota.
+    final dynamic rawCanExpressInterest = json['can_express_interest'];
+    bool parsedCanExpressInterest = rawCanExpressInterest == true ||
+        rawCanExpressInterest == 1 ||
+        rawCanExpressInterest == '1' ||
+        rawCanExpressInterest?.toString().toLowerCase() == 'true';
 
-    if (json['can_express_interest'] == null &&
-        basicMap['can_express_interest'] == null) {
+    if (rawCanExpressInterest == null) {
       parsedCanExpressInterest = true;
     }
 
-    bool parsedIsInterested = json['is_interested'] == true ||
-        json['is_interested'] == 1 ||
-        json['is_interested'] == '1' ||
-        basicMap['is_interested'] == true ||
-        basicMap['is_interested'] == 1 ||
-        basicMap['is_interested'] == '1' ||
-        !parsedCanExpressInterest;
+    final dynamic rawIsInterested = json['is_interested'];
+    final bool parsedIsInterested = rawIsInterested == true ||
+        rawIsInterested == 1 ||
+        rawIsInterested == '1' ||
+        rawIsInterested?.toString().toLowerCase() == 'true';
 
     int parsedRemainingInterests = int.tryParse(
             json['remaining_interests']?.toString() ??
-                basicMap['remaining_interests']?.toString() ??
                 json['remaining_interest']?.toString() ??
                 '0') ??
         0;

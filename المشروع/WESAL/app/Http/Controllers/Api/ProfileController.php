@@ -1280,10 +1280,25 @@ class ProfileController extends Controller
             $data['intoduction'] = new AboutUser($user);
             $data['basic_info'] = new PublicBasicInformation($user);
 
+            // Interest state and quota belong to the authenticated viewer.
+            $viewerIsOwner = (int) $auth_user->id === (int) $user->id;
+            $viewerAlreadyExpressedInterest = !$viewerIsOwner && ExpressInterest::where(function ($query) use ($auth_user, $user) {
+                $query->where('user_id', $user->id)
+                    ->where('interested_by', $auth_user->id);
+            })->orWhere(function ($query) use ($auth_user, $user) {
+                $query->where('user_id', $auth_user->id)
+                    ->where('interested_by', $user->id);
+            })->exists();
+
+            $data['is_interested'] = $viewerAlreadyExpressedInterest;
+            $data['can_express_interest'] = !$viewerIsOwner
+                && !$viewerAlreadyExpressedInterest
+                && MemberUtility::can_express_interest($auth_user->id);
+            $data['remaining_interests'] = MemberUtility::remaining_interests_count($auth_user->id);
+
             $profile_pic_privacy = get_setting('profile_picture_privacy');
             $photo_view_request = ViewProfilePicture::where('user_id', $user->id)
                 ->where('requested_by', $auth_user->id)->first();
-            $viewerIsOwner = (int) $auth_user->id === (int) $user->id;
             $viewerHasPaidAccess = $viewerIsOwner || MemberUtility::is_female($auth_user)
                 || SubscriptionUtility::hasActivePaidPackage($auth_user);
             $viewerMember = $auth_user->member;

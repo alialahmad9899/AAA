@@ -24,6 +24,7 @@ class MemberModel {
   final int matchEvaluatedCriteriaCount;
   final String matchStatus;
   final String packageName;
+  final bool isInterested;
 
   MemberModel({
     required this.id,
@@ -41,6 +42,7 @@ class MemberModel {
     this.matchEvaluatedCriteriaCount = 0,
     this.matchStatus = 'not_calculated',
     this.packageName = '',
+    this.isInterested = false,
   });
 
   // --------------------------------------------------------------------------
@@ -316,6 +318,10 @@ class MemberModel {
       matchEvaluatedCriteriaCount: parsedMatchEvaluatedCriteriaCount,
       matchStatus: parsedMatchStatus,
       packageName: parsedPackageName,
+      isInterested: json['is_interested'] == true ||
+          json['is_interested'] == 1 ||
+          json['is_interested'] == '1' ||
+          json['is_interested']?.toString().toLowerCase() == 'true',
     );
   }
 }
