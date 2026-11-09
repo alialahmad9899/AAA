@@ -278,10 +278,12 @@ class AuthController extends Controller
             // Google only guarantees ongoing control of the email for Gmail and
             // hosted Workspace accounts. External addresses must not be silently
             // linked to an existing local account using an old email claim.
-            $domain = substr(strrchr($email, '@') ?: '', 1);
-            $googleHostedDomain = $claims['hd'] ?? null;
-            $googleControlsEmail = strcasecmp($domain, 'gmail.com') === 0
-                || (is_string($googleHostedDomain) && $googleHostedDomain !== '');
+            $domain = strtolower(substr(strrchr($email, '@') ?: '', 1));
+            $googleHostedDomain = is_string($claims['hd'] ?? null)
+                ? strtolower(trim($claims['hd']))
+                : '';
+            $googleControlsEmail = in_array($domain, ['gmail.com', 'googlemail.com'], true)
+                || ($googleHostedDomain !== '' && hash_equals($domain, $googleHostedDomain));
 
             if ($userByEmail && !$googleControlsEmail) {
                 return response()->json([
