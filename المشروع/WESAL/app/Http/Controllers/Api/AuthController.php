@@ -635,45 +635,5 @@ class AuthController extends Controller
             'message' => translate('device token updated'),
         ]);
     }
-}
-}
-        return response()->json(
-            ['user' => $user]
-        );
-    }
 
-    public function update_device_token(Request $request)
-    {
-        $user = auth()->user();
-        if (!$user) {
-            $token = PersonalAccessToken::findToken($request->bearerToken());
-            if ($token) {
-                $user = $token->tokenable;
-            }
-        }
-
-        if (!$user) {
-            return response()->json([
-                'result' => false,
-                'message' => translate("User not found.")
-            ], 401);
-        }
-
-        $fcmToken = $request->fcm_token ?? $request->device_token;
-
-        if ($fcmToken) {
-            $user->fcm_token = $fcmToken;
-            $user->save();
-
-            return response()->json([
-                'result' => true,
-                'message' => translate("device token updated")
-            ]);
-        }
-
-        return response()->json([
-            'result' => false,
-            'message' => translate("Device token is required")
-        ], 400);
-    }
 }
