@@ -384,6 +384,18 @@ $lang = \App\Models\Language::where('code', $locale)->first();
         $coreJsVersion = is_file($coreJsPath) ? filemtime($coreJsPath) : '3.0';
     @endphp
     <script src="{{ static_asset('assets/js/aiz-core.js') }}?v={{ $coreJsVersion }}"></script>
+    <script>
+        if (window.jQuery) {
+            var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            if (csrfMeta) {
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': csrfMeta.getAttribute('content')
+                    }
+                });
+            }
+        }
+    </script>
 
     @if (get_setting('firebase_push_notification') == 1)
         @auth
