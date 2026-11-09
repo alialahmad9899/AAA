@@ -181,8 +181,8 @@ class RegisterController extends Controller
             if (filter_var($request->email, FILTER_VALIDATE_EMAIL)) {
                 $verificationQuery->where('email', strtolower(trim((string) $request->email)));
             } elseif ($request->filled('phone')) {
-                $countryCode = preg_replace('/\\D+/', '', (string) $request->input('country_code', ''));
-                $phoneDigits = preg_replace('/\\D+/', '', (string) $request->phone);
+                $countryCode = preg_replace('/\D+/', '', (string) $request->input('country_code', ''));
+                $phoneDigits = preg_replace('/\D+/', '', (string) $request->phone);
                 $verifiedPhone = '+' . $countryCode . $phoneDigits;
                 $verificationQuery->where('phone', $verifiedPhone);
             } else {
