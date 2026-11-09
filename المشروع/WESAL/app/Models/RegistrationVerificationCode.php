@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class RegistrationVerificationCode extends Model
 {
     use HasFactory;
-    protected $fillable = ['email', 'phone', 'code', 'is_verified', 'expires_at'];
+    protected $fillable = ['email', 'phone', 'code', 'code_hash', 'is_verified', 'expires_at'];
 
     protected $casts = [
         'is_verified' => 'boolean',
