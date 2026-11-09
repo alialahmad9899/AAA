@@ -75,7 +75,7 @@ Route::controller(HomeController::class)->group(function () {
     Route::post('/fcm-token', 'updateToken')->name('fcmToken');
 
     Route::get('/email_change/callback', 'email_change_callback')->name('email_change.callback');
-    Route::post('/password/reset/email/submit', 'reset_password_with_code')->name('password.update');
+    Route::post('/password/reset/email/submit', 'reset_password_with_code')->middleware('throttle:password-reset-web')->name('password.update.code');
     Route::get('/users/login', 'login')->name('user.login');
     Route::get('/happy-stories', 'happy_stories')->name('happy_stories');
     Route::get('/story_details/{id}', 'story_details')->name('story_details');
