@@ -272,9 +272,14 @@
                                             <a class="dropdown-item fw-600" onclick="wallet_balance_update({{$member->id}},{{$member->balance}})" href="javascript:void(0);" >رصيد المحفظة</a>
                                             <a class="dropdown-item fw-600" onclick="send_custom_notification({{$member->id}})" href="javascript:void(0);">إرسال إشعار</a>
                                             <div class="dropdown-divider"></div>
-                                            @can ('login_as_member')
-                                                <a href="{{ route('members.login', encrypt($member->id)) }}" class="dropdown-item fw-600">دخول كعضو</a>
-                                            @endcan
+                                            @if(auth()->user() && auth()->user()->user_type === 'admin')
+                                                @can ('login_as_member')
+                                                    <form method="POST" action="{{ route('members.login', encrypt($member->id)) }}" class="m-0">
+                                                        @csrf
+                                                        <button type="submit" class="dropdown-item fw-600">دخول كعضو</button>
+                                                    </form>
+                                                @endcan
+                                            @endif
                                             @can ('delete_member')
                                                 <a class="dropdown-item confirm-delete fw-600 text-danger" data-href="{{route('members.destroy', $member->id)}}">حذف</a>
                                             @endcan
