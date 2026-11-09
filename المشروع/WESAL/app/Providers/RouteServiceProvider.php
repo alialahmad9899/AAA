@@ -186,7 +186,11 @@ class RouteServiceProvider extends ServiceProvider
 
         RateLimiter::for('password-reset-web', function (Request $request) {
             $ip = 'web-reset-ip:' . ($request->ip() ?: 'unknown');
-            $identity = 'web-reset-account:' . hash('sha256', strtolower(trim((string) $request->input('email', 'unknown'))));
+            $resetIdentity = $request->input('email')
+                ?? $request->input('phone')
+                ?? $request->input('email_or_phone')
+                ?? 'unknown';
+            $identity = 'web-reset-account:' . hash('sha256', strtolower(trim((string) $resetIdentity)));
 
             return [
                 Limit::perHour(15)->by($ip),
