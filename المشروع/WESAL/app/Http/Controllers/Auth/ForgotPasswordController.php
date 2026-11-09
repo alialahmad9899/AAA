@@ -75,8 +75,15 @@ class ForgotPasswordController extends Controller
         }
 
         // Same response and view for existing and unknown identities to prevent enumeration.
-        return view('auth.passwords.reset', [
-            'email' => $identity,
+        if (filter_var($identity, FILTER_VALIDATE_EMAIL)) {
+            return view('auth.passwords.reset', [
+                'email' => $identity,
+                'reset_notice' => translate('If the account exists, a reset code has been sent.'),
+            ]);
+        }
+
+        return view('addons.otp_systems.frontend.auth.passwords.reset_with_phone', [
+            'phone' => $identity,
             'reset_notice' => translate('If the account exists, a reset code has been sent.'),
         ]);
     }
