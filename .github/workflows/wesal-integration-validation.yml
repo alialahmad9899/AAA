@@ -82,6 +82,7 @@ jobs:
             "المشروع/WESAL/app/Utility/SubscriptionUtility.php"
             "المشروع/WESAL/routes/api.php"
             "المشروع/WESAL/app/Http/Resources/ActiveUserResource.php"
+            "المشروع/WESAL/app/Models/Address.php"
             "المشروع/WESAL/app/Services/SmartMatchingService.php"
             "المشروع/WESAL/tests/Unit/SmartMatchingServiceTest.php"
             "المشروع/WESAL/app/Http/Controllers/Api/ProfileController.php"
@@ -111,6 +112,7 @@ jobs:
           (
             cd "المشروع/WESAL"
             phpunit --no-configuration tests/Unit/SmartMatchingServiceTest.php
+            phpunit --no-configuration tests/Unit/AddressCityRelationshipTest.php
             phpunit --no-configuration tests/Unit/VipServiceCatalogOrderTest.php
             phpunit --no-configuration tests/Unit/GoogleIdTokenVerifierTest.php
             phpunit --no-configuration tests/Unit/PasswordResetCodeTest.php
