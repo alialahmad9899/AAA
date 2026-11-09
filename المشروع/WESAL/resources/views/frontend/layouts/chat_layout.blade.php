@@ -61,6 +61,18 @@
     {{-- ملفات الجافاسكريبت الأساسية --}}
     <script src="{{ static_asset('assets/js/vendors.js') }}"></script>
     <script src="{{ static_asset('assets/js/aiz-core.js') }}"></script>
+    <script>
+        if (window.jQuery) {
+            var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            if (csrfMeta) {
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': csrfMeta.getAttribute('content')
+                    }
+                });
+            }
+        }
+    </script>
     
     {{-- إشعارات النظام --}}
     <script type="text/javascript">
