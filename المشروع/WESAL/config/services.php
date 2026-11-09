@@ -28,6 +28,12 @@ return [
         'client_id'     => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect'      => env('APP_URL').'/social-login/google/callback',
+        // Include the Web, Android, and iOS OAuth client IDs that may appear in
+        // the audience claim of the Flutter application's Google ID token.
+        'client_ids'    => array_values(array_unique(array_filter(array_map(
+            'trim',
+            array_merge([env('GOOGLE_CLIENT_ID')], explode(',', env('GOOGLE_MOBILE_CLIENT_IDS', '')))
+        )))),
     ],
 
     'facebook' => [
