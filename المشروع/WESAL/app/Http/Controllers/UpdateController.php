@@ -12,6 +12,15 @@ use ZipArchive;
 
 class UpdateController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware(function ($request, $next) {
+            abort_unless($request->user() && $request->user()->user_type === 'admin', 403);
+            return $next($request);
+        });
+    }
+
     public function step0(Request $request)
     {
         if (env('DEMO_MODE') == 'On') {
@@ -19,44 +28,91 @@ class UpdateController extends Controller
             return back();
         }
 
-        $current_version = get_setting('current_version');
-        if (version_compare($current_version, '4.6', '<')) {
+        $currentVersion = get_setting('current_version');
+        if (version_compare($currentVersion, '4.6', '<')) {
             flash(translate('Could not update. Please check the compatible version'))->error();
             return back();
         }
 
-
-        if ($request->has('update_zip')) {
-            if (class_exists('ZipArchive')) {
-                // Create update directory.
-                $dir = 'updates';
-                if (!is_dir($dir))
-                    mkdir($dir, 0777, true);
-
-                $path = Upload::findOrFail($request->update_zip)->file_name;
-
-                //Unzip uploaded update file and remove zip file.
-                $zip = new ZipArchive;
-                $res = $zip->open(base_path('public/' . $path));
-
-                if ($res === true) {
-                    $res = $zip->extractTo(base_path());
-                    $zip->close();
-                } else {
-                    flash(translate('Could not open the updates zip file.'))->error();
-                    return back();
-                }
-
-                if ($_SERVER['SERVER_NAME'] == 'localhost' || $_SERVER['SERVER_NAME'] == '127.0.0.1') {
-                    return redirect()->route('update.step2');
-                }
-                return redirect()->route('update.step1');
-            } else {
-                flash(translate('Please enable ZipArchive extension.'))->error();
-            }
-        } else {
+        if (!$request->has('update_zip')) {
             return view('update.step0');
         }
+
+        $validated = $request->validate([
+            'update_zip' => 'required|integer|exists:uploads,id',
+        ]);
+
+        if (!class_exists(ZipArchive::class)) {
+            flash(translate('Please enable ZipArchive extension.'))->error();
+            return back();
+        }
+
+        // The update archive must have been uploaded by this authenticated admin.
+        $upload = Upload::whereKey($validated['update_zip'])
+            ->where('user_id', $request->user()->id)
+            ->firstOrFail();
+
+        $publicRoot = realpath(public_path());
+        $archivePath = realpath(base_path('public/' . ltrim($upload->file_name, '/\\')));
+        if (!$publicRoot || !$archivePath
+            || !str_starts_with($archivePath, $publicRoot . DIRECTORY_SEPARATOR)
+            || !is_file($archivePath)) {
+            abort(404);
+        }
+
+        $zip = new ZipArchive();
+        $result = $zip->open($archivePath);
+        if ($result !== true) {
+            flash(translate('Could not open the updates zip file.'))->error();
+            return back();
+        }
+
+        // Reject absolute paths, traversal entries, and Unix symlinks before extraction.
+        $safeArchive = true;
+        for ($index = 0; $index < $zip->numFiles; $index++) {
+            $entry = str_replace('\\', '/', (string) $zip->getNameIndex($index));
+            $segments = explode('/', $entry);
+
+            if ($entry === ''
+                || str_starts_with($entry, '/')
+                || preg_match('/^[A-Za-z]:/', $entry)
+                || in_array('..', $segments, true)
+                || str_contains($entry, "\0")) {
+                $safeArchive = false;
+                break;
+            }
+
+            $opsys = 0;
+            $attributes = 0;
+            if ($zip->getExternalAttributesIndex($index, $opsys, $attributes)
+                && $opsys === 3) {
+                $unixMode = ($attributes >> 16) & 0170000;
+                if ($unixMode === 0120000) {
+                    $safeArchive = false;
+                    break;
+                }
+            }
+        }
+
+        if (!$safeArchive) {
+            $zip->close();
+            flash(translate('The update archive contains an unsafe file path.'))->error();
+            return back();
+        }
+
+        $extracted = $zip->extractTo(base_path());
+        $zip->close();
+
+        if (!$extracted) {
+            flash(translate('Could not extract the updates zip file.'))->error();
+            return back();
+        }
+
+        if (in_array($_SERVER['SERVER_NAME'] ?? '', ['localhost', '127.0.0.1'], true)) {
+            return $this->step2();
+        }
+
+        return redirect()->route('update.step1');
     }
 
     public function step1()
@@ -66,29 +122,28 @@ class UpdateController extends Controller
 
     public function purchase_code(Request $request)
     {
-        if (\App\Utility\MemberUtility::create_initial_member($request->purchase_code) == false) {
+        $validated = $request->validate([
+            'purchase_code' => 'required|string|max:255',
+        ]);
+
+        if (\App\Utility\MemberUtility::create_initial_member($validated['purchase_code']) === false) {
             flash("Sorry! The purchase code you have provided is not valid.")->error();
             return back();
         }
-        // if ($request->system_key == null) {
-        //     flash("Sorry! The System Key required")->error();
-        //     return back();
-        // }
 
         $businessSetting = Setting::where('type', 'purchase_code')->first();
         if ($businessSetting) {
-            $businessSetting->value = $request->purchase_code;
+            $businessSetting->value = $validated['purchase_code'];
             $businessSetting->save();
         } else {
-            $business_settings = new Setting;
-            $business_settings->type = 'purchase_code';
-            $business_settings->value = $request->purchase_code;
-            $business_settings->save();
+            $businessSetting = new Setting();
+            $businessSetting->type = 'purchase_code';
+            $businessSetting->value = $validated['purchase_code'];
+            $businessSetting->save();
         }
 
-        //$this->writeEnvironmentFile('SYSTEM_KEY', $request->system_key);
-
-        return redirect()->route('update.step2');
+        // Continue through the protected POST workflow in the same request.
+        return $this->step2();
     }
 
     public function step2()
@@ -119,41 +174,37 @@ class UpdateController extends Controller
         ];
 
         $keys = array_keys($versions);
-        $current_version = (get_setting('current_version') != null) ? get_setting('current_version') : '4.6';
+        $currentVersion = get_setting('current_version') ?: '4.6';
 
-        // Validate current version
-        if (!in_array($current_version, $keys)) {
-            Artisan::call('view:clear');
-            Artisan::call('cache:clear');
-
-            copy(
-                base_path('app/Providers/RouteServiceProvider.txt'),
-                base_path('app/Providers/RouteServiceProvider.php')
-            );
-
+        if (!in_array($currentVersion, $keys, true)) {
             flash(translate('Could not update. Please check the compatible version'))->error();
-            return redirect('/');
+            return redirect()->route('admin.dashboard');
         }
 
-        $initial_index = array_search($current_version, $keys) + 1;
+        $initialIndex = array_search($currentVersion, $keys, true) + 1;
+        for ($index = $initialIndex; $index < count($keys); $index++) {
+            $sqlPath = base_path('sqlupdates/' . $versions[$keys[$index]]);
+            if (!is_file($sqlPath) || !is_readable($sqlPath)) {
+                \Log::error('System update SQL file is missing or unreadable.', [
+                    'file' => basename($sqlPath),
+                ]);
+                flash(translate('An update file is missing. Please contact support.'))->error();
+                return redirect()->route('admin.dashboard');
+            }
 
-        for ($i = $initial_index; $i < count($keys); $i++) {
-            $sql_path = base_path('sqlupdates/' . $versions[$keys[$i]]);
-            DB::unprepared(file_get_contents($sql_path));
+            DB::unprepared(file_get_contents($sqlPath));
         }
 
-        // Done — go to step 3
+        Artisan::call('view:clear');
+        Artisan::call('cache:clear');
+
+        // Do not overwrite the customized RouteServiceProvider from a legacy .txt copy.
         return redirect()->route('update.step3');
     }
 
     public function step3()
     {
-        Artisan::call('view:clear');
-        Artisan::call('cache:clear');
-        $previousRouteServiceProvier = base_path('app/Providers/RouteServiceProvider.php');
-        $newRouteServiceProvier      = base_path('app/Providers/RouteServiceProvider.txt');
-        copy($newRouteServiceProvier, $previousRouteServiceProvier);
-
+        // Read-only completion screen. All update actions run in the protected POST above.
         return view('update.done');
     }
 
