@@ -14,7 +14,6 @@ use App\Models\Notification;
 use App\Models\Package;
 use App\Models\Upload;
 use App\Models\User;
-use App\Notifications\AppEmailVerificationNotification;
 use App\Notifications\DbStoreNotification;
 use App\Notifications\VerificationCode;
 use App\Services\MemberService;
@@ -414,15 +413,16 @@ class AuthController extends Controller
             $user->password_reset_code_hash = $issuedCode['hash'];
             $user->password_reset_code_expires_at = $issuedCode['expires_at'];
 
-            // Keep the code only in memory for the existing notification templates.
-            $user->verification_code = $issuedCode['code'];
+            // The raw code is passed directly to the delivery helper and is
+            // never stored in the legacy plaintext verification_code column.
+            $user->verification_code = null;
             $user->save();
 
             try {
                 if ($validated['send_code_by'] === 'phone') {
                     SmsUtility::password_reset($user, $issuedCode['code']);
                 } else {
-                    $user->notify(new AppEmailVerificationNotification($user));
+                    EmailUtility::password_reset_email($user, $issuedCode['code']);
                 }
             } catch (\Throwable $exception) {
                 \Log::warning('API password reset delivery failed.', [
