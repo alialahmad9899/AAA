@@ -13,7 +13,7 @@ class UserService
         $password = Hash::make($data['password']);
         $code = unique_code();
         $approved = get_setting('member_verification') == 1 ? 0 : 1;
-        $verification_code = rand(100000, 999999);
+        $verification_code = random_int(100000, 999999);
         $referred_by = null;
 
         $data = $collection->merge(compact('password', 'code', 'approved', 'verification_code'))->toArray();
