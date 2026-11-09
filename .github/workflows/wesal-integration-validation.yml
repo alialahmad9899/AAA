@@ -34,6 +34,7 @@ jobs:
             "المشروع/WESAL/app/Http/Controllers/UpdateController.php"
             "المشروع/WESAL/app/Http/Controllers/DemoController.php"
             "المشروع/WESAL/app/Http/Controllers/MemberController.php"
+            "المشروع/WESAL/app/Http/Controllers/ProfileMatchController.php"
             "المشروع/WESAL/app/Http/Controllers/HomeController.php"
             "المشروع/WESAL/app/Providers/RouteServiceProvider.php"
             "المشروع/WESAL/app/Security/GoogleIdTokenVerifier.php"
