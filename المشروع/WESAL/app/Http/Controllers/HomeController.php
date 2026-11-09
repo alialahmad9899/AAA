@@ -638,10 +638,20 @@ class HomeController extends Controller
         }
 
         $verificationCode = (string) random_int(100000, 999999);
+        $codeHash = password_hash($verificationCode, PASSWORD_DEFAULT);
+        if (!is_string($codeHash) || $codeHash === '') {
+            return response()->json([
+                'status' => 0,
+                'message' => translate('Unable to create a secure verification code.'),
+            ], 503);
+        }
+
         $customerVerification = RegistrationVerificationCode::updateOrCreate(
             ['email' => $email, 'phone' => $phone],
             [
-                'code' => $verificationCode,
+                // Keep a non-secret placeholder in the legacy column for schema compatibility.
+                'code' => random_int(100000, 999999),
+                'code_hash' => $codeHash,
                 'is_verified' => 0,
                 'expires_at' => now()->addMinutes(15),
             ]
@@ -692,8 +702,7 @@ class HomeController extends Controller
             'code' => ['required', 'string', 'regex:/^\\d{6}$/'],
         ]);
 
-        $query = RegistrationVerificationCode::where('code', $validated['code'])
-            ->where('expires_at', '>', now())
+        $query = RegistrationVerificationCode::where('expires_at', '>', now())
             ->where('is_verified', 0);
 
         if (!empty($validated['email'])) {
@@ -704,8 +713,10 @@ class HomeController extends Controller
             $query->where('phone', $phone);
         }
 
-        $customerVerification = $query->first();
-        if (!$customerVerification) {
+        $customerVerification = $query->latest('id')->first();
+        if (!$customerVerification
+            || !is_string($customerVerification->code_hash)
+            || !password_verify($validated['code'], $customerVerification->code_hash)) {
             return response()->json([
                 'status' => 0,
                 'message' => translate('Verification Code did not match or has expired.'),
@@ -713,6 +724,7 @@ class HomeController extends Controller
         }
 
         $customerVerification->is_verified = 1;
+        $customerVerification->code_hash = null;
         $customerVerification->save();
 
         return response()->json([
