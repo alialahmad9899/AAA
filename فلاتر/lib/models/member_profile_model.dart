@@ -709,6 +709,7 @@ class MemberProfileModel {
 
     int parsedRemainingInterests = int.tryParse(
             json['remaining_interests']?.toString() ??
+                basicMap['remaining_interests']?.toString() ??
                 json['remaining_interest']?.toString() ??
                 '0') ??
         0;
