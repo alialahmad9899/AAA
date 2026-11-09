@@ -12,8 +12,6 @@ class VerifyCsrfToken extends Middleware
      * @var array
      */
     protected $except = [
-        'aiz-uploader/upload',
-        '/aiz-uploader',
         '/stripe*',
         '/paytm*',
         '/api/phonepe*',
