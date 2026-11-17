@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Schema;
 /**
  * The single source of truth for paid membership state and entitlements.
  * package_validity is inclusive: the member keeps access through that date.
+ * Disabling a plan stops new sales, but does not revoke paid access before expiry;
+ * an explicit member cancellation clears the entitlement immediately.
  */
 class SubscriptionUtility
 {
@@ -29,7 +31,6 @@ class SubscriptionUtility
                     ->whereDate('package_validity', '>=', $today)
                     ->whereHas('package', function ($packages) {
                         $packages->whereNull('packages.deleted_at')
-                            ->where('packages.active', 1)
                             ->where('packages.price', '>', 0)
                             ->where('packages.validity', '>', 0);
                     });
@@ -38,7 +39,7 @@ class SubscriptionUtility
 
     /**
      * Constrain a user query to accounts without a currently valid paid package.
-     * This keeps expired/disabled subscriptions out of Premium lists immediately,
+     * This keeps expired or deleted subscriptions out of Premium lists immediately,
      * even before the scheduled cleanup synchronizes the legacy membership flag.
      */
     public static function constrainNonPaidMembers(Builder $users): Builder
@@ -51,7 +52,6 @@ class SubscriptionUtility
                 ->whereDate('package_validity', '>=', $today)
                 ->whereHas('package', function ($packages) {
                     $packages->whereNull('packages.deleted_at')
-                        ->where('packages.active', 1)
                         ->where('packages.price', '>', 0)
                         ->where('packages.validity', '>', 0);
                 });
@@ -77,7 +77,6 @@ class SubscriptionUtility
         return Package::query()
             ->whereKey($member->current_package_id)
             ->whereNull('packages.deleted_at')
-            ->where('packages.active', 1)
             ->where('packages.price', '>', 0)
             ->where('packages.validity', '>', 0)
             ->first();
@@ -382,8 +381,9 @@ class SubscriptionUtility
     }
 
     /**
-     * Clear expired/disabled/deleted paid status under row locks.
-     * This is safe to call from a request as well as from the scheduled job.
+     * Clear expired or deleted paid status under row locks. Disabled plans remain
+     * valid for current holders until their expiry. This is safe to call from a
+     * request as well as from the scheduled job.
      */
     public static function deactivateIfInvalid($user): bool
     {
@@ -416,8 +416,8 @@ class SubscriptionUtility
 
             $activePackage = self::currentActivePaidPackageForMember($member);
             if ($activePackage) {
-                // The current paid package and inclusive expiry date are authoritative.
-                // Repair a stale legacy membership flag instead of revoking a valid plan.
+                // The paid package and inclusive expiry date are authoritative even
+                // when the plan is no longer sold. Repair legacy membership drift instead.
                 if ((int) $lockedUser->membership !== 2) {
                     $lockedUser->membership = 2;
                     $lockedUser->save();

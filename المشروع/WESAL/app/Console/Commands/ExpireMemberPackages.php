@@ -12,7 +12,7 @@ class ExpireMemberPackages extends Command
 {
     protected $signature = 'wesal:expire-member-packages';
 
-    protected $description = 'Deactivate expired, disabled, deleted or otherwise invalid paid member packages';
+    protected $description = 'Deactivate expired, deleted or otherwise invalid paid member packages';
 
     public function handle()
     {
