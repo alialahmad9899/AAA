@@ -44,8 +44,8 @@ class PremiumPackageAvailabilityTest extends TestCase
             self::assertStringContainsString("where('packages.validity', '>', 0)", $method);
         }
 
-        self::assertStringContainsString("whereDate('package_validity', '>=', $today)", $paidScope);
-        self::assertStringContainsString("whereDate('package_validity', '>=', $today)", $nonPaidScope);
+        self::assertStringContainsString('whereDate(\'package_validity\', \'>=\', $today)', $paidScope);
+        self::assertStringContainsString('whereDate(\'package_validity\', \'>=\', $today)', $nonPaidScope);
     }
 
     public function test_new_purchases_and_activations_still_require_an_active_package(): void

@@ -31,7 +31,7 @@ class SubscriptionUtility
                     ->whereDate('package_validity', '>=', $today)
                     ->whereHas('package', function ($packages) {
                         $packages->whereNull('packages.deleted_at')
-                                                        ->where('packages.price', '>', 0)
+                            ->where('packages.price', '>', 0)
                             ->where('packages.validity', '>', 0);
                     });
             });
@@ -52,7 +52,7 @@ class SubscriptionUtility
                 ->whereDate('package_validity', '>=', $today)
                 ->whereHas('package', function ($packages) {
                     $packages->whereNull('packages.deleted_at')
-                                                ->where('packages.price', '>', 0)
+                        ->where('packages.price', '>', 0)
                         ->where('packages.validity', '>', 0);
                 });
         });
@@ -77,7 +77,7 @@ class SubscriptionUtility
         return Package::query()
             ->whereKey($member->current_package_id)
             ->whereNull('packages.deleted_at')
-                        ->where('packages.price', '>', 0)
+            ->where('packages.price', '>', 0)
             ->where('packages.validity', '>', 0)
             ->first();
     }
