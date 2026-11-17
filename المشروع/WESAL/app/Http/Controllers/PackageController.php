@@ -70,6 +70,9 @@ class PackageController extends Controller
             $presentation = PackagePresentation::get((int) $package->id);
             $package->display_order = $presentation['sort_order'];
             $package->display_description = $presentation['description_ar'];
+            $package->display_badge = $presentation['badge_text_ar'];
+            $package->display_featured = $presentation['is_featured'];
+            $package->display_archived = $presentation['archived'];
         }
 
         $perPage = 10;
@@ -92,7 +95,11 @@ class PackageController extends Controller
      */
     public function create()
     {
-        return view('admin.premium_packages.create');
+        return view('admin.premium_packages.create', [
+            'featureRows' => old('features', []),
+            'iconOptions' => PackagePresentation::iconOptions(),
+            'badgeStyles' => PackagePresentation::badgeStyles(),
+        ]);
     }
 
     /**
@@ -103,14 +110,7 @@ class PackageController extends Controller
      */
     public function store(Request $request)
     {
-        $rules = array_merge($this->package_rules, [
-            'name_en' => ['nullable', 'string', 'max:255'],
-            'description_ar' => ['nullable', 'string', 'max:1500'],
-            'description_en' => ['nullable', 'string', 'max:1500'],
-            'features_ar' => ['nullable', 'string', 'max:5000'],
-            'features_en' => ['nullable', 'string', 'max:5000'],
-            'sort_order' => ['required', 'integer', 'min:0', 'max:9999'],
-        ]);
+        $rules = array_merge($this->package_rules, $this->presentationRules());
         $messages = $this->package_messages;
         $validator = Validator::make($request->all(), $rules, $messages);
         if ($validator->fails()) {
@@ -139,14 +139,7 @@ class PackageController extends Controller
         try {
             DB::transaction(function () use ($package, $request) {
                 $package->save();
-                PackagePresentation::save((int) $package->id, [
-                    'name_en' => $request->input('name_en'),
-                    'description_ar' => $request->input('description_ar'),
-                    'description_en' => $request->input('description_en'),
-                    'features_ar' => $request->input('features_ar'),
-                    'features_en' => $request->input('features_en'),
-                    'sort_order' => $request->input('sort_order'),
-                ]);
+                PackagePresentation::save((int) $package->id, $this->presentationValues($request));
             });
 
             flash(translate('New Package has been added successfully'))->success();
@@ -179,7 +172,29 @@ class PackageController extends Controller
     {
         $package = Package::findOrFail(decrypt($id));
         $presentation = PackagePresentation::get((int) $package->id);
-        return view('admin.premium_packages.edit', compact('package', 'presentation'));
+        $featureCount = max(
+            count($presentation['feature_items_ar']),
+            count($presentation['feature_items_en'])
+        );
+        $featureRows = [];
+        for ($index = 0; $index < $featureCount; $index++) {
+            $ar = $presentation['feature_items_ar'][$index] ?? [];
+            $en = $presentation['feature_items_en'][$index] ?? [];
+            $featureRows[] = [
+                'title_ar' => $ar['title'] ?? '',
+                'title_en' => $en['title'] ?? '',
+                'icon_key' => $ar['icon_key'] ?? $en['icon_key'] ?? 'check',
+            ];
+        }
+        $featureRows = old('features', $featureRows);
+
+        return view('admin.premium_packages.edit', [
+            'package' => $package,
+            'presentation' => $presentation,
+            'featureRows' => $featureRows,
+            'iconOptions' => PackagePresentation::iconOptions(),
+            'badgeStyles' => PackagePresentation::badgeStyles(),
+        ]);
     }
 
     /**
@@ -191,14 +206,7 @@ class PackageController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $rules = array_merge($this->package_rules, [
-            'name_en' => ['nullable', 'string', 'max:255'],
-            'description_ar' => ['nullable', 'string', 'max:1500'],
-            'description_en' => ['nullable', 'string', 'max:1500'],
-            'features_ar' => ['nullable', 'string', 'max:5000'],
-            'features_en' => ['nullable', 'string', 'max:5000'],
-            'sort_order' => ['required', 'integer', 'min:0', 'max:9999'],
-        ]);
+        $rules = array_merge($this->package_rules, $this->presentationRules());
         $messages = $this->package_messages;
         $validator = Validator::make($request->all(), $rules, $messages);
 
@@ -228,14 +236,7 @@ class PackageController extends Controller
         try {
             DB::transaction(function () use ($package, $request) {
                 $package->save();
-                PackagePresentation::save((int) $package->id, [
-                    'name_en' => $request->input('name_en'),
-                    'description_ar' => $request->input('description_ar'),
-                    'description_en' => $request->input('description_en'),
-                    'features_ar' => $request->input('features_ar'),
-                    'features_en' => $request->input('features_en'),
-                    'sort_order' => $request->input('sort_order'),
-                ]);
+                PackagePresentation::save((int) $package->id, $this->presentationValues($request));
             });
 
             flash(translate('Package info has been updated successfully'))->success();
@@ -265,6 +266,14 @@ class PackageController extends Controller
             ], 500);
         }
 
+        if ((int) $package->active === 1) {
+            $presentation = PackagePresentation::get((int) $package->id);
+            if (!empty($presentation['archived'])) {
+                $presentation['archived'] = false;
+                PackagePresentation::save((int) $package->id, $presentation);
+            }
+        }
+
         return response()->json([
             'result' => true,
             'id' => (int) $package->id,
@@ -284,14 +293,86 @@ class PackageController extends Controller
      */
     public function destroy($id)
     {
-        if (Package::destroy($id)) {
+        $package = Package::findOrFail($id);
+
+        // Keep every package referenced by payments, members or quota records.
+        // Such plans are archived and can be reactivated from this list.
+        $hasHistory = $package->payckage_payments()->exists()
+            || $package->member()->exists()
+            || $package->quota_usages()->exists();
+
+        if ($hasHistory) {
+            $package->active = 0;
+            $package->save();
+            $presentation = PackagePresentation::get((int) $package->id);
+            $presentation['archived'] = true;
+            PackagePresentation::save((int) $package->id, $presentation);
+
+            flash('تمت أرشفة الباقة لأن لها اشتراكات أو سجلات سابقة. بقيت السجلات محفوظة ويمكن إعادة تفعيلها.')->success();
+            return redirect()->route('packages.index');
+        }
+
+        if ($package->delete()) {
             PackagePresentation::forget((int) $id);
             flash(translate('Package info has been deleted successfully'))->success();
             return redirect()->route('packages.index');
-        } else {
-            flash(translate('Sorry! Something went wrong.'))->error();
-            return back();
         }
+
+        flash(translate('Sorry! Something went wrong.'))->error();
+        return back();
+    }
+
+    private function presentationRules(): array
+    {
+        $iconKeys = implode(',', array_keys(PackagePresentation::iconOptions()));
+        return [
+            'name_en' => ['nullable', 'string', 'max:255'],
+            'description_ar' => ['nullable', 'string', 'max:1500'],
+            'description_en' => ['nullable', 'string', 'max:1500'],
+            'features' => ['nullable', 'array', 'max:30'],
+            // Accept older cached admin forms during a rolling deploy.
+            'features_ar' => ['nullable', 'string', 'max:5000'],
+            'features_en' => ['nullable', 'string', 'max:5000'],
+            'features.*.title_ar' => ['nullable', 'string', 'max:180'],
+            'features.*.title_en' => ['nullable', 'string', 'max:180'],
+            'features.*.icon_key' => ['nullable', 'string', 'in:' . $iconKeys],
+            'badge_text_ar' => ['nullable', 'string', 'max:80'],
+            'badge_text_en' => ['nullable', 'string', 'max:80'],
+            'badge_icon_key' => ['required', 'string', 'in:' . $iconKeys],
+            'badge_style' => ['required', 'string', 'in:silver,gold,teal'],
+            'is_featured' => ['nullable', 'in:0,1'],
+            'duration_label_ar' => ['nullable', 'string', 'max:80'],
+            'duration_label_en' => ['nullable', 'string', 'max:80'],
+            'sort_order' => ['required', 'integer', 'min:0', 'max:9999'],
+        ];
+    }
+
+    private function presentationValues(Request $request): array
+    {
+        $values = [
+            'name_en' => $request->input('name_en'),
+            'description_ar' => $request->input('description_ar'),
+            'description_en' => $request->input('description_en'),
+            'badge_text_ar' => $request->input('badge_text_ar'),
+            'badge_text_en' => $request->input('badge_text_en'),
+            'badge_icon_key' => $request->input('badge_icon_key', 'workspace_premium'),
+            'badge_style' => $request->input('badge_style', 'teal'),
+            'is_featured' => $request->input('is_featured', '0') === '1',
+            'duration_label_ar' => $request->input('duration_label_ar'),
+            'duration_label_en' => $request->input('duration_label_en'),
+            'sort_order' => $request->input('sort_order'),
+        ];
+
+        if (is_array($request->input('features'))) {
+            $values['features'] = $request->input('features');
+        } else {
+            // During a rolling deploy, an older cached form may still submit
+            // the previous multiline Arabic/English fields.
+            $values['features_ar'] = $request->input('features_ar', []);
+            $values['features_en'] = $request->input('features_en', []);
+        }
+
+        return $values;
     }
 
     public function select_package()

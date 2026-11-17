@@ -2542,13 +2542,26 @@ class _SubscriptionsModalContentState
               packageData,
               isArabic: widget.isArabic,
             );
-            final String rawPkgName = name.isNotEmpty
-                ? name
-                : (widget.isArabic ? 'باقة' : 'Package');
             final String description = PackageCatalogUtils.displayDescription(
               packageData,
               isArabic: widget.isArabic,
             );
+            final String badgeTag = PackageCatalogUtils.displayBadgeText(
+              packageData,
+              isArabic: widget.isArabic,
+            );
+            final String durationLabel =
+                PackageCatalogUtils.displayDurationLabel(
+              packageData,
+              isArabic: widget.isArabic,
+            );
+            final List<Map<String, String>> packageFeatures =
+                PackageCatalogUtils.displayFeatureItems(
+              packageData,
+              isArabic: widget.isArabic,
+            );
+            final bool isFeatured =
+                PackageCatalogUtils.isFeatured(packageData);
 
             final double price = (pkg['price'] is num)
                 ? (pkg['price'] as num).toDouble()
@@ -2558,49 +2571,36 @@ class _SubscriptionsModalContentState
                 ? pkg['validity']
                 : (int.tryParse(pkg['validity']?.toString() ?? '30') ?? 30);
 
-            final int viewersView = (pkg['profile_viewers_view'] is int)
-                ? pkg['profile_viewers_view']
-                : (int.tryParse(
-                        pkg['profile_viewers_view']?.toString() ?? '0') ??
-                    0);
-
             final bool isSelected = _selectedPackageId == id;
+            final String badgeStyle =
+                PackageCatalogUtils.badgeStyle(packageData);
 
-            Color themeColor;
-            List<Color> gradientColors;
-            String badgeTag;
-            IconData badgeIcon;
-
-            if (validity >= 90 ||
-                rawPkgName.contains('3') ||
-                rawPkgName.contains('VIP') ||
-                rawPkgName.contains('ملكي')) {
-              themeColor = AppColors.primaryTeal;
-              gradientColors = [
-                AppColors.primaryTeal,
-                AppColors.secondaryTeal,
-              ];
-              badgeTag =
-                  widget.isArabic ? 'باقة VIP الملكية 👑' : 'Royal VIP Package';
-              badgeIcon = Icons.workspace_premium_rounded;
-            } else if (validity >= 30 || rawPkgName.contains('شهري')) {
-              themeColor = AppColors.premiumGold;
-              gradientColors = [
-                AppColors.premiumGold,
-                AppColors.premiumGoldDeep,
-              ];
-              badgeTag = widget.isArabic ? 'الباقة الذهبية 🥇' : 'Gold Package';
-              badgeIcon = Icons.stars_rounded;
-            } else {
-              themeColor = AppColors.premiumSilver;
-              gradientColors = [
-                AppColors.premiumSilver,
-                AppColors.premiumSilverDeep,
-              ];
-              badgeTag =
-                  widget.isArabic ? 'الباقة الفضية 🥈' : 'Silver Package';
-              badgeIcon = Icons.verified_rounded;
+            late final Color themeColor;
+            late final List<Color> gradientColors;
+            switch (badgeStyle) {
+              case 'silver':
+                themeColor = AppColors.premiumSilver;
+                gradientColors = [
+                  AppColors.premiumSilver,
+                  AppColors.premiumSilverDeep,
+                ];
+                break;
+              case 'gold':
+                themeColor = AppColors.premiumGold;
+                gradientColors = [
+                  AppColors.premiumGold,
+                  AppColors.premiumGoldDeep,
+                ];
+                break;
+              default:
+                themeColor = AppColors.primaryTeal;
+                gradientColors = [
+                  AppColors.primaryTeal,
+                  AppColors.secondaryTeal,
+                ];
             }
+            final IconData badgeIcon =
+                _packageFeatureIcon(PackageCatalogUtils.badgeIconKey(packageData));
 
             return GestureDetector(
               onTap: () {
@@ -2656,6 +2656,11 @@ class _SubscriptionsModalContentState
                                     fontWeight: FontWeight.bold,
                                     fontFamily: 'Cairo'),
                               ),
+                              if (isFeatured) ...[
+                                const SizedBox(width: 6),
+                                const Icon(Icons.push_pin_rounded,
+                                    color: Colors.white, size: 12),
+                              ],
                             ],
                           ),
                         ),
@@ -2693,9 +2698,13 @@ class _SubscriptionsModalContentState
                                       fontWeight: FontWeight.bold,
                                       fontFamily: 'Cairo')),
                               Text(
-                                widget.isArabic
-                                    ? 'صلاحية $validity يوم من تاريخ التفعيل'
-                                    : 'Valid for $validity days',
+                                durationLabel.isNotEmpty
+                                    ? (widget.isArabic
+                                        ? '$durationLabel · الصلاحية الفعلية $validity يوم'
+                                        : '$durationLabel · Actual validity: $validity days')
+                                    : (widget.isArabic
+                                        ? 'صلاحية $validity يوم من تاريخ التفعيل'
+                                        : 'Valid for $validity days'),
                                 style: const TextStyle(
                                     color: AppColors.textMuted,
                                     fontSize: 11,
@@ -2721,28 +2730,12 @@ class _SubscriptionsModalContentState
                       ),
                     const Divider(
                         color: AppColors.lineColor, height: 20),
-                    _buildPackageFeatureRow(
-                      widget.isArabic
-                          ? 'محادثات وإعجابات غير محدودة'
-                          : 'Unlimited Chats & Likes',
-                    ),
-                    if (viewersView > 0)
-                      _buildPackageFeatureRow(
-                        widget.isArabic
-                            ? 'إمكانية رؤية حتى $viewersView زائر لملفك'
-                            : 'View up to $viewersView profile visitors',
+                    ...packageFeatures.map(
+                      (feature) => _buildPackageFeatureRow(
+                        feature['title'] ?? '',
+                        _packageFeatureIcon(feature['icon_key'] ?? 'check'),
                       ),
-                    _buildPackageFeatureRow(
-                      widget.isArabic
-                          ? 'تطابق تلقائي متتقدم ومميز مع الشريك'
-                          : 'Advanced Auto-Profile Matching',
                     ),
-                    if (price >= 50 || rawPkgName.contains('VIP'))
-                      _buildPackageFeatureRow(
-                        widget.isArabic
-                            ? 'نشر بوست مخصص على الفيسبوك للوصول لأكبر عدد من التوافقات'
-                            : 'Custom Facebook Post Promotion for Best Match',
-                      ),
                   ],
                 ),
               ),
@@ -3226,13 +3219,48 @@ class _SubscriptionsModalContentState
     );
   }
 
-  Widget _buildPackageFeatureRow(String featureText) {
+  IconData _packageFeatureIcon(String key) {
+    switch (key) {
+      case 'star':
+        return Icons.star_rounded;
+      case 'workspace_premium':
+        return Icons.workspace_premium_rounded;
+      case 'verified':
+        return Icons.verified_rounded;
+      case 'favorite':
+        return Icons.favorite_rounded;
+      case 'chat':
+        return Icons.chat_bubble_rounded;
+      case 'visibility':
+        return Icons.visibility_rounded;
+      case 'photo':
+        return Icons.photo_rounded;
+      case 'photo_library':
+        return Icons.photo_library_rounded;
+      case 'handshake':
+        return Icons.handshake_rounded;
+      case 'shield':
+        return Icons.shield_rounded;
+      case 'bolt':
+        return Icons.bolt_rounded;
+      case 'people':
+        return Icons.people_rounded;
+      case 'infinity':
+        return Icons.all_inclusive_rounded;
+      default:
+        return Icons.check_circle_outline_rounded;
+    }
+  }
+
+  Widget _buildPackageFeatureRow(
+    String featureText, [
+    IconData icon = Icons.check_circle_outline_rounded,
+  ]) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
         children: [
-          const Icon(Icons.check_circle_outline_rounded,
-              color: AppColors.success, size: 16),
+          Icon(icon, color: AppColors.success, size: 16),
           const SizedBox(width: 8),
           Expanded(
             child: Text(

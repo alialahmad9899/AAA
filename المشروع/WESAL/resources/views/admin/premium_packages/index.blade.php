@@ -59,6 +59,15 @@
                     </td>
                     <td>
                         <strong>{{ $package->name }}</strong>
+                        @if(!empty($package->display_badge))
+                            <span class="badge badge-inline badge-info ml-1">{{ $package->display_badge }}</span>
+                        @endif
+                        @if(!empty($package->display_featured))
+                            <span class="badge badge-inline badge-warning ml-1">مميزة</span>
+                        @endif
+                        @if(!empty($package->display_archived))
+                            <span class="badge badge-inline badge-secondary ml-1">مؤرشفة</span>
+                        @endif
                         @if(!empty($package->display_description))
                             <small class="text-muted d-block">{{ \Illuminate\Support\Str::limit($package->display_description, 110) }}</small>
                         @endif

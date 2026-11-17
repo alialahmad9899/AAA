@@ -140,6 +140,22 @@ class PackageController extends Controller
                         : $presentation['features_ar'],
                     'features_ar' => $presentation['features_ar'],
                     'features_en' => $presentation['features_en'],
+                    'feature_items' => $lang === 'en' ? $presentation['feature_items_en'] : $presentation['feature_items_ar'],
+                    'feature_items_ar' => $presentation['feature_items_ar'],
+                    'feature_items_en' => $presentation['feature_items_en'],
+                    'badge_text' => $lang === 'en'
+                        ? ($presentation['badge_text_en'] ?: $presentation['badge_text_ar'])
+                        : $presentation['badge_text_ar'],
+                    'badge_text_ar' => $presentation['badge_text_ar'],
+                    'badge_text_en' => $presentation['badge_text_en'],
+                    'badge_icon_key' => $presentation['badge_icon_key'],
+                    'badge_style' => $presentation['badge_style'],
+                    'is_featured' => $presentation['is_featured'],
+                    'duration_label' => $lang === 'en'
+                        ? ($presentation['duration_label_en'] ?: $presentation['duration_label_ar'])
+                        : $presentation['duration_label_ar'],
+                    'duration_label_ar' => $presentation['duration_label_ar'],
+                    'duration_label_en' => $presentation['duration_label_en'],
                     'sort_order' => $presentation['sort_order'],
                     'price' => $package->price,
                     'validity' => $package->validity,
@@ -171,6 +187,7 @@ class PackageController extends Controller
         $package = Package::where('active', 1)->where('price', '>', 0)->where('validity', '>', 0)->find($request->package_id);
 
         if ($package) {
+            $presentation = PackagePresentation::get((int) $package->id);
             $formattedPackage = [
                 'id'                   => $package->id,
                 'name'                 => $this->formatPackageName($package, $lang),
@@ -183,8 +200,24 @@ class PackageController extends Controller
                     ? PackagePresentation::get((int) $package->id)['features_en']
                     : PackagePresentation::get((int) $package->id)['features_ar'],
                 'features_ar'          => PackagePresentation::get((int) $package->id)['features_ar'],
-                'features_en'          => PackagePresentation::get((int) $package->id)['features_en'],
-                'sort_order'           => PackagePresentation::get((int) $package->id)['sort_order'],
+                'features_en'          => $presentation['features_en'],
+                'feature_items'        => $lang === 'en' ? $presentation['feature_items_en'] : $presentation['feature_items_ar'],
+                'feature_items_ar'     => $presentation['feature_items_ar'],
+                'feature_items_en'     => $presentation['feature_items_en'],
+                'badge_text'           => $lang === 'en'
+                    ? ($presentation['badge_text_en'] ?: $presentation['badge_text_ar'])
+                    : $presentation['badge_text_ar'],
+                'badge_text_ar'        => $presentation['badge_text_ar'],
+                'badge_text_en'        => $presentation['badge_text_en'],
+                'badge_icon_key'       => $presentation['badge_icon_key'],
+                'badge_style'          => $presentation['badge_style'],
+                'is_featured'          => $presentation['is_featured'],
+                'duration_label'       => $lang === 'en'
+                    ? ($presentation['duration_label_en'] ?: $presentation['duration_label_ar'])
+                    : $presentation['duration_label_ar'],
+                'duration_label_ar'    => $presentation['duration_label_ar'],
+                'duration_label_en'    => $presentation['duration_label_en'],
+                'sort_order'           => $presentation['sort_order'],
                 'price'                => $package->price,
                 'validity'             => $package->validity,
                 'express_interest'     => $package->express_interest,
@@ -193,6 +226,8 @@ class PackageController extends Controller
                 'profile_viewers_view' => $package->profile_viewers_view,
                 'profile_image_view'   => $package->profile_image_view,
                 'gallery_image_view'   => $package->gallery_image_view,
+                'message_profile_quota' => $package->message_profile_quota,
+                'auto_profile_match'   => (int) ($package->auto_profile_match ?? 0),
             ];
 
             return response()->json([

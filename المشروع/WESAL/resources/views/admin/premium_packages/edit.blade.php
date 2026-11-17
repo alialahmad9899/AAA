@@ -39,19 +39,7 @@
                                 <textarea name="description_en" id="description_en" class="form-control" rows="3" maxlength="1500">{{ old('description_en', $presentation['description_en']) }}</textarea>
                             </div>
                         </div>
-                        <div class="form-group row">
-                            <label class="col-md-3 col-form-label" for="features_ar">مزايا الباقة بالعربية</label>
-                            <div class="col-md-9">
-                                <textarea name="features_ar" id="features_ar" class="form-control" rows="4" maxlength="5000" placeholder="كل سطر يظهر كبند مستقل">{{ old('features_ar', implode("\n", $presentation['features_ar'])) }}</textarea>
-                                <small class="text-muted">اكتب كل ميزة في سطر مستقل. عند ترك الحقل فارغاً يستخدم التطبيق المزايا الافتراضية القديمة.</small>
-                            </div>
-                        </div>
-                        <div class="form-group row">
-                            <label class="col-md-3 col-form-label" for="features_en">مزايا الباقة بالإنجليزية</label>
-                            <div class="col-md-9">
-                                <textarea name="features_en" id="features_en" class="form-control" rows="4" maxlength="5000" placeholder="One benefit per line">{{ old('features_en', implode("\n", $presentation['features_en'])) }}</textarea>
-                            </div>
-                        </div>
+                        @include('admin.premium_packages._presentation_fields')
                         <div class="form-group row">
                             <label class="col-md-3 col-form-label" for="sort_order"><i class="las la-sort-numeric-down"></i> ترتيب الظهور في التطبيق</label>
                             <div class="col-md-9">

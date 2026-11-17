@@ -6,6 +6,13 @@ class PackageCatalogUtils {
     return int.tryParse(value?.toString() ?? '') ?? fallback;
   }
 
+  static bool _boolean(dynamic value) {
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    final text = value?.toString().trim().toLowerCase();
+    return text == '1' || text == 'true' || text == 'yes';
+  }
+
   static List<Map<String, dynamic>> sortPackages(Iterable<dynamic> source) {
     final packages = source
         .whereType<Map>()
@@ -32,39 +39,101 @@ class PackageCatalogUtils {
     return packages;
   }
 
-  static String displayName(
-    Map<String, dynamic> package, {
-    required bool isArabic,
-  }) {
+  static String displayName(Map<String, dynamic> package, {required bool isArabic}) {
     final preferred = isArabic ? package['name_ar'] : package['name_en'];
     final preferredText = preferred?.toString().trim() ?? '';
     if (preferredText.isNotEmpty) return preferredText;
     return package['name']?.toString().trim() ?? '';
   }
 
-  static String displayDescription(
-    Map<String, dynamic> package, {
-    required bool isArabic,
-  }) {
-    final preferred =
-        isArabic ? package['description_ar'] : package['description_en'];
+  static String displayDescription(Map<String, dynamic> package, {required bool isArabic}) {
+    final preferred = isArabic ? package['description_ar'] : package['description_en'];
     final preferredText = preferred?.toString().trim() ?? '';
     if (preferredText.isNotEmpty) return preferredText;
     return package['description']?.toString().trim() ?? '';
+  }
+
+  /// Prefer icon-bearing API rows; gracefully read older plain-string arrays.
+  static List<Map<String, String>> displayFeatureItems(
+    Map<String, dynamic> package, {
+    required bool isArabic,
+  }) {
+    final preferredItems = isArabic
+        ? package['feature_items_ar']
+        : package['feature_items_en'];
+    final sharedItems = package['feature_items'];
+    final localizedStrings =
+        isArabic ? package['features_ar'] : package['features_en'];
+
+    final dynamic source = preferredItems is List
+        ? preferredItems
+        : (sharedItems is List ? sharedItems : localizedStrings);
+    final fallback = package['features'] is List
+        ? package['features'] as List
+        : const <dynamic>[];
+    final values = source is List && source.isNotEmpty ? source : fallback;
+
+    final items = <Map<String, String>>[];
+    for (final value in values.take(30)) {
+      if (value is Map) {
+        final title = (value['title'] ??
+                (isArabic ? value['title_ar'] : value['title_en']) ??
+                '')
+            .toString()
+            .trim();
+        if (title.isEmpty) continue;
+        final icon = value['icon_key']?.toString().trim() ?? '';
+        items.add({
+          'title': title,
+          'icon_key': icon.isEmpty ? 'check' : icon,
+        });
+      } else {
+        final title = value?.toString().trim() ?? '';
+        if (title.isEmpty) continue;
+        items.add({'title': title, 'icon_key': 'check'});
+      }
+    }
+    return items;
   }
 
   static List<String> displayFeatures(
     Map<String, dynamic> package, {
     required bool isArabic,
   }) {
-    final preferred = isArabic ? package['features_ar'] : package['features_en'];
-    final source = preferred is List
-        ? preferred
-        : (package['features'] is List ? package['features'] as List : const []);
-    return source
-        .map((item) => item?.toString().trim() ?? '')
-        .where((item) => item.isNotEmpty)
-        .take(30)
+    return displayFeatureItems(package, isArabic: isArabic)
+        .map((item) => item['title']!)
         .toList(growable: false);
+  }
+
+  static String displayBadgeText(Map<String, dynamic> package, {required bool isArabic}) {
+    final preferred = isArabic ? package['badge_text_ar'] : package['badge_text_en'];
+    final preferredText = preferred?.toString().trim() ?? '';
+    if (preferredText.isNotEmpty) return preferredText;
+    final localizedFallback = package['badge_text']?.toString().trim() ?? '';
+    if (localizedFallback.isNotEmpty) return localizedFallback;
+    return isArabic ? 'اشتراك مميز' : 'Premium Membership';
+  }
+
+  static String badgeIconKey(Map<String, dynamic> package) {
+    final value = package['badge_icon_key']?.toString().trim() ?? '';
+    return value.isEmpty ? 'workspace_premium' : value;
+  }
+
+  static String badgeStyle(Map<String, dynamic> package) {
+    final value = package['badge_style']?.toString().trim().toLowerCase();
+    return const ['silver', 'gold', 'teal'].contains(value) ? value! : 'teal';
+  }
+
+  static bool isFeatured(Map<String, dynamic> package) {
+    return _boolean(package['is_featured']);
+  }
+
+  static String displayDurationLabel(Map<String, dynamic> package, {required bool isArabic}) {
+    final preferred = isArabic
+        ? package['duration_label_ar']
+        : package['duration_label_en'];
+    final preferredText = preferred?.toString().trim() ?? '';
+    if (preferredText.isNotEmpty) return preferredText;
+    return package['duration_label']?.toString().trim() ?? '';
   }
 }
