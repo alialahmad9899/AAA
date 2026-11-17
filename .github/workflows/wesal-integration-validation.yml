@@ -82,6 +82,8 @@ jobs:
             "المشروع/WESAL/tests/Unit/VipServiceCatalogOrderTest.php"
             "المشروع/WESAL/app/Models/VipServiceOrder.php"
             "المشروع/WESAL/app/Utility/SubscriptionUtility.php"
+            "المشروع/WESAL/app/Console/Commands/ExpireMemberPackages.php"
+            "المشروع/WESAL/tests/Unit/PremiumPackageAvailabilityTest.php"
             "المشروع/WESAL/routes/api.php"
             "المشروع/WESAL/app/Http/Resources/ActiveUserResource.php"
             "المشروع/WESAL/app/Models/Address.php"
@@ -119,6 +121,7 @@ jobs:
             phpunit --no-configuration tests/Unit/InterestControllerIdempotencyTest.php
             phpunit --no-configuration tests/Unit/VipServiceCatalogOrderTest.php
             phpunit --no-configuration tests/Unit/PackagePresentationTest.php
+            phpunit --no-configuration tests/Unit/PremiumPackageAvailabilityTest.php
             phpunit --no-configuration tests/Unit/GoogleIdTokenVerifierTest.php
             phpunit --no-configuration tests/Unit/PasswordResetCodeTest.php
           )

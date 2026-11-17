@@ -294,6 +294,10 @@ class PackageController extends Controller
     public function destroy($id)
     {
         $package = Package::findOrFail($id);
+        if ((int) $package->id === 1) {
+            flash('لا يمكن حذف الباقة الأساسية.')->error();
+            return redirect()->route('packages.index');
+        }
 
         // Keep every package referenced by payments, members or quota records.
         // Such plans are archived and can be reactivated from this list.
