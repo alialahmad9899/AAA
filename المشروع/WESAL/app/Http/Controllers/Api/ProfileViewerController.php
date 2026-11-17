@@ -53,6 +53,9 @@ class ProfileViewerController extends Controller
 
         // 5. جلب قائمة الزوار النشطين والمفعلين مرتبة حسب الأحدث
         $profileViewersQuery = ProfileViewer::where('user_id', $user->id)
+            // A visitor without a Member row makes MyProfileViewerResource return null.
+            // Exclude incomplete visitor profiles before serializing the collection.
+            ->whereHas('profileViewer.member')
             ->whereIn("viewed_by", function ($query) {
                 $query->select('id')
                     ->from('users')

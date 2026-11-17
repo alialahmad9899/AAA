@@ -11,6 +11,7 @@ import '../constants/colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '../models/member_profile_model.dart';
+import '../models/profile_viewer_model.dart';
 import '../services/api_service.dart';
 import 'member_profile_screen.dart';
 import 'home/tabs/account_tab.dart';
@@ -33,7 +34,7 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
   String _quotaErrorMessage = '';
   bool _hasLoadError = false;
   String _loadErrorMessage = '';
-  List<dynamic> _viewers = [];
+  List<ProfileViewerModel> _viewers = <ProfileViewerModel>[];
   bool _isFemale = false;
   bool _hasActivePackage = false;
 
@@ -47,6 +48,8 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
 
   /// 🟢 جلب بيانات الزوار مع التحقق من جنس المستخدم وحالة باقة الاشتراك
   Future<void> _fetchViewers() async {
+    if (!mounted) return;
+
     setState(() {
       _isLoading = true;
       _hasQuotaError = false;
@@ -59,6 +62,8 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
           await ApiService.getCurrentUserProfile(
         lang: widget.currentLanguage,
       );
+
+      if (!mounted) return;
 
       if (currentUser != null) {
         _isFemale = currentUser.isFemale;
@@ -91,8 +96,30 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
               (_isAr ? 'تعذر تحميل زوار الملف الشخصي' : 'Could not load profile visitors');
         });
       } else {
+        final rawViewers = res['data'] as List;
+        final parsedViewers = rawViewers
+            .map((item) =>
+                ProfileViewerModel.tryParse(item, isArabic: _isAr))
+            .whereType<ProfileViewerModel>()
+            .toList(growable: false);
+
+        if (rawViewers.isNotEmpty && parsedViewers.isEmpty) {
+          debugPrint(
+            '[MyProfileViewersScreen] Ignored ${rawViewers.length} malformed visitor records.',
+          );
+          setState(() {
+            _isLoading = false;
+            _hasQuotaError = false;
+            _hasLoadError = true;
+            _loadErrorMessage = _isAr
+                ? 'بيانات الزوار غير مكتملة. حدّث الصفحة للمحاولة مجدداً.'
+                : 'Visitor data is incomplete. Refresh to try again.';
+          });
+          return;
+        }
+
         setState(() {
-          _viewers = res['data'];
+          _viewers = parsedViewers;
           _isLoading = false;
           _hasQuotaError = false;
           _hasLoadError = false;
@@ -472,22 +499,16 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
   }
 
   /// 👤 كارت عرض بيانات الزائر
-  Widget _buildViewerCard(dynamic item) {
-    final String name =
-        item['name'] ?? item['user_name'] ?? (_isAr ? 'عضو' : 'Member');
-    final String photo = item['photo'] ?? item['user_photo'] ?? '';
-    final int userId = item['user_id'] ?? item['viewed_by'] ?? 0;
-    final int age = item['age'] ?? 0;
-    final String timeStr = item['date'] ?? item['time'] ?? '';
+  /// 👤 كارت عرض بيانات الزائر — يعتمد على نموذج محصّن من قيم JSON غير المتوقعة
+  Widget _buildViewerCard(ProfileViewerModel viewer) {
+    final bool hasPhoto = viewer.photo.isNotEmpty;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: AppColors.cardColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.lineColor,
-        ),
+        border: Border.all(color: AppColors.lineColor),
       ),
       child: Material(
         color: Colors.transparent,
@@ -498,17 +519,38 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
           leading: CircleAvatar(
             radius: 26,
             backgroundColor: AppColors.sectionBackground,
-            backgroundImage:
-                photo.isNotEmpty ? CachedNetworkImageProvider(photo) : null,
-            child: photo.isEmpty
-                ? const Icon(Icons.person, color: AppColors.textMuted, size: 28)
-                : null,
+            child: !hasPhoto
+                ? const Icon(
+                    Icons.person,
+                    color: AppColors.textMuted,
+                    size: 28,
+                  )
+                : ClipOval(
+                    child: CachedNetworkImage(
+                      imageUrl: viewer.photo,
+                      width: 52,
+                      height: 52,
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) => const Icon(
+                        Icons.person,
+                        color: AppColors.textMuted,
+                        size: 28,
+                      ),
+                      errorWidget: (_, __, ___) => const Icon(
+                        Icons.person,
+                        color: AppColors.textMuted,
+                        size: 28,
+                      ),
+                    ),
+                  ),
           ),
           title: Row(
             children: [
               Expanded(
                 child: Text(
-                  name,
+                  viewer.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: AppColors.textDark,
                     fontSize: 15,
@@ -517,9 +559,10 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
                   ),
                 ),
               ),
-              if (age > 0)
+              if (viewer.age > 0) ...[
+                const SizedBox(width: 8),
                 Text(
-                  '$age ${_isAr ? 'سنة' : 'yrs'}',
+                  '${viewer.age} ${_isAr ? 'سنة' : 'yrs'}',
                   style: const TextStyle(
                     color: AppColors.primaryTeal,
                     fontSize: 12,
@@ -527,19 +570,27 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
                     fontFamily: 'Cairo',
                   ),
                 ),
+              ],
             ],
           ),
           subtitle: Row(
             children: [
-              const Icon(Icons.access_time_rounded,
-                  color: AppColors.textMuted, size: 14),
+              const Icon(
+                Icons.access_time_rounded,
+                color: AppColors.textMuted,
+                size: 14,
+              ),
               const SizedBox(width: 4),
-              Text(
-                timeStr,
-                style: const TextStyle(
-                  color: AppColors.textMuted,
-                  fontSize: 11.5,
-                  fontFamily: 'Cairo',
+              Expanded(
+                child: Text(
+                  viewer.visitedAt,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 11.5,
+                    fontFamily: 'Cairo',
+                  ),
                 ),
               ),
             ],
@@ -552,20 +603,19 @@ class _MyProfileViewersScreenState extends State<MyProfileViewersScreen> {
             size: 16,
           ),
           onTap: () {
-            if (userId > 0) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => MemberProfileScreen(
-                    userId: userId,
-                    currentLanguage: widget.currentLanguage,
-                  ),
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MemberProfileScreen(
+                  userId: viewer.userId,
+                  currentLanguage: widget.currentLanguage,
                 ),
-              );
-            }
+              ),
+            );
           },
         ),
       ),
     );
   }
+
 }
