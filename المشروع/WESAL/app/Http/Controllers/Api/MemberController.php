@@ -390,7 +390,7 @@ class MemberController extends Controller
                 \App\Utility\NotificationUtility::set_notification(
                     'member_report',
                     'تم استلام بلاغ جديد عن أحد الأعضاء.',
-                    '/admin',
+                    route('reported_members', $targetUserId),
                     $reporter->id,
                     $admin->id,
                     'admin'
