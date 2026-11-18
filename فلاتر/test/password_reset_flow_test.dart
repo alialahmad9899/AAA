@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../lib/screens/change_password_screen.dart';
-import '../lib/screens/forgot_password_screen.dart';
+import 'package:wesal_app/screens/change_password_screen.dart';
+import 'package:wesal_app/screens/forgot_password_screen.dart';
 
 void main() {
   group('ForgotPasswordScreen', () {
