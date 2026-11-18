@@ -49,15 +49,6 @@ void main() {
 
   testWidgets('signup keeps the logo and hero heading centered',
       (WidgetTester tester) async {
-    final previousFlutterErrorHandler = FlutterError.onError;
-    FlutterError.onError = (details) {
-      debugPrint('WESAL_SIGNUP_RENDER_DIAGNOSTIC_START');
-      FlutterError.dumpErrorToConsole(details);
-      debugPrint('WESAL_SIGNUP_RENDER_DIAGNOSTIC_END');
-      previousFlutterErrorHandler?.call(details);
-    };
-    addTearDown(() => FlutterError.onError = previousFlutterErrorHandler);
-
     await setPhoneSize(tester);
     await tester.pumpWidget(const MaterialApp(home: SignupScreen()));
 
@@ -69,16 +60,7 @@ void main() {
       find.text('لنبدأ رحلتك مع وصال'),
     );
     expect(heading.textAlign, TextAlign.center);
-    final layoutException = tester.takeException();
-    if (layoutException is FlutterError) {
-      debugPrint('WESAL_SIGNUP_EXCEPTION_DEEP_START');
-      debugPrint(layoutException.toStringDeep());
-      for (final diagnostic in layoutException.diagnostics) {
-        debugPrint(diagnostic.toStringDeep());
-      }
-      debugPrint('WESAL_SIGNUP_EXCEPTION_DEEP_END');
-    }
-    expect(layoutException, isNull);
+    expect(tester.takeException(), isNull);
 
     await tester.binding.setSurfaceSize(null);
   });
@@ -86,7 +68,9 @@ void main() {
   testWidgets('welcome hero gives the original logo a wide contain box',
       (WidgetTester tester) async {
     await setPhoneSize(tester);
-    await tester.pumpWidget(const MaterialApp(home: WelcomeScreen()));
+    await tester.pumpWidget(
+      const MaterialApp(home: WelcomeScreen(checkSession: false)),
+    );
     await tester.pumpAndSettle();
 
     final logoFinder = find.byType(WesalLogo);
