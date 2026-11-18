@@ -1505,8 +1505,9 @@
 - `فلاتر/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@3x.png`
 - حُذف مورد الأيقونة المتجهية المؤقتة `فلاتر/android/app/src/main/res/drawable/ic_launcher_wesal.xml` واستُبدل باستخدام صورة الشعار الأصلي مباشرة.
 ### التحقق
-- GitHub Actions run `44404211182`: فحص PHP syntax نجح؛ `dart analyze --fatal-infos` نجح (No issues found)؛ و`flutter test` نجح بإجمالي 108 اختبارات؛ إنشاء ZIP في مهمة CI نجح.
-- GitHub Actions run `44404211321`: اختبار عقد توجيه الإشعارات نجح. بناء Android Debug APK كان قيد التنفيذ عند تدوين هذه الملاحظة، لذلك لا يُسجل نجاحه قبل استلام النتيجة النهائية.
+- GitHub Actions run `44404211182` و`44404908164`: فحص PHP syntax نجح؛ `dart analyze --fatal-infos` نجح (No issues found)؛ و`flutter test` نجح بإجمالي 108 اختبارات؛ كما نجحت مهمة إنشاء ZIP.
+- GitHub Actions run `44403832235` على commit `fbd086db2006c85d52dfe126b81fd9f52908d124`: اختبار عقد توجيه الإشعارات نجح (4 اختبارات / 15 assertions)، وبناء Android Debug APK نجح على Java 17.
+- إعادة بناء Android على آخر تعديل صغير لملف `keep.xml` كانت ما تزال قيد التنفيذ عند آخر فحص؛ هذا التعديل اقتصر على إزالة اسم مورد لم يعد موجودًا من قائمة موارد الحماية، ولم تظهر نتيجة فشل في السجلات المتاحة.
 - لم يتم اختبار ظهور الرمز على أجهزة فعلية، ولم يتم النشر إلى Hostinger أو متجر.
 ### ما بقي خارج النطاق / غير متحقق منه
 - لم يتغير `AppIcon.appiconset` الخاص بأيقونة iOS الرئيسية؛ بقيت الأيقونة الحالية كما هي. تم تحديث شاشة إقلاع iOS فقط، لأن ملف الشعار الأصلي شفاف ولا يحتوي بعد على مشتقات أيقونات Apple المعتمة ذات المقاسات المطلوبة.
