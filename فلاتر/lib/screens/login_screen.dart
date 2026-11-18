@@ -683,26 +683,16 @@ class _LoginScreenState extends State<LoginScreen> {
                                               strokeWidth: 2.4,
                                             ),
                                           )
-                                        : Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              const Icon(
-                                                Icons.login_rounded,
-                                                size: 20,
-                                              ),
-                                              const SizedBox(width: 9),
-                                              Text(
-                                                _isArabic
-                                                    ? 'الدخول إلى حسابي'
-                                                    : 'Sign in',
-                                                style: const TextStyle(
-                                                  fontSize: 15,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontFamily: 'Cairo',
-                                                ),
-                                              ),
-                                            ],
+                                        : Text(
+                                            _isArabic
+                                                ? 'الدخول إلى حسابي'
+                                                : 'Sign in',
+                                            textAlign: TextAlign.center,
+                                            style: const TextStyle(
+                                              fontSize: 14.5,
+                                              fontWeight: FontWeight.bold,
+                                              fontFamily: 'Cairo',
+                                            ),
                                           ),
                                   ),
                                 ),
@@ -759,19 +749,24 @@ class _LoginScreenState extends State<LoginScreen> {
                                       children: [
                                         const Icon(
                                           Icons.g_mobiledata_rounded,
-                                          size: 30,
+                                          size: 28,
                                           color: Colors.redAccent,
                                         ),
-                                        const SizedBox(width: 7),
-                                        Text(
-                                          _isArabic
-                                              ? 'المتابعة باستخدام Google'
-                                              : 'Continue with Google',
-                                          style: const TextStyle(
-                                            color: AppColors.textDark,
-                                            fontSize: 13.5,
-                                            fontWeight: FontWeight.bold,
-                                            fontFamily: 'Cairo',
+                                        const SizedBox(width: 6),
+                                        Flexible(
+                                          child: Text(
+                                            _isArabic
+                                                ? 'المتابعة باستخدام Google'
+                                                : 'Continue with Google',
+                                            textAlign: TextAlign.center,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              color: AppColors.textDark,
+                                              fontSize: 12.5,
+                                              fontWeight: FontWeight.bold,
+                                              fontFamily: 'Cairo',
+                                            ),
                                           ),
                                         ),
                                       ],
