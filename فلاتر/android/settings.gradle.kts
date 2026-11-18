@@ -21,7 +21,9 @@ plugins {
     // 🛑 تحديث إصدار Android Gradle Plugin إلى 8.11.1 لتلبية متطلبات AndroidX الحديثة 🛑
     id("com.android.application") version "8.11.1" apply false
     // 🛑 تحديث محرك Kotlin إلى 2.1.0 لمنع تعارضات وتطابق الإصدارات 🛑
-    id("org.jetbrains.kotlin.android") version "2.1.0" apply false
+    // Flutter stable requires Kotlin Gradle Plugin 2.2.20 or newer.
+    // Kotlin 2.2.20 supports the project's Gradle 8.14 and Android Gradle Plugin 8.11.1.
+    id("org.jetbrains.kotlin.android") version "2.2.20" apply false
     // تحديث خدمات Google و Firebase للإصدار الأحدث المستقر
     id("com.google.gms.google-services") version "4.4.2" apply false
 }
