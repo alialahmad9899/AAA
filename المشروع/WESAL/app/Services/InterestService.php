@@ -249,7 +249,17 @@ class InterestService
                     FirebaseNotificationService::sendPushNotification(
                         $notify_user->fcm_token,
                         $title,
-                        $message
+                        $message,
+                        [
+                            'type' => (string) $notify_type,
+                            'notify_by' => (string) $notify_by,
+                            'actor_id' => (string) $notify_by,
+                            'user_id' => (string) $notify_by,
+                            'info_id' => (string) $info_id,
+                            'interest_id' => (string) $info_id,
+                            'notification_id' => (string) $id,
+                            'route' => (string) $route,
+                        ]
                     );
                 } catch (\Exception $e) {
                     Log::error("❌ [Firebase Notification Error]: " . $e->getMessage());
