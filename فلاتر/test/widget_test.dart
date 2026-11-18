@@ -10,8 +10,12 @@ void main() {
     await tester.pumpWidget(const MyApp(isLoggedIn: false));
 
     expect(find.byType(MaterialApp), findsOneWidget);
-    // Secure storage is a platform channel; the test environment keeps the
-    // welcome screen in its initial session-check state.
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (widget) => widget.runtimeType.toString() == 'BrandIntroScreen',
+      ),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('brand-intro-logo')), findsOneWidget);
   });
 }
