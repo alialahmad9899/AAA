@@ -126,7 +126,7 @@ class NotificationUtility
             }
 
             return true;
-        } catch (\\Throwable $exception) {
+        } catch (\Throwable $exception) {
             Log::error('API notification dispatch failed.', [
                 'receiver_id' => $receiver,
                 'type' => $type,
