@@ -107,7 +107,7 @@ class SupportTicketAdminController extends Controller
                 ));
 
                 if (get_setting('firebase_push_notification') == 1 && !empty($recipient->fcm_token)) {
-                    FirebaseNotificationService::sendPushNotification(
+                    $pushAccepted = FirebaseNotificationService::sendPushNotification(
                         $recipient->fcm_token,
                         $title,
                         $message,
@@ -117,6 +117,12 @@ class SupportTicketAdminController extends Controller
                             'info_id' => $ticket->id,
                         ]
                     );
+                    if (!$pushAccepted) {
+                        Log::warning('Support ticket reply saved, but Firebase did not accept the push.', [
+                            'ticket_id' => $ticket->id,
+                            'user_id' => $recipient->id,
+                        ]);
+                    }
                 }
             } catch (\Throwable $exception) {
                 Log::error('Admin support ticket notification failed.', [

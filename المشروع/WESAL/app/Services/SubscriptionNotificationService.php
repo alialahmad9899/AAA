@@ -73,11 +73,17 @@ class SubscriptionNotificationService
                 $user->fcm_token,
                 $title,
                 $message,
-                [
+                array_merge([
                     'type' => $type,
                     'info_id' => $infoId,
                     'route' => $route,
-                ]
+                ], in_array($type, ['package', 'package_purchase', 'package_activated'], true) && $infoId
+                    ? [
+                        'payment_id' => (string) $infoId,
+                        'package_payment_id' => (string) $infoId,
+                        'invoice_id' => (string) $infoId,
+                    ]
+                    : [])
             );
             if (!$sent) {
                 Log::warning('Subscription notification persisted in-app but FCM push was not delivered.', [

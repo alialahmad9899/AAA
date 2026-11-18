@@ -12,6 +12,7 @@ import '../constants/colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/notification_model.dart';
 import '../services/api_service.dart';
+import '../services/notification_service.dart';
 import '../widgets/app_snackbar.dart';
 
 class NotificationsScreen extends StatefulWidget {
@@ -95,6 +96,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           notificationId: notification.notificationId,
           type: notification.type,
           notifyBy: notification.notifyBy,
+          infoId: notification.infoId,
+          route: notification.route,
           photo: notification.photo,
           title: notification.title,
           message: notification.message,
@@ -126,6 +129,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     notificationId: n.notificationId,
                     type: n.type,
                     notifyBy: n.notifyBy,
+                    infoId: n.infoId,
+                    route: n.route,
                     photo: n.photo,
                     title: n.title,
                     message: n.message,
@@ -162,6 +167,21 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           messageEn: 'Network connection error',
         );
       }
+    }
+  }
+
+  /// Mark the item read, then use the same resolver as system tray taps.
+  /// Show the details modal only when this event has no safe destination.
+  Future<void> _openNotification(NotificationModel notification) async {
+    await _markSingleAsRead(notification);
+    if (!mounted) return;
+
+    final bool opened = await NotificationService.openFromNotificationCenter(
+      notification.toRoutePayload(),
+      language: widget.currentLanguage,
+    );
+    if (!opened && mounted) {
+      _showNotificationDetailsModal(notification);
     }
   }
 
@@ -606,7 +626,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         borderRadius: BorderRadius.circular(24),
         child: InkWell(
           borderRadius: BorderRadius.circular(24),
-          onTap: () => _showNotificationDetailsModal(notification),
+          onTap: () => _openNotification(notification),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(

@@ -1,0 +1,65 @@
+name: Notification routing contract
+
+on:
+  pull_request:
+    paths:
+      - 'المشروع/WESAL/app/Notifications/DbStoreNotification.php'
+      - 'المشروع/WESAL/tests/Unit/NotificationRoutingContractTest.php'
+      - '.github/workflows/notification-routing-contract.yml'
+      - 'فلاتر/**'
+  push:
+    branches:
+      - main
+    paths:
+      - 'المشروع/WESAL/app/Notifications/DbStoreNotification.php'
+      - 'المشروع/WESAL/tests/Unit/NotificationRoutingContractTest.php'
+      - '.github/workflows/notification-routing-contract.yml'
+      - 'فلاتر/**'
+
+permissions:
+  contents: read
+
+jobs:
+  notification-routing-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP and PHPUnit
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: phpunit:10.5
+
+      - name: Run notification routing contract tests
+        working-directory: المشروع/WESAL
+        run: phpunit --no-configuration tests/Unit/NotificationRoutingContractTest.php
+
+  flutter-android-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Android Gradle Plugin 8.11.1 / Gradle 8.14 require a supported JDK.
+      # Pin Java 17 instead of relying on the runner's moving default.
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.9'
+          channel: stable
+
+      - name: Resolve Flutter dependencies
+        working-directory: فلاتر
+        run: flutter pub get
+
+      - name: Build Android debug APK with Firebase configuration
+        working-directory: فلاتر
+        run: flutter build apk --debug

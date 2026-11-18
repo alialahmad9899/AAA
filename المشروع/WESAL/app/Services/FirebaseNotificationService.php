@@ -74,12 +74,28 @@ class FirebaseNotificationService
             'assertion' => $jwt
         ]));
 
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 20);
         $rawTokenResponse = curl_exec($ch);
-        $tokenResponse = json_decode($rawTokenResponse, true);
+        $tokenHttpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $tokenCurlError = curl_error($ch);
         curl_close($ch);
+        $tokenResponse = is_string($rawTokenResponse)
+            ? json_decode($rawTokenResponse, true)
+            : null;
 
-        if (!isset($tokenResponse['access_token'])) {
-            Log::error("❌ [FCM Error]: فشل الحصول على Access Token من Google: " . $rawTokenResponse);
+        if (
+            $rawTokenResponse === false
+            || $tokenHttpCode < 200
+            || $tokenHttpCode >= 300
+            || !is_array($tokenResponse)
+            || empty($tokenResponse['access_token'])
+        ) {
+            Log::error("❌ [FCM OAuth Error]: تعذر الحصول على Access Token.", [
+                'http_code' => $tokenHttpCode,
+                'curl_error' => $tokenCurlError,
+                'response' => is_string($rawTokenResponse) ? substr($rawTokenResponse, 0, 1200) : null,
+            ]);
             return false;
         }
 
@@ -204,19 +220,51 @@ class FirebaseNotificationService
             "Content-Type: application/json"
         ]);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 25);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
 
         $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
         curl_close($ch);
 
-        // 8. معالجة وتدوين النتيجة
-        if ($httpCode !== 200) {
-            Log::error("❌ [FCM Send Error]: فشل الإرسال الهوائي. رمز الحالة: $httpCode | الرد: $response");
+        // 8. Do not treat a completed cURL call as a delivered FCM message.
+        if ($response === false || $httpCode !== 200) {
+            $decodedError = is_string($response) ? json_decode($response, true) : null;
+            $fcmErrorCode = $decodedError['error']['details'][0]['errorCode']
+                ?? $decodedError['error']['status']
+                ?? null;
+            // FCM marks tokens that no longer belong to an installed app as
+            // UNREGISTERED. Remove only that exact stale token from the legacy
+            // single-token user column; do not clear tokens for other errors.
+            if ($fcmErrorCode === 'UNREGISTERED') {
+                try {
+                    \App\Models\User::where('fcm_token', $targetFcmToken)
+                        ->update(['fcm_token' => null]);
+                } catch (\Throwable $cleanupException) {
+                    Log::warning('[FCM] Could not clear an unregistered device token.', [
+                        'exception' => get_class($cleanupException),
+                    ]);
+                }
+            }
+
+            Log::error("❌ [FCM Send Error]: فشل إرسال الإشعار.", [
+                'http_code' => $httpCode,
+                'curl_error' => $curlError,
+                'fcm_error' => $fcmErrorCode,
+                'response' => is_string($response) ? substr($response, 0, 1600) : null,
+                'token_suffix' => substr((string) $targetFcmToken, -8),
+            ]);
             return false;
         }
 
-        Log::info("✅ [FCM Success]: تم إرسال الإشعار بالحقول المخصصة بنجاح إلى FCM Token!");
+        $acceptedMessage = json_decode((string) $response, true);
+        Log::info("✅ [FCM Success]: تم قبول الإشعار من Firebase FCM.", [
+            'message_name' => is_array($acceptedMessage)
+                ? ($acceptedMessage['name'] ?? null)
+                : null,
+        ]);
         return true;
     }
 }

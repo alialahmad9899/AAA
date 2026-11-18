@@ -3985,6 +3985,26 @@ class ApiService {
     }
   }
 
+  /// Fetch a single package invoice. The backend verifies that the
+  /// payment belongs to the currently authenticated member.
+  static Future<Map<String, dynamic>?> getPackageInvoice(
+    int paymentId, {
+    String? lang,
+  }) async {
+    if (paymentId < 1) return null;
+    final response = await post(
+      '/member/package-purchase-history-invoice',
+      {'package_payment_id': paymentId},
+      lang: lang,
+    );
+    if (response == null || response['result'] != true) return response;
+    final dynamic rawData = response['data'];
+    if (rawData is Map) {
+      return Map<String, dynamic>.from(rawData);
+    }
+    return response;
+  }
+
   static Future<bool> markNotificationAsRead(String notificationId) async {
     try {
       final headers = await _getHeaders();

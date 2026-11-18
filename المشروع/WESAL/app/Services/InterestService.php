@@ -244,13 +244,34 @@ class InterestService
             $title = $this->getNotificationTitle($notify_type);
 
             // 1. إرسال إشعار Firebase Push
-            if ($notify_user && !empty($notify_user->fcm_token)) {
+            if (
+                $notify_user
+                && !empty($notify_user->fcm_token)
+                && get_setting('firebase_push_notification') == 1
+            ) {
                 try {
-                    FirebaseNotificationService::sendPushNotification(
+                    $pushAccepted = FirebaseNotificationService::sendPushNotification(
                         $notify_user->fcm_token,
                         $title,
-                        $message
+                        $message,
+                        [
+                            'type' => (string) $notify_type,
+                            'notify_by' => (string) $notify_by,
+                            'actor_id' => (string) $notify_by,
+                            'user_id' => (string) $notify_by,
+                            'info_id' => (string) $info_id,
+                            'interest_id' => (string) $info_id,
+                            'notification_id' => (string) $id,
+                            'route' => (string) $route,
+                        ]
                     );
+                    if (!$pushAccepted) {
+                        Log::warning('Interest notification persisted, but Firebase did not accept the push.', [
+                            'receiver_id' => $user_id,
+                            'notification_id' => $id,
+                            'type' => $notify_type,
+                        ]);
+                    }
                 } catch (\Exception $e) {
                     Log::error("❌ [Firebase Notification Error]: " . $e->getMessage());
                 }
