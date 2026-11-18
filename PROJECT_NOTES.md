@@ -1468,3 +1468,46 @@
 - إعداد iOS/APNs غير مكتمل في ملفات المستودع التي تمت مراجعتها: لم يظهر `GoogleService-Info.plist` أو ملف Entitlements يحتوي `aps-environment`؛ لذلك لا تُعد إشعارات iOS معتمدة للإنتاج من هذه الدفعة.
 - ما زال تخزين FCM يعتمد على حقل واحد `users.fcm_token` لكل حساب؛ لم يُنفّذ تخزين متعدد الأجهزة في هذه الدفعة.
 - لم يُنشأ PDF قابل للتنزيل للفاتورة؛ الشاشة الحالية تعرض تفاصيل الفاتورة وتدعم نسخ بياناتها.
+
+
+## 2026-11-19 — اعتماد شعار وصال الأصلي في تطبيق الموبايل والإشعارات
+### النطاق والهوية
+- التغيير خاص بتطبيق Flutter وموارد Android وiOS الخاصة بإقلاع التطبيق، وباسم مورد أيقونة FCM في Laravel. لا تعديل على صفحات الموقع العام ولا نشر إلى الاستضافة.
+- مصدر الشعار هو `لوغو مفرغ.png` الموجود أصلًا في جذر المستودع (PNG شفاف 1664×1664). تم نسخ الملف بايت-ببايت دون إعادة رسمه أو تغيير ألوانه أو تركيبته إلى أصول Flutter وAndroid وiOS.
+### التغييرات
+- إضافة `WesalLogo` كمكوّن Flutter مشترك يضبط العرض والارتفاع مع `BoxFit.contain` للحفاظ على نسبة أبعاد الملف.
+- استبدال رموز القلب العامة بالشعار الأصلي في شاشة الترحيب، شاشة تسجيل الدخول، رأس التسجيل، ورأس تبويب المطابقات في الرئيسية.
+- ربط الشعار الأصلي بأيقونة تطبيق Android وبشاشتي الإقلاع القديمة وAndroid 12+، واستخدامه في LaunchImage على iOS مع ضبط الحجم والخلفية العاجية.
+- إضافة رمز إشعار Android مخصص أحادي اللون `ic_stat_wesal` واستخدامه في الإشعارات المحلية وبيانات FCM، مع لون الهوية البترولي. هذا الرمز منفصل عن شعار الواجهة لأن Android يتطلب رمزًا صغيرًا أحادي اللون في شريط الإشعارات.
+- إضافة اختبار Widget للتحقق من تسجيل أصل الشعار ونسبة العرض وسلوك النص الدلالي. إصلاح import الاختبار ليطابق قاعدة package imports.
+### الملفات التشغيلية المتغيرة في الدفعة
+- `المشروع/WESAL/app/Services/FirebaseNotificationService.php`
+- `فلاتر/assets/images/wesal_logo.png`
+- `فلاتر/lib/widgets/wesal_logo.dart`
+- `فلاتر/lib/screens/welcome_screen.dart`
+- `فلاتر/lib/screens/login_screen.dart`
+- `فلاتر/lib/screens/signup_screen.dart`
+- `فلاتر/lib/screens/home/tabs/auto_matching_tab.dart`
+- `فلاتر/lib/services/notification_service.dart`
+- `فلاتر/pubspec.yaml`
+- `فلاتر/test/wesal_branding_test.dart`
+- `فلاتر/android/app/src/main/AndroidManifest.xml`
+- `فلاتر/android/app/src/main/res/drawable/launch_background.xml`
+- `فلاتر/android/app/src/main/res/drawable-v21/launch_background.xml`
+- `فلاتر/android/app/src/main/res/drawable-nodpi/wesal_logo.png`
+- `فلاتر/android/app/src/main/res/drawable/ic_stat_wesal.xml`
+- `فلاتر/android/app/src/main/res/values/colors.xml`
+- `فلاتر/android/app/src/main/res/values-v31/styles.xml`
+- `فلاتر/android/app/src/main/res/raw/keep.xml`
+- `فلاتر/ios/Runner/Base.lproj/LaunchScreen.storyboard`
+- `فلاتر/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage.png`
+- `فلاتر/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@2x.png`
+- `فلاتر/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@3x.png`
+- حُذف مورد الأيقونة المتجهية المؤقتة `فلاتر/android/app/src/main/res/drawable/ic_launcher_wesal.xml` واستُبدل باستخدام صورة الشعار الأصلي مباشرة.
+### التحقق
+- GitHub Actions run `44404211182`: فحص PHP syntax نجح؛ `dart analyze --fatal-infos` نجح (No issues found)؛ و`flutter test` نجح بإجمالي 108 اختبارات؛ إنشاء ZIP في مهمة CI نجح.
+- GitHub Actions run `44404211321`: اختبار عقد توجيه الإشعارات نجح. بناء Android Debug APK كان قيد التنفيذ عند تدوين هذه الملاحظة، لذلك لا يُسجل نجاحه قبل استلام النتيجة النهائية.
+- لم يتم اختبار ظهور الرمز على أجهزة فعلية، ولم يتم النشر إلى Hostinger أو متجر.
+### ما بقي خارج النطاق / غير متحقق منه
+- لم يتغير `AppIcon.appiconset` الخاص بأيقونة iOS الرئيسية؛ بقيت الأيقونة الحالية كما هي. تم تحديث شاشة إقلاع iOS فقط، لأن ملف الشعار الأصلي شفاف ولا يحتوي بعد على مشتقات أيقونات Apple المعتمة ذات المقاسات المطلوبة.
+- لا يمكن إثبات عرض FCM على جهاز من نجاح بناء APK أو قبول FCM؛ يلزم اختبار جهاز فعلي بعد تثبيت النسخة.
