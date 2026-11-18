@@ -22,6 +22,7 @@ import '../screens/chat_detail_screen.dart';
 import '../screens/member_profile_screen.dart';
 import '../screens/my_interests_screen.dart';
 import '../screens/notifications_screen.dart';
+import '../screens/package_invoice_screen.dart';
 import '../screens/support_ticket_detail_screen.dart';
 import 'api_service.dart';
 import 'fcm_service.dart';
@@ -468,48 +469,79 @@ class NotificationService {
     }
   }
 
+  /// Opens a notification from the in-app center through the same resolver
+  /// used for FCM tray taps. Returns false when the event has no safe target.
+  static Future<bool> openFromNotificationCenter(
+    Map<String, dynamic> data, {
+    String language = 'ar',
+  }) {
+    return _dispatchNotificationTap(
+      data,
+      messageId: data['notification_id']?.toString(),
+      languageOverride: language,
+      fallbackToCenter: false,
+    );
+  }
+
   static Future<void> _handleNotificationTap(
     Map<String, dynamic> data, {
     String? messageId,
   }) async {
+    await _dispatchNotificationTap(data, messageId: messageId);
+  }
+
+  static Future<bool> _dispatchNotificationTap(
+    Map<String, dynamic> data, {
+    String? messageId,
+    String? languageOverride,
+    bool fallbackToCenter = true,
+  }) async {
     final String dedupeId = messageId?.trim().isNotEmpty == true
         ? messageId!.trim()
         : jsonEncode(data);
-    // Receiving an FCM message and tapping its visible notification are
-    // separate events. Do not block the tap merely because onMessage ran first.
+    // Ignore only an already handled tap; foreground delivery itself never
+    // consumes the tap event.
     if (!claimNotificationTap(
       dedupeId,
       handled: _handledNotificationTapIds,
       inProgress: _messagesBeingHandled,
     )) {
-      return;
+      return false;
     }
 
     try {
       final String? userToken = await ApiService.getToken();
-      if (userToken == null || userToken.isEmpty) return;
+      if (userToken == null || userToken.isEmpty) return false;
 
       final SharedPreferences prefs = await SharedPreferences.getInstance();
-      final String language = prefs.getString('app_language') ?? 'ar';
-      final WidgetBuilder destination = await _resolveDestination(
+      final String language = languageOverride ??
+          prefs.getString('app_language') ??
+          'ar';
+      final WidgetBuilder? resolved = await _resolveDestination(
         data,
         language,
       );
+
+      if (resolved == null && !fallbackToCenter) return false;
+      final WidgetBuilder destination = resolved ??
+          (_) => NotificationsScreen(currentLanguage: language);
 
       final bool pushed = await _pushWhenNavigatorReady(destination);
       if (pushed) {
         _handledNotificationTapIds.add(dedupeId);
         _trimProcessedMessageIds();
       }
+      return pushed;
     } catch (error, stackTrace) {
       debugPrint('[Notification Navigation] $error');
       debugPrintStack(stackTrace: stackTrace);
+      return false;
     } finally {
       _messagesBeingHandled.remove(dedupeId);
     }
   }
 
-  static Future<WidgetBuilder> _resolveDestination(
+  static Future<WidgetBuilder?> _resolveDestination(
     Map<String, dynamic> data,
     String language,
   ) async {
@@ -539,9 +571,25 @@ class NotificationService {
           );
     }
 
+    // Interest events belong to the actor, not just the generic interests list.
     if (type.contains('interest') ||
         type.contains('match') ||
         type.contains('like')) {
+      final int? actorId = _firstPositiveInt(data, const [
+        'notify_by',
+        'actor_id',
+        'sender_id',
+        'interested_by',
+        'user_id',
+        'member_id',
+        'viewer_id',
+      ]);
+      if (actorId != null) {
+        return (_) => MemberProfileScreen(
+              userId: actorId,
+              currentLanguage: language,
+            );
+      }
       return (_) => MyInterestsScreen(currentLanguage: language);
     }
 
@@ -573,13 +621,32 @@ class NotificationService {
           debugPrint('[Notification Chat Route] $error');
         }
       }
-      return (_) => NotificationsScreen(currentLanguage: language);
+      return null;
+    }
+
+    if (type == 'package' ||
+        type == 'package_purchase' ||
+        type == 'package_activated') {
+      final int? paymentId = _firstPositiveInt(data, const [
+        'payment_id',
+        'package_payment_id',
+        'invoice_id',
+        'info_id',
+      ]);
+      if (paymentId != null) {
+        return (_) => PackageInvoiceScreen(
+              paymentId: paymentId,
+              currentLanguage: language,
+            );
+      }
+      return null;
     }
 
     if (type.contains('profile') ||
         type.contains('member') ||
         type.contains('visitor')) {
       final int? memberId = _firstPositiveInt(data, const [
+        'viewer_id',
         'user_id',
         'userId',
         'member_id',
@@ -587,6 +654,8 @@ class NotificationService {
         'profile_id',
         'sender_id',
         'visitor_id',
+        'info_id',
+        'notify_by',
       ]);
       if (memberId != null) {
         return (_) => MemberProfileScreen(
@@ -596,9 +665,8 @@ class NotificationService {
       }
     }
 
-    // للأنواع الإدارية والمالية أو الحمولة غير المعروفة، افتح مركز الإشعارات
-    // بدلاً من توجيه المستخدم إلى شاشة غير مؤكدة أو بمعرّف غير صحيح.
-    return (_) => NotificationsScreen(currentLanguage: language);
+    // Unknown and lifecycle-only events stay in the center; never guess a route.
+    return null;
   }
 
   static int? _firstPositiveInt(
