@@ -102,7 +102,10 @@ class _BrandIntroScreenState extends State<BrandIntroScreen>
 
   void _openWelcome() {
     _navigateTo(
-      WelcomeScreen(currentLanguage: widget.currentLanguage),
+      WelcomeScreen(
+        currentLanguage: widget.currentLanguage,
+        checkSession: false,
+      ),
     );
   }
 
