@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wesal_app/screens/login_screen.dart';
 import 'package:wesal_app/screens/signup_screen.dart';
@@ -6,13 +7,22 @@ import 'package:wesal_app/screens/welcome_screen.dart';
 import 'package:wesal_app/widgets/wesal_logo.dart';
 
 void main() {
+  const secureStorageChannel =
+      MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
+
+  setUp(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(secureStorageChannel, (call) async => null);
+  });
+
+  tearDown(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(secureStorageChannel, null);
+  });
+
   Future<void> setPhoneSize(WidgetTester tester) async {
     await tester.binding.setSurfaceSize(const Size(390, 844));
   }
-
-  tearDown(() async {
-    // Widget tests restore the default surface size after every test.
-  });
 
   testWidgets('login shows one centered logo above centered welcome copy',
       (WidgetTester tester) async {
@@ -59,8 +69,7 @@ void main() {
       (WidgetTester tester) async {
     await setPhoneSize(tester);
     await tester.pumpWidget(const MaterialApp(home: WelcomeScreen()));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 20));
+    await tester.pumpAndSettle();
 
     final logoFinder = find.byType(WesalLogo);
     expect(logoFinder, findsOneWidget);
