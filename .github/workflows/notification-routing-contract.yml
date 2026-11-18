@@ -1,0 +1,35 @@
+name: Notification routing contract
+
+on:
+  pull_request:
+    paths:
+      - 'المشروع/WESAL/app/Notifications/DbStoreNotification.php'
+      - 'المشروع/WESAL/tests/Unit/NotificationRoutingContractTest.php'
+      - '.github/workflows/notification-routing-contract.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'المشروع/WESAL/app/Notifications/DbStoreNotification.php'
+      - 'المشروع/WESAL/tests/Unit/NotificationRoutingContractTest.php'
+      - '.github/workflows/notification-routing-contract.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  notification-routing-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP and PHPUnit
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: phpunit:10.5
+
+      - name: Run notification routing contract tests
+        working-directory: المشروع/WESAL
+        run: phpunit --no-configuration tests/Unit/NotificationRoutingContractTest.php
