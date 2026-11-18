@@ -46,7 +46,7 @@ class NotificationUtility
                     // البحث عن التوكن الخاص بجهاز العضو في الحقول الشائعة
                     $fcmToken = $user->fcm_token ?? $user->device_token ?? $user->device_id ?? null;
 
-                    if ($fcmToken) {
+                    if ($fcmToken && get_setting('firebase_push_notification') == 1) {
                         $translatedMsg = function_exists('translate') ? translate($message) : $message;
                         $pushAccepted = self::sendFirebasePushNotification(
                             $fcmToken,
