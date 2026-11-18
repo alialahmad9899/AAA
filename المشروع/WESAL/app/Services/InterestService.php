@@ -244,7 +244,11 @@ class InterestService
             $title = $this->getNotificationTitle($notify_type);
 
             // 1. إرسال إشعار Firebase Push
-            if ($notify_user && !empty($notify_user->fcm_token)) {
+            if (
+                $notify_user
+                && !empty($notify_user->fcm_token)
+                && get_setting('firebase_push_notification') == 1
+            ) {
                 try {
                     $pushAccepted = FirebaseNotificationService::sendPushNotification(
                         $notify_user->fcm_token,
