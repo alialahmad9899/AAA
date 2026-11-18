@@ -68,14 +68,9 @@ class NotificationController extends Controller
                 || str_contains($type, 'conversation');
         });
 
-        // تصفية السجلات المكررة بناءً على الرسالة والنوع ووقت الدقيقة
-        $uniqueNotifications = $nonChatNotifications->unique(function ($item) {
-            $data = is_string($item->data) ? json_decode($item->data, true) : (array)$item->data;
-            $msg = $data['message'] ?? '';
-            $type = $data['type'] ?? $item->type;
-            $time = $item->created_at ? $item->created_at->format('Y-m-d H:i') : '';
-            return $type . '_' . $msg . '_' . $time;
-        });
+        // Database notification IDs are stable; never hide two distinct events
+        // merely because they share a type, text, and creation minute.
+        $uniqueNotifications = $nonChatNotifications;
 
         // تطبيق الترقيم (Pagination) على القائمة المصفاة
         $page = request()->get('page', 1);
