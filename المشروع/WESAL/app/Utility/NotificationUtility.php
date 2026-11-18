@@ -65,8 +65,13 @@ class NotificationUtility
                                 'type' => $type,
                             ]);
                         }
-                    } else {
+                    } elseif (empty($fcmToken)) {
                         Log::info("ℹ️ [NotificationUtility] العضو رقم {$receiver} لا يمتلك fcm_token مسجلاً في حسابه.");
+                    } else {
+                        Log::info('[NotificationUtility] Firebase push is disabled by the platform setting.', [
+                            'receiver_id' => $receiver,
+                            'type' => $type,
+                        ]);
                     }
                 }
             }
