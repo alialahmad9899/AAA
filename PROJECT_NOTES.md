@@ -1417,3 +1417,54 @@
 - حماية خادمية إضافية تمنع حذف الباقة الأساسية رقم 1 حتى عند استدعاء رابط الحذف مباشرة.
 - أضيف اختبار انحدار PHP يفحص الفصل بين أهلية المشترك الحالي وإتاحة البيع الجديد، والإلغاء اليدوي، وحماية الباقة الأساسية.
 - لم تتم إضافة Migration أو تعديل مخطط قاعدة البيانات، ولم تتغير الأسعار أو مدد الصلاحية أو آلية الدفع.
+
+
+## 2026-11-18 — توحيد إشعارات تطبيق وصال ومسارات التوجيه والفواتير
+### النطاق والدمج
+- النطاق محصور بتطبيق Flutter للموبايل وLaravel mobile API ومسارات لوحة الأدمن المرتبطة بالإشعارات؛ لم تُعدّل صفحات الموقع العام.
+- نُفذت الدفعة على فرع `fix/unified-notifications-routing-invoices-2026-11-18` ثم دُمج PR #18 إلى `main`.
+- commit الدمج: `55a0297f8fd99ca0e57fedc8f84fd93459efdb96`، ورأس فرع الإصلاح قبل الدمج: `229214b09e57082de60ba7e563e5900875ec3c73`.
+
+### السبب الجذري والإصلاح
+- كان إرسال Push موزعاً بين أكثر من مسار، وكان بعض المسارات يستخدم استدعاءات غير موحدة أو لا يحترم مفتاح تفعيل Firebase العام. وجرى توحيد الإرسال عبر `FirebaseNotificationService` باستخدام FCM HTTP v1، مع تسجيل فشل النقل، وعدم اعتبار حفظ الإشعار في قاعدة البيانات دليلاً على قبول Firebase لطلب Push.
+- أُكمل مسار إشعار زيارة الملف الشخصي، وأُضيفت بيانات المرسل/الاهتمام إلى إشعارات الاهتمام، ووُحد توجيه الضغط من ستارة الهاتف ومركز الإشعارات، مع الاحتفاظ بمعرفات الحدث والوجهة في نموذج Flutter.
+- أُضيف تنبيه لوحة الإدارة عند بلاغ عضو، وربط مسار التنبيه بقائمة مراجعة العضو المبلّغ عنه. وأُصلح بث الإشعارات اليدوي من الأدمن ليحترم إعداد Firebase العام ويعدّ فقط طلبات Push التي قبلتها Firebase، لا الأجهزة التي ثبت ظهور الإشعار عليها.
+- تم ربط إشعار شراء/تفعيل الباقة بمعرف الدفع وشاشة عرض الفاتورة، وتأمين جلب الفاتورة بحيث لا يمكن للمستخدم استرجاع فاتورة لا تخص حسابه.
+- أُضيفت سجلات تشخيص عند فشل Push في الرسائل والدعم والاهتمام، وتوحيد احترام إعداد تفعيل Firebase في هذه المسارات.
+- عند تسجيل الخروج، يُحذف من قاعدة البيانات توكن FCM المطابق للجهاز الذي يسجل الخروج فقط؛ كما يُزال التوكن الذي يبلّغ Firebase عنه بحالة `UNREGISTERED`.
+- تم تثبيت Kotlin Gradle Plugin على `2.2.20` في Android لتوافق Flutter، مع الإبقاء على Gradle `8.14` وAGP `8.11.1`، واستخدام JDK 17 في فحص بناء Android.
+
+### الملفات الأصلية التي تغيرت
+- `.github/workflows/notification-routing-contract.yml` (Workflow اختبار/بناء فقط؛ مستبعد من ZIP التسليم).
+- `المشروع/WESAL/app/Http/Controllers/NotificationController.php`
+- `المشروع/WESAL/app/Http/Controllers/Admin/SupportTicketAdminController.php`
+- `المشروع/WESAL/app/Http/Controllers/Api/AuthController.php`
+- `المشروع/WESAL/app/Http/Controllers/Api/MemberController.php`
+- `المشروع/WESAL/app/Http/Controllers/Api/NotificationController.php`
+- `المشروع/WESAL/app/Http/Controllers/Api/PackageController.php`
+- `المشروع/WESAL/app/Http/Resources/PackagePaymentInvoiceResource.php`
+- `المشروع/WESAL/app/Services/ChatService.php`
+- `المشروع/WESAL/app/Services/FirebaseNotificationService.php`
+- `المشروع/WESAL/app/Services/InterestService.php`
+- `المشروع/WESAL/app/Services/SubscriptionNotificationService.php`
+- `المشروع/WESAL/app/Utility/NotificationUtility.php`
+- `المشروع/WESAL/tests/Unit/NotificationRoutingContractTest.php` (اختبار جديد).
+- `فلاتر/android/settings.gradle.kts`
+- `فلاتر/lib/models/notification_model.dart`
+- `فلاتر/lib/screens/notifications_screen.dart`
+- `فلاتر/lib/screens/package_invoice_screen.dart` (شاشة جديدة).
+- `فلاتر/lib/services/api_service.dart`
+- `فلاتر/lib/services/notification_service.dart`
+- `فلاتر/test/models/notification_model_test.dart` (اختبار جديد).
+
+### التحقق الآلي
+- GitHub Actions run `44371464909`: فحص PHP syntax نجح؛ مجموعات PHPUnit التسع المنفذة نجحت بإجمالي 49 اختباراً و210 assertions؛ Flutter regression tests وتحليل Dart نجحا (107 اختبارات)؛ وإنشاء ZIP للدفعة نجح.
+- GitHub Actions run `44371464947`: اختبار عقد توجيه الإشعارات نجح (4 اختبارات / 15 assertions)، وبناء Android Debug APK نجح على Java 17 بعد تثبيت Kotlin `2.2.20`.
+- لم تُجرَ Migration أو تغييرات مباشرة على قاعدة الإنتاج، ولم يُنشر Backend إلى Hostinger أو التطبيق إلى متجر.
+
+### ما بقي غير متحقق منه / القيود
+- لم يُنفذ إرسال FCM حي إلى هاتف عضو مسجل ولم يُتحقق من ظهور الإشعار والضغط عليه في هاتف فعلي. نجاح FCM HTTP v1 يعني قبول الطلب من Firebase فقط، وليس إثبات عرض الإشعار على الجهاز.
+- لم يتم التحقق من وجود وصلاحية `المشروع/WESAL/app/service-account.json` على Hostinger أو من قيمة إعداد `firebase_push_notification` في بيئة الإنتاج.
+- إعداد iOS/APNs غير مكتمل في ملفات المستودع التي تمت مراجعتها: لم يظهر `GoogleService-Info.plist` أو ملف Entitlements يحتوي `aps-environment`؛ لذلك لا تُعد إشعارات iOS معتمدة للإنتاج من هذه الدفعة.
+- ما زال تخزين FCM يعتمد على حقل واحد `users.fcm_token` لكل حساب؛ لم يُنفّذ تخزين متعدد الأجهزة في هذه الدفعة.
+- لم يُنشأ PDF قابل للتنزيل للفاتورة؛ الشاشة الحالية تعرض تفاصيل الفاتورة وتدعم نسخ بياناتها.
