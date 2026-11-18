@@ -7,6 +7,7 @@ use App\Models\ChatThread;
 use App\Models\MessageQuotaUsage;
 use App\Models\Package;
 use App\Models\PackagePayment;
+use App\Models\ProfileViewer;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
