@@ -261,7 +261,16 @@ class PackageController extends Controller
     public function package_purchase_history_invoice(Request $request)
     {
         $lang = $this->getRequestLanguage($request);
-        $payment = PackagePayment::find($request->package_payment_id);
+        $paymentId = $request->input('package_payment_id');
+        if (!is_numeric($paymentId) || (int) $paymentId < 1) {
+            $errorMessage = ($lang === 'en') ? 'Sorry!!, Invalid Data.' : 'عفواً، البيانات غير صالحة.';
+            return response()->json(['result' => false, 'message' => $errorMessage], 404);
+        }
+
+        // Never expose another member's invoice by guessing a payment ID.
+        $payment = PackagePayment::where('user_id', auth()->id())
+            ->whereKey((int) $paymentId)
+            ->first();
 
         if ($payment) {
             return (new PackagePaymentInvoiceResource($payment))->additional([
@@ -269,8 +278,8 @@ class PackageController extends Controller
             ]);
         }
 
-        $errorMessage = ($lang === 'en') ? 'Sorry!!, Invalid Data.' : 'عفواً، البيانات غير صالحة.';
-        return $this->failure_message($errorMessage);
+        $errorMessage = ($lang === 'en') ? 'Sorry!!, Invalid Data.' : 'عفواً، الفاتورة غير موجودة.';
+        return response()->json(['result' => false, 'message' => $errorMessage], 404);
     }
 
     /**
@@ -576,7 +585,8 @@ class PackageController extends Controller
                 'package',
                 ($lang === 'en') ? 'Package Activation' : 'تفعيل الباقة',
                 $message,
-                $result['payment']->id
+                $result['payment']->id,
+                'wesal://package-invoice/' . $result['payment']->id
             );
 
             if ($user->email != null && get_email_template('package_purchase_email', 'status')) {
