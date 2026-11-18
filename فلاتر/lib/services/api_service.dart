@@ -2844,6 +2844,58 @@ class ApiService {
     return value;
   }
 
+  /// Builds a validated partner age range using Laravel's canonical fields.
+  static Map<String, int> buildPartnerAgeRangePayload({
+    required int minAge,
+    required int maxAge,
+  }) {
+    if (minAge < 18 || minAge > 100) {
+      throw ArgumentError.value(minAge, 'minAge', 'Age must be between 18 and 100.');
+    }
+    if (maxAge < 18 || maxAge > 100) {
+      throw ArgumentError.value(maxAge, 'maxAge', 'Age must be between 18 and 100.');
+    }
+    if (minAge > maxAge) {
+      throw ArgumentError('minAge must not be greater than maxAge.');
+    }
+    return <String, int>{'min_age': minAge, 'max_age': maxAge};
+  }
+
+  /// Reads canonical Laravel fields and legacy aliases. A one-sided range is
+  /// completed with the supported boundary; absent or invalid ranges return null.
+  static Map<String, int>? parsePartnerAgeRange(
+    Map<String, dynamic>? expectations,
+  ) {
+    if (expectations == null || expectations.isEmpty) return null;
+
+    int? parseAge(dynamic value) {
+      if (value == null) return null;
+      final text = value.toString().trim();
+      if (text.isEmpty || text.toLowerCase() == 'null') return null;
+      return int.tryParse(text);
+    }
+
+    final minAge = parseAge(expectations['min_age']) ??
+        parseAge(expectations['partner_age']);
+    final maxAge = parseAge(expectations['max_age']) ??
+        parseAge(expectations['partner_max_age']);
+    if (minAge == null && maxAge == null) return null;
+
+    final resolvedMin = minAge ?? 18;
+    final resolvedMax = maxAge ?? 100;
+    if (resolvedMin < 18 ||
+        resolvedMin > 100 ||
+        resolvedMax < 18 ||
+        resolvedMax > 100 ||
+        resolvedMin > resolvedMax) {
+      return null;
+    }
+    return <String, int>{
+      'min_age': resolvedMin,
+      'max_age': resolvedMax,
+    };
+  }
+
   /// Builds the API payload for the preferred partner country/governorate.
   /// It never writes the unrelated residence_country_id column.
   static Map<String, dynamic> buildPreferredPartnerLocationPayload({

@@ -182,6 +182,14 @@ class MemberModel {
     return '';
   }
 
+  static bool _parseInterestFlag(dynamic value) {
+    if (value == true || value == 1) return true;
+    final normalized = value?.toString().trim().toLowerCase();
+    return normalized == '1' ||
+        normalized == 'true' ||
+        normalized == 'yes';
+  }
+
   /// دالة تحويل JSON إلى الموديل مع تحصين كامل
   factory MemberModel.fromJson(Map<String, dynamic> json,
       {bool isArabic = true}) {
@@ -318,10 +326,9 @@ class MemberModel {
       matchEvaluatedCriteriaCount: parsedMatchEvaluatedCriteriaCount,
       matchStatus: parsedMatchStatus,
       packageName: parsedPackageName,
-      isInterested: json['is_interested'] == true ||
-          json['is_interested'] == 1 ||
-          json['is_interested'] == '1' ||
-          json['is_interested']?.toString().toLowerCase() == 'true',
+      isInterested: _parseInterestFlag(
+        json['is_interested'] ?? json['interest_status'],
+      ),
     );
   }
 }

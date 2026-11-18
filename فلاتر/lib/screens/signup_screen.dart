@@ -748,10 +748,11 @@ class _SignupScreenState extends State<SignupScreen> {
         final partnerPayload = <String, dynamic>{
           if (_partnerGeneralController.text.trim().isNotEmpty)
             'general': _partnerGeneralController.text.trim(),
-          if (_partnerAgeWasSelected) ...{
-            'min_age': _partnerAgeRange.start.round().toString(),
-            'max_age': _partnerAgeRange.end.round().toString(),
-          },
+          if (_partnerAgeWasSelected)
+            ...ApiService.buildPartnerAgeRangePayload(
+              minAge: _partnerAgeRange.start.round(),
+              maxAge: _partnerAgeRange.end.round(),
+            ),
           if (_partnerHeightWasSelected) ...{
             'min_height':
                 (_partnerHeightRange.start / 100).toStringAsFixed(2),

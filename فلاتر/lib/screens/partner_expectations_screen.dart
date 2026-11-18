@@ -204,16 +204,12 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
             expectations['partner_profession']?.toString() ??
             '';
 
-        final rawMinAge = int.tryParse(
-            (expectations['min_age'] ?? expectations['partner_age'])?.toString() ?? '');
-        final rawMaxAge = int.tryParse(
-            (expectations['max_age'] ?? expectations['partner_max_age'])?.toString() ?? '');
-        if (rawMinAge != null || rawMaxAge != null) {
-          final minAge = (rawMinAge ?? 18).clamp(18, 80).toDouble();
-          final maxAge = (rawMaxAge ?? 80).clamp(18, 80).toDouble();
-          if (minAge <= maxAge) {
-            _partnerAgeRange = RangeValues(minAge, maxAge);
-          }
+        final savedAgeRange = ApiService.parsePartnerAgeRange(expectations);
+        if (savedAgeRange != null) {
+          _partnerAgeRange = RangeValues(
+            savedAgeRange['min_age']!.toDouble(),
+            savedAgeRange['max_age']!.toDouble(),
+          );
         }
 
         final eduVal = expectations['education'] ??
@@ -1119,8 +1115,8 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                   RangeSlider(
                                                     values: _partnerAgeRange,
                                                     min: 18,
-                                                    max: 80,
-                                                    divisions: 62,
+                                                    max: 100,
+                                                    divisions: 82,
                                                     activeColor: AppColors.primaryTeal,
                                                     inactiveColor: AppColors.lineColor,
                                                     onChanged: (newRange) {

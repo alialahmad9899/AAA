@@ -366,7 +366,7 @@ class Step4PartnerExpectations extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final safeAgeRange = _clampRange(ageRange, 18, 80);
+    final safeAgeRange = _clampRange(ageRange, 18, 100);
     final safeHeightRange = _clampRange(heightRange, 140, 210);
     final safeWeightRange = _clampRange(weightRange, 40, 140);
     final languageItems = languages.whereType<Map>().map((language) {
@@ -506,14 +506,28 @@ class Step4PartnerExpectations extends StatelessWidget {
                         ],
                       ),
                       RangeSlider(
+                        key: const ValueKey<String>('partner-age-range-slider'),
                         values: safeAgeRange,
                         min: 18,
-                        max: 80,
-                        divisions: 62,
+                        max: 100,
+                        divisions: 82,
                         activeColor: ageRangeWasSelected ? AppColors.accentWarm : AppColors.textLight,
                         inactiveColor: AppColors.lineColor,
                         onChanged: onAgeRangeChanged,
                       ),
+                      if (!ageRangeWasSelected) ...[
+                        Text(
+                          _isAr
+                              ? 'لم يتم تحديد نطاق العمر بعد'
+                              : 'No age range selected yet',
+                          style: const TextStyle(
+                            color: AppColors.textMuted,
+                            fontFamily: 'Cairo',
+                            fontSize: 11,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                      ],
                       Align(
                         alignment: AlignmentDirectional.centerStart,
                         child: Text(
