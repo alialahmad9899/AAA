@@ -16,10 +16,12 @@ import 'signup_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
   final String currentLanguage;
+  final bool checkSession;
 
   const WelcomeScreen({
     super.key,
     this.currentLanguage = 'ar',
+    this.checkSession = true,
   });
 
   @override
@@ -34,7 +36,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   @override
   void initState() {
     super.initState();
-    _checkSecureSession();
+    if (widget.checkSession) {
+      _checkSecureSession();
+    } else {
+      _isCheckingAuth = false;
+    }
   }
 
   Future<void> _checkSecureSession() async {
