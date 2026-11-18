@@ -348,11 +348,15 @@ class AuthController extends Controller
     {
         $user = auth()->user();
         if ($user) {
-            // This application currently stores one FCM token per account.
-            // Clear it on logout so a signed-out device cannot keep receiving
-            // private member notifications for the previous account.
-            $user->fcm_token = null;
-            $user->save();
+            // The mobile client includes its current FCM token on logout.
+            // Clear only that exact token so an older device cannot erase a
+            // newer token that another device has already registered.
+            $deviceToken = $request->input('device_token') ?? $request->input('fcm_token');
+            if (is_string($deviceToken) && trim($deviceToken) !== '') {
+                User::whereKey($user->id)
+                    ->where('fcm_token', trim($deviceToken))
+                    ->update(['fcm_token' => null]);
+            }
 
             $currentAccessToken = $user->currentAccessToken();
             if ($currentAccessToken) {
