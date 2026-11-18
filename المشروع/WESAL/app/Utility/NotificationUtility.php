@@ -4,8 +4,12 @@ namespace App\Utility;
 
 use App\Models\Notification;
 use App\Models\User;
+use App\Notifications\DbStoreNotification;
+use App\Services\FirebaseNotificationService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification as NotificationFacade;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class NotificationUtility
@@ -67,64 +71,83 @@ class NotificationUtility
     }
 
     /**
-     * 🚀 دالة إرسال الإشعار المنبثق للهاتف عبر سيرفرات Firebase (FCM API)
-     *
-     * @param string $deviceToken رمز جهاز العميل
-     * @param string $title عنوان التنبيه
-     * @param string $body نص التنبيه
-     * @param array $extraData بيانات إضافية للتطبيق
-     * @return bool
+     * إرسال إشعار API موحد (قاعدة البيانات + FCM v1) للعضو المستلم.
+     * يدعم بيانات التوجيه الخاصة بزيارة الملف والإشعارات الأخرى.
+     */
+    public static function send_notification($receiver, $type, $message, $fallbackMessage = '', array $extraData = []): bool
+    {
+        try {
+            $user = User::find($receiver);
+            if (!$user) {
+                return false;
+            }
+
+            $senderId = (int) ($extraData['viewer_id']
+                ?? $extraData['notify_by']
+                ?? $extraData['sender_id']
+                ?? $extraData['actor_id']
+                ?? 0);
+            $infoId = $extraData['info_id'] ?? $extraData['viewer_id'] ?? $senderId;
+            $route = (string) ($extraData['route'] ?? '');
+            $notificationId = (string) Str::uuid();
+            $title = (string) ($extraData['title'] ?? (
+                $type === 'profile_view'
+                    ? (app()->getLocale() === 'en' ? 'Profile viewed' : 'زيارة ملفك الشخصي')
+                    : (app()->getLocale() === 'en' ? 'New notification' : 'إشعار جديد من وصال')
+            ));
+            $localizedMessage = app()->getLocale() === 'en' && $fallbackMessage !== ''
+                ? $fallbackMessage
+                : $message;
+
+            NotificationFacade::send($user, new DbStoreNotification(
+                (string) $type,
+                $notificationId,
+                $senderId ?: null,
+                $infoId,
+                (string) $localizedMessage,
+                $route,
+                $title
+            ));
+
+            $payload = array_merge($extraData, [
+                'type' => (string) $type,
+                'notification_id' => $notificationId,
+                'notify_by' => (string) $senderId,
+                'info_id' => (string) $infoId,
+            ]);
+
+            if (!empty($user->fcm_token) && get_setting('firebase_push_notification') == 1) {
+                FirebaseNotificationService::sendPushNotification(
+                    $user->fcm_token,
+                    $title,
+                    (string) $localizedMessage,
+                    $payload
+                );
+            }
+
+            return true;
+        } catch (\\Throwable $exception) {
+            Log::error('API notification dispatch failed.', [
+                'receiver_id' => $receiver,
+                'type' => $type,
+                'exception' => get_class($exception),
+                'message' => $exception->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * إرسال الإشعار المنبثق عبر خدمة FCM HTTP v1 المشتركة.
      */
     private static function sendFirebasePushNotification($deviceToken, $title, $body, array $extraData = [])
     {
-        // 🔑 مفتاح السيرفر الخاص بـ Firebase (تأكد من وجوده في ملف .env تحت اسم FCM_SERVER_KEY)
-        $serverKey = env('FCM_SERVER_KEY', '');
-
-        if (empty($serverKey)) {
-            Log::warning('⚠️ [NotificationUtility] لم يتم إعداد FCM_SERVER_KEY في ملف .env');
-            return false;
-        }
-
-        $url = 'https://fcm.googleapis.com/fcm/send';
-
-        $payload = [
-            'to'           => $deviceToken,
-            'priority'     => 'high',
-            'notification' => [
-                'title' => $title,
-                'body'  => $body,
-                'sound' => 'default',
-                'badge' => '1',
-            ],
-            'data' => array_merge([
-                'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
-            ], $extraData),
-        ];
-
-        $headers = [
-            'Authorization: key=' . $serverKey,
-            'Content-Type: application/json',
-        ];
-
-        try {
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-
-            $result = curl_exec($ch);
-            curl_close($ch);
-
-            Log::info("✅ [NotificationUtility] تم إرسال إشعار Firebase بنجاح للتوكن: " . substr($deviceToken, 0, 10) . "...");
-            return true;
-
-        } catch (\Exception $e) {
-            Log::error('⚠️ [NotificationUtility] فشل إرسال cURL إلى Firebase: ' . $e->getMessage());
-            return false;
-        }
+        return FirebaseNotificationService::sendPushNotification(
+            (string) $deviceToken,
+            (string) $title,
+            (string) $body,
+            $extraData
+        );
     }
 
     /**
