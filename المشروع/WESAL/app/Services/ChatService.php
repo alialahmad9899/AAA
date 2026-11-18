@@ -47,7 +47,13 @@ class ChatService
                 ? $thread->receiver_user_id
                 : $thread->sender_user_id;
             $receiver = User::find($receiverId);
-            if (!$receiver || empty($receiver->fcm_token)) return $chat;
+            if (
+                !$receiver
+                || empty($receiver->fcm_token)
+                || get_setting('firebase_push_notification') != 1
+            ) {
+                return $chat;
+            }
 
             // The recipient is already reading this exact chat: update the
             // message list silently through the open screen's refresh timer.
@@ -88,7 +94,7 @@ class ChatService
                 now()->addSeconds(60)
             );
 
-            FirebaseNotificationService::sendPushNotification(
+            $pushAccepted = FirebaseNotificationService::sendPushNotification(
                 $receiver->fcm_token,
                 'رسالة جديدة من ' . $senderName,
                 $notificationBody,
@@ -103,6 +109,13 @@ class ChatService
                     'silent' => $isFirstInWindow ? 'false' : 'true',
                 ]
             );
+            if (!$pushAccepted) {
+                Log::warning('Chat message saved, but Firebase did not accept the push.', [
+                    'receiver_id' => $receiverId,
+                    'thread_id' => $thread->id,
+                    'chat_id' => $chat->id,
+                ]);
+            }
         } catch (\Throwable $notificationError) {
             // A failed push must never turn a saved message into a failed send,
             // otherwise the client may retry and create a duplicate message.
