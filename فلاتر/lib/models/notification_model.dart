@@ -8,6 +8,8 @@ class NotificationModel {
       notificationId; // تم التغيير من int إلى String لقراءة UUID السيرفر
   final String type;
   final int notifyBy;
+  final String infoId;
+  final String route;
   final String photo;
   final String title;
   final String message;
@@ -19,6 +21,8 @@ class NotificationModel {
     required this.notificationId,
     required this.type,
     required this.notifyBy,
+    this.infoId = '',
+    this.route = '',
     required this.photo,
     required this.title,
     required this.message,
@@ -106,6 +110,13 @@ class NotificationModel {
       notifyBy: json['notify_by'] is int
           ? json['notify_by']
           : int.tryParse(json['notify_by']?.toString() ?? '0') ?? 0,
+      infoId: (json['info_id'] ??
+              json['payment_id'] ??
+              json['package_payment_id'] ??
+              json['invoice_id'] ??
+              '')
+          .toString(),
+      route: json['route']?.toString() ?? json['link']?.toString() ?? '',
       photo: json['photo']?.toString() ?? '',
       title: extractedTitle,
       message: extractedMessage,
@@ -178,6 +189,15 @@ class NotificationModel {
       return raw;
     }
   }
+
+  /// Payload shared by notification-center taps and FCM tray taps.
+  Map<String, dynamic> toRoutePayload() => {
+        'type': type,
+        'notify_by': notifyBy.toString(),
+        'info_id': infoId,
+        'route': route,
+        'notification_id': notificationId,
+      };
 
   bool get read => !isNew;
 }
