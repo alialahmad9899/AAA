@@ -15,6 +15,7 @@ import '../widgets/app_snackbar.dart';
 import '../utils/arabic_number_formatter.dart';
 import 'main_home_screen.dart';
 import 'signup_screen.dart';
+import 'forgot_password_screen.dart';
 
 /// شاشة تسجيل الدخول بالتصميم الزجاجي السماوي الفاخر 2026
 class LoginScreen extends StatefulWidget {
@@ -645,7 +646,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ],
                                     ),
                                     TextButton(
-                                      onPressed: () {},
+                                      onPressed: _isLoading
+                                          ? null
+                                          : () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) => ForgotPasswordScreen(
+                                                    currentLanguage: widget.currentLanguage,
+                                                  ),
+                                                ),
+                                              );
+                                            },
                                       style: TextButton.styleFrom(
                                         foregroundColor: AppColors.primaryTeal,
                                         padding: const EdgeInsets.symmetric(

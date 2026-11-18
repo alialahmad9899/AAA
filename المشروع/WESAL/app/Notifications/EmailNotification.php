@@ -11,6 +11,15 @@ class EmailNotification extends Notification
 {
     use Queueable;
 
+    protected $subject;
+    protected $email_body;
+
+    public function __construct($subject, $email_body)
+    {
+        $this->subject = (string) $subject;
+        $this->email_body = (string) $email_body;
+    }
+
     /**
      * Create a new notification instance.
      *

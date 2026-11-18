@@ -840,6 +840,70 @@ class ApiService {
     }
   }
 
+  /// إرسال رمز استعادة كلمة المرور إلى البريد الإلكتروني.
+  static Future<Map<String, dynamic>> requestPasswordReset(String email) async {
+    final identity = email.trim().toLowerCase();
+    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(identity)) {
+      return {'success': false, 'message': 'يرجى إدخال بريد إلكتروني صحيح.'};
+    }
+    final response = await post('/forgot/password', {
+      'send_code_by': 'email',
+      'email_or_phone': identity,
+    });
+    final success = isSuccessfulResult(response);
+    return {
+      'success': success,
+      'message': response?['message']?.toString() ??
+          (success ? 'إذا كان البريد مسجلاً فسيصلك رمز الاستعادة.' : 'تعذر إرسال رمز الاستعادة. حاول مجدداً.'),
+    };
+  }
+
+  /// تأكيد رمز البريد وحفظ كلمة المرور الجديدة.
+  static Future<Map<String, dynamic>> resetPassword({
+    required String email,
+    required String verificationCode,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    final identity = email.trim().toLowerCase();
+    final code = verificationCode.trim();
+    if (!RegExp(r'^\d{4,6}$').hasMatch(code)) {
+      return {'success': false, 'message': 'يرجى إدخال رمز صحيح.'};
+    }
+    final response = await post('/reset/password', {
+      'send_code_by': 'email',
+      'email_or_phone': identity,
+      'verification_code': code,
+      'password': password,
+      'password_confirmation': passwordConfirmation,
+    });
+    final success = isSuccessfulResult(response);
+    return {
+      'success': success,
+      'message': response?['message']?.toString() ??
+          (success ? 'تم تحديث كلمة المرور.' : 'الرمز غير صحيح أو منتهي الصلاحية.'),
+    };
+  }
+
+  /// تغيير كلمة مرور الحساب للمستخدم المسجّل.
+  static Future<Map<String, dynamic>> changePassword({
+    required String oldPassword,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    final response = await post('/member/change/password', {
+      'old_password': oldPassword,
+      'password': password,
+      'password_confirmation': passwordConfirmation,
+    });
+    final success = isSuccessfulResult(response);
+    return {
+      'success': success,
+      'message': response?['message']?.toString() ??
+          (success ? 'تم تحديث كلمة المرور.' : 'تعذر تحديث كلمة المرور.'),
+    };
+  }
+
   /// 🟢 دالة تسجيل الدخول عبر Google المباشرة مع السيرفر
   static Future<Map<String, dynamic>> googleSignIn({
     required String email,

@@ -1209,20 +1209,31 @@ class ProfileController extends Controller
 
     public function password_update(Request $request)
     {
-        $this->validate($request, [
-            'old_password'  => ['required'],
-            'password'      => ['required', 'string', 'min:8', 'confirmed']
+        $validated = $request->validate([
+            'old_password' => ['required', 'string', 'max:4096'],
+            'password' => ['required', 'string', 'min:8', 'max:4096', 'confirmed', 'different:old_password'],
         ]);
 
-        $user = User::findOrFail(auth()->id());
-
-        if (Hash::check($request->old_password, $user->password)) {
-            $user->password = Hash::make($request->password);
-            $user->save();
-            return $this->success_message('Passwoed Updated successfully.');
+        $user = $request->user();
+        if (!$user || !Hash::check($validated['old_password'], $user->password)) {
+            return response()->json([
+                'result' => false,
+                'message' => translate('The current password is incorrect.'),
+            ], 422);
         }
 
-        return $this->failure_message('Old password do not matched.');
+        $user->password = Hash::make($validated['password']);
+        $user->save();
+
+        // Keep this device's current Sanctum token; revoke sessions on other devices.
+        $currentToken = $user->currentAccessToken();
+        $otherTokens = $user->tokens();
+        if ($currentToken) {
+            $otherTokens->where('id', '!=', $currentToken->getKey());
+        }
+        $otherTokens->delete();
+
+        return $this->success_message('Password updated successfully.');
     }
 
     public function account_deactivation(Request $request)

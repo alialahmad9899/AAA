@@ -29,6 +29,7 @@ import '../../../widgets/package_badge_widget.dart';
 import '../../../widgets/vip_survey_wizard_dialog.dart';
 import '../../welcome_screen.dart';
 import '../../edit_profile_screen.dart';
+import '../../change_password_screen.dart';
 import '../../partner_expectations_screen.dart';
 import '../../blocked_accounts_screen.dart';
 import '../../user_guide_screen.dart';
@@ -1211,6 +1212,32 @@ class AccountTabState extends State<AccountTab> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => PartnerExpectationsScreen(
+                                  currentLanguage: widget.currentLanguage,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    _buildSectionTitle(
+                        _isAr ? 'الأمان والحساب' : 'Account Security',
+                        Icons.shield_outlined),
+                    _buildGlassGroupCard(
+                      children: [
+                        _buildMenuItem(
+                          icon: Icons.lock_reset_rounded,
+                          title: _isAr ? 'تغيير كلمة المرور' : 'Change password',
+                          gradientColors: const [
+                            AppColors.primaryTeal,
+                            AppColors.secondaryTeal
+                          ],
+                          showDivider: false,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ChangePasswordScreen(
                                   currentLanguage: widget.currentLanguage,
                                 ),
                               ),

@@ -144,18 +144,27 @@ class EmailUtility
 
     public static function password_reset_email($user = '', $code = '')
     {
-        $subject    = get_email_template('password_reset_email','subject');
-        $email_body = get_email_template('password_reset_email','body');
-        $email_body = str_replace('[[name]]', $user->first_name.' '.$user->last_name, $email_body);
-        $email_body = str_replace('[[code]]', $code, $email_body);
-        $email_body = str_replace('[[from]]', env('MAIL_FROM_NAME'), $email_body);
+        if (!$user || !filter_var((string) ($user->email ?? ''), FILTER_VALIDATE_EMAIL)) {
+            throw new \InvalidArgumentException('Password reset recipient has no valid email address.');
+        }
+        if (!preg_match('/^\d{4,6}$/D', (string) $code)) {
+            throw new \InvalidArgumentException('Password reset email requires a valid numeric code.');
+        }
 
-        try{
-            Notification::send($user, new EmailNotification($subject, $email_body));
+        $subject = get_email_template('password_reset_email', 'subject');
+        $email_body = get_email_template('password_reset_email', 'body');
+        if (!is_string($subject) || trim($subject) === ''
+            || !is_string($email_body) || trim($email_body) === '') {
+            throw new \RuntimeException('Password reset email template is missing or empty.');
         }
-        catch(\Exception $e){
-            // dd($e);
-        }
+
+        $email_body = str_replace('[[name]]', trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')), $email_body);
+        $email_body = str_replace('[[code]]', (string) $code, $email_body);
+        $email_body = str_replace('[[from]]', (string) config('mail.from.name', env('MAIL_FROM_NAME')), $email_body);
+
+        // Let SMTP/transport exceptions reach the API so it can invalidate the code
+        // and return a real delivery failure instead of a false success response.
+        Notification::send($user, new EmailNotification($subject, $email_body));
     }
 
     public static function email_on_request($user, $identifier)

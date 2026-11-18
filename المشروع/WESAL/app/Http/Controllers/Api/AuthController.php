@@ -405,41 +405,56 @@ class AuthController extends Controller
         ]);
 
         $identity = trim($validated['email_or_phone']);
-        $user = $validated['send_code_by'] === 'email'
-            ? User::where('email', strtolower($identity))->first()
-            : User::where('phone', $identity)->first();
-
-        // The same response is returned whether or not the account exists.
-        if ($user) {
-            $issuedCode = PasswordResetCode::issue(10);
-            $user->password_reset_code_hash = $issuedCode['hash'];
-            $user->password_reset_code_expires_at = $issuedCode['expires_at'];
-
-            // The raw code is passed directly to the delivery helper and is
-            // never stored in the legacy plaintext verification_code column.
-            $user->verification_code = null;
-            $user->save();
-
-            try {
-                if ($validated['send_code_by'] === 'phone') {
-                    SmsUtility::password_reset($user, $issuedCode['code']);
-                } else {
-                    EmailUtility::password_reset_email($user, $issuedCode['code']);
-                }
-            } catch (\Throwable $exception) {
-                \Log::warning('API password reset delivery failed.', [
-                    'user_id' => $user->id,
-                    'channel' => $validated['send_code_by'],
-                    'exception' => get_class($exception),
-                ]);
-
-                $user->password_reset_code_hash = null;
-                $user->password_reset_code_expires_at = null;
+        if ($validated['send_code_by'] === 'email') {
+            $identity = strtolower($identity);
+            if (!filter_var($identity, FILTER_VALIDATE_EMAIL)) {
+                return response()->json([
+                    'result' => false,
+                    'message' => translate('Please enter a valid email address.'),
+                ], 422);
             }
+            $user = User::whereRaw('LOWER(email) = ?', [$identity])->first();
+        } else {
+            $user = User::where('phone', $identity)->first();
+        }
 
-            // Never leave the raw recovery code in the database after delivery.
+        // Keep the same response for registered and unknown identities.
+        if (!$user) {
+            return response()->json([
+                'result' => true,
+                'message' => translate('If the account exists, a password reset code has been sent.'),
+            ], 200);
+        }
+
+        $issuedCode = PasswordResetCode::issue(10);
+        $user->password_reset_code_hash = $issuedCode['hash'];
+        $user->password_reset_code_expires_at = $issuedCode['expires_at'];
+        $user->verification_code = null;
+        $user->save();
+
+        try {
+            if ($validated['send_code_by'] === 'phone') {
+                SmsUtility::password_reset($user, $issuedCode['code']);
+            } else {
+                EmailUtility::password_reset_email($user, $issuedCode['code']);
+            }
+        } catch (\Throwable $exception) {
+            \Log::warning('API password reset delivery failed.', [
+                'user_id' => $user->id,
+                'channel' => $validated['send_code_by'],
+                'exception' => get_class($exception),
+            ]);
+
+            // A failed delivery must never leave an active recovery code.
+            $user->password_reset_code_hash = null;
+            $user->password_reset_code_expires_at = null;
             $user->verification_code = null;
             $user->save();
+
+            return response()->json([
+                'result' => false,
+                'message' => translate('We could not send the reset code. Please try again later.'),
+            ], 503);
         }
 
         return response()->json([
@@ -508,9 +523,18 @@ class AuthController extends Controller
         ]);
 
         $identity = trim($validated['email_or_phone']);
+        if ($validated['send_code_by'] === 'email') {
+            $identity = strtolower($identity);
+            if (!filter_var($identity, FILTER_VALIDATE_EMAIL)) {
+                return response()->json([
+                    'result' => false,
+                    'message' => translate('Please enter a valid email address.'),
+                ], 422);
+            }
+        }
         $user = $validated['send_code_by'] === 'phone'
             ? User::where('phone', $identity)->first()
-            : User::where('email', $identity)->first();
+            : User::whereRaw('LOWER(email) = ?', [$identity])->first();
 
         if (!$user || !PasswordResetCode::isValid(
             $validated['verification_code'],
