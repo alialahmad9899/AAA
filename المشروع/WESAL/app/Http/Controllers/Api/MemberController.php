@@ -387,7 +387,7 @@ class MemberController extends Controller
             $reporter = auth()->user();
             $admins = User::where('user_type', 'admin')->get(['id']);
             foreach ($admins as $admin) {
-                \\App\\Utility\\NotificationUtility::set_notification(
+                \App\Utility\NotificationUtility::set_notification(
                     'member_report',
                     'تم استلام بلاغ جديد عن أحد الأعضاء.',
                     '/admin',
@@ -396,8 +396,8 @@ class MemberController extends Controller
                     'admin'
                 );
             }
-        } catch (\\Throwable $exception) {
-            \\Log::warning('Member report admin notification failed.', [
+        } catch (\Throwable $exception) {
+            \Log::warning('Member report admin notification failed.', [
                 'report_id' => $report->id ?? null,
                 'message' => $exception->getMessage(),
             ]);
