@@ -42,6 +42,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Android Gradle Plugin 8.11.1 / Gradle 8.14 require a supported JDK.
+      # Pin Java 17 instead of relying on the runner's moving default.
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
