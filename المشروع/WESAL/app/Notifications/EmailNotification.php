@@ -11,6 +11,9 @@ class EmailNotification extends Notification
 {
     use Queueable;
 
+    protected $subject;
+    protected $email_body;
+
     /**
      * Create a new notification instance.
      *

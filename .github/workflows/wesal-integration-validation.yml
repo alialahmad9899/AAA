@@ -45,6 +45,12 @@ jobs:
             "المشروع/WESAL/app/Http/Controllers/HomeController.php"
             "المشروع/WESAL/app/Http/Controllers/Auth/RegisterController.php"
             "المشروع/WESAL/app/Http/Controllers/Auth/ForgotPasswordController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/AuthController.php"
+            "المشروع/WESAL/app/Http/Controllers/Api/ProfileController.php"
+            "المشروع/WESAL/app/Utility/EmailUtility.php"
+            "المشروع/WESAL/app/Notifications/EmailNotification.php"
+            "المشروع/WESAL/app/Models/User.php"
+            "المشروع/WESAL/tests/Unit/PasswordResetIntegrationContractTest.php"
             "المشروع/WESAL/routes/otp.php"
             "المشروع/WESAL/app/Services/UserService.php"
             "المشروع/WESAL/app/Http/Kernel.php"
@@ -124,6 +130,7 @@ jobs:
             phpunit --no-configuration tests/Unit/PremiumPackageAvailabilityTest.php
             phpunit --no-configuration tests/Unit/GoogleIdTokenVerifierTest.php
             phpunit --no-configuration tests/Unit/PasswordResetCodeTest.php
+            phpunit --no-configuration tests/Unit/PasswordResetIntegrationContractTest.php
           )
 
   flutter-regression-tests:
