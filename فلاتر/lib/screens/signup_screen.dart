@@ -1402,10 +1402,12 @@ class _SignupScreenState extends State<SignupScreen> {
                                       strokeWidth: 2.4,
                                     ),
                                   )
-                                : Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
+                                : Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                    ),
+                                    child: Center(
+                                      child: Text(
                                         _currentStep == 3
                                             ? (isAr
                                                 ? 'إتمام إنشاء الحساب'
@@ -1413,22 +1415,16 @@ class _SignupScreenState extends State<SignupScreen> {
                                             : (isAr
                                                 ? 'متابعة إلى الخطوة التالية'
                                                 : 'Continue to next step'),
+                                        textAlign: TextAlign.center,
+                                        maxLines: 2,
+                                        softWrap: true,
                                         style: const TextStyle(
-                                          fontSize: 15,
+                                          fontSize: 14.5,
                                           fontWeight: FontWeight.w900,
                                           fontFamily: 'Cairo',
                                         ),
                                       ),
-                                      const SizedBox(width: 9),
-                                      Icon(
-                                        _currentStep == 3
-                                            ? Icons.check_circle_outline_rounded
-                                            : (isAr
-                                                ? Icons.arrow_back_rounded
-                                                : Icons.arrow_forward_rounded),
-                                        size: 19,
-                                      ),
-                                    ],
+                                    ),
                                   ),
                           ),
                         ),
