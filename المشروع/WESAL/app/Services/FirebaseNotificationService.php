@@ -235,6 +235,20 @@ class FirebaseNotificationService
             $fcmErrorCode = $decodedError['error']['details'][0]['errorCode']
                 ?? $decodedError['error']['status']
                 ?? null;
+            // FCM marks tokens that no longer belong to an installed app as
+            // UNREGISTERED. Remove only that exact stale token from the legacy
+            // single-token user column; do not clear tokens for other errors.
+            if ($fcmErrorCode === 'UNREGISTERED') {
+                try {
+                    \App\Models\User::where('fcm_token', $targetFcmToken)
+                        ->update(['fcm_token' => null]);
+                } catch (\Throwable $cleanupException) {
+                    Log::warning('[FCM] Could not clear an unregistered device token.', [
+                        'exception' => get_class($cleanupException),
+                    ]);
+                }
+            }
+
             Log::error("❌ [FCM Send Error]: فشل إرسال الإشعار.", [
                 'http_code' => $httpCode,
                 'curl_error' => $curlError,
@@ -245,7 +259,12 @@ class FirebaseNotificationService
             return false;
         }
 
-        Log::info("✅ [FCM Success]: تم قبول الإشعار من Firebase FCM.");
+        $acceptedMessage = json_decode((string) $response, true);
+        Log::info("✅ [FCM Success]: تم قبول الإشعار من Firebase FCM.", [
+            'message_name' => is_array($acceptedMessage)
+                ? ($acceptedMessage['name'] ?? null)
+                : null,
+        ]);
         return true;
     }
 }
