@@ -1580,3 +1580,23 @@
 - تم إنشاء `WESAL_AUTH_ENTRY_REPAIR_2026-11-19.zip` من Artifact التشغيل `44418053126`؛ يحتوي 8 ملفات Flutter/اختبارات فقط بمساراتها الأصلية، دون ملفات التعليمات أو سجل المشروع أو Workflow أو وثائق التصميم. تم التحقق من `unzip -t`.
 - SHA256 للحزمة: `0368fe6c401fe921065abe20e2f5446e2e3f6530517dafc03d1ceac948b1b3d4`.
 - لم تُجرَ جلسة تشغيل على هاتف TECNO أو محاكي فعلي في هذه المهمة؛ الاختبارات Widget/CI فقط. لم يتم نشر التطبيق إلى Hostinger أو متجر.
+
+## 2026-11-19 — إصلاح تعذّر فتح الملف الشخصي بسبب استيراد ProfileViewer
+### النطاق والسبب الجذري
+- النطاق Laravel API الذي يستدعيه تطبيق Flutter؛ لا تعديل على صفحات الموقع العام أو Web Controllers أو قاعدة البيانات.
+- سجل الإنتاج المرفق بتاريخ 2026-11-19 02:30:32 أظهر `Class "App\\Utility\\ProfileViewer" not found` عند `SubscriptionUtility.php:178`، ضمن `SubscriptionUtility::withQuota()` المستدعاة من `ProfileController::public_profile()`.
+- موديل الزيارات موجود بالفعل في `app/Models/ProfileViewer.php` ويعلن namespace `App\\Models`. كما أن `ProfileController` و`ProfileViewerController` يستوردانه بالاسم الصحيح. لكن `SubscriptionUtility` ضمن namespace `App\\Utility` كان يستخدم `ProfileViewer::where()` من دون `use App\\Models\\ProfileViewer;`، لذلك فسّر PHP الاسم نسبياً إلى `App\\Utility` وتوقف طلب الملف الشخصي بخطأ قاتل.
+### الإصلاح
+- إضافة `use App\\Models\\ProfileViewer;` إلى `SubscriptionUtility.php`؛ لم يتم إنشاء موديل مكرر أو تغيير آلية الحصة أو حد الزيارات المجانية.
+- إضافة اختبار عقد `SubscriptionUtilityProfileViewerQuotaTest` يثبت أن `SubscriptionUtility` يستورد موديل App\\Models الصحيح وأن مسار فحص حد ثلاث زيارات يستخدم هذا الموديل.
+- تحديث Workflow التحقق ليشغّل PHP lint للموديل والاختبار الجديدين ويفعّل اختبار الانحدار الجديد، مع إضافة نقطة أساس ZIP لهذه الدفعة.
+### الملفات التشغيلية المتغيرة
+- `المشروع/WESAL/app/Utility/SubscriptionUtility.php`
+- `المشروع/WESAL/tests/Unit/SubscriptionUtilityProfileViewerQuotaTest.php` (اختبار انحدار جديد)
+- `.github/workflows/wesal-integration-validation.yml` (اختبار/تغليف CI فقط؛ مستبعد من ZIP).
+### التحقق
+- GitHub Actions run `44421909684` على commit `5ac02df047ab56c47b856789e8b420670ef1e05b`: PHP syntax نجح لجميع الملفات المدرجة، ومجموع PHPUnit للاختبارات المنفذة **51 اختباراً / 223 assertions**؛ `dart analyze --fatal-infos` نجح (`No issues found!`) وFlutter regression tests نجحت (**120 اختباراً**). مهمة ZIP نجحت.
+- لا توجد migrations أو تغييرات في مخطط قاعدة البيانات.
+### ما بقي غير متحقق منه
+- لم يتم نشر الملف إلى Hostinger في هذه الدفعة؛ لذلك نجاح CI لا يغير نسخة الإنتاج تلقائياً، وقد يستمر الخطأ على التطبيق حتى يُنشر ملف `SubscriptionUtility.php` المحدّث على الاستضافة.
+- لم يُنفذ طلب API حي بعد النشر، ولم يُختبر فتح الملف الشخصي من جهاز فعلي بعد تحديث الاستضافة.
