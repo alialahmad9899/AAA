@@ -6,6 +6,7 @@ on:
       - 'المشروع/WESAL/app/Notifications/DbStoreNotification.php'
       - 'المشروع/WESAL/tests/Unit/NotificationRoutingContractTest.php'
       - '.github/workflows/notification-routing-contract.yml'
+      - 'فلاتر/**'
   push:
     branches:
       - main
@@ -13,6 +14,7 @@ on:
       - 'المشروع/WESAL/app/Notifications/DbStoreNotification.php'
       - 'المشروع/WESAL/tests/Unit/NotificationRoutingContractTest.php'
       - '.github/workflows/notification-routing-contract.yml'
+      - 'فلاتر/**'
 
 permissions:
   contents: read
@@ -33,3 +35,23 @@ jobs:
       - name: Run notification routing contract tests
         working-directory: المشروع/WESAL
         run: phpunit --no-configuration tests/Unit/NotificationRoutingContractTest.php
+
+  flutter-android-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.9'
+          channel: stable
+
+      - name: Resolve Flutter dependencies
+        working-directory: فلاتر
+        run: flutter pub get
+
+      - name: Build Android debug APK with Firebase configuration
+        working-directory: فلاتر
+        run: flutter build apk --debug
