@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import '../lib/widgets/wesal_logo.dart';
+import 'package:wesal_app/widgets/wesal_logo.dart';
 
 void main() {
   testWidgets('Wesal logo uses the registered original transparent asset',
