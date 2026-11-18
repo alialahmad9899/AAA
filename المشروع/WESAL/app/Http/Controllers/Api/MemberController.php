@@ -375,11 +375,33 @@ class MemberController extends Controller
             ], 200);
         }
 
-        ReportedUser::create([
+        $report = ReportedUser::create([
             'user_id'     => $targetUserId,
             'reported_by' => auth()->user()->id,
             'reason'      => $request->reason ?? $request->report_reason ?? 'بدون سبب محدد',
         ]);
+
+        // Send an administrative alert without allowing notification failures
+        // to roll back or hide the successfully stored report.
+        try {
+            $reporter = auth()->user();
+            $admins = User::where('user_type', 'admin')->get(['id']);
+            foreach ($admins as $admin) {
+                \\App\\Utility\\NotificationUtility::set_notification(
+                    'member_report',
+                    'تم استلام بلاغ جديد عن أحد الأعضاء.',
+                    '/admin',
+                    $reporter->id,
+                    $admin->id,
+                    'admin'
+                );
+            }
+        } catch (\\Throwable $exception) {
+            \\Log::warning('Member report admin notification failed.', [
+                'report_id' => $report->id ?? null,
+                'message' => $exception->getMessage(),
+            ]);
+        }
 
         return response()->json([
             'result'  => true,
