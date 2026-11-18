@@ -3,6 +3,6 @@
     <style name="LaunchTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="android:windowBackground">@color/wesal_splash_background</item>
         <item name="android:windowSplashScreenBackground">@color/wesal_splash_background</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_wesal</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/wesal_logo</item>
     </style>
 </resources>

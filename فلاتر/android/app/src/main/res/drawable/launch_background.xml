@@ -2,6 +2,6 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/wesal_splash_background" />
     <item
-        android:drawable="@drawable/ic_launcher_wesal"
+        android:drawable="@drawable/wesal_logo"
         android:gravity="center" />
 </layer-list>
