@@ -11,7 +11,7 @@ import 'package:app_links/app_links.dart';
 import 'theme/app_theme.dart';
 
 // استيراد الشاشات والخدمات الرئيسية للتطبيق
-import 'screens/welcome_screen.dart';
+import 'screens/brand_intro_screen.dart';
 import 'screens/main_home_screen.dart';
 import 'screens/my_interests_screen.dart';
 import 'screens/member_profile_screen.dart';
@@ -19,18 +19,13 @@ import 'screens/member_profile_screen.dart';
 // 🟢 خدمة الإشعارات المركزية مع مفتاح الملاحة العام
 import 'services/notification_service.dart';
 import 'services/fcm_service.dart';
-// 🟢 استيراد ApiService لقراءة التوكن من التخزين المشفر الآمن (FlutterSecureStorage)
-import 'services/api_service.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Read the local login token before the first frame. Do not hold the first
-  // render for notification permission prompts or the FCM token HTTP sync.
-  final String? token = await ApiService.getToken();
-  final bool isLoggedIn = token != null && token.trim().isNotEmpty;
-
-  runApp(MyApp(isLoggedIn: isLoggedIn));
+  // Paint the branded startup immediately; the intro resolves the saved
+  // session while its logo animation is running.
+  runApp(const MyApp());
 
   // Start optional services after the app can paint.
   _setupDeepLinks();
@@ -100,9 +95,9 @@ void _handleDeepLinkUri(Uri uri) {
 
 /// الكلاس الرئيسي للتطبيق المسؤول عن ضبط الثيم العام والمسار الابتدائي
 class MyApp extends StatelessWidget {
-  final bool isLoggedIn;
+  final bool? isLoggedIn;
 
-  const MyApp({super.key, required this.isLoggedIn});
+  const MyApp({super.key, this.isLoggedIn});
 
   @override
   Widget build(BuildContext context) {
@@ -118,8 +113,10 @@ class MyApp extends StatelessWidget {
       routes: {
         '/my-interests': (context) => const MyInterestsScreen(),
       },
-      // التوجيه المباشر للشاشة الرئيسية أو الترحيبية بحسب حالة التوكن
-      home: isLoggedIn ? const MainHomeScreen() : const WelcomeScreen(),
+      // المستخدم المسجّل يتجاوز شاشة الترحيب؛ غير المسجّل يرى افتتاحية وصال.
+      home: isLoggedIn == true
+          ? const MainHomeScreen()
+          : BrandIntroScreen(checkSession: isLoggedIn == null),
     );
   }
 }

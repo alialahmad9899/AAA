@@ -13,6 +13,7 @@ import '../services/api_service.dart';
 import '../services/notification_service.dart';
 import '../widgets/app_snackbar.dart';
 import '../widgets/wesal_logo.dart';
+import '../utils/wesal_page_route.dart';
 import '../utils/arabic_number_formatter.dart';
 import 'main_home_screen.dart';
 import 'signup_screen.dart';
@@ -218,8 +219,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => SignupScreen(
+          WesalPageRoute(
+            child: SignupScreen(
               currentLanguage: widget.currentLanguage,
               initialEmail: result['email'] ?? email,
               initialName: result['name'] ?? name,
@@ -343,12 +344,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ),
                               ),
-                              const Spacer(),
-                              const WesalLogo(
-                                width: 72,
-                                height: 72,
-                                excludeSemantics: true,
-                              ),
                             ],
                           ),
                           const SizedBox(height: 14),
@@ -389,18 +384,22 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ),
                                 Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    const WesalLogo(
-                                      width: 126,
-                                      height: 126,
-                                      excludeSemantics: true,
+                                    const Center(
+                                      child: WesalLogo(
+                                        width: 215,
+                                        height: 116,
+                                        fit: BoxFit.contain,
+                                        excludeSemantics: true,
+                                      ),
                                     ),
-                                    const SizedBox(height: 18),
+                                    const SizedBox(height: 15),
                                     Text(
                                       _isArabic
                                           ? 'أهلاً بعودتك إلى وصال'
                                           : 'Welcome back to Wesal',
+                                      textAlign: TextAlign.center,
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 24,
@@ -414,6 +413,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       _isArabic
                                           ? 'سجّل دخولك وتابع رحلتك نحو تعارف أكثر وضوحاً وراحة.'
                                           : 'Sign in and continue your journey toward a meaningful connection.',
+                                      textAlign: TextAlign.center,
                                       style: TextStyle(
                                         color: Colors.white
                                             .withValues(alpha: 0.88),
@@ -424,6 +424,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                                     const SizedBox(height: 16),
                                     Wrap(
+                                      alignment: WrapAlignment.center,
                                       spacing: 8,
                                       runSpacing: 8,
                                       children: [
@@ -814,8 +815,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                       : () {
                                           Navigator.push(
                                             context,
-                                            MaterialPageRoute(
-                                              builder: (context) => SignupScreen(
+                                            WesalPageRoute(
+                                              child: SignupScreen(
                                                 currentLanguage:
                                                     widget.currentLanguage,
                                               ),

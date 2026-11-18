@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import '../constants/colors.dart';
 import '../services/api_service.dart';
 import '../widgets/wesal_logo.dart';
+import '../utils/wesal_page_route.dart';
 import 'login_screen.dart';
 import 'main_home_screen.dart';
 import 'signup_screen.dart';
@@ -59,9 +60,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   void _openLogin() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) =>
-            LoginScreen(currentLanguage: widget.currentLanguage),
+      WesalPageRoute(
+        child: LoginScreen(currentLanguage: widget.currentLanguage),
       ),
     );
   }
@@ -69,9 +69,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   void _openSignup() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) =>
-            SignupScreen(currentLanguage: widget.currentLanguage),
+      WesalPageRoute(
+        child: SignupScreen(currentLanguage: widget.currentLanguage),
       ),
     );
   }
@@ -142,13 +141,23 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                   ),
                                   child: Column(
                                     children: [
-                                      const WesalLogo(
-                                        width: 190,
-                                        height: 190,
-                                        excludeSemantics: true,
+                                      LayoutBuilder(
+                                        builder: (context, constraints) {
+                                          final double logoWidth =
+                                              constraints.maxWidth
+                                                  .clamp(0.0, 250.0)
+                                                  .toDouble();
+                                          return Center(
+                                            child: WesalLogo(
+                                              width: logoWidth,
+                                              height: logoWidth * 0.54,
+                                              fit: BoxFit.contain,
+                                              excludeSemantics: true,
+                                            ),
+                                          );
+                                        },
                                       ),
                                       const SizedBox(height: 20),
-                                      const SizedBox(height: 8),
                                       Text(
                                         _isAr
                                             ? 'كل لقاء جميل يبدأ بخطوة'

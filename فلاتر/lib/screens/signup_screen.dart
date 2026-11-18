@@ -1044,12 +1044,6 @@ class _SignupScreenState extends State<SignupScreen> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 10),
-                              const WesalLogo(
-                                width: 78,
-                                height: 78,
-                                excludeSemantics: true,
-                              ),
                               const Spacer(),
                               Container(
                                 padding: const EdgeInsets.symmetric(
@@ -1077,9 +1071,19 @@ class _SignupScreenState extends State<SignupScreen> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 17),
+                          const SizedBox(height: 12),
+                          const Center(
+                            child: WesalLogo(
+                              width: 190,
+                              height: 103,
+                              fit: BoxFit.contain,
+                              excludeSemantics: true,
+                            ),
+                          ),
+                          const SizedBox(height: 13),
                           Text(
                             isAr ? 'لنبدأ رحلتك مع وصال' : 'Let’s begin with Wesal',
+                            textAlign: TextAlign.center,
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 23,
@@ -1093,6 +1097,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             isAr
                                 ? 'أكمل بياناتك بهدوء، وكل خطوة تقرّبنا من ملف متكامل يعكسك.'
                                 : 'Complete your details at your pace. Each step helps build a profile that represents you.',
+                            textAlign: TextAlign.center,
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.86),
                               fontSize: 12,
