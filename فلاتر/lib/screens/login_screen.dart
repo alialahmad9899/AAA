@@ -12,6 +12,7 @@ import '../constants/colors.dart';
 import '../services/api_service.dart';
 import '../services/notification_service.dart';
 import '../widgets/app_snackbar.dart';
+import '../widgets/wesal_logo.dart';
 import '../utils/arabic_number_formatter.dart';
 import 'main_home_screen.dart';
 import 'signup_screen.dart';
@@ -343,20 +344,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                               const Spacer(),
-                              Text(
-                                _isArabic ? 'وصال' : 'Wesal',
-                                style: const TextStyle(
-                                  color: AppColors.primaryTeal,
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w900,
-                                  fontFamily: 'Cairo',
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              const Icon(
-                                Icons.favorite_rounded,
-                                color: AppColors.accentWarm,
-                                size: 18,
+                              const WesalLogo(
+                                width: 72,
+                                height: 72,
+                                excludeSemantics: true,
                               ),
                             ],
                           ),
@@ -400,19 +391,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Container(
-                                      width: 58,
-                                      height: 58,
-                                      decoration: BoxDecoration(
-                                        color: AppColors.backgroundColor,
-                                        borderRadius:
-                                            BorderRadius.circular(19),
-                                      ),
-                                      child: const Icon(
-                                        Icons.favorite_rounded,
-                                        color: AppColors.accentWarm,
-                                        size: 32,
-                                      ),
+                                    const WesalLogo(
+                                      width: 126,
+                                      height: 126,
+                                      excludeSemantics: true,
                                     ),
                                     const SizedBox(height: 18),
                                     Text(

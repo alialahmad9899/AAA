@@ -135,7 +135,8 @@ class FirebaseNotificationService
             "channel_id" => $isChatNotification
                 ? ($isSilent ? "wesal_chat_silent_channel" : "wesal_chat_alert_channel")
                 : "wesal_high_importance_channel",
-            "icon" => "@mipmap/ic_launcher",
+            "icon" => "ic_stat_wesal",
+            "color" => "#0F4C5C",
             "notification_priority" => $isSilent ? "PRIORITY_LOW" : "PRIORITY_MAX"
         ];
         if (!$isSilent) {

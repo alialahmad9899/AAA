@@ -8,6 +8,7 @@
 import 'package:flutter/material.dart';
 import '../constants/colors.dart';
 import '../services/api_service.dart';
+import '../widgets/wesal_logo.dart';
 import 'login_screen.dart';
 import 'main_home_screen.dart';
 import 'signup_screen.dart';
@@ -141,67 +142,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                   ),
                                   child: Column(
                                     children: [
-                                      Stack(
-                                        alignment: Alignment.center,
-                                        children: [
-                                          Container(
-                                            width: 112,
-                                            height: 112,
-                                            decoration: BoxDecoration(
-                                              color: Colors.white
-                                                  .withValues(alpha: 0.10),
-                                              shape: BoxShape.circle,
-                                              border: Border.all(
-                                                color: Colors.white
-                                                    .withValues(alpha: 0.24),
-                                                width: 1.2,
-                                              ),
-                                            ),
-                                          ),
-                                          Container(
-                                            width: 82,
-                                            height: 82,
-                                            decoration: BoxDecoration(
-                                              color: AppColors.backgroundColor,
-                                              borderRadius:
-                                                  BorderRadius.circular(28),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.black
-                                                      .withValues(alpha: 0.12),
-                                                  blurRadius: 18,
-                                                  offset: const Offset(0, 8),
-                                                ),
-                                              ],
-                                            ),
-                                            child: const Icon(
-                                              Icons.favorite_rounded,
-                                              color: AppColors.accentWarm,
-                                              size: 43,
-                                            ),
-                                          ),
-                                          Positioned(
-                                            top: 7,
-                                            right: 7,
-                                            child: Icon(
-                                              Icons.auto_awesome_rounded,
-                                              color: AppColors.accentLight,
-                                              size: 22,
-                                            ),
-                                          ),
-                                        ],
+                                      const WesalLogo(
+                                        width: 190,
+                                        height: 190,
+                                        excludeSemantics: true,
                                       ),
                                       const SizedBox(height: 20),
-                                      Text(
-                                        _isAr ? 'وصال' : 'Wesal',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 34,
-                                          fontWeight: FontWeight.w900,
-                                          letterSpacing: 0.4,
-                                          fontFamily: 'Cairo',
-                                        ),
-                                      ),
                                       const SizedBox(height: 8),
                                       Text(
                                         _isAr

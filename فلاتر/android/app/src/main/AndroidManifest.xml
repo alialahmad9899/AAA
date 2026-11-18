@@ -26,7 +26,7 @@
     <application
         android:label="وصال"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/ic_launcher_wesal"
         android:enableOnBackInvokedCallback="true"
         android:usesCleartextTraffic="true">
 
@@ -100,7 +100,7 @@
         <!-- أيقونة الإشعارات الافتراضية بالستارة -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
-            android:resource="@mipmap/ic_launcher" />
+            android:resource="@drawable/ic_stat_wesal" />
 
         <!-- تحديد إصدار محرك Flutter المستخدم -->
         <meta-data

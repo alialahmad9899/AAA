@@ -16,6 +16,7 @@ import '../../../models/member_model.dart';
 import '../../../models/chat_model.dart';
 import '../../../services/api_service.dart';
 import '../../../widgets/package_badge_widget.dart';
+import '../../../widgets/wesal_logo.dart';
 import '../../member_profile_screen.dart';
 import '../../chat_detail_screen.dart';
 import 'account_tab.dart';
@@ -547,26 +548,10 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
         children: [
           Row(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.primaryTeal, AppColors.secondaryTeal],
-                    begin: Alignment.topRight,
-                    end: Alignment.bottomLeft,
-                  ),
-                  borderRadius: BorderRadius.circular(15),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primaryTeal.withValues(alpha: 0.15),
-                      blurRadius: 12,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: const Icon(Icons.favorite_rounded,
-                    color: AppColors.accentLight, size: 23),
+              const WesalLogo(
+                width: 54,
+                height: 54,
+                excludeSemantics: true,
               ),
               const SizedBox(width: 11),
               Expanded(

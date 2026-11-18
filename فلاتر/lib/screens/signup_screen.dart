@@ -16,6 +16,7 @@ import '../services/api_service.dart';
 import '../services/notification_service.dart';
 import '../services/profile_cache_service.dart';
 import '../widgets/app_snackbar.dart';
+import '../widgets/wesal_logo.dart';
 import 'main_home_screen.dart';
 
 import 'widgets/step1_basic_info.dart';
@@ -1043,20 +1044,10 @@ class _SignupScreenState extends State<SignupScreen> {
                                 ),
                               ),
                               const SizedBox(width: 10),
-                              const Icon(
-                                Icons.favorite_rounded,
-                                color: AppColors.accentLight,
-                                size: 21,
-                              ),
-                              const SizedBox(width: 7),
-                              Text(
-                                isAr ? 'وصال' : 'Wesal',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w900,
-                                  fontFamily: 'Cairo',
-                                ),
+                              const WesalLogo(
+                                width: 78,
+                                height: 78,
+                                excludeSemantics: true,
                               ),
                               const Spacer(),
                               Container(

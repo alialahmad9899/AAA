@@ -80,7 +80,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     if (title.isEmpty || body.isEmpty) return;
 
     final plugin = FlutterLocalNotificationsPlugin();
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings('ic_stat_wesal');
     const iosSettings = DarwinInitializationSettings();
     const initializationSettings = InitializationSettings(
       android: androidSettings,
@@ -102,7 +102,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
           _notificationChannel.id,
           _notificationChannel.name,
           channelDescription: _notificationChannel.description,
-          icon: '@mipmap/ic_launcher',
+          icon: 'ic_stat_wesal',
           importance: Importance.max,
           priority: Priority.high,
           playSound: true,
@@ -174,7 +174,7 @@ class NotificationService {
       }
 
       const androidSettings =
-          AndroidInitializationSettings('@mipmap/ic_launcher');
+          AndroidInitializationSettings('ic_stat_wesal');
       const iosSettings = DarwinInitializationSettings(
         requestAlertPermission: false,
         requestBadgePermission: false,
@@ -314,7 +314,7 @@ class NotificationService {
           selectedChannel.id,
           selectedChannel.name,
           channelDescription: selectedChannel.description,
-          icon: android?.smallIcon ?? '@mipmap/ic_launcher',
+          icon: android?.smallIcon ?? 'ic_stat_wesal',
           importance: isSilent ? Importance.low : Importance.max,
           priority: isSilent ? Priority.low : Priority.high,
           playSound: !isSilent,
