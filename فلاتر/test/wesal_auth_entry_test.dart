@@ -49,6 +49,15 @@ void main() {
 
   testWidgets('signup keeps the logo and hero heading centered',
       (WidgetTester tester) async {
+    final previousFlutterErrorHandler = FlutterError.onError;
+    FlutterError.onError = (details) {
+      debugPrint('WESAL_SIGNUP_RENDER_DIAGNOSTIC_START');
+      FlutterError.dumpErrorToConsole(details);
+      debugPrint('WESAL_SIGNUP_RENDER_DIAGNOSTIC_END');
+      previousFlutterErrorHandler?.call(details);
+    };
+    addTearDown(() => FlutterError.onError = previousFlutterErrorHandler);
+
     await setPhoneSize(tester);
     await tester.pumpWidget(const MaterialApp(home: SignupScreen()));
 
