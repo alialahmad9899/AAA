@@ -110,18 +110,26 @@ class NotificationController extends Controller
                     'read_at'         => null,
                 ]);
 
-                // 2. دفق الإشعار الهوائي لجوال المستخدم عبر Firebase FCM v1
-                if (!empty($user->fcm_token)) {
-                    FirebaseNotificationService::sendPushNotification(
+                // 2. Send a push only when the global Firebase switch is enabled.
+                if (get_setting('firebase_push_notification') == 1 && !empty($user->fcm_token)) {
+                    $pushAccepted = FirebaseNotificationService::sendPushNotification(
                         $user->fcm_token,
                         $title,
-                        $message
+                        $message,
+                        ['type' => 'admin_custom_notification']
                     );
-                    $sentCount++;
+                    if ($pushAccepted) {
+                        // This counts FCM API acceptance, not confirmed device display.
+                        $sentCount++;
+                    } else {
+                        \\Log::warning('Admin custom notification was saved, but FCM did not accept the push.', [
+                            'user_id' => $user->id,
+                        ]);
+                    }
                 }
             }
 
-            flash("تم إرسال الإشعار بنجاح لـ {$users->count()} مستخدم (وصل هوائياً لـ {$sentCount} جهاز)").success();
+            flash("تم حفظ الإشعار لـ {$users->count()} مستخدم وقبلت Firebase طلب الإرسال لـ {$sentCount} جهاز").success();
             return back();
 
         } catch (\Exception $e) {
