@@ -69,7 +69,16 @@ void main() {
       find.text('لنبدأ رحلتك مع وصال'),
     );
     expect(heading.textAlign, TextAlign.center);
-    expect(tester.takeException(), isNull);
+    final layoutException = tester.takeException();
+    if (layoutException is FlutterError) {
+      debugPrint('WESAL_SIGNUP_EXCEPTION_DEEP_START');
+      debugPrint(layoutException.toStringDeep());
+      for (final diagnostic in layoutException.diagnostics) {
+        debugPrint(diagnostic.toStringDeep());
+      }
+      debugPrint('WESAL_SIGNUP_EXCEPTION_DEEP_END');
+    }
+    expect(layoutException, isNull);
 
     await tester.binding.setSurfaceSize(null);
   });
