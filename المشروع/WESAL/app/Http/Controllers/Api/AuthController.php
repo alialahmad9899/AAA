@@ -348,10 +348,18 @@ class AuthController extends Controller
     {
         $user = auth()->user();
         if ($user) {
-            $user
-                ->tokens()
-                ->where('id', $user->currentAccessToken()->id)
-                ->delete();
+            // This application currently stores one FCM token per account.
+            // Clear it on logout so a signed-out device cannot keep receiving
+            // private member notifications for the previous account.
+            $user->fcm_token = null;
+            $user->save();
+
+            $currentAccessToken = $user->currentAccessToken();
+            if ($currentAccessToken) {
+                $user->tokens()
+                    ->where('id', $currentAccessToken->id)
+                    ->delete();
+            }
         }
         return $this->success_message('Successfully logged out');
     }
