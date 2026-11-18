@@ -48,7 +48,7 @@ class NotificationUtility
 
                     if ($fcmToken) {
                         $translatedMsg = function_exists('translate') ? translate($message) : $message;
-                        self::sendFirebasePushNotification(
+                        $pushAccepted = self::sendFirebasePushNotification(
                             $fcmToken,
                             'منصة وصال 👑',
                             $translatedMsg,
@@ -58,6 +58,13 @@ class NotificationUtility
                                 'notification_id' => (string) $notification->id
                             ]
                         );
+                        if (!$pushAccepted) {
+                            Log::warning('[NotificationUtility] Database notification saved, but Firebase did not accept the push.', [
+                                'notification_id' => $notification->id,
+                                'receiver_id' => $receiver,
+                                'type' => $type,
+                            ]);
+                        }
                     } else {
                         Log::info("ℹ️ [NotificationUtility] العضو رقم {$receiver} لا يمتلك fcm_token مسجلاً في حسابه.");
                     }
@@ -117,12 +124,25 @@ class NotificationUtility
             ]);
 
             if (!empty($user->fcm_token) && get_setting('firebase_push_notification') == 1) {
-                FirebaseNotificationService::sendPushNotification(
+                $pushAccepted = FirebaseNotificationService::sendPushNotification(
                     $user->fcm_token,
                     $title,
                     (string) $localizedMessage,
                     $payload
                 );
+                if (!$pushAccepted) {
+                    Log::warning('In-app notification saved, but Firebase did not accept the push.', [
+                        'receiver_id' => $receiver,
+                        'notification_id' => $notificationId,
+                        'type' => $type,
+                    ]);
+                }
+            } elseif (empty($user->fcm_token)) {
+                Log::info('In-app notification saved without a registered FCM token.', [
+                    'receiver_id' => $receiver,
+                    'notification_id' => $notificationId,
+                    'type' => $type,
+                ]);
             }
 
             return true;
