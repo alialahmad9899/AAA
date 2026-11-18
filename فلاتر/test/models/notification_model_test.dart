@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import '../../lib/models/notification_model.dart';
+import 'package:wesal_app/models/notification_model.dart';
 
 void main() {
   group('NotificationModel routing metadata', () {
