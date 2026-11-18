@@ -27,6 +27,7 @@ void main() {
       )));
 
       await tester.enterText(find.byKey(const Key('password-reset-email')), ' USER@example.com ');
+      await tester.ensureVisible(find.byKey(const Key('password-reset-send-code')));
       await tester.tap(find.byKey(const Key('password-reset-send-code')));
       await tester.pumpAndSettle();
       expect(requested, 'user@example.com');
@@ -34,6 +35,7 @@ void main() {
       await tester.enterText(find.byKey(const Key('password-reset-code')), '123456');
       await tester.enterText(find.byKey(const Key('password-reset-password')), 'NewPass123');
       await tester.enterText(find.byKey(const Key('password-reset-confirmation')), 'NewPass123');
+      await tester.ensureVisible(find.byKey(const Key('password-reset-send-code')));
       await tester.tap(find.byKey(const Key('password-reset-send-code')));
       await tester.pumpAndSettle();
 
@@ -52,6 +54,7 @@ void main() {
         },
       )));
       await tester.enterText(find.byKey(const Key('password-reset-email')), 'not-an-email');
+      await tester.ensureVisible(find.byKey(const Key('password-reset-send-code')));
       await tester.tap(find.byKey(const Key('password-reset-send-code')));
       await tester.pumpAndSettle();
       expect(requests, 0);
@@ -73,6 +76,7 @@ void main() {
       await tester.enterText(find.byKey(const Key('change-password-old')), 'OldPass123');
       await tester.enterText(find.byKey(const Key('change-password-new')), 'NewPass123');
       await tester.enterText(find.byKey(const Key('change-password-confirmation')), 'NewPass123');
+      await tester.ensureVisible(find.byKey(const Key('change-password-submit')));
       await tester.tap(find.byKey(const Key('change-password-submit')));
       await tester.pumpAndSettle();
       expect(oldValue, 'OldPass123');
@@ -92,6 +96,7 @@ void main() {
       await tester.enterText(find.byKey(const Key('change-password-old')), 'SamePass123');
       await tester.enterText(find.byKey(const Key('change-password-new')), 'SamePass123');
       await tester.enterText(find.byKey(const Key('change-password-confirmation')), 'SamePass123');
+      await tester.ensureVisible(find.byKey(const Key('change-password-submit')));
       await tester.tap(find.byKey(const Key('change-password-submit')));
       await tester.pumpAndSettle();
       expect(submissions, 0);
