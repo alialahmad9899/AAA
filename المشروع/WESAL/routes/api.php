@@ -95,6 +95,9 @@ Route::group(['namespace' => 'Api', 'middleware' => ['app_language']], function 
         Route::get('/member/verification_form', 'MemberController@getVerifyForm');
         Route::get('/member/is-approved', 'MemberController@isApproved');
         Route::post('/member/verification-info-store', 'MemberController@store_verification_info');
+
+        Route::get('/member/blocked-status', 'ProfileController@blocked_status');
+        Route::post('/member/blocked-support-message', 'SupportTicketController@store_blocked_message');
     });
 
     Route::group(['middleware' => ['auth:sanctum', 'api_member']], function () {
