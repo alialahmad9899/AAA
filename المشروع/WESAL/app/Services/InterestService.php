@@ -275,6 +275,13 @@ class InterestService
                 } catch (\Exception $e) {
                     Log::error("❌ [Firebase Notification Error]: " . $e->getMessage());
                 }
+            } elseif ($notify_user) {
+                Log::warning('Interest push notification skipped.', [
+                    'receiver_id' => $user_id,
+                    'type' => $notify_type,
+                    'push_enabled' => (int) get_setting('firebase_push_notification') === 1,
+                    'has_device_token' => !empty($notify_user->fcm_token),
+                ]);
             }
 
             // 2. حفظ الإشعار في قاعدة البيانات
