@@ -271,8 +271,11 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
     _chatRefreshTimer?.cancel();
     if (!widget.isActive) return;
     _chatRefreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (!mounted || !widget.isActive ||
-          WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return;
+      if (!mounted ||
+          !widget.isActive ||
+          WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
+        return;
+      }
       _fetchChats(silent: true);
     });
   }

@@ -1549,7 +1549,7 @@ class ApiService {
         return Map<String, dynamic>.from(cached);
       }
       final pending = _accessSummaryRequests[userId];
-      if (!forceRefresh && pending != null) return pending;
+      if (!forceRefresh && pending != null) return await pending;
       final request = _fetchCurrentUserAccessSummary(userId, lang: lang);
       _accessSummaryRequests[userId] = request;
       try {
