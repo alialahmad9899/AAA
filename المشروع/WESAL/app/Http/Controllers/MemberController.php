@@ -58,6 +58,7 @@ use Illuminate\Support\Str;
 use App\Services\FirebaseNotificationService;
 use App\Utility\SubscriptionUtility;
 use App\Services\SubscriptionNotificationService;
+use App\Utility\NotificationUtility;
 use App\Models\Notification as NotificationModel;
 
 class MemberController extends Controller
@@ -894,17 +895,45 @@ class MemberController extends Controller
 
     public function block(Request $request)
     {
-        $user           = User::findOrFail($request->member_id);
-        $user->blocked  = $request->block_status;
-        if ($user->save()) {
-            $member                 = Member::where('user_id', $user->id)->first();
-            $member->blocked_reason = !empty($request->blocking_reason) ? $request->blocking_reason : "";
-            if ($member->save()) {
-                flash($user->blocked == 1 ? translate('Member Blocked !') : translate('Member Unblocked !'))->success();
-                return back();
-            }
+        $validated = $request->validate([
+            'member_id' => ['required', 'integer', 'exists:users,id'],
+            'block_status' => ['required', 'in:0,1'],
+            'blocking_reason' => ['required_if:block_status,1', 'nullable', 'string', 'max:3000'],
+        ]);
+        $status = (int) $validated['block_status'];
+        $reason = trim((string) ($validated['blocking_reason'] ?? ''));
+
+        $result = DB::transaction(function () use ($validated, $status, $reason) {
+            $user = User::query()->lockForUpdate()->findOrFail($validated['member_id']);
+            $wasBlocked = (int) $user->blocked === 1;
+            $member = Member::withTrashed()->where('user_id', $user->id)->lockForUpdate()->firstOrFail();
+            $user->blocked = $status;
+            $user->save();
+            $member->blocked_reason = $status === 1 ? $reason : '';
+            $member->save();
+            return [
+                'user' => $user,
+                'just_blocked' => $status === 1 && !$wasBlocked,
+                'reason' => $member->blocked_reason,
+            ];
+        });
+
+        if ($result['just_blocked']) {
+            $message = 'أنت محظور من استخدام التطبيق بسبب مخالفة قواعد وشروط الاستخدام. السبب: ' . $result['reason'];
+            NotificationUtility::send_notification(
+                (int) $result['user']->id,
+                'account_blocked',
+                $message,
+                'Your account has been blocked for violating the Terms of Use. Reason: ' . $result['reason'],
+                [
+                    'title' => 'تم حظر حسابك',
+                    'route' => 'wesal://account-blocked',
+                    'notification_tag' => 'account_blocked',
+                ]
+            );
         }
-        flash('Sorry! Something went wrong.')->error();
+
+        flash($status === 1 ? translate('Member Blocked !') : translate('Member Unblocked !'))->success();
         return back();
     }
 
