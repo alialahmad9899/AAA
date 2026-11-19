@@ -32,7 +32,7 @@ import '../utils/notification_route_resolver.dart';
 
 const AndroidNotificationChannel _notificationChannel =
     AndroidNotificationChannel(
-  'wesal_high_importance_channel',
+  'wesal_high_importance_channel_v2',
   'إشعارات تطبيق وصال',
   description: 'إشعارات الطلبات والتنبيهات المهمة في تطبيق وصال',
   importance: Importance.max,
@@ -42,7 +42,7 @@ const AndroidNotificationChannel _notificationChannel =
 
 const AndroidNotificationChannel _chatAlertChannel =
     AndroidNotificationChannel(
-  'wesal_chat_alert_channel',
+  'wesal_chat_alert_channel_v2',
   'رسائل وصال',
   description: 'تنبيه أول رسالة جديدة في المحادثة',
   importance: Importance.high,
