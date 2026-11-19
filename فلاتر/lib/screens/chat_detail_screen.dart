@@ -2294,7 +2294,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   }
 
   Widget _buildInputArea() {
-    ret  Widget _buildInputArea() {
     final outline = OutlineInputBorder(
       borderRadius: BorderRadius.circular(20),
       borderSide: const BorderSide(color: AppColors.lineColor),
@@ -2415,7 +2414,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     );
   }
 
-{
+  Widget _buildEmojiStickerPicker() {
     return Container(
       height: 230,
       decoration: const BoxDecoration(
