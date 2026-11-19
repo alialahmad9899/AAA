@@ -21,6 +21,7 @@ import '../models/chat_model.dart';
 import '../models/notification_model.dart';
 import '../models/member_profile_model.dart';
 import '../models/support_ticket_model.dart';
+import '../models/blocked_account_status.dart';
 import 'profile_cache_service.dart';
 import 'chat_local_store.dart';
 
@@ -4347,6 +4348,35 @@ class ApiService {
     } catch (e) {
       if (kDebugMode) debugPrint('❌ [API ERROR searchMembers]: $e');
       return [];
+    }
+  }
+
+  static Future<BlockedAccountStatus?> getBlockedAccountStatus({String? lang}) async {
+    try {
+      final response = await get('/member/blocked-status', lang: lang);
+      if (response == null || !isSuccessfulResult(response)) return null;
+      return BlockedAccountStatus.fromJson(response);
+    } catch (error) {
+      if (kDebugMode) debugPrint('⚠️ [Blocked Account Status] $error');
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>> sendBlockedSupportMessage({required String message, String? lang}) async {
+    final cleanMessage = message.trim();
+    if (cleanMessage.isEmpty) return {'success': false, 'message': 'يرجى كتابة رسالتك للدعم الفني.'};
+    try {
+      final language = (lang ?? (await SharedPreferences.getInstance()).getString('app_language') ?? 'ar').toLowerCase();
+      final response = await post('/member/blocked-support-message', {
+        'subject': language.startsWith('en') ? 'Account ban appeal' : 'طلب مراجعة قرار الحظر',
+        'support_category_id': 1,
+        'description': cleanMessage,
+      }, lang: lang);
+      final success = response != null && isSuccessfulResult(response) && (response['result'] == true || response['success'] == true);
+      return {'success': success, 'message': response?['message'] ?? (success ? 'تم إرسال رسالتك إلى فريق الدعم.' : 'تعذر إرسال الرسالة إلى الدعم.'), 'data': response};
+    } catch (error) {
+      if (kDebugMode) debugPrint('⚠️ [Blocked Support Message] $error');
+      return {'success': false, 'message': 'تعذر الاتصال بالدعم الفني. تحقق من الإنترنت وحاول مجدداً.'};
     }
   }
 
