@@ -95,11 +95,13 @@ NotificationDestination? resolveNotificationDestination(
   if (type.contains('package') ||
       type.contains('invoice') ||
       type.contains('purchase')) {
+    // info_id is a legacy generic reference (often a package ID), not
+    // necessarily a package_payments primary key. Only an explicit payment
+    // identifier or a verified Wesal invoice route may open an invoice.
     final int? id = firstId(const [
       'payment_id',
       'package_payment_id',
       'invoice_id',
-      'info_id',
     ]);
     if (id != null) {
       return NotificationDestination(

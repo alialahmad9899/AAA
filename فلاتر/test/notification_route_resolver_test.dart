@@ -4,14 +4,24 @@ import 'package:wesal_app/utils/notification_route_resolver.dart';
 
 void main() {
   group('notification destination resolver', () {
-    test('resolves package invoice from the payment ID in the payload', () {
+    test('resolves package invoice from an explicit payment ID in the payload', () {
       final result = resolveNotificationDestination({
         'type': 'package_activated',
-        'info_id': '501',
+        'info_id': '16',
+        'payment_id': '501',
       });
 
       expect(result?.kind, NotificationDestinationKind.packageInvoice);
       expect(result?.id, 501);
+    });
+
+    test('does not mistake a legacy package info_id for a payment ID', () {
+      final result = resolveNotificationDestination({
+        'type': 'package',
+        'info_id': '16',
+      });
+
+      expect(result, isNull);
     });
 
     test('resolves package invoice from the Wesal deep link alone', () {

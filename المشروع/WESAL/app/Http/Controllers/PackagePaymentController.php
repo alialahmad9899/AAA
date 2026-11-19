@@ -495,7 +495,8 @@ class PackagePaymentController extends Controller
             'package',
             'تفعيل الباقة',
             $message,
-            $result['payment']->id
+            $result['payment']->id,
+            'wesal://package-invoice/' . $result['payment']->id
         );
 
         if ($user->email != null && get_email_template('manual_payment_approval_email', 'status')) {

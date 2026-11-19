@@ -180,6 +180,19 @@ namespace Tests\Unit {
             );
         }
 
+        public function test_manual_package_approval_notification_includes_an_explicit_invoice_route(): void
+        {
+            $controllerPath = dirname(__DIR__, 2)
+                . '/app/Http/Controllers/PackagePaymentController.php';
+            $source = file_get_contents($controllerPath);
+
+            $this->assertIsString($source);
+            $this->assertStringContainsString(
+                "'wesal://package-invoice/' . $result['payment']->id",
+                $source
+            );
+        }
+
         public function test_notification_serialization_is_database_only_and_keeps_route(): void
         {
             $notification = new DbStoreNotification(
