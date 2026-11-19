@@ -104,6 +104,39 @@ namespace Tests\Unit {
             $this->assertStringContainsString('payment_was_soft_deleted', $source);
         }
 
+        public function test_package_invoice_resource_keeps_the_fields_consumed_by_flutter(): void
+        {
+            $root = dirname(__DIR__, 2);
+            $resource = file_get_contents(
+                $root . '/app/Http/Resources/PackagePaymentInvoiceResource.php'
+            );
+            $paymentModel = file_get_contents(
+                $root . '/app/Models/PackagePayment.php'
+            );
+
+            $this->assertIsString($resource);
+            $this->assertIsString($paymentModel);
+            foreach ([
+                "'payment_id'",
+                "'purchase_code'",
+                "'purchase_date'",
+                "'payment_method'",
+                "'payment_status'",
+                "'package_name'",
+                "'total'",
+            ] as $field) {
+                $this->assertStringContainsString($field, $resource);
+            }
+            $this->assertStringContainsString(
+                'belongsTo(User::class)->withTrashed()',
+                $paymentModel
+            );
+            $this->assertStringContainsString(
+                'belongsTo(Package::class)->withTrashed()',
+                $paymentModel
+            );
+        }
+
         public function test_fcm_android_tray_action_and_versioned_channels_match_flutter(): void
         {
             $root = dirname(__DIR__, 2);
