@@ -20,6 +20,7 @@ on:
       - main
     paths:
       - 'المشروع/WESAL/app/Notifications/DbStoreNotification.php'
+      - 'المشروع/WESAL/app/Services/FirebaseNotificationService.php'
       - 'المشروع/WESAL/app/Http/Controllers/Api/PackageController.php'
       - 'المشروع/WESAL/app/Services/SubscriptionNotificationService.php'
       - 'المشروع/WESAL/app/Services/ChatService.php'
