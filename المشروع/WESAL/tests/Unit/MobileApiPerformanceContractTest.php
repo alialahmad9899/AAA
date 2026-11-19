@@ -29,8 +29,14 @@ class MobileApiPerformanceContractTest extends TestCase
         $controller = $this->source('app/Http/Controllers/Api/ProfileController.php');
         $routes = $this->source('routes/api.php');
         $this->assertStringContainsString('public function app_summary()', $controller);
-        $this->assertStringContainsString("'is_female' => $gender === 2", $controller);
-        $this->assertStringContainsString("'is_subscribed_active' => $activePackage !== null", $controller);
+        $isFemaleContract = <<<'SOURCE'
+'is_female' => $gender === 2
+SOURCE;
+        $activePackageContract = <<<'SOURCE'
+'is_subscribed_active' => $activePackage !== null
+SOURCE;
+        $this->assertStringContainsString($isFemaleContract, $controller);
+        $this->assertStringContainsString($activePackageContract, $controller);
         $this->assertStringContainsString("Route::get('/app-summary', 'ProfileController@app_summary')", $routes);
     }
 
