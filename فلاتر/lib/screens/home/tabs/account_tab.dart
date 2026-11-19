@@ -258,19 +258,34 @@ class AccountTabState extends State<AccountTab> {
   }
 
   Future<void> _loadUserProfileData({bool forceRefresh = false}) async {
-    if (forceRefresh) {
-      await ProfileCacheService.clearCache();
-    }
-
     try {
-      // Start the full profile request in parallel, but do not block the account
-      // header on unrelated sections such as education or preferences.
+      final prefs = await SharedPreferences.getInstance();
+      final currentUserId = prefs.getInt('user_id') ?? 0;
+      if (!forceRefresh && currentUserId > 0) {
+        final cachedIdentity = await ProfileCacheService.getCachedUserSummary(
+          userId: currentUserId,
+        );
+        final cachedName = (cachedIdentity?['name'] ?? '').toString().trim();
+        final cachedPhoto = (cachedIdentity?['photo'] ?? '').toString().trim();
+        if (mounted && (cachedName.isNotEmpty || cachedPhoto.isNotEmpty)) {
+          setState(() {
+            if (cachedName.isNotEmpty) _userName = cachedName;
+            if (cachedPhoto.isNotEmpty) _userPhoto = cachedPhoto;
+            _isLoadingUser = false;
+          });
+        }
+      }
+
+      // Compact identity and full editable profile are loaded in parallel.
+      final summaryFuture = ApiService.getCurrentUserAccessSummary(
+        lang: widget.currentLanguage,
+        forceRefresh: forceRefresh,
+      );
       final profileFuture = ApiService.getCurrentUserProfile(
         lang: widget.currentLanguage,
       );
-      final summary =
-          await ApiService.getCurrentUserSummary(lang: widget.currentLanguage);
 
+      final summary = await summaryFuture;
       final summaryName = (summary?['name'] ?? '').toString().trim();
       final summaryPhoto = (summary?['photo'] ?? '').toString().trim();
       if (mounted) {
@@ -282,28 +297,20 @@ class AccountTabState extends State<AccountTab> {
       }
 
       final MemberProfileModel? profile = await profileFuture;
+      if (!mounted) return;
       final profileName = profile?.basicInfo.fullName.trim() ?? '';
       final profilePhoto = profile?.basicInfo.photo.trim() ?? '';
-      if (mounted) {
-        setState(() {
-          _userProfile = profile;
-          if (_userName.isEmpty && profileName.isNotEmpty) {
-            _userName = profileName;
-          }
-          if (_userPhoto.isEmpty && profilePhoto.isNotEmpty) {
-            _userPhoto = profilePhoto;
-          }
-        });
-      }
+      setState(() {
+        _userProfile = profile;
+        if (_userName.isEmpty && profileName.isNotEmpty) _userName = profileName;
+        if (_userPhoto.isEmpty && profilePhoto.isNotEmpty) _userPhoto = profilePhoto;
+        _isLoadingUser = false;
+      });
     } catch (e) {
       if (kDebugMode) {
         debugPrint('❌ [AccountTab] Failed to load account identity: $e');
       }
-      if (mounted) {
-        setState(() {
-          _isLoadingUser = false;
-        });
-      }
+      if (mounted) setState(() => _isLoadingUser = false);
     }
   }
 
