@@ -23,6 +23,7 @@ import '../chat_detail_screen.dart';
 
 class ChatsTab extends StatefulWidget {
   final String currentLanguage;
+  final bool isActive;
   final String Function(String) txt;
   final int unreadNotificationCount;
   final VoidCallback onNotificationPressed;
@@ -31,6 +32,7 @@ class ChatsTab extends StatefulWidget {
   const ChatsTab({
     super.key,
     required this.currentLanguage,
+    this.isActive = false,
     required this.txt,
     required this.unreadNotificationCount,
     required this.onNotificationPressed,
@@ -94,7 +96,7 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _startChatRefreshTimer();
+    if (widget.isActive) _startChatRefreshTimer();
     _checkSubscriptionAndFetch();
   }
 
@@ -107,8 +109,22 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
   }
 
   @override
+  void didUpdateWidget(ChatsTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.isActive != widget.isActive) {
+      if (widget.isActive) {
+        _startChatRefreshTimer();
+        _checkSubscriptionAndFetch();
+      } else {
+        _chatRefreshTimer?.cancel();
+        _chatRefreshTimer = null;
+      }
+    }
+  }
+
+  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
+    if (state == AppLifecycleState.resumed && widget.isActive) {
       unawaited(ApiService.syncChatMuteSettings());
       _checkSubscriptionAndFetch();
     }
@@ -121,22 +137,41 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
   /// التحقق من حالة حساب العضو وجلب المحادثات دائماً للجميع
   Future<void> _checkSubscriptionAndFetch() async {
     if (!mounted) return;
+    // Read-only cache is account-scoped; display it while network refresh runs.
+    unawaited(_loadCachedThreads());
+    unawaited(_fetchChats(silent: _chatThreads.isNotEmpty));
+    unawaited(_refreshSubscriptionStatus());
+  }
 
-    // Load the cached conversation list first; profile/plan lookup is
-    // independent and must not hold the chat tab behind a network spinner.
-    unawaited(_fetchChats());
-    setState(() => _isCheckingSubscription = false);
-
+  Future<void> _loadCachedThreads() async {
     try {
-      final profile = await ApiService.getCurrentUserProfile();
-      if (mounted && profile != null) {
+      final prefs = await SharedPreferences.getInstance();
+      final accountId = prefs.getInt('user_id') ?? 0;
+      if (accountId <= 0) return;
+      final cached = await ChatLocalStore.getThreads(accountId);
+      if (mounted && cached.isNotEmpty && _chatThreads.isEmpty) {
         setState(() {
-          _isSubscribedOrFemale =
-              profile.isFemale || profile.isSubscribedActive;
+          _chatThreads = cached;
+          _isChatsLoading = false;
         });
       }
     } catch (error) {
-      debugPrint('[Chats Tab] Subscription lookup unavailable: $error');
+      debugPrint('[Chats Tab] Could not load cached chats: $error');
+    }
+  }
+
+  Future<void> _refreshSubscriptionStatus() async {
+    final summary = await ApiService.getCurrentUserAccessSummary(
+      lang: widget.currentLanguage,
+    );
+    if (mounted && summary != null) {
+      setState(() {
+        _isSubscribedOrFemale = summary['is_female'] == true ||
+            summary['is_subscribed_active'] == true;
+        _isCheckingSubscription = false;
+      });
+    } else if (mounted) {
+      setState(() => _isCheckingSubscription = false);
     }
   }
 
@@ -234,8 +269,10 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
   /// تجديد قائمة المحادثات بصمت عند بقاء الشاشة مفتوحة.
   void _startChatRefreshTimer() {
     _chatRefreshTimer?.cancel();
+    if (!widget.isActive) return;
     _chatRefreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (!mounted || WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return;
+      if (!mounted || !widget.isActive ||
+          WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return;
       _fetchChats(silent: true);
     });
   }
@@ -266,6 +303,12 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
             .compareTo(_parseChatTimeToDateTime(a.time));
         return timeOrder != 0 ? timeOrder : b.id.compareTo(a.id);
       });
+      try {
+        final accountId = (await SharedPreferences.getInstance()).getInt('user_id') ?? 0;
+        if (accountId > 0) await ChatLocalStore.saveThreads(accountId, threads);
+      } catch (cacheError) {
+        debugPrint('[Chats Tab] Could not save chat cache: $cacheError');
+      }
       if (mounted && currentFetch == _chatFetchCounter) {
         setState(() {
           _chatThreads = threads;
