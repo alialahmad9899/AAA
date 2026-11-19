@@ -4177,6 +4177,28 @@ class ApiService {
     return response;
   }
 
+
+  /// Fetch the authenticated member's own package purchase history.
+  /// Null means a request failure; an empty list means no purchases.
+  static Future<List<Map<String, dynamic>>?> getPackagePurchaseHistory({String? lang}) async {
+    try {
+      final headers = await _getHeaders(lang: lang);
+      final int ts = DateTime.now().millisecondsSinceEpoch;
+      final Uri url = Uri.parse('$baseUrl/member/package-purchase-history?_t=$ts');
+      final response = await http.get(url, headers: headers).timeout(_timeoutDuration);
+      if (response.statusCode != 200 && response.statusCode != 201) return null;
+      final dynamic decoded = jsonDecode(response.body);
+      dynamic rows = decoded;
+      if (decoded is Map) rows = decoded['data'];
+      if (rows is Map && rows['data'] is List) rows = rows['data'];
+      if (rows is! List) return <Map<String, dynamic>>[];
+      return rows.whereType<Map>().map((row) => Map<String, dynamic>.from(row)).toList(growable: false);
+    } catch (error) {
+      if (kDebugMode) debugPrint('❌ [API ERROR getPackagePurchaseHistory]: $error');
+      return null;
+    }
+  }
+
   static Future<bool> markNotificationAsRead(String notificationId) async {
     try {
       final headers = await _getHeaders();
