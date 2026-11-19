@@ -160,9 +160,14 @@ NotificationDestination? _resolveKnownRoute(String rawRoute) {
       final int? parsed = int.tryParse(uri.queryParameters[key] ?? '');
       if (parsed != null && parsed > 0) return parsed;
     }
-    final int? parsedFromPath = segmentIndex < segments.length
-        ? int.tryParse(segments[segmentIndex])
-        : null;
+    final int effectiveSegmentIndex =
+        uri.scheme == 'wesal' && uri.host.isNotEmpty
+            ? segmentIndex - 1
+            : segmentIndex;
+    final int? parsedFromPath =
+        effectiveSegmentIndex >= 0 && effectiveSegmentIndex < segments.length
+            ? int.tryParse(segments[effectiveSegmentIndex])
+            : null;
     return parsedFromPath != null && parsedFromPath > 0
         ? parsedFromPath
         : null;
