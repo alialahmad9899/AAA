@@ -180,18 +180,22 @@ namespace Tests\Unit {
             );
         }
 
-        public function test_manual_package_approval_notification_includes_an_explicit_invoice_route(): void
+        public function test_package_purchase_notifications_include_explicit_invoice_routes(): void
         {
             $controllerPath = dirname(__DIR__, 2)
                 . '/app/Http/Controllers/PackagePaymentController.php';
             $source = file_get_contents($controllerPath);
 
             $this->assertIsString($source);
-            $expectedRoute = <<<'SOURCE'
+            $manualApprovalRoute = <<<'SOURCE'
 'wesal://package-invoice/' . $result['payment']->id
 SOURCE;
+            $completedPurchaseRoute = <<<'SOURCE'
+'wesal://package-invoice/' . $package_payment->id
+SOURCE;
 
-            $this->assertStringContainsString($expectedRoute, $source);
+            $this->assertStringContainsString($manualApprovalRoute, $source);
+            $this->assertStringContainsString($completedPurchaseRoute, $source);
         }
 
         public function test_notification_serialization_is_database_only_and_keeps_route(): void
