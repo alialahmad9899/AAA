@@ -52,9 +52,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
 
   late int _activeThreadId;
   int _currentUserId = 0;
-  double? _savedScrollOffset;
-  Timer? _scrollPositionSaveTimer;
   bool _hasRestoredScrollPosition = false;
+  bool _partnerIsOnline = false;
+  String _partnerLastSeen = '';
   bool _isChatMuted = false;
   bool _showMessageSearch = false;
   bool _isSearchingSavedMessages = false;
@@ -141,6 +141,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   void initState() {
     super.initState();
     _activeThreadId = widget.thread.id;
+    _partnerIsOnline = widget.thread.isOnline;
+    _partnerLastSeen = widget.thread.lastSeen;
     WidgetsBinding.instance.addObserver(this);
     _scrollController.addListener(_scrollListener);
     _inputFocusNode.addListener(_onFocusChange);
@@ -161,28 +163,26 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   }
 
   void _onFocusChange() {
-    if (mounted && _inputFocusNode.hasFocus && _showEmojiPicker) {
+    if (!mounted || !_inputFocusNode.hasFocus) return;
+    if (_showEmojiPicker) {
       setState(() {
         _showEmojiPicker = false;
       });
     }
+    _scrollToBottom();
   }
 
   @override
   void dispose() {
     _messageRefreshTimer?.cancel();
-    _scrollPositionSaveTimer?.cancel();
-    if (_scrollController.hasClients && _currentUserId > 0) {
-      unawaited(ChatLocalStore.saveScrollOffset(
-        _currentUserId,
-        _activeThreadId,
-        _scrollController.offset,
-      ));
-    }
     if (ChatActivityState.activeThreadId.value == _activeThreadId) {
       ChatActivityState.activeThreadId.value = null;
     }
-    unawaited(ApiService.updateChatPresence(threadId: 0));
+    unawaited(ApiService.updateChatPresence(
+      threadId: 0,
+      appIsActive:
+          WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed,
+    ));
     WidgetsBinding.instance.removeObserver(this);
     _scrollController.removeListener(_scrollListener);
     _inputFocusNode.removeListener(_onFocusChange);
@@ -203,10 +203,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           _currentUserId,
           _activeThreadId,
           currentUserId: _currentUserId,
-        );
-        _savedScrollOffset = await ChatLocalStore.getScrollOffset(
-          _currentUserId,
-          _activeThreadId,
         );
         final muted = await ChatLocalStore.isMuted(
           _currentUserId,
@@ -229,7 +225,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
 
     if (!mounted) return;
     ChatActivityState.activeThreadId.value = _activeThreadId;
-    unawaited(ApiService.updateChatPresence(threadId: _activeThreadId));
+    unawaited(ApiService.updateChatPresence(
+        threadId: _activeThreadId,
+        appIsActive: true,
+      ));
     unawaited(ApiService.syncChatMuteSettings());
     _startMessageRefreshTimer();
     await _loadMessages(
@@ -249,7 +248,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         return;
       }
       ChatActivityState.activeThreadId.value = _activeThreadId;
-      unawaited(ApiService.updateChatPresence(threadId: _activeThreadId));
+      unawaited(ApiService.updateChatPresence(
+        threadId: _activeThreadId,
+        appIsActive: true,
+      ));
       _loadMessages(silent: true, preserveHistory: true);
     });
   }
@@ -258,7 +260,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       ChatActivityState.activeThreadId.value = _activeThreadId;
-      unawaited(ApiService.updateChatPresence(threadId: _activeThreadId));
+      unawaited(ApiService.updateChatPresence(
+        threadId: _activeThreadId,
+        appIsActive: true,
+      ));
       unawaited(ApiService.syncChatMuteSettings());
       _loadMessages(silent: true, preserveHistory: true);
       _startMessageRefreshTimer();
@@ -266,41 +271,33 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       _messageRefreshTimer?.cancel();
       _messageRefreshTimer = null;
       ChatActivityState.activeThreadId.value = null;
-      unawaited(ApiService.updateChatPresence(threadId: 0));
+      if (state == AppLifecycleState.paused ||
+          state == AppLifecycleState.detached) {
+        unawaited(ApiService.updateChatPresence(
+          threadId: 0,
+          appIsActive: false,
+        ));
+      }
     }
   }
 
-  void _saveReadPositionSoon() {
-    if (_currentUserId <= 0 ||
-        _activeThreadId <= 0 ||
-        !_scrollController.hasClients ||
-        _isLoadingMore) {
-      return;
-    }
-    _scrollPositionSaveTimer?.cancel();
-    _scrollPositionSaveTimer = Timer(const Duration(milliseconds: 350), () {
-      if (!_scrollController.hasClients) return;
-      unawaited(ChatLocalStore.saveScrollOffset(
-        _currentUserId,
-        _activeThreadId,
-        _scrollController.offset,
-      ));
+  @override
+  void didChangeMetrics() {
+    if (!_inputFocusNode.hasFocus || _showEmojiPicker) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+      );
     });
   }
 
   void _restoreSavedReadPosition() {
     if (_hasRestoredScrollPosition) return;
     _hasRestoredScrollPosition = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_scrollController.hasClients) return;
-      final max = _scrollController.position.maxScrollExtent;
-      final saved = _savedScrollOffset;
-      if (saved != null && saved.isFinite) {
-        _scrollController.jumpTo(saved.clamp(0.0, max).toDouble());
-      } else {
-        _scrollToBottom();
-      }
-    });
+    _scrollToBottom();
   }
 
   void _toggleMessageSearch() {
@@ -703,7 +700,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   }
 
   void _scrollListener() {
-    _saveReadPositionSoon();
     if (_scrollController.hasClients &&
         _scrollController.position.pixels <= 30 &&
         !_isLoadingMore &&
@@ -738,7 +734,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     }
     _isFetchingMessages = true;
     final requestedThreadId = _activeThreadId;
-    final int previousMessageCount = _messages.length;
+    final int? previousLatestMessageId =
+        _messages.isNotEmpty ? _messages.last.id : null;
     final bool wasNearBottom = _scrollController.hasClients &&
         (_scrollController.position.maxScrollExtent -
                 _scrollController.position.pixels <=
@@ -780,8 +777,19 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       if (_activeThreadId > 0) {
         _globalMessagesCache[_activeThreadId] = List.from(displayedMessages);
       }
+      final int? latestMessageId =
+          displayedMessages.isNotEmpty ? displayedMessages.last.id : null;
+      final bool hasNewLatestMessage = latestMessageId != null &&
+          (previousLatestMessageId == null ||
+              latestMessageId > previousLatestMessageId);
       setState(() {
         _messages = displayedMessages;
+        if (res.containsKey('partner_is_online')) {
+          _partnerIsOnline = res['partner_is_online'] == true;
+        }
+        if (res.containsKey('partner_last_seen')) {
+          _partnerLastSeen = res['partner_last_seen']?.toString() ?? '';
+        }
         _chatRules = rules;
         _hasMoreOldMessages = preserveHistory
             ? (_hasMoreOldMessages && res['has_more_old_messages'] == true)
@@ -793,9 +801,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       if (!_hasRestoredScrollPosition) {
         _restoreSavedReadPosition();
       } else if (!silent ||
-          (preserveHistory &&
-              wasNearBottom &&
-              displayedMessages.length > previousMessageCount)) {
+          (preserveHistory && wasNearBottom && hasNewLatestMessage)) {
         _scrollToBottom();
       }
     } catch (e) {
@@ -882,13 +888,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
+      if (!mounted || !_scrollController.hasClients) return;
+      final position = _scrollController.position;
+      final target = position.maxScrollExtent;
+      if ((target - position.pixels).abs() < 1) return;
+      _scrollController.animateTo(
+        target,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+      );
     });
   }
 
@@ -2096,9 +2104,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
 
   /// رأس المحادثة ببطاقة فاتحة مع بقاء ملف العضو وقائمة الخيارات قابلين للفتح.
   Widget _buildHeader() {
-    final String presenceText = widget.thread.isOnline
+    final String presenceText = _partnerIsOnline
         ? (_isArabic ? 'متصل الآن' : 'Online')
-        : _translateLastSeen(widget.thread.lastSeen);
+        : _translateLastSeen(_partnerLastSeen);
 
     return Container(
       margin: const EdgeInsets.fromLTRB(14, 8, 14, 10),
@@ -2152,7 +2160,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                           gender: widget.thread.gender,
                           radius: 21,
                         ),
-                        if (widget.thread.isOnline)
+                        if (_partnerIsOnline)
                           Positioned(
                             bottom: 0,
                             right: 0,
@@ -2205,7 +2213,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                           const SizedBox(height: 2),
                           Row(
                             children: [
-                              if (widget.thread.isOnline)
+                              if (_partnerIsOnline)
                                 Container(
                                   margin: const EdgeInsetsDirectional.only(end: 5),
                                   width: 6,
@@ -2221,12 +2229,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
-                                    color: widget.thread.isOnline
+                                    color: _partnerIsOnline
                                         ? AppColors.success
                                         : AppColors.textMuted,
                                     fontSize: 10.5,
                                     fontFamily: 'Cairo',
-                                    fontWeight: widget.thread.isOnline
+                                    fontWeight: _partnerIsOnline
                                         ? FontWeight.w600
                                         : FontWeight.normal,
                                   ),
@@ -2286,8 +2294,13 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   }
 
   Widget _buildInputArea() {
+    ret  Widget _buildInputArea() {
+    final outline = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(20),
+      borderSide: const BorderSide(color: AppColors.lineColor),
+    );
     return Container(
-      padding: const EdgeInsets.fromLTRB(8, 9, 8, 10),
+      padding: const EdgeInsets.fromLTRB(5, 8, 5, 8),
       decoration: BoxDecoration(
         color: AppColors.cardColor,
         border: const Border(
@@ -2302,8 +2315,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           IconButton(
+            constraints: const BoxConstraints.tightFor(width: 40, height: 48),
+            padding: EdgeInsets.zero,
+            visualDensity: VisualDensity.compact,
             tooltip: _isArabic ? 'إرفاق صورة' : 'Attach image',
             icon: const Icon(
               Icons.add_a_photo_rounded,
@@ -2313,6 +2330,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
             onPressed: () => _pickImage(ImageSource.gallery),
           ),
           IconButton(
+            constraints: const BoxConstraints.tightFor(width: 40, height: 48),
+            padding: EdgeInsets.zero,
+            visualDensity: VisualDensity.compact,
             tooltip: _isArabic ? 'الرموز والملصقات' : 'Emojis and stickers',
             icon: Icon(
               _showEmojiPicker
@@ -2323,17 +2343,21 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
             ),
             onPressed: _toggleEmojiPicker,
           ),
+          const SizedBox(width: 5),
           Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              decoration: BoxDecoration(
-                color: AppColors.sectionBackground,
-                borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: AppColors.lineColor),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                minHeight: 48,
+                maxHeight: 104,
               ),
               child: TextField(
                 controller: _messageController,
                 focusNode: _inputFocusNode,
+                minLines: 1,
+                maxLines: 4,
+                keyboardType: TextInputType.multiline,
+                textCapitalization: TextCapitalization.sentences,
+                textAlignVertical: TextAlignVertical.center,
                 style: const TextStyle(
                   color: AppColors.textDark,
                   fontFamily: 'Cairo',
@@ -2348,14 +2372,27 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                     fontFamily: 'Cairo',
                     fontSize: 12.5,
                   ),
-                  border: InputBorder.none,
+                  filled: true,
+                  fillColor: AppColors.sectionBackground,
                   isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  border: outline,
+                  enabledBorder: outline,
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: const BorderSide(
+                      color: AppColors.primaryTeal,
+                      width: 1.3,
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 7),
           Material(
             color: AppColors.primaryTeal,
             shape: const CircleBorder(),
@@ -2378,7 +2415,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     );
   }
 
-  Widget _buildEmojiStickerPicker() {
+{
     return Container(
       height: 230,
       decoration: const BoxDecoration(
