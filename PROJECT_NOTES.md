@@ -1893,3 +1893,36 @@
 - Backend PHP syntax: نجاح؛ اختبارات PHPUnit التي يشغّلها Workflow نجحت، بما فيها `AccountBlockAccessContractTest` الذي يغطي إشعار الحظر ومسارات حالة الحظر والدعم.
 - تم إنشاء وفحص ZIP مستقل يحتوي 11 ملفاً تشغيلياً/اختبارياً فقط بمساراتها الأصلية؛ لا يحتوي الموقع العام أو `PROJECT_NOTES.md`.
 - لا يشمل هذا النجاح اختبار FCM فعلياً على هاتف أو اختبار إنشاء رسالة دعم على قاعدة الإنتاج؛ ولم يتم النشر إلى Hostinger أو بناء APK.
+
+
+## 2026-11-20 — إصلاح تعطل تأكيد شراء الاشتراكات عبر شام كاش وStripe
+
+### السبب الجذري المثبت من الكود وتاريخ التعديلات
+- في Commit `93c5ccb42dc7f8b1a0b826e246998f38990c4d62` بتاريخ 7 نوفمبر، تم تقييد جلب وسائل الدفع اليدوي والتحقق من وسيلة الدفع داخل `PackageController` بالبحث في `heading` أو `heading_en`.
+- نموذج لوحة الأدمن الفعلي في `ManualPaymentMethodController` وواجهتي الإنشاء/التعديل يحفظ `heading` و`description` و`photo` و`type` فقط؛ ولا يحتوي على حقل `heading_en`. لذلك أصبح عقد API غير مطابق للحقول التي تحفظها لوحة الأدمن، وقد يؤدي ذلك إلى فشل استعلام وسائل الدفع أو إرجاع قائمة فارغة. تطبيق Flutter يحوّل فشل جلب القائمة إلى قائمة فارغة، ثم يبقى `_selectedManualMethodId` فارغاً وتظهر رسالة الاختيار المضللة رغم اختيار الباقة.
+- مسار Stripe كان يستخدم `get_setting('stripe_payment_activation')`، بينما `get_setting` يخزن جميع الإعدادات في Cache لمدة 24 ساعة. هذا يسمح بقراءة قيمة تفعيل قديمة عند اختلاف/تأخر إبطال الكاش عن القيمة الحالية في جدول settings.
+
+### الإصلاح
+- توحيد تحديد شام كاش في موديل `ManualPaymentMethod::isShamCash()` بالاعتماد على `heading` الذي تحفظه لوحة الأدمن، مع دعم الاسم العربي وصيغ Sham Cash الإنجليزية والمسافات/الفواصل.
+- تحديث API جلب وسائل الدفع اليدوية و`PaymentTypesController` لاستخدام المعيار الموحد، دون افتراض وجود `heading_en`.
+- تحديث `package_purchase` للتحقق من معرّف الطريقة المختارة ثم التحقق من أنها شام كاش بالمعيار نفسه؛ لم يتم فتح الدفع اليدوي لوسائل أخرى.
+- تحديث فحص تفعيل Stripe في إنشاء PaymentIntent وقائمة أنواع الدفع ليقرأ قيمة `stripe_payment_activation` مباشرة من جدول settings، مع إبقاء شرط تفعيل الأدمن كما هو. عند بقاء القيمة غير مفعلة يسجل الخادم وجود السجل وقيمته الحالية دون تسجيل أي مفاتيح سرية.
+- فصل رسائل Flutter: فقدان الباقة يعرض طلب اختيار الباقة، أما فقدان معرّف شام كاش فيعرض رسالة واضحة عن تعذر تحميل طريقة الدفع، بدلاً من اتهام المستخدم بعدم اختيار الباقة.
+
+### الملفات الأصلية المعدّلة
+- `المشروع/WESAL/app/Models/ManualPaymentMethod.php`
+- `المشروع/WESAL/app/Http/Controllers/Api/PackageController.php`
+- `المشروع/WESAL/app/Http/Controllers/Api/Payment/PaymentTypesController.php`
+- `المشروع/WESAL/app/Http/Controllers/Api/Payment/StripeController.php`
+- `فلاتر/lib/screens/home/tabs/account_tab.dart`
+- `المشروع/WESAL/tests/Unit/SubscriptionPaymentContractTest.php` (اختبار انحدار جديد)
+- `.github/workflows/wesal-integration-validation.yml` (تسجيل الاختبار ونقطة أساس ZIP فقط؛ مستبعد من ZIP التسليم)
+
+### التحقق والتسليم
+- Commit المصدر على `main`: `fc82ce1939b87844ebdce0e5dacfd3df49730fc4`.
+- GitHub Actions run `44640121891`: جميع الوظائف الثلاث نجحت؛ PHP syntax وPHPUnit، إنشاء ZIP، وFlutter.
+- اختبار الانحدار الجديد: `2 tests / 32 assertions` ناجحة.
+- `dart analyze --fatal-infos`: `No issues found!`.
+- `flutter test`: `140 tests passed`.
+- تم فحص أرشيف الدفعة النهائي: 6 ملفات فقط بمساراتها الأصلية، وسلامة ZIP ناجحة؛ لا يحتوي الموقع العام أو سجل الملاحظات أو ملفات قديمة.
+- لم يتم نشر الملفات على Hostinger، ولم يتم تنفيذ دفعة فعلية أو اختبار Stripe/شام كاش على حساب إنتاجي، ولم يتم تعديل بيانات قاعدة الإنتاج. لذلك لا يُدّعى أن معاملة دفع حقيقية قد جُرّبت. بوابة Stripe ما زالت تتطلب أن تكون قيمة `stripe_payment_activation` مساوية لـ `1` في قاعدة البيانات؛ الإصلاح لا يتجاوز إعداد الأدمن.
