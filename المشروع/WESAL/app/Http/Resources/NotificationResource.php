@@ -118,7 +118,23 @@ class NotificationResource extends JsonResource
         $title = $isCorruptedTitle ? $this->getDefaultTitleByType($rawType, $cleanMessage) : $rawTitle;
 
         // 7. جلب صورة المرسل أو أيكونة الدعم الفني المخصصة
-        $notifyBy = isset($notificationData->notify_by) ? $notificationData->notify_by : ($notificationData->sender_id ?? null);
+        $notifyBy = $notificationData->notify_by
+            ?? $notificationData->viewer_id
+            ?? $notificationData->actor_id
+            ?? $notificationData->sender_id
+            ?? null;
+        $notificationRoute = isset($notificationData->route) ? $this->cleanUtf8($notificationData->route) : '';
+        $paymentId = $notificationData->payment_id
+            ?? $notificationData->package_payment_id
+            ?? $notificationData->invoice_id
+            ?? null;
+        // Recover historical payment IDs only from an explicit trusted Wesal invoice route.
+        if ((!is_numeric($paymentId) || (int) $paymentId < 1)
+            && preg_match('~^wesal://package-invoice/([1-9][0-9]*)(?:/?(?:[?#].*)?)$~i', (string) $notificationRoute, $invoiceRouteMatch)) {
+            $paymentId = (int) $invoiceRouteMatch[1];
+        }
+        $paymentId = is_numeric($paymentId) && (int) $paymentId > 0 ? (int) $paymentId : null;
+        $viewerId = $notificationData->viewer_id ?? ($rawType === 'profile_view' ? $notifyBy : null);
         $photo = '';
 
         // إذا كان الإشعار خاصاً بالدعم الفني/البلاغات نعتمد صورة الإدارة/شعار النظام
@@ -143,11 +159,16 @@ class NotificationResource extends JsonResource
             'type'            => $this->cleanUtf8($rawType),
             'notifiable_id'   => $this->notifiable_id,
             'notify_by'       => $notifyBy ?? 0,
+            'actor_id'        => $notifyBy ?? 0,
+            'viewer_id'       => $viewerId,
+            'payment_id'      => $paymentId,
+            'package_payment_id' => $paymentId,
+            'invoice_id'      => $paymentId,
             'photo'           => $this->cleanUtf8($photo),
             'info_id'         => isset($notificationData->info_id) ? $notificationData->info_id : ($notificationData->thread_id ?? null),
             'title'           => $this->cleanUtf8(trim($title)),
             'message'         => $this->cleanUtf8($cleanMessage),
-            'route'           => isset($notificationData->route) ? $this->cleanUtf8($notificationData->route) : '',
+            'route'           => $notificationRoute,
             'read_at'         => $this->read_at,
             'created_at'      => $this->created_at ? $this->created_at->format('Y-m-d H:i:s') : null,
         ];
