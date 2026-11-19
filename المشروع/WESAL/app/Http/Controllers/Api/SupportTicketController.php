@@ -28,6 +28,22 @@ class SupportTicketController extends Controller
     }
 
     /**
+     * Only authenticated blocked users can use this endpoint to send an appeal.
+     */
+    public function store_blocked_message(Request $request)
+    {
+        if (!$request->user() || (int) $request->user()->blocked !== 1) {
+            return response()->json([
+                'result' => false,
+                'status' => 'not_blocked',
+                'message' => 'هذا المسار مخصص للحسابات المحظورة فقط.',
+            ], 403);
+        }
+
+        return $this->store($request);
+    }
+
+    /**
      * جلب جميع التذاكر الخاصة بالمستخدم الحالي (المفتوحة والمكتملة)
      *
      * @return \Illuminate\Http\Response
