@@ -19,6 +19,7 @@ use App\Notifications\DbStoreNotification;
 use App\Services\FirebaseNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Log;
 
 class WalletController extends Controller
 {
@@ -114,11 +115,25 @@ class WalletController extends Controller
             $client_title = "رصيد المحفظة";
             $client_message = "تمت إضافة مبلغ " . $payment_data['amount'] . "$ إلى محفظتك بنجاح. رصيدك الحالي الآن هو " . $user->balance . "$. ويمكنك استخدام هذا الرصيد لشراء الباقات بسهولة.";
 
-            if (get_setting('firebase_push_notification') == 1 && !empty($user->fcm_token)) {
-                FirebaseNotificationService::sendPushNotification($user->fcm_token, $client_title, $client_message, [
+            $pushEnabled = (int) get_setting('firebase_push_notification') === 1;
+            $hasDeviceToken = !empty($user->fcm_token);
+            if ($pushEnabled && $hasDeviceToken) {
+                $pushAccepted = FirebaseNotificationService::sendPushNotification($user->fcm_token, $client_title, $client_message, [
                     'type'    => 'wallet',
                     'info_id' => $wallet->id,
                     'route'   => ''
+                ]);
+                if (!$pushAccepted) {
+                    Log::warning('Wallet notification saved, but Firebase did not accept the push.', [
+                        'user_id' => $user->id,
+                        'wallet_id' => $wallet->id,
+                    ]);
+                }
+            } else {
+                Log::warning('Wallet push notification skipped.', [
+                    'user_id' => $user->id,
+                    'push_enabled' => $pushEnabled,
+                    'has_device_token' => $hasDeviceToken,
                 ]);
             }
 
