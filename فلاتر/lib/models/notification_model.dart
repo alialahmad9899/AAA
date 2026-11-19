@@ -84,7 +84,7 @@ class NotificationModel {
         json['header']?.toString() ??
         '';
 
-    String typeStr = json['type']?.toString() ?? '';
+    String typeStr = (json['type'] ?? json['notification_type'] ?? json['action'])?.toString() ?? '';
 
     final isUnderscoreTitle = RegExp(r'^_+$').hasMatch(extractedTitle.trim());
     bool isBadTitle = extractedTitle.trim().isEmpty ||
@@ -114,6 +114,9 @@ class NotificationModel {
               json['payment_id'] ??
               json['package_payment_id'] ??
               json['invoice_id'] ??
+              json['thread_id'] ??
+              json['chat_thread_id'] ??
+              json['conversation_id'] ??
               '')
           .toString(),
       route: json['route']?.toString() ?? json['link']?.toString() ?? '',
