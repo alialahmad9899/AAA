@@ -46,6 +46,31 @@ void main() {
       expect(receivedMessageIds, contains('fcm-123'));
     });
 
+    test('allows a deliberate new tap from the notification center after navigation', () {
+      final handledTaps = <String>{'notification-16'};
+      final inProgressTaps = <String>{};
+
+      expect(
+        claimNotificationTap(
+          'notification-16',
+          handled: handledTaps,
+          inProgress: inProgressTaps,
+          allowHandledRepeat: true,
+        ),
+        isTrue,
+      );
+
+      expect(
+        claimNotificationTap(
+          'notification-16',
+          handled: handledTaps,
+          inProgress: inProgressTaps,
+          allowHandledRepeat: true,
+        ),
+        isFalse,
+      );
+    });
+
     test('parses silent flags sent through FCM data fields', () {
       expect(isSilentChatNotification('true'), isTrue);
       expect(isSilentChatNotification(1), isTrue);
