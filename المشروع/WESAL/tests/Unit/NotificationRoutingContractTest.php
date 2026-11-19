@@ -104,6 +104,48 @@ namespace Tests\Unit {
             $this->assertStringContainsString('payment_was_soft_deleted', $source);
         }
 
+        public function test_fcm_android_tray_action_and_versioned_channels_match_flutter(): void
+        {
+            $root = dirname(__DIR__, 2);
+            $firebaseService = file_get_contents(
+                $root . '/app/Services/FirebaseNotificationService.php'
+            );
+            $flutterService = file_get_contents(
+                dirname($root) . '/فلاتر/lib/services/notification_service.dart'
+            );
+            $manifest = file_get_contents(
+                dirname($root) . '/فلاتر/android/app/src/main/AndroidManifest.xml'
+            );
+
+            $this->assertIsString($firebaseService);
+            $this->assertIsString($flutterService);
+            $this->assertIsString($manifest);
+            $this->assertStringContainsString(
+                '"click_action" => "FLUTTER_NOTIFICATION_CLICK"',
+                $firebaseService
+            );
+            $this->assertStringContainsString(
+                'wesal_high_importance_channel_v2',
+                $firebaseService
+            );
+            $this->assertStringContainsString(
+                'wesal_chat_alert_channel_v2',
+                $firebaseService
+            );
+            $this->assertStringContainsString(
+                "'wesal_high_importance_channel_v2'",
+                $flutterService
+            );
+            $this->assertStringContainsString(
+                "'wesal_chat_alert_channel_v2'",
+                $flutterService
+            );
+            $this->assertStringContainsString(
+                'android:value="wesal_high_importance_channel_v2"',
+                $manifest
+            );
+        }
+
         public function test_notification_serialization_is_database_only_and_keeps_route(): void
         {
             $notification = new DbStoreNotification(
