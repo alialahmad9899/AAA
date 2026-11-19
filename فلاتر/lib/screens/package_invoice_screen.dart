@@ -148,6 +148,13 @@ class _PackageInvoiceScreenState extends State<PackageInvoiceScreen> {
 
               final data = snapshot.data;
               if (data == null || data['result'] == false) {
+                final String serverMessage =
+                    data?['message']?.toString().trim() ?? '';
+                final String errorMessage = serverMessage.isNotEmpty
+                    ? serverMessage
+                    : (_isEnglish
+                        ? 'Invoice could not be loaded. Check your connection and try again.'
+                        : 'تعذر تحميل الفاتورة. تحقق من الاتصال ثم أعد المحاولة.');
                 return Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
@@ -158,9 +165,7 @@ class _PackageInvoiceScreenState extends State<PackageInvoiceScreen> {
                             size: 46, color: AppColors.textMuted),
                         const SizedBox(height: 12),
                         Text(
-                          _isEnglish
-                              ? 'Invoice could not be loaded. Check your connection and try again.'
-                              : 'تعذر تحميل الفاتورة. تحقق من الاتصال ثم أعد المحاولة.',
+                          errorMessage,
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             fontFamily: 'Cairo',
