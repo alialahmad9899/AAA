@@ -21,7 +21,9 @@ import '../models/chat_model.dart';
 import '../screens/chat_detail_screen.dart';
 import '../screens/member_profile_screen.dart';
 import '../screens/my_interests_screen.dart';
+import '../screens/my_profile_viewers_screen.dart';
 import '../screens/notifications_screen.dart';
+import '../screens/package_purchase_history_screen.dart';
 import '../screens/package_invoice_screen.dart';
 import '../screens/support_ticket_detail_screen.dart';
 import 'api_service.dart';
@@ -529,6 +531,7 @@ class NotificationService {
       languageOverride: language,
       fallbackToCenter: false,
       allowHandledRepeat: true,
+      requireAuthToken: false,
     );
   }
 
@@ -545,6 +548,7 @@ class NotificationService {
     String? languageOverride,
     bool fallbackToCenter = true,
     bool allowHandledRepeat = false,
+    bool requireAuthToken = true,
   }) async {
     final String dedupeId = messageId?.trim().isNotEmpty == true
         ? messageId!.trim()
@@ -561,8 +565,10 @@ class NotificationService {
     }
 
     try {
-      final String? userToken = await ApiService.getToken();
-      if (userToken == null || userToken.isEmpty) return false;
+      if (requireAuthToken) {
+        final String? userToken = await ApiService.getToken();
+        if (userToken == null || userToken.isEmpty) return false;
+      }
 
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final String language = languageOverride ??
@@ -611,6 +617,12 @@ class NotificationService {
 
       case NotificationDestinationKind.interests:
         return (_) => MyInterestsScreen(currentLanguage: language);
+
+      case NotificationDestinationKind.profileVisitors:
+        return (_) => MyProfileViewersScreen(currentLanguage: language);
+
+      case NotificationDestinationKind.packagePurchaseHistory:
+        return (_) => PackagePurchaseHistoryScreen(currentLanguage: language);
 
       case NotificationDestinationKind.profile:
         final int? memberId = destination.id;
