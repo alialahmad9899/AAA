@@ -47,11 +47,15 @@ class ChatService
                 ? $thread->receiver_user_id
                 : $thread->sender_user_id;
             $receiver = User::find($receiverId);
-            if (
-                !$receiver
-                || empty($receiver->fcm_token)
-                || get_setting('firebase_push_notification') != 1
-            ) {
+            $pushEnabled = (int) get_setting('firebase_push_notification') === 1;
+            if (!$receiver || empty($receiver->fcm_token) || !$pushEnabled) {
+                Log::warning('Chat push notification skipped.', [
+                    'receiver_id' => $receiverId,
+                    'thread_id' => $thread->id,
+                    'receiver_exists' => $receiver !== null,
+                    'has_device_token' => $receiver ? !empty($receiver->fcm_token) : false,
+                    'push_enabled' => $pushEnabled,
+                ]);
                 return $chat;
             }
 
