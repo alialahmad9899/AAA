@@ -95,7 +95,7 @@
         <!-- ربط القناة عالية الأهمية المعرفة بالسيرفر -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="wesal_high_importance_channel" />
+            android:value="wesal_high_importance_channel_v2" />
 
         <!-- أيقونة الإشعارات الافتراضية بالستارة -->
         <meta-data
