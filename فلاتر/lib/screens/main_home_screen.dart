@@ -21,7 +21,6 @@ import 'home/tabs/auto_matching_tab.dart';
 import 'home/chats_tab.dart';
 import 'home/tabs/search_tab.dart';
 import 'home/tabs/account_tab.dart';
-import '../models/blocked_account_status.dart';
 import 'support_tickets_screen.dart';
 
 class MainHomeScreen extends StatefulWidget {
@@ -213,14 +212,18 @@ class _MainHomeScreenState extends State<MainHomeScreen>
         const Duration(seconds: 20),
         (_) => unawaited(_refreshBlockedStatus()),
       );
-      if (!_isBlocked) _fetchNotificationsCount();
+      if (!_isBlocked) {
+        _fetchNotificationsCount();
+      }
     });
   }
 
   void _onForegroundNotificationReceived() {
     if (!mounted) return;
     unawaited(_refreshBlockedStatus());
-    if (!_isBlocked) _fetchNotificationsCount();
+    if (!_isBlocked) {
+      _fetchNotificationsCount();
+    }
   }
 
   Future<void> _loadCachedBlockedStatus() async {
