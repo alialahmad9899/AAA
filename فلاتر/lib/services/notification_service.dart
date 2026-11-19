@@ -143,7 +143,7 @@ class NotificationService {
   static final ValueNotifier<int> foregroundMessageVersion = ValueNotifier<int>(0);
 
   static bool _initialized = false;
-  static bool _initializing = false;
+  static Future<void>? _initializationFuture;
   static bool _localNotificationsInitialized = false;
   static bool _sessionEnabled = false;
   static int _sessionGeneration = 0;
@@ -155,12 +155,18 @@ class NotificationService {
   static final Set<String> _handledNotificationTapIds = <String>{};
   static final Set<String> _messagesBeingHandled = <String>{};
 
-  /// تهيئة الخدمة مرة واحدة فقط طوال عمر التطبيق.
-  static Future<void> initialize() async {
-    if (_initialized || _initializing) return;
-    _initializing = true;
+  /// تهيئة مشتركة؛ أي استدعاء متزامن ينتظر نفس عملية Firebase والـlisteners.
+  static Future<void> initialize() {
+    if (_initialized) return Future<void>.value();
+    return _initializationFuture ??= _initializeOnce().whenComplete(() {
+      _initializationFuture = null;
+    });
+  }
 
+  static Future<void> _initializeOnce() async {
     try {
+      await Firebase.initializeApp();
+
       // يجب تسجيل معالج الخلفية قبل بدء استقبال الرسائل.
       FirebaseMessaging.onBackgroundMessage(
         firebaseMessagingBackgroundHandler,
@@ -178,14 +184,12 @@ class NotificationService {
           '[Notifications] Authorization: ${permission.authorizationStatus}',
         );
       } catch (error) {
-        // لا نوقف استقبال الإشعارات أو توجيهها بسبب فشل طلب الإذن.
         debugPrint('[Notifications] Permission request failed: $error');
       }
 
       await _ensureLocalNotificationsInitialized();
       await _configureForegroundPresentationOptions();
 
-      // من هذه النقطة أصبحت مستمعات FCM مربوطة مرة واحدة.
       _initialized = true;
       FirebaseMessaging.onMessage.listen(_onForegroundMessage);
       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
@@ -198,7 +202,6 @@ class NotificationService {
         unawaited(_syncSpecificToken(newToken).then<void>((_) {}));
       });
 
-      // فتح التطبيق من إشعار FCM وهو مغلق بالكامل.
       try {
         final RemoteMessage? initialMessage =
             await _messaging.getInitialMessage();
@@ -212,7 +215,6 @@ class NotificationService {
         debugPrint('[Notifications] Initial FCM message failed: $error');
       }
 
-      // فتح التطبيق من إشعار محلي (رسالة data-only في الخلفية).
       if (_localNotificationsInitialized) {
         try {
           final NotificationAppLaunchDetails? launchDetails =
@@ -228,14 +230,11 @@ class NotificationService {
           debugPrint('[Notifications] Local launch details failed: $error');
         }
       }
-
-      // مزامنة التوكن لا تتم إلا إذا كانت هناك جلسة دخول محفوظة.
-      await syncCurrentToken();
     } catch (error, stackTrace) {
+      _initialized = false;
       debugPrint('[NotificationService Initialize] $error');
       debugPrintStack(stackTrace: stackTrace);
-    } finally {
-      _initializing = false;
+      rethrow;
     }
   }
 
@@ -389,9 +388,14 @@ class NotificationService {
   /// يجبر إعادة الربط لأن الحساب قد يكون مختلفاً على الجهاز نفسه.
   static Future<bool> syncCurrentToken({bool force = false}) async {
     try {
+      // Token registration must never race Firebase initialization or be
+      // silently lost when the saved login session is restored on cold start.
+      await initialize();
+
       final String? userToken = await ApiService.getToken();
       if (userToken == null || userToken.isEmpty) {
         _sessionEnabled = false;
+        debugPrint('[Notifications] Token sync skipped: no saved member session.');
         return false;
       }
 
@@ -402,8 +406,18 @@ class NotificationService {
       }
 
       final String? fcmToken = await _messaging.getToken();
-      if (fcmToken == null || fcmToken.isEmpty) return false;
-      return await _syncSpecificToken(fcmToken, expectedUserToken: userToken);
+      if (fcmToken == null || fcmToken.isEmpty) {
+        debugPrint('[Notifications] Firebase returned no device token.');
+        return false;
+      }
+      final bool synced = await _syncSpecificToken(
+        fcmToken,
+        expectedUserToken: userToken,
+      );
+      if (!synced) {
+        debugPrint('[Notifications] Device token registration did not complete.');
+      }
+      return synced;
     } catch (error) {
       debugPrint('[Notification Token Sync] $error');
       return false;
@@ -514,6 +528,7 @@ class NotificationService {
       messageId: data['notification_id']?.toString(),
       languageOverride: language,
       fallbackToCenter: false,
+      allowHandledRepeat: true,
     );
   }
 
@@ -529,6 +544,7 @@ class NotificationService {
     String? messageId,
     String? languageOverride,
     bool fallbackToCenter = true,
+    bool allowHandledRepeat = false,
   }) async {
     final String dedupeId = messageId?.trim().isNotEmpty == true
         ? messageId!.trim()
@@ -539,6 +555,7 @@ class NotificationService {
       dedupeId,
       handled: _handledNotificationTapIds,
       inProgress: _messagesBeingHandled,
+      allowHandledRepeat: allowHandledRepeat,
     )) {
       return false;
     }
