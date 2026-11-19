@@ -545,3 +545,96 @@ class _CreateTicketModalState extends State<_CreateTicketModal> {
     );
   }
 }
+
+
+class BlockedSupportMessageScreen extends StatefulWidget {
+  final String currentLanguage;
+  const BlockedSupportMessageScreen({super.key, this.currentLanguage = 'ar'});
+  @override
+  State<BlockedSupportMessageScreen> createState() => _BlockedSupportMessageScreenState();
+}
+
+class _BlockedSupportMessageScreenState extends State<BlockedSupportMessageScreen> {
+  final TextEditingController _messageController = TextEditingController();
+  bool _isSending = false;
+  bool get _isArabic => widget.currentLanguage.toLowerCase().startsWith('ar');
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _sendMessage() async {
+    final message = _messageController.text.trim();
+    if (message.isEmpty || _isSending) {
+      AppSnackBar.show(context: context, type: NotificationType.warning, isArabic: _isArabic, messageAr: 'يرجى كتابة تفاصيل طلب المراجعة أولاً.', messageEn: 'Please enter your appeal message first.');
+      return;
+    }
+    setState(() => _isSending = true);
+    final result = await ApiService.sendBlockedSupportMessage(message: message, lang: widget.currentLanguage);
+    if (!mounted) return;
+    setState(() => _isSending = false);
+    if (result['success'] == true) {
+      _messageController.clear();
+      AppSnackBar.show(context: context, type: NotificationType.success, isArabic: _isArabic, messageAr: 'وصلت رسالتك إلى فريق الدعم الفني.', messageEn: 'Your message has been sent to support.');
+    } else {
+      AppSnackBar.show(context: context, type: NotificationType.error, isArabic: _isArabic, messageAr: result['message']?.toString() ?? 'تعذر إرسال الرسالة.', messageEn: result['message']?.toString() ?? 'Could not send your message.');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: AppColors.backgroundColor,
+        appBar: AppBar(
+          backgroundColor: AppColors.cardColor,
+          elevation: 0,
+          leading: IconButton(onPressed: () => Navigator.of(context).pop(), icon: Icon(_isArabic ? Icons.arrow_back_ios_new_rounded : Icons.arrow_back_ios_rounded, color: AppColors.textDark, size: 18)),
+          title: Text(_isArabic ? 'مراسلة الدعم الفني' : 'Contact Support', style: const TextStyle(color: AppColors.textDark, fontSize: 17, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(_isArabic ? 'اكتب اعتراضك أو وضّح ما تريد مراجعته بخصوص قرار الحظر. ستصل رسالتك مباشرة إلى فريق الدعم.' : 'Describe your appeal or explain what you would like the support team to review about this account restriction.', textAlign: TextAlign.center, style: const TextStyle(color: AppColors.textDark, fontSize: 14, height: 1.6, fontFamily: 'Cairo')),
+                const SizedBox(height: 18),
+                TextField(
+                  controller: _messageController,
+                  minLines: 6,
+                  maxLines: 10,
+                  maxLength: 10000,
+                  textAlign: _isArabic ? TextAlign.right : TextAlign.left,
+                  style: const TextStyle(color: AppColors.textDark, fontSize: 14, fontFamily: 'Cairo'),
+                  decoration: InputDecoration(
+                    hintText: _isArabic ? 'اكتب تفاصيل رسالتك هنا...' : 'Write your message here...',
+                    hintStyle: const TextStyle(color: AppColors.textMuted, fontFamily: 'Cairo'),
+                    filled: true,
+                    fillColor: AppColors.cardColor,
+                    contentPadding: const EdgeInsets.all(14),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.lineColor)),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.primaryTeal, width: 1.3)),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                SizedBox(
+                  height: 52,
+                  child: ElevatedButton.icon(
+                    onPressed: _isSending ? null : _sendMessage,
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryTeal, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))),
+                    icon: _isSending ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Icon(Icons.send_rounded, color: Colors.white),
+                    label: Text(_isArabic ? 'إرسال رسالة للدعم' : 'Send a message to support', style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
