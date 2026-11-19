@@ -198,6 +198,27 @@ SOURCE;
             $this->assertStringContainsString($completedPurchaseRoute, $source);
         }
 
+        public function test_notification_resource_preserves_invoice_and_profile_visitor_routing_ids(): void
+        {
+            $resourcePath = dirname(__DIR__, 2)
+                . '/app/Http/Resources/NotificationResource.php';
+            $source = file_get_contents($resourcePath);
+
+            $this->assertIsString($source);
+            foreach ([
+                "'payment_id'",
+                "'package_payment_id'",
+                "'invoice_id'",
+                "'viewer_id'",
+                "'actor_id'",
+                "'route'",
+            ] as $field) {
+                $this->assertStringContainsString($field, $source);
+            }
+            $this->assertStringContainsString('$notificationData->viewer_id', $source);
+            $this->assertStringContainsString('wesal://package-invoice/', $source);
+        }
+
         public function test_notification_serialization_is_database_only_and_keeps_route(): void
         {
             $notification = new DbStoreNotification(
