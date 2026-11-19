@@ -37,7 +37,10 @@ bool claimNotificationTap(
   String id, {
   required Set<String> handled,
   required Set<String> inProgress,
+  bool allowHandledRepeat = false,
 }) {
-  if (handled.contains(id)) return false;
+  if (!allowHandledRepeat && handled.contains(id)) return false;
+  // Even an explicit tap from the in-app center cannot dispatch twice while
+  // its previous navigation request is still being processed.
   return inProgress.add(id);
 }
