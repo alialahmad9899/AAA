@@ -64,7 +64,15 @@ class SubscriptionNotificationService
         $infoId = null,
         string $route = ''
     ): bool {
-        if (get_setting('firebase_push_notification') != 1 || empty($user->fcm_token)) {
+        $pushEnabled = (int) get_setting('firebase_push_notification') === 1;
+        $hasDeviceToken = !empty($user->fcm_token);
+        if (!$pushEnabled || !$hasDeviceToken) {
+            Log::warning('Subscription push notification skipped.', [
+                'user_id' => $user->id,
+                'type' => $type,
+                'push_enabled' => $pushEnabled,
+                'has_device_token' => $hasDeviceToken,
+            ]);
             return false;
         }
 
