@@ -126,6 +126,7 @@ Route::group(['namespace' => 'Api', 'middleware' => ['app_language']], function 
             Route::get('/get-email', 'ProfileController@get_email');
             Route::post('/introduction-update', 'ProfileController@introduction_update');
             Route::get('/full-my-profile', 'ProfileController@get_full_my_profile');
+            Route::get('/app-summary', 'ProfileController@app_summary');
             Route::get('/account-summary', 'ProfileController@account_summary');
             Route::get('/basic-info', 'ProfileController@get_basic_info');
             Route::post('/basic-info/update', 'ProfileController@basic_info_update');

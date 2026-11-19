@@ -104,6 +104,16 @@ class MemberController extends Controller
             ]);
         }
 
+        // Pagination is opt-in: older app versions keep the complete-list contract.
+        $isPagedRequest = $request->has('per_page');
+        $perPage = $isPagedRequest
+            ? max(1, min(30, (int) $request->input('per_page', 20)))
+            : null;
+        $page = $isPagedRequest
+            ? max(1, (int) $request->input('page', 1))
+            : null;
+        $pagination = null;
+
         if ($matchEnabled) {
             if (!MemberUtility::can_auto_match($user->id)) {
                 return response()->json([
@@ -113,13 +123,31 @@ class MemberController extends Controller
                 ], 403);
             }
 
+            // Smart matching needs global ranking; page only after the scores are ordered.
             $matches = app(SmartMatchingService::class)->getMatches($user);
-            $matches = $this->attachInterestStatusToProfiles($matches, $user);
+            if ($isPagedRequest) {
+                $pageRows = $matches
+                    ->slice(($page - 1) * $perPage, $perPage + 1)
+                    ->values();
+                $hasMore = $pageRows->count() > $perPage;
+                $matches = $pageRows->take($perPage)->values();
+                $pagination = [
+                    'current_page' => $page,
+                    'per_page' => $perPage,
+                    'has_more' => $hasMore,
+                ];
+            }
 
-            return ActiveUserResource::collection($matches)->additional([
+            $matches = $this->attachInterestStatusToProfiles($matches, $user);
+            $additional = [
                 'result' => true,
                 'smart_matching' => true,
-            ]);
+            ];
+            if ($pagination !== null) {
+                $additional['pagination'] = $pagination;
+            }
+
+            return ActiveUserResource::collection($matches)->additional($additional);
         }
 
         $oppositeGender = $gender === 1 ? 2 : 1;
@@ -141,21 +169,44 @@ class MemberController extends Controller
                     ->from('ignored_users')
                     ->where('user_id', $user->id);
             })
-            ->orderByDesc('created_at');
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
 
-        // Calculate a live score for every visible profile, without changing
-        // the default newest-first order. The switch controls sorting only.
+        if ($isPagedRequest) {
+            $members = $usersQuery
+                ->offset(($page - 1) * $perPage)
+                ->limit($perPage + 1)
+                ->get();
+            $hasMore = $members->count() > $perPage;
+            if ($hasMore) {
+                $members = $members->take($perPage)->values();
+            }
+            $pagination = [
+                'current_page' => $page,
+                'per_page' => $perPage,
+                'has_more' => $hasMore,
+            ];
+        } else {
+            $members = $usersQuery->get();
+        }
+
+        // Compatibility data is calculated only for the requested page.
         $members = app(SmartMatchingService::class)->scoreCandidates(
             $user,
-            $usersQuery->get(),
+            $members,
             false
         );
         $members = $this->attachInterestStatusToProfiles($members, $user);
 
-        return ActiveUserResource::collection($members)->additional([
+        $additional = [
             'result' => true,
             'smart_matching' => false,
-        ]);
+        ];
+        if ($pagination !== null) {
+            $additional['pagination'] = $pagination;
+        }
+
+        return ActiveUserResource::collection($members)->additional($additional);
     }
 
     public function member_listing(Request $request)

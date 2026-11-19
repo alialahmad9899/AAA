@@ -210,12 +210,18 @@ class ProfileController extends Controller
             'lifestyles',
             'astrologies',
             'families',
-            'partner_expectations'
+            'partner_expectations',
+            'addresses.country',
+            'addresses.state',
+            'addresses.city',
         ])->find($userId);
 
         if (!$user) {
             return $this->failure_message('User Not Found');
         }
+
+        $presentAddress = $user->addresses->firstWhere('type', 'present');
+        $permanentAddress = $user->addresses->firstWhere('type', 'permanent');
 
         $languageResources = $this->member_language_resources($user->member);
         $member_known_languages = $languageResources['known_languages'];
@@ -248,12 +254,40 @@ class ProfileController extends Controller
             'spiritual_backgrounds'=> $user->spiritual_backgrounds ? new SpiritualSocialBackground($user->spiritual_backgrounds) : null,
             'lifestyles'           => $ownerLifestyle,
             'astrologies'          => $user->astrologies ? new AstronomicInformation($user->astrologies) : null,
-            'present_address'      => Address::where('user_id', $userId)->where('type', 'present')->first() ? new AddressResource(Address::where('user_id', $userId)->where('type', 'present')->first()) : null,
-            'permanent_address'    => Address::where('user_id', $userId)->where('type', 'permanent')->first() ? new AddressResource(Address::where('user_id', $userId)->where('type', 'permanent')->first()) : null,
+            'present_address'      => $presentAddress ? new AddressResource($presentAddress) : null,
+            'permanent_address'    => $permanentAddress ? new AddressResource($permanentAddress) : null,
             'partner_expectation'  => $user->partner_expectations ? new PartnerExpectationResource($user->partner_expectations) : null,
         ];
 
         return $this->response_data($data);
+    }
+
+    /**
+     * Compact mobile identity and access flags.
+     * Avoids serializing the full editable profile for navigation/tab badges.
+     */
+    public function app_summary()
+    {
+        $user = auth()->user()->loadMissing('member');
+        $member = $user->member;
+        $gender = (int) ($member->gender ?? 0);
+        $activePackage = SubscriptionUtility::currentActivePaidPackageForMember($member);
+
+        $photo = !empty($user->photo) ? uploaded_asset($user->photo) : null;
+        if (!$photo) {
+            $photo = static_asset('assets/img/avatar-place.png');
+        }
+
+        return $this->response_data([
+            'user_id' => (int) $user->id,
+            'first_name' => $user->first_name ?? '',
+            'last_name' => $user->last_name ?? '',
+            'name' => trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')),
+            'photo' => $photo,
+            'gender' => $gender,
+            'is_female' => $gender === 2,
+            'is_subscribed_active' => $activePackage !== null,
+        ]);
     }
 
     /**

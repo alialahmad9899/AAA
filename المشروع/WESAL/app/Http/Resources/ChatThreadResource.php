@@ -3,8 +3,6 @@
 namespace App\Http\Resources;
 
 use App\Models\IgnoredUser;
-use App\Models\Member;
-use App\Models\Package;
 use App\Models\ProfileMatch;
 use App\Models\User;
 use Cache;
@@ -29,8 +27,9 @@ class ChatThreadResource extends JsonResource
                 : 'sender';
             $targetUser = $this->{$userToShow};
 
-            $member = Member::where('user_id', $targetUser->id)->first();
-            $memberPackage = $member ? Package::find($member->current_package_id) : null;
+            // Member/package are eager-loaded by ChatController::chat_list().
+            $member = $targetUser->member;
+            $memberPackage = $member ? $member->package : null;
 
             $lastMessageAt = $this->last_message_created_at
                 ? Carbon::parse($this->last_message_created_at)

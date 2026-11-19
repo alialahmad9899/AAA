@@ -63,7 +63,7 @@ class ChatController extends Controller
         };
 
         $chat_threads = ChatThread::query()
-            ->with(['sender', 'receiver'])
+            ->with(['sender.member.package', 'receiver.member.package'])
             ->withCount(['chats as unseen_message_count' => $unreadCountQuery])
             ->addSelect([
                 'last_message_text' => Chat::query()
