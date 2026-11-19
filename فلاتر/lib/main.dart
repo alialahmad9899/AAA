@@ -6,7 +6,6 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:app_links/app_links.dart';
 import 'theme/app_theme.dart';
 
@@ -36,8 +35,10 @@ void main() {
 
 Future<void> _initializeNotificationServices() async {
   try {
-    await Firebase.initializeApp();
     await NotificationService.initialize();
+    // A cold-started, already-authenticated member must register the current
+    // FCM token even though no login screen is shown this time.
+    await NotificationService.syncCurrentToken();
   } catch (e) {
     debugPrint('⚠️ خطأ أثناء تهيئة Firebase والإشعارات: $e');
   }
