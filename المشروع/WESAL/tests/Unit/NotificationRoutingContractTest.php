@@ -110,11 +110,12 @@ namespace Tests\Unit {
             $firebaseService = file_get_contents(
                 $root . '/app/Services/FirebaseNotificationService.php'
             );
+            $repositoryRoot = dirname($root, 2);
             $flutterService = file_get_contents(
-                dirname($root) . '/فلاتر/lib/services/notification_service.dart'
+                $repositoryRoot . '/فلاتر/lib/services/notification_service.dart'
             );
             $manifest = file_get_contents(
-                dirname($root) . '/فلاتر/android/app/src/main/AndroidManifest.xml'
+                $repositoryRoot . '/فلاتر/android/app/src/main/AndroidManifest.xml'
             );
 
             $this->assertIsString($firebaseService);
