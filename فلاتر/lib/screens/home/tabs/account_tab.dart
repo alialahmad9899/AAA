@@ -1850,13 +1850,24 @@ class _SubscriptionsModalContentState
   Future<void> _submitShamCashPayment() async {
     if (_isSubmitting) return;
 
-    if (_selectedPackageId == null || _selectedManualMethodId == null) {
+    if (_selectedPackageId == null) {
       AppSnackBar.show(
         context: context,
         type: NotificationType.warning,
         isArabic: widget.isArabic,
-        messageAr: 'يرجى اختيار الباقة وطريقة الدفع أولاً',
-        messageEn: 'Please select package and payment method first',
+        messageAr: 'يرجى اختيار الباقة أولاً',
+        messageEn: 'Please select a package first',
+      );
+      return;
+    }
+
+    if (_selectedManualMethodId == null) {
+      AppSnackBar.show(
+        context: context,
+        type: NotificationType.error,
+        isArabic: widget.isArabic,
+        messageAr: 'تعذر تحميل وسيلة شام كاش من الخادم. أعد فتح نافذة الاشتراكات، وإذا استمرت المشكلة تواصل مع الدعم.',
+        messageEn: 'Sham Cash is not available from the server. Reopen subscriptions and contact support if the issue continues.',
       );
       return;
     }

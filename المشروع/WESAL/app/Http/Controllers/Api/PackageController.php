@@ -71,19 +71,20 @@ class PackageController extends Controller
     {
         $lang = $this->getRequestLanguage($request);
         $methods = ManualPaymentMethod::query()
-            ->where(function ($query) {
-                $query->whereRaw('LOWER(COALESCE(heading, "")) LIKE ?', ['%شام كاش%'])
-                    ->orWhereRaw('LOWER(COALESCE(heading_en, "")) LIKE ?', ['%sham cash%']);
-            })
+            ->latest()
             ->get()
-            ->map(function ($method) use ($lang) {
-            return [
-                'id'          => $method->id,
-                'heading'     => ($lang === 'en' && !empty($method->heading_en)) ? $method->heading_en : $method->heading,
-                'description' => ($lang === 'en' && !empty($method->description_en)) ? $method->description_en : $method->description,
-                'code'        => $method->code ?? '',
-            ];
-        });
+            ->filter(function (ManualPaymentMethod $method) {
+                return $method->isShamCash();
+            })
+            ->values()
+            ->map(function ($method) {
+                return [
+                    'id' => (int) $method->id,
+                    'heading' => (string) $method->heading,
+                    'description' => (string) ($method->description ?? ''),
+                    'code' => '',
+                ];
+            });
 
         return response()->json([
             'result' => true,
@@ -334,14 +335,9 @@ class PackageController extends Controller
         // Validate the exact manual method against the only permitted offline
         // provider. Hiding other methods from the app is not a security boundary.
         $manualMethod = ManualPaymentMethod::query()
-            ->whereKey((int) $request->input('manual_payment_id'))
-            ->where(function ($query) {
-                $query->whereRaw('LOWER(COALESCE(heading, "")) LIKE ?', ['%شام كاش%'])
-                    ->orWhereRaw('LOWER(COALESCE(heading_en, "")) LIKE ?', ['%sham cash%']);
-            })
-            ->first();
+            ->find((int) $request->input('manual_payment_id'));
 
-        if (!$manualMethod) {
+        if (!$manualMethod || !$manualMethod->isShamCash()) {
             $message = ($lang === 'en')
                 ? 'Only a valid Sham Cash payment method is supported.'
                 : 'طريقة الدفع اليدوي المحددة غير صالحة. يُقبل شام كاش فقط.';

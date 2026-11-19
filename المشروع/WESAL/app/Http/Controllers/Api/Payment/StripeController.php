@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Payment;
 
 use App\Models\Package;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\Controller;
 use App\Http\Controllers\Api\PackageController;
@@ -25,7 +26,16 @@ class StripeController extends Controller
     {
         $request->validate(['package_id' => ['required', 'integer']]);
 
-        if ((int) get_setting('stripe_payment_activation') !== 1) {
+        $stripeActivation = Setting::query()
+            ->where('type', 'stripe_payment_activation')
+            ->value('value');
+
+        if ((int) $stripeActivation !== 1) {
+            Log::warning('Stripe PaymentIntent creation blocked by the current admin activation setting.', [
+                'setting_found' => $stripeActivation !== null,
+                'activation_value' => $stripeActivation === null ? null : (int) $stripeActivation,
+            ]);
+
             return response()->json([
                 'result' => false,
                 'message' => 'الدفع عبر Stripe غير متاح حالياً.',

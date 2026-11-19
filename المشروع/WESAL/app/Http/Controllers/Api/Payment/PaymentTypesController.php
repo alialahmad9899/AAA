@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Payment;
 
 use App\Http\Controllers\Api\Controller;
 use App\Models\ManualPaymentMethod;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 
 
@@ -13,7 +14,11 @@ class PaymentTypesController extends Controller
     {
         $payment_types = [];
 
-        if (get_setting('stripe_payment_activation') == 1) {
+        $stripeActivation = Setting::query()
+            ->where('type', 'stripe_payment_activation')
+            ->value('value');
+
+        if ((int) $stripeActivation === 1) {
             $payment_types[] = [
                 'payment_type' => 'stripe_payment',
                 'payment_type_key' => 'stripe',
@@ -26,10 +31,12 @@ class PaymentTypesController extends Controller
         }
 
         $methods = ManualPaymentMethod::query()
-            ->where(function ($query) {
-                $query->whereRaw('LOWER(COALESCE(heading, "")) LIKE ?', ['%شام كاش%'])
-                    ->orWhereRaw('LOWER(COALESCE(heading_en, "")) LIKE ?', ['%sham cash%']);
-            })->get();
+            ->latest()
+            ->get()
+            ->filter(function (ManualPaymentMethod $method) {
+                return $method->isShamCash();
+            })
+            ->values();
 
         foreach ($methods as $method) {
             $bankList = '';
