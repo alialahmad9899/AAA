@@ -182,18 +182,6 @@ class NotificationService {
         debugPrint('[Notifications] Permission request failed: $error');
       }
 
-      const androidSettings =
-          AndroidInitializationSettings('ic_stat_wesal');
-      const iosSettings = DarwinInitializationSettings(
-        requestAlertPermission: false,
-        requestBadgePermission: false,
-        requestSoundPermission: false,
-      );
-      const initializationSettings = InitializationSettings(
-        android: androidSettings,
-        iOS: iosSettings,
-      );
-
       await _ensureLocalNotificationsInitialized();
       await _configureForegroundPresentationOptions();
 
