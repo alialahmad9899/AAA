@@ -194,33 +194,8 @@ class NotificationService {
         iOS: iosSettings,
       );
 
-      try {
-        await _localNotifications.initialize(
-          initializationSettings,
-          onDidReceiveNotificationResponse: _onLocalNotificationResponse,
-        );
-        _localNotificationsInitialized = true;
-
-        final androidNotifications = _localNotifications
-            .resolvePlatformSpecificImplementation<
-                AndroidFlutterLocalNotificationsPlugin>();
-        await androidNotifications?.createNotificationChannel(_notificationChannel);
-        await androidNotifications?.createNotificationChannel(_chatAlertChannel);
-        await androidNotifications?.createNotificationChannel(_silentChatChannel);
-      } catch (error) {
-        debugPrint('[Notifications] Local notifications setup failed: $error');
-      }
-
-      try {
-        // نتولى العرض محلياً أثناء فتح التطبيق لتوحيد شكل وطريقة الإشعار.
-        await _messaging.setForegroundNotificationPresentationOptions(
-          alert: false,
-          badge: true,
-          sound: true,
-        );
-      } catch (error) {
-        debugPrint('[Notifications] Foreground options failed: $error');
-      }
+      await _ensureLocalNotificationsInitialized();
+      await _configureForegroundPresentationOptions();
 
       // من هذه النقطة أصبحت مستمعات FCM مربوطة مرة واحدة.
       _initialized = true;
@@ -276,6 +251,56 @@ class NotificationService {
     }
   }
 
+  static Future<bool> _ensureLocalNotificationsInitialized() async {
+    if (_localNotificationsInitialized) return true;
+
+    const androidSettings =
+        AndroidInitializationSettings('ic_stat_wesal');
+    const iosSettings = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
+    const initializationSettings = InitializationSettings(
+      android: androidSettings,
+      iOS: iosSettings,
+    );
+
+    try {
+      await _localNotifications.initialize(
+        initializationSettings,
+        onDidReceiveNotificationResponse: _onLocalNotificationResponse,
+      );
+      final androidNotifications = _localNotifications
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      await androidNotifications?.createNotificationChannel(_notificationChannel);
+      await androidNotifications?.createNotificationChannel(_chatAlertChannel);
+      await androidNotifications?.createNotificationChannel(_silentChatChannel);
+      _localNotificationsInitialized = true;
+      return true;
+    } catch (error, stackTrace) {
+      _localNotificationsInitialized = false;
+      debugPrint('[Notifications] Local notification initialization failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      return false;
+    }
+  }
+
+  static Future<void> _configureForegroundPresentationOptions() async {
+    try {
+      // Use the native iOS foreground banner as a fallback whenever the local
+      // notification plugin is not ready; switch back to local-only when it is.
+      await _messaging.setForegroundNotificationPresentationOptions(
+        alert: !_localNotificationsInitialized,
+        badge: true,
+        sound: true,
+      );
+    } catch (error) {
+      debugPrint('[Notifications] Foreground presentation setup failed: $error');
+    }
+  }
+
   static Future<void> _onForegroundMessage(RemoteMessage message) async {
     final String? messageId = message.messageId;
     if (messageId != null && !_processedMessageIds.add(messageId)) return;
@@ -304,7 +329,14 @@ class NotificationService {
             '')
         .trim();
 
-    if (title.isEmpty || body.isEmpty || !_localNotificationsInitialized) {
+    if (title.isEmpty || body.isEmpty) return;
+
+    if (!_localNotificationsInitialized) {
+      await _ensureLocalNotificationsInitialized();
+      await _configureForegroundPresentationOptions();
+    }
+    if (!_localNotificationsInitialized) {
+      debugPrint('[Notifications] Foreground alert skipped because local notifications are unavailable.');
       return;
     }
 
