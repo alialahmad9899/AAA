@@ -106,7 +106,9 @@ class SupportTicketAdminController extends Controller
                     $title
                 ));
 
-                if (get_setting('firebase_push_notification') == 1 && !empty($recipient->fcm_token)) {
+                $pushEnabled = (int) get_setting('firebase_push_notification') === 1;
+                $hasDeviceToken = !empty($recipient->fcm_token);
+                if ($pushEnabled && $hasDeviceToken) {
                     $pushAccepted = FirebaseNotificationService::sendPushNotification(
                         $recipient->fcm_token,
                         $title,
@@ -123,6 +125,13 @@ class SupportTicketAdminController extends Controller
                             'user_id' => $recipient->id,
                         ]);
                     }
+                } else {
+                    Log::warning('Support ticket push notification skipped.', [
+                        'ticket_id' => $ticket->id,
+                        'user_id' => $recipient->id,
+                        'push_enabled' => $pushEnabled,
+                        'has_device_token' => $hasDeviceToken,
+                    ]);
                 }
             } catch (\Throwable $exception) {
                 Log::error('Admin support ticket notification failed.', [
