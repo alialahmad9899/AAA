@@ -3529,11 +3529,18 @@ class ApiService {
             }
           }
         }
+        final rawPartnerOnline = threadData['partner_is_online'];
+        final partnerIsOnline = rawPartnerOnline == true ||
+            rawPartnerOnline == 1 ||
+            rawPartnerOnline == '1' ||
+            rawPartnerOnline == 'true';
         return {
           'success': true,
           'status': 'success',
           'messages': orderedMessages,
           'has_more_old_messages': threadData['has_more_old_messages'] == true,
+          'partner_is_online': partnerIsOnline,
+          'partner_last_seen': threadData['partner_last_seen']?.toString() ?? '',
           'chat_rules': chatRules,
         };
       }
@@ -3690,11 +3697,17 @@ class ApiService {
     }
   }
 
-  static Future<bool> updateChatPresence({required int threadId}) async {
+  static Future<bool> updateChatPresence({
+    required int threadId,
+    bool appIsActive = true,
+  }) async {
     try {
       final response = await post(
         '/member/chat-presence',
-        {'thread_id': threadId},
+        {
+          'thread_id': threadId,
+          'app_active': appIsActive,
+        },
       );
       return isSuccessfulResult(response);
     } catch (error) {
