@@ -57,6 +57,11 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
   final Set<int> _likingUserIds = {};
   final Set<int> _likedUserIds = {};
   int _fetchCounter = 0;
+  int _currentMatchPage = 1;
+  bool _hasMoreMatches = false;
+  bool _isLoadingMoreMatches = false;
+  DateTime? _lastMatchesLoadedAt;
+  static const int _matchPageSize = 20;
 
   late PageController _pageController;
   late AnimationController _heartAnimationController;
@@ -192,115 +197,133 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
     );
   }
 
-  Future<void> _checkSubscriptionAndFetch() async {
+  Future<void> _checkSubscriptionAndFetch({bool forceRefresh = false}) async {
     if (!mounted) return;
+    unawaited(_refreshSubscriptionStatus(forceRefresh: forceRefresh));
+    final lastLoaded = _lastMatchesLoadedAt;
+    final isFresh = _matchedMembers.isNotEmpty && lastLoaded != null &&
+        DateTime.now().difference(lastLoaded) < const Duration(seconds: 45);
+    if (!forceRefresh && isFresh) return;
+    await _fetchMatches();
+  }
 
-    try {
-      final profile = await ApiService.getCurrentUserProfile();
-      if (mounted && profile != null) {
-        bool isFemale = false;
-        bool isSubscribed = false;
-
-        try {
-          final dynamic p = profile;
-          if (p.isFemale == true) {
-            isFemale = true;
-          } else if (p.basicInfo != null && p.basicInfo.gender != null) {
-            final String g = p.basicInfo.gender.toString().toLowerCase();
-            isFemale = g.contains('female') ||
-                g.contains('أنثى') ||
-                g.contains('انثى');
-          }
-          if (p.isSubscribedActive == true) {
-            isSubscribed = true;
-          }
-        } catch (_) {}
-
-        setState(() {
-          _isSubscribedOrFemale = isFemale || isSubscribed;
-        });
-      }
-    } catch (_) {}
-
-    if (mounted) {
-      _fetchMatches();
-    }
+  Future<void> _refreshSubscriptionStatus({bool forceRefresh = false}) async {
+    final summary = await ApiService.getCurrentUserAccessSummary(
+      lang: widget.currentLanguage,
+      forceRefresh: forceRefresh,
+    );
+    if (!mounted || summary == null) return;
+    setState(() {
+      _isSubscribedOrFemale = summary['is_female'] == true ||
+          summary['is_subscribed_active'] == true;
+    });
   }
 
   Future<void> _fetchMatches() async {
     if (!mounted) return;
-
     _fetchCounter++;
     final int currentRequestToken = _fetchCounter;
-
     setState(() {
-      _isLoading = true;
+      if (_matchedMembers.isEmpty) _isLoading = true;
+      _isLoadingMoreMatches = false;
       _errorMessage = null;
     });
-
     try {
-      final members = await ApiService.getMatchedProfiles(
+      final page = await ApiService.getMatchedProfilesPage(
         matchEnabled: _isMatchFilterEnabled,
         lang: widget.currentLanguage,
+        page: 1,
+        perPage: _matchPageSize,
       );
-
       if (mounted && currentRequestToken == _fetchCounter) {
         setState(() {
-          _matchedMembers = members;
+          _matchedMembers = page.members;
           _likedUserIds
             ..clear()
-            ..addAll(members.where((member) => member.isInterested).map((member) => member.id));
+            ..addAll(page.members.where((member) => member.isInterested).map((member) => member.id));
           _currentProfileIndex = 0;
+          _currentMatchPage = page.currentPage;
+          _hasMoreMatches = page.hasMore;
           _isLoading = false;
+          _lastMatchesLoadedAt = DateTime.now();
         });
-
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && _pageController.hasClients) {
-            _pageController.jumpToPage(0);
-          }
+          if (mounted && _pageController.hasClients) _pageController.jumpToPage(0);
         });
       }
     } catch (e) {
-      if (mounted && currentRequestToken == _fetchCounter) {
-        final matchingLocked = e.toString().contains('smart_matching_locked');
+      if (!mounted || currentRequestToken != _fetchCounter) return;
+      final matchingLocked = e.toString().contains('smart_matching_locked');
+      if (matchingLocked) {
         setState(() {
-          if (matchingLocked) {
-            // The server is authoritative: a paid package may still lack the
-            // smart-sort entitlement. Revert the switch instead of leaving it on.
-            _isSubscribedOrFemale = false;
-            _isMatchFilterEnabled = false;
-            _matchedMembers = [];
-            _errorMessage = _isAr
-                ? 'ترتيب الأعضاء حسب التوافق غير مفعّل ضمن صلاحية حسابك الحالية.'
-                : 'Compatibility sorting is not enabled for your current account.';
-          } else {
-            _errorMessage = widget.txt('matches_fetch_failed');
-          }
-          _isLoading = false;
+          _isSubscribedOrFemale = false;
+          _isMatchFilterEnabled = false;
+          _errorMessage = null;
         });
-
-        if (matchingLocked && mounted && currentRequestToken == _fetchCounter) {
-          // Keep the ordinary member list available when the account can browse
-          // profiles but does not have the separate smart-sort entitlement.
-          try {
-            final members = await ApiService.getMatchedProfiles(
-              matchEnabled: false,
-              lang: widget.currentLanguage,
-            );
-            if (mounted && currentRequestToken == _fetchCounter) {
-              setState(() {
-                _matchedMembers = members;
-                _likedUserIds
-                  ..clear()
-                  ..addAll(members.where((member) => member.isInterested).map((member) => member.id));
-                _isLoading = false;
-              });
-            }
-          } catch (_) {
-            // Preserve the localized entitlement notice and let Retry handle
-            // transient list-loading errors.
+        try {
+          final page = await ApiService.getMatchedProfilesPage(
+            matchEnabled: false,
+            lang: widget.currentLanguage,
+            page: 1,
+            perPage: _matchPageSize,
+          );
+          if (mounted && currentRequestToken == _fetchCounter) {
+            setState(() {
+              _matchedMembers = page.members;
+              _likedUserIds
+                ..clear()
+                ..addAll(page.members.where((member) => member.isInterested).map((member) => member.id));
+              _currentProfileIndex = 0;
+              _currentMatchPage = page.currentPage;
+              _hasMoreMatches = page.hasMore;
+              _isLoading = false;
+              _lastMatchesLoadedAt = DateTime.now();
+            });
+          }
+        } catch (_) {
+          if (mounted && currentRequestToken == _fetchCounter) {
+            setState(() {
+              _isLoading = false;
+              _errorMessage = widget.txt('matches_fetch_failed');
+            });
           }
         }
+      } else {
+        setState(() {
+          _errorMessage = _matchedMembers.isEmpty ? widget.txt('matches_fetch_failed') : null;
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _fetchMoreMatches() async {
+    if (!mounted || _isLoading || _isLoadingMoreMatches || !_hasMoreMatches || _matchedMembers.isEmpty) return;
+    _isLoadingMoreMatches = true;
+    final int requestToken = _fetchCounter;
+    final int nextPage = _currentMatchPage + 1;
+    try {
+      final page = await ApiService.getMatchedProfilesPage(
+        matchEnabled: _isMatchFilterEnabled,
+        lang: widget.currentLanguage,
+        page: nextPage,
+        perPage: _matchPageSize,
+      );
+      if (!mounted || requestToken != _fetchCounter) return;
+      final knownIds = _matchedMembers.map((member) => member.id).toSet();
+      final newMembers = page.members.where((member) => knownIds.add(member.id)).toList(growable: false);
+      setState(() {
+        _matchedMembers = [..._matchedMembers, ...newMembers];
+        _likedUserIds.addAll(newMembers.where((member) => member.isInterested).map((member) => member.id));
+        _currentMatchPage = page.currentPage;
+        _hasMoreMatches = page.hasMore && newMembers.isNotEmpty;
+        _lastMatchesLoadedAt = DateTime.now();
+        _isLoadingMoreMatches = false;
+      });
+    } catch (error) {
+      if (mounted && requestToken == _fetchCounter) {
+        setState(() => _isLoadingMoreMatches = false);
+        if (kDebugMode) debugPrint('[Home Cards] Could not load next page: $error');
       }
     }
   }
@@ -1108,7 +1131,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                                         borderRadius:
                                             BorderRadius.circular(16)),
                                   ),
-                                  onPressed: _checkSubscriptionAndFetch,
+                                  onPressed: () => _checkSubscriptionAndFetch(forceRefresh: true),
                                   child: Text(widget.txt('retry'),
                                       style:
                                           const TextStyle(fontFamily: 'Cairo')),
@@ -1117,7 +1140,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                             ),
                           )
                         : RefreshIndicator(
-                            onRefresh: _checkSubscriptionAndFetch,
+                            onRefresh: () => _checkSubscriptionAndFetch(forceRefresh: true),
                             color: AppColors.accentWarm,
                             child: _matchedMembers.isEmpty
                                 ? ListView(
@@ -1146,6 +1169,9 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                                       setState(() {
                                         _currentProfileIndex = index;
                                       });
+                                      if (index >= _matchedMembers.length - 3) {
+                                        unawaited(_fetchMoreMatches());
+                                      }
                                     },
                                     itemCount: _matchedMembers.length,
                                     itemBuilder: (context, index) {

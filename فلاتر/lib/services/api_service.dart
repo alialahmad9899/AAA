@@ -147,6 +147,15 @@ List<MemberModel> _parseMatchedProfilesIsolate(String responseBody) {
   }
 }
 
+Map<String, dynamic> _parseMatchedProfilesPageEnvelopeIsolate(String responseBody) {
+  try {
+    final decoded = jsonDecode(responseBody);
+    if (decoded is Map) return Map<String, dynamic>.from(decoded);
+    if (decoded is List) return <String, dynamic>{'data': decoded};
+  } catch (_) {}
+  return <String, dynamic>{};
+}
+
 List<ChatThreadModel> _parseChatThreadsIsolate(String responseBody) {
   try {
     final data = jsonDecode(responseBody);
@@ -336,6 +345,10 @@ class ApiService {
   static const String baseUrl = 'https://www.wesalsyria.com/api';
   static const _secureStorage = FlutterSecureStorage();
   static const Duration _timeoutDuration = Duration(seconds: 20);
+  static const Duration _accessSummaryCacheDuration = Duration(seconds: 20);
+  static final Map<int, Map<String, dynamic>> _accessSummaryCache = {};
+  static final Map<int, DateTime> _accessSummaryCacheTimes = {};
+  static final Map<int, Future<Map<String, dynamic>?>> _accessSummaryRequests = {};
 
   /// توحيد تفسير استجابات API في جميع الشاشات.
   /// HTTP 2xx لا يكفي وحده إذا صرّح الخادم أن العملية فشلت.
@@ -1521,6 +1534,72 @@ class ApiService {
     return 'No structured error message';
   }
 
+  static Future<Map<String, dynamic>?> getCurrentUserAccessSummary({
+    String? lang,
+    bool forceRefresh = false,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final int userId = prefs.getInt('user_id') ?? 0;
+      if (userId <= 0) return null;
+      final cached = _accessSummaryCache[userId];
+      final cachedAt = _accessSummaryCacheTimes[userId];
+      if (!forceRefresh && cached != null && cachedAt != null &&
+          DateTime.now().difference(cachedAt) <= _accessSummaryCacheDuration) {
+        return Map<String, dynamic>.from(cached);
+      }
+      final pending = _accessSummaryRequests[userId];
+      if (!forceRefresh && pending != null) return pending;
+      final request = _fetchCurrentUserAccessSummary(userId, lang: lang);
+      _accessSummaryRequests[userId] = request;
+      try {
+        return await request;
+      } finally {
+        if (identical(_accessSummaryRequests[userId], request)) {
+          _accessSummaryRequests.remove(userId);
+        }
+      }
+    } catch (error) {
+      if (kDebugMode) debugPrint('❌ [API ERROR getCurrentUserAccessSummary]: $error');
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> _fetchCurrentUserAccessSummary(
+    int expectedUserId, {
+    String? lang,
+  }) async {
+    final response = await get('/member/app-summary', lang: lang);
+    if (response == null || response['result'] == false) return null;
+    final data = _extractMapData(response);
+    if (data == null) return null;
+    final int responseUserId = int.tryParse((data['user_id'] ?? data['id'] ?? '').toString()) ?? 0;
+    if (responseUserId <= 0 || responseUserId != expectedUserId) return null;
+
+    bool parseFlag(dynamic value) {
+      if (value is bool) return value;
+      if (value is num) return value != 0;
+      final normalized = value?.toString().trim().toLowerCase();
+      return normalized == '1' || normalized == 'true' || normalized == 'yes';
+    }
+
+    final summary = <String, dynamic>{
+      'user_id': responseUserId,
+      'name': (data['name'] ?? [
+        data['first_name'] ?? '',
+        data['last_name'] ?? '',
+      ].where((part) => part.toString().trim().isNotEmpty).join(' ')).toString().trim(),
+      'photo': (data['photo'] ?? '').toString().trim(),
+      'gender': data['gender'],
+      'is_female': parseFlag(data['is_female']),
+      'is_subscribed_active': parseFlag(data['is_subscribed_active']),
+    };
+    _accessSummaryCache[responseUserId] = summary;
+    _accessSummaryCacheTimes[responseUserId] = DateTime.now();
+    await ProfileCacheService.saveUserSummary(summary);
+    return Map<String, dynamic>.from(summary);
+  }
+
   /// Lightweight authenticated identity endpoint used by the account header.
   /// It does not depend on profile aggregates or public photo-privacy rules.
   static Future<Map<String, dynamic>?> getCurrentUserSummary(
@@ -1563,11 +1642,13 @@ class ApiService {
         }
       }
 
-      return {
+      final summary = {
         'user_id': userId,
         'name': resolvedName,
         'photo': photo,
       };
+      if (userId > 0) await ProfileCacheService.saveUserSummary(summary);
+      return summary;
     } catch (e) {
       if (kDebugMode) debugPrint('❌ [API ERROR getCurrentUserSummary]: $e');
       return null;
@@ -3028,6 +3109,45 @@ class ApiService {
       }
       throw Exception('فشل في جلب قائمة الأعضاء من السيرفر');
     }
+  }
+
+  static Future<MemberProfilesPage> getMatchedProfilesPage({
+    bool matchEnabled = false,
+    String? lang,
+    int page = 1,
+    int perPage = 20,
+  }) async {
+    final headers = await _getHeaders(lang: lang);
+    final safePage = page < 1 ? 1 : page;
+    final safePerPage = perPage.clamp(10, 30);
+    final int matchParam = matchEnabled ? 1 : 0;
+    final Uri url = Uri.parse(
+      '$baseUrl/member/matched-profile?match_enabled=$matchParam&page=$safePage&per_page=$safePerPage',
+    );
+    if (kDebugMode) debugPrint('🌐 [API GET] MatchedProfilesPage -> $url');
+    final response = await http.get(url, headers: headers).timeout(_timeoutDuration);
+    if (response.statusCode == 403) {
+      try {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map && decoded['status'] == 'matching_locked') {
+          throw Exception('smart_matching_locked');
+        }
+      } catch (error) {
+        if (error.toString().contains('smart_matching_locked')) rethrow;
+      }
+    }
+    if (response.statusCode != 200) {
+      throw HttpException('فشل في جلب صفحة الأعضاء (HTTP ${response.statusCode})', uri: url);
+    }
+    final envelope = await compute(_parseMatchedProfilesPageEnvelopeIsolate, response.body);
+    if (envelope['result'] == false) {
+      throw Exception(envelope['message']?.toString() ?? 'فشل في جلب قائمة الأعضاء');
+    }
+    return MemberProfilesPage.fromJson(
+      envelope,
+      fallbackPage: safePage,
+      isArabic: (lang ?? 'ar').toLowerCase().startsWith('ar'),
+    );
   }
 
   /// 🟢 دالة إرسال الاهتمام المصححة مع استخراج الستاتوس والرسالة بدقة

@@ -11,6 +11,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ProfileCacheService {
   static const String _profileKey = 'cached_user_profile_data';
+  static const String _identitySummaryKey = 'cached_user_identity_summary';
   static const String _fcmTokenKey = 'cached_fcm_token';
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
 
@@ -61,17 +62,56 @@ class ProfileCacheService {
     return null;
   }
 
-  /// مسح بيانات التخزين المؤقت بالكامل لمنع ظهور بيانات المستخدم السابق
-  static Future<void> clearCache() async {
+  static Future<void> saveUserSummary(Map<String, dynamic> summary) async {
+    try {
+      final int userId = int.tryParse((summary['user_id'] ?? '').toString()) ?? 0;
+      if (userId <= 0) return;
+      await _secureStorage.write(
+        key: _identitySummaryKey,
+        value: jsonEncode(<String, dynamic>{...summary, 'user_id': userId}),
+      );
+    } catch (e) {
+      if (kDebugMode) debugPrint('⚠️ [ProfileCache Error] Failed to save identity: $e');
+    }
+  }
+
+  static Future<Map<String, dynamic>?> getCachedUserSummary({required int userId}) async {
+    if (userId <= 0) return null;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if ((prefs.getInt('user_id') ?? 0) != userId) return null;
+      final rawJson = await _secureStorage.read(key: _identitySummaryKey);
+      if (rawJson == null || rawJson.trim().isEmpty) return null;
+      final decoded = jsonDecode(rawJson);
+      if (decoded is! Map) return null;
+      final summary = Map<String, dynamic>.from(decoded);
+      final cachedUserId = int.tryParse((summary['user_id'] ?? '').toString()) ?? 0;
+      return cachedUserId == userId ? summary : null;
+    } catch (e) {
+      if (kDebugMode) debugPrint('⚠️ [ProfileCache Error] Failed to read identity: $e');
+      return null;
+    }
+  }
+
+  static Future<void> clearProfileCache() async {
     try {
       await _secureStorage.delete(key: _profileKey);
+      await _secureStorage.delete(key: _identitySummaryKey);
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_profileKey);
+    } catch (e) {
+      if (kDebugMode) debugPrint('⚠️ [ProfileCache Error] Failed to clear profile: $e');
+    }
+  }
+
+  /// مسح بيانات التخزين المؤقت بالكامل لمنع ظهور بيانات المستخدم السابق
+  static Future<void> clearCache() async {
+    await clearProfileCache();
+    try {
+      final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_fcmTokenKey);
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('⚠️ [ProfileCache Error] Failed to clear cache: $e');
-      }
+      if (kDebugMode) debugPrint('⚠️ [ProfileCache Error] Failed to clear FCM token cache: $e');
     }
   }
 

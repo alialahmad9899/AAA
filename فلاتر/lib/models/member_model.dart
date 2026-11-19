@@ -332,3 +332,53 @@ class MemberModel {
     );
   }
 }
+
+
+class MemberProfilesPage {
+  final List<MemberModel> members;
+  final int currentPage;
+  final bool hasMore;
+
+  const MemberProfilesPage({
+    required this.members,
+    required this.currentPage,
+    required this.hasMore,
+  });
+
+  factory MemberProfilesPage.fromJson(
+    Map<String, dynamic> json, {
+    int fallbackPage = 1,
+    bool isArabic = true,
+  }) {
+    final dynamic rawMembers = json['data'] ?? json['members'] ?? [];
+    final List<dynamic> rows = rawMembers is List
+        ? rawMembers
+        : rawMembers is Map && rawMembers['data'] is List
+            ? rawMembers['data'] as List
+            : const <dynamic>[];
+    final pagination = json['pagination'] is Map
+        ? Map<String, dynamic>.from(json['pagination'] as Map)
+        : json['meta'] is Map
+            ? Map<String, dynamic>.from(json['meta'] as Map)
+            : <String, dynamic>{};
+
+    bool parseFlag(dynamic value) {
+      if (value is bool) return value;
+      if (value is num) return value != 0;
+      final normalized = value?.toString().trim().toLowerCase();
+      return normalized == '1' || normalized == 'true' || normalized == 'yes';
+    }
+
+    final members = rows.whereType<Map>().map((row) => MemberModel.fromJson(
+      Map<String, dynamic>.from(row),
+      isArabic: isArabic,
+    )).toList(growable: false);
+    final currentPage = int.tryParse(
+      (pagination['current_page'] ?? pagination['currentPage'] ?? fallbackPage).toString(),
+    ) ?? fallbackPage;
+    final hasMore = pagination.containsKey('has_more') || pagination.containsKey('hasMore')
+        ? parseFlag(pagination['has_more'] ?? pagination['hasMore'])
+        : (pagination['next_page_url'] != null || pagination['nextPageUrl'] != null);
+    return MemberProfilesPage(members: members, currentPage: currentPage, hasMore: hasMore);
+  }
+}
