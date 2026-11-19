@@ -262,14 +262,17 @@ class NotificationService {
       final androidNotifications = _localNotifications
           .resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin>();
-      await androidNotifications?.createNotificationChannel(_notificationChannel);
+      await androidNotifications
+          ?.createNotificationChannel(_notificationChannel);
       await androidNotifications?.createNotificationChannel(_chatAlertChannel);
       await androidNotifications?.createNotificationChannel(_silentChatChannel);
       _localNotificationsInitialized = true;
       return true;
     } catch (error, stackTrace) {
       _localNotificationsInitialized = false;
-      debugPrint('[Notifications] Local notification initialization failed: $error');
+      debugPrint(
+        '[Notifications] Local notification initialization failed: $error',
+      );
       debugPrintStack(stackTrace: stackTrace);
       return false;
     }
@@ -285,7 +288,9 @@ class NotificationService {
         sound: true,
       );
     } catch (error) {
-      debugPrint('[Notifications] Foreground presentation setup failed: $error');
+      debugPrint(
+        '[Notifications] Foreground presentation setup failed: $error',
+      );
     }
   }
 
@@ -625,6 +630,7 @@ class NotificationService {
         }
         return null;
     }
+    return null;
   }
 
   static Future<bool> _pushWhenNavigatorReady(WidgetBuilder builder) async {
