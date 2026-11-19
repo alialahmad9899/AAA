@@ -462,6 +462,7 @@ class _MainHomeScreenState extends State<MainHomeScreen>
       _loadedTabs.contains(1)
           ? ChatsTab(
               currentLanguage: _currentLanguage,
+              isActive: _currentIndex == 1,
               txt: _txt,
               unreadNotificationCount: _unreadNotificationCount,
               onNotificationPressed: _handleNotificationPressed,
