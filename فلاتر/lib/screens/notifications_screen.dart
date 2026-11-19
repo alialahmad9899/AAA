@@ -13,6 +13,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../models/notification_model.dart';
 import '../services/api_service.dart';
 import '../services/notification_service.dart';
+import '../utils/notification_route_resolver.dart';
 import '../widgets/app_snackbar.dart';
 
 class NotificationsScreen extends StatefulWidget {
@@ -98,6 +99,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           notifyBy: notification.notifyBy,
           infoId: notification.infoId,
           route: notification.route,
+          paymentId: notification.paymentId,
           photo: notification.photo,
           title: notification.title,
           message: notification.message,
@@ -131,6 +133,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     notifyBy: n.notifyBy,
                     infoId: n.infoId,
                     route: n.route,
+                    paymentId: n.paymentId,
                     photo: n.photo,
                     title: n.title,
                     message: n.message,
@@ -181,11 +184,34 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       language: widget.currentLanguage,
     );
     if (!opened && mounted) {
+      if (_mustNeverShowDetailsPopup(notification)) {
+        AppSnackBar.show(
+          context: context,
+          type: NotificationType.error,
+          isArabic: widget.currentLanguage == 'ar',
+          messageAr: 'تعذر فتح الوجهة المطلوبة. أعد المحاولة بعد التأكد من الاتصال.',
+          messageEn: 'Could not open the requested destination. Please retry.',
+        );
+        return;
+      }
       _showNotificationDetailsModal(notification);
     }
   }
 
-  /// عرض نافذة تفاصيل الإشعار الفاخرة
+  bool _mustNeverShowDetailsPopup(NotificationModel notification) {
+    final String type=notification.type.trim().toLowerCase().replaceAll('-','_');
+    final destination=resolveNotificationDestination(notification.toRoutePayload());
+    final bool routed=destination!=null&&const {
+      NotificationDestinationKind.profile,
+      NotificationDestinationKind.profileVisitors,
+      NotificationDestinationKind.interests,
+      NotificationDestinationKind.packageInvoice,
+      NotificationDestinationKind.packagePurchaseHistory,
+    }.contains(destination.kind);
+    return routed||type.contains('interest')||type.contains('like')||type.contains('package')||type.contains('invoice')||type.contains('purchase')||type.contains('profile_view')||type.contains('profile_visit')||type.contains('visitor');
+  }
+
+  /// نافذة التفاصيل مخصصة للإشعارات الإدارية العامة فقط.
   void _showNotificationDetailsModal(NotificationModel notification) {
     _markSingleAsRead(notification);
 
