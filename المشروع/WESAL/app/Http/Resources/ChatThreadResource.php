@@ -35,17 +35,20 @@ class ChatThreadResource extends JsonResource
                 ? Carbon::parse($this->last_message_created_at)
                 : ($this->updated_at ? Carbon::parse($this->updated_at) : null);
 
-            $lastSeenTime = '';
-            if (!empty($targetUser->last_seen)) {
-                $lastSeenTime = Carbon::parse($targetUser->last_seen)->diffForHumans();
-            } elseif (!empty($targetUser->updated_at)) {
-                $lastSeenTime = Carbon::parse($targetUser->updated_at)->diffForHumans();
+            $lastSeenValue = Cache::get('wesal:last-seen:' . $targetUser->id);
+            if (empty($lastSeenValue)) {
+                $lastSeenValue = $targetUser->getAttribute('last_seen');
             }
+            $lastSeenAt = !empty($lastSeenValue)
+                ? Carbon::parse($lastSeenValue)
+                : null;
+            $lastSeenTime = $lastSeenAt ? $lastSeenAt->diffForHumans() : '';
+            $isOnline = Cache::has('user-is-online-' . $targetUser->id);
 
             return [
                 'id'                   => $this->id,
                 'user_id'              => $targetUser->id,
-                'active'               => Cache::has('user-is-online-' . $targetUser->id) ? 1 : 0,
+                'active'               => $isOnline ? 1 : 0,
                 'blocked_by_user'      => $this->blocked_by_user ?? 0,
                 'unseen_message_count' => (int) ($this->unseen_message_count ?? 0),
                 'member_photo'         => $targetUser->photo != null ? uploaded_asset($targetUser->photo) : static_asset('assets/frontend/default/img/avatar-place.png'),
@@ -55,6 +58,7 @@ class ChatThreadResource extends JsonResource
                 'last_message_at'      => $lastMessageAt ? $lastMessageAt->toIso8601String() : null,
                 'last_message'         => $this->last_message_text ?? '',
                 'last_seen'            => $lastSeenTime,
+                'last_seen_at'         => $lastSeenAt ? $lastSeenAt->toIso8601String() : null,
                 'member_package'       => $memberPackage ? new PackageResource($memberPackage) : null,
             ];
         }
