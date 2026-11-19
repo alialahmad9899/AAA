@@ -21,6 +21,8 @@ import 'home/tabs/auto_matching_tab.dart';
 import 'home/chats_tab.dart';
 import 'home/tabs/search_tab.dart';
 import 'home/tabs/account_tab.dart';
+import '../models/blocked_account_status.dart';
+import 'support_tickets_screen.dart';
 
 class MainHomeScreen extends StatefulWidget {
   final String currentLanguage;
@@ -41,6 +43,11 @@ class _MainHomeScreenState extends State<MainHomeScreen>
   int _unreadNotificationCount = 0;
 
   bool _isModalActive = false;
+  bool _isBlocked = false;
+  bool _isResolvingBlockedStatus = true;
+  bool _isCheckingBlockedStatus = false;
+  String _blockingReason = '';
+  Timer? _blockedStatusTimer;
   final Set<int> _loadedTabs = {0};
 
   final Map<String, Map<String, String>> _localizedStrings = {
@@ -197,28 +204,94 @@ class _MainHomeScreenState extends State<MainHomeScreen>
         .addListener(_onForegroundNotificationReceived);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _loadSavedLanguage();
-      if (mounted) {
-        _fetchNotificationsCount();
-      }
+      if (!mounted) return;
+      await _loadCachedBlockedStatus();
+      await _refreshBlockedStatus();
+      if (!mounted) return;
+      _blockedStatusTimer?.cancel();
+      _blockedStatusTimer = Timer.periodic(
+        const Duration(seconds: 20),
+        (_) => unawaited(_refreshBlockedStatus()),
+      );
+      if (!_isBlocked) _fetchNotificationsCount();
     });
   }
 
   void _onForegroundNotificationReceived() {
-    if (mounted) _fetchNotificationsCount();
+    if (!mounted) return;
+    unawaited(_refreshBlockedStatus());
+    if (!_isBlocked) _fetchNotificationsCount();
+  }
+
+  Future<void> _loadCachedBlockedStatus() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('user_id') ?? 0;
+      if (userId <= 0 ||
+          prefs.getInt('wesal_blocked_user_id') != userId ||
+          prefs.getBool('wesal_account_blocked') != true) return;
+      if (!mounted) return;
+      setState(() {
+        _isBlocked = true;
+        _blockingReason = prefs.getString('wesal_blocking_reason') ?? '';
+      });
+    } catch (error) {
+      debugPrint('[Blocked Account Cache] $error');
+    }
+  }
+
+  Future<void> _refreshBlockedStatus() async {
+    if (!mounted || _isCheckingBlockedStatus) return;
+    _isCheckingBlockedStatus = true;
+    try {
+      final status = await ApiService.getBlockedAccountStatus(lang: _currentLanguage);
+      if (!mounted) return;
+      if (status != null) {
+        setState(() {
+          _isBlocked = status.isBlocked;
+          _blockingReason = status.reason;
+          _isResolvingBlockedStatus = false;
+        });
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          final userId = prefs.getInt('user_id') ?? 0;
+          if (userId > 0) {
+            await prefs.setInt('wesal_blocked_user_id', userId);
+            await prefs.setBool('wesal_account_blocked', status.isBlocked);
+            if (status.isBlocked && status.reason.isNotEmpty) {
+              await prefs.setString('wesal_blocking_reason', status.reason);
+            } else {
+              await prefs.remove('wesal_blocking_reason');
+            }
+          }
+        } catch (cacheError) {
+          debugPrint('[Blocked Account Cache Save] $cacheError');
+        }
+      } else {
+        setState(() => _isResolvingBlockedStatus = false);
+      }
+    } catch (error) {
+      if (mounted) setState(() => _isResolvingBlockedStatus = false);
+      debugPrint('[Blocked Account Status] $error');
+    } finally {
+      _isCheckingBlockedStatus = false;
+    }
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _fetchNotificationsCount();
-      // Refresh the device token on resume in case it rotated while the app
-      // was backgrounded or the last registration attempt failed.
-      unawaited(NotificationService.syncCurrentToken());
+      unawaited(_refreshBlockedStatus().then((_) {
+        if (!mounted || _isBlocked) return;
+        _fetchNotificationsCount();
+        unawaited(NotificationService.syncCurrentToken());
+      }));
     }
   }
 
   @override
   void dispose() {
+    _blockedStatusTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     NotificationService.foregroundMessageVersion
         .removeListener(_onForegroundNotificationReceived);
@@ -251,6 +324,7 @@ class _MainHomeScreenState extends State<MainHomeScreen>
   }
 
   Future<void> _fetchNotificationsCount() async {
+    if (_isBlocked) return;
     try {
       final dynamic rawList = await ApiService.getNotifications();
       if (rawList is! List) return;
@@ -322,7 +396,7 @@ class _MainHomeScreenState extends State<MainHomeScreen>
   }
 
   Future<bool> _showExitConfirmationDialog() async {
-    if (!mounted || _isModalActive) return false;
+    if (!mounted || _isModalActive || _isBlocked) return false;
     _isModalActive = true;
 
     final result = await showDialog<bool>(
@@ -438,7 +512,19 @@ class _MainHomeScreenState extends State<MainHomeScreen>
     return result ?? false;
   }
 
+  Future<void> _openBlockedSupportMessage() async {
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => BlockedSupportMessageScreen(currentLanguage: _currentLanguage)));
+    if (mounted) unawaited(_refreshBlockedStatus());
+  }
+
+  Widget _buildBlockedAccessScreen() {
+    final isArabic = _currentLanguage.toLowerCase().startsWith('ar');
+    final reason = _blockingReason.isNotEmpty ? _blockingReason : (isArabic ? 'لم يتم تسجيل سبب إضافي.' : 'No further reason was provided.');
+    return SafeArea(child: Center(child: SingleChildScrollView(padding: const EdgeInsets.all(24), child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 520), child: Container(width: double.infinity, padding: const EdgeInsets.all(24), decoration: BoxDecoration(color: AppColors.cardColor, borderRadius: BorderRadius.circular(26), border: Border.all(color: AppColors.error.withValues(alpha: 0.30), width: 1.2), boxShadow: [BoxShadow(color: AppColors.textDark.withValues(alpha: 0.08), blurRadius: 24, offset: const Offset(0, 10))]), child: Column(mainAxisSize: MainAxisSize.min, children: [Container(width: 74, height: 74, decoration: BoxDecoration(color: AppColors.error.withValues(alpha: 0.10), shape: BoxShape.circle), child: const Icon(Icons.gpp_bad_rounded, color: AppColors.error, size: 40)), const SizedBox(height: 20), Text(isArabic ? 'تم حظر حسابك' : 'Your account is blocked', textAlign: TextAlign.center, style: const TextStyle(color: AppColors.textDark, fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Cairo')), const SizedBox(height: 12), Text(isArabic ? 'أنت محظور من استخدام التطبيق بسبب مخالفة قواعد وشروط الاستخدام.' : 'You are blocked from using the app because the Terms of Use were violated.', textAlign: TextAlign.center, style: const TextStyle(color: AppColors.textDark, fontSize: 14, height: 1.7, fontFamily: 'Cairo')), const SizedBox(height: 18), Container(width: double.infinity, padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: AppColors.sectionBackground, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.lineColor)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(isArabic ? 'السبب:' : 'Reason:', style: const TextStyle(color: AppColors.textDark, fontSize: 13, fontWeight: FontWeight.bold, fontFamily: 'Cairo')), const SizedBox(height: 7), Text(reason, style: const TextStyle(color: AppColors.textDark, fontSize: 14, height: 1.6, fontFamily: 'Cairo'))])), const SizedBox(height: 22), SizedBox(width: double.infinity, height: 52, child: ElevatedButton.icon(onPressed: _openBlockedSupportMessage, style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryTeal, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))), icon: const Icon(Icons.support_agent_rounded, color: Colors.white), label: Text(isArabic ? 'إرسال رسالة للدعم' : 'Send a message to support', style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold, fontFamily: 'Cairo'))))]))))));
+  }
+
   void _onTabSelected(int index) {
+    if (_isBlocked || _isResolvingBlockedStatus) return;
     if (index < 0 || index > 3) return;
     if (_currentIndex == index && _loadedTabs.contains(index)) return;
 
@@ -504,7 +590,7 @@ class _MainHomeScreenState extends State<MainHomeScreen>
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (bool didPop, dynamic result) async {
-        if (didPop) return;
+        if (didPop || _isBlocked || _isResolvingBlockedStatus) return;
         final bool shouldExit = await _showExitConfirmationDialog();
         if (shouldExit) {
           SystemNavigator.pop();
@@ -514,34 +600,34 @@ class _MainHomeScreenState extends State<MainHomeScreen>
         textDirection:
             _currentLanguage == 'ar' ? TextDirection.rtl : TextDirection.ltr,
         child: Scaffold(
-          body: Container(
-            width: double.infinity,
-            height: double.infinity,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.backgroundColor,
-                  AppColors.sectionBackground,
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: SafeArea(
-              bottom: false,
-              child: IndexedStack(
-                index: _currentIndex,
-                children: pages,
-              ),
-            ),
-          ),
-          bottomNavigationBar: SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: _buildGlassBottomNavigationBar(),
-            ),
-          ),
+          body: _isResolvingBlockedStatus
+              ? const Center(child: CircularProgressIndicator(color: AppColors.primaryTeal))
+              : _isBlocked
+                  ? _buildBlockedAccessScreen()
+                  : Container(
+                      width: double.infinity,
+                      height: double.infinity,
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [AppColors.backgroundColor, AppColors.sectionBackground],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      child: SafeArea(
+                        bottom: false,
+                        child: IndexedStack(index: _currentIndex, children: pages),
+                      ),
+                    ),
+          bottomNavigationBar: _isBlocked || _isResolvingBlockedStatus
+              ? null
+              : SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: _buildGlassBottomNavigationBar(),
+                  ),
+                ),
         ),
       ),
     );
