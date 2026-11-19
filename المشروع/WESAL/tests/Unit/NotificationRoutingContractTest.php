@@ -85,6 +85,25 @@ namespace Tests\Unit {
             $this->assertSame('wesal://package-invoice/501', $payload['route']);
         }
 
+        public function test_package_invoice_lookup_keeps_soft_deleted_owner_invoices_without_weakening_ownership(): void
+        {
+            $controllerPath = dirname(__DIR__, 2)
+                . '/app/Http/Controllers/Api/PackageController.php';
+            $source = file_get_contents($controllerPath);
+
+            $this->assertIsString($source);
+            $this->assertStringContainsString('PackagePayment::withTrashed()', $source);
+            $this->assertStringContainsString(
+                "->where('user_id', auth()->id())",
+                $source
+            );
+            $this->assertStringContainsString(
+                '->whereKey((int) $paymentId)',
+                $source
+            );
+            $this->assertStringContainsString('payment_was_soft_deleted', $source);
+        }
+
         public function test_notification_serialization_is_database_only_and_keeps_route(): void
         {
             $notification = new DbStoreNotification(
