@@ -22,7 +22,6 @@ import '../utils/chat_time_utils.dart';
 import '../utils/chat_activity_state.dart';
 import '../widgets/app_snackbar.dart';
 import '../widgets/bottom_system_inset.dart';
-import '../widgets/package_badge_widget.dart';
 import 'member_profile_screen.dart';
 
 class ChatDetailScreen extends StatefulWidget {
@@ -2200,14 +2199,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                                   ),
                                 ),
                               ),
-                              if (widget.thread.packageName.isNotEmpty) ...[
-                                const SizedBox(width: 5),
-                                PackageBadgeWidget(
-                                  packageName: widget.thread.packageName,
-                                  compact: true,
-                                  isArabic: _isArabic,
-                                ),
-                              ],
                             ],
                           ),
                           const SizedBox(height: 2),
