@@ -23,6 +23,24 @@ void main() {
       expect(notification.toRoutePayload(), containsPair('info_id', '381'));
     });
 
+    test('accepts legacy notification type and conversation ID aliases', () {
+      final notification = NotificationModel.fromJson({
+        'id': 'notif-44',
+        'notification_type': 'chat_message',
+        'thread_id': 109,
+        'title': 'رسالة جديدة',
+        'message': 'وصلتك رسالة',
+        'read_at': null,
+      });
+
+      expect(notification.type, 'chat_message');
+      expect(notification.infoId, '109');
+      expect(
+        notification.toRoutePayload(),
+        containsPair('info_id', '109'),
+      );
+    });
+
     test('accepts explicit invoice metadata aliases', () {
       final notification = NotificationModel.fromJson({
         'notification_id': 'notif-43',
