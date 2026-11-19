@@ -1680,6 +1680,6 @@
 - Commit مصدر الحزمة التشغيلية: ccafd1207255eb824ca973d2439112721559819d على main، مع تحديث سجل المشروع لاحقاً في Commit 59113af3d1f7d55b395d00cdcd35b1c85eae3508.
 - GitHub Actions Validate Wesal integration #496 (run 44432584560): نجح فحص PHP syntax، ونجح dart analyze مع No issues found، ونجحت اختبارات Flutter: 129 tests passed، ونجح إنشاء Artifact الخاص بالـZIP.
 - GitHub Actions Notification routing contract #53 (run 44432584374): نجح فحص PHP syntax للملفات الخلفية المعدلة، ونجح اختبار Laravel: 7 tests / 40 assertions.
-- GitHub Actions Notification routing contract #52 (run 44432384374): شغل Android debug APK كان ما يزال قيد التنفيذ عند آخر فحص؛ لا أسجل نجاح بناء APK حتى يكتمل ويظهر conclusion ناجحاً.
+- GitHub Actions Notification routing contract #52 (run 44432347948): شغل Android debug APK كان ما يزال قيد التنفيذ عند آخر فحص؛ لا أسجل نجاح بناء APK حتى يكتمل ويظهر conclusion ناجحاً.
 - حزمة التسليم النهائية: WESAL_NOTIFICATIONS_AND_INVOICE_FIX_2026-11-19.zip، 17 ملفاً تشغيلية واختبارية فقط، مع الحفاظ على المسارات الأصلية. فُحصت سلامة ZIP بنجاح. SHA256: dd19c3e18920e7df6fe08e02e4f678e28005cf3bd40983f1cda13501033cbe52.
 - لم يتم نشر التعديلات على Hostinger أو تنفيذ إرسال FCM تجريبي على هاتف حقيقي. بعد نشر الخادم والتطبيق وتثبيت نسخة Android المحدّثة وفتحها مرة واحدة، يجب فحص سجلات FCM الجديدة وسجل فاتورة الدفع رقم 16 لتحديد إن كان السجل مفقوداً أو مملوكاً لمستخدم آخر أو محذوفاً منطقياً.
