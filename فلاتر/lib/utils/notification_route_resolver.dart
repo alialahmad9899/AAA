@@ -92,7 +92,9 @@ NotificationDestination? resolveNotificationDestination(
     }
   }
 
-  if (type.contains('package') || type.contains('invoice') || type.contains('purchase')) {
+  if (type.contains('package') ||
+      type.contains('invoice') ||
+      type.contains('purchase')) {
     final int? id = firstId(const [
       'payment_id',
       'package_payment_id',
@@ -151,9 +153,12 @@ NotificationDestination? _resolveKnownRoute(String rawRoute) {
   final List<String> segments = uri.pathSegments
       .where((segment) => segment.trim().isNotEmpty)
       .toList();
-  final String routeName = (uri.scheme == 'wesal' && uri.host.isNotEmpty)
-      ? uri.host.toLowerCase().replaceAll('-', '_')
-      : (segments.isNotEmpty ? segments.first.toLowerCase().replaceAll('-', '_') : uri.host.toLowerCase());
+  final String routeName =
+      (uri.scheme == 'wesal' && uri.host.isNotEmpty)
+          ? uri.host.toLowerCase().replaceAll('-', '_')
+          : (segments.isNotEmpty
+              ? segments.first.toLowerCase().replaceAll('-', '_')
+              : uri.host.toLowerCase());
 
   int? routeId(Iterable<String> queryKeys, {int segmentIndex = 1}) {
     for (final String key in queryKeys) {
@@ -204,7 +209,8 @@ NotificationDestination? _resolveKnownRoute(String rawRoute) {
     }
   }
 
-  if (const {'member', 'profile', 'member_profile', 'visitor'}.contains(routeName)) {
+  if (const {'member', 'profile', 'member_profile', 'visitor'}
+      .contains(routeName)) {
     final int? id = routeId(const [
       'user_id',
       'member_id',
@@ -236,7 +242,8 @@ NotificationDestination? _resolveKnownRoute(String rawRoute) {
     }
   }
 
-  if (const {'interests', 'my_interests', 'interest_requests'}.contains(routeName)) {
+  if (const {'interests', 'my_interests', 'interest_requests'}
+      .contains(routeName)) {
     return const NotificationDestination(NotificationDestinationKind.interests);
   }
 
