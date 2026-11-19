@@ -135,6 +135,9 @@ class FirebaseNotificationService
             "channel_id" => $isChatNotification
                 ? ($isSilent ? "wesal_chat_silent_channel" : "wesal_chat_alert_channel")
                 : "wesal_high_importance_channel",
+            // Android reads click_action from the notification object, not only
+            // from custom data fields, when constructing the system tray intent.
+            "click_action" => "FLUTTER_NOTIFICATION_CLICK",
             "icon" => "ic_stat_wesal",
             "color" => "#0F4C5C",
             "notification_priority" => $isSilent ? "PRIORITY_LOW" : "PRIORITY_MAX"
