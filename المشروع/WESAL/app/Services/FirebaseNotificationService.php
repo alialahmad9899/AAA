@@ -251,6 +251,7 @@ class FirebaseNotificationService
             }
 
             Log::error("❌ [FCM Send Error]: فشل إرسال الإشعار.", [
+                'project_id' => $jsonData['project_id'],
                 'http_code' => $httpCode,
                 'curl_error' => $curlError,
                 'fcm_error' => $fcmErrorCode,
@@ -262,6 +263,7 @@ class FirebaseNotificationService
 
         $acceptedMessage = json_decode((string) $response, true);
         Log::info("✅ [FCM Success]: تم قبول الإشعار من Firebase FCM.", [
+            'project_id' => $jsonData['project_id'],
             'message_name' => is_array($acceptedMessage)
                 ? ($acceptedMessage['name'] ?? null)
                 : null,
