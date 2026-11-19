@@ -187,10 +187,11 @@ namespace Tests\Unit {
             $source = file_get_contents($controllerPath);
 
             $this->assertIsString($source);
-            $this->assertStringContainsString(
-                "'wesal://package-invoice/' . $result['payment']->id",
-                $source
-            );
+            $expectedRoute = <<<'SOURCE'
+'wesal://package-invoice/' . $result['payment']->id
+SOURCE;
+
+            $this->assertStringContainsString($expectedRoute, $source);
         }
 
         public function test_notification_serialization_is_database_only_and_keeps_route(): void
