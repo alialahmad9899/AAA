@@ -630,7 +630,6 @@ class NotificationService {
         }
         return null;
     }
-    return null;
   }
 
   static Future<bool> _pushWhenNavigatorReady(WidgetBuilder builder) async {
