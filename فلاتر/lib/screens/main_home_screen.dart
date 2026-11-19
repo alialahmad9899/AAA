@@ -210,6 +210,9 @@ class _MainHomeScreenState extends State<MainHomeScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _fetchNotificationsCount();
+      // Refresh the device token on resume in case it rotated while the app
+      // was backgrounded or the last registration attempt failed.
+      unawaited(NotificationService.syncCurrentToken());
     }
   }
 
