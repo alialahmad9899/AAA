@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class IsApiMember
 {
@@ -31,6 +32,18 @@ class IsApiMember
                 'message' => translate('User is banned.'),
             ], 403);
         }
+
+        // Refresh the shared online marker for mobile API activity.
+        $activityAt = now();
+        Cache::put(
+            'user-is-online-' . $user->id,
+            true,
+            $activityAt->copy()->addMinutes(3)
+        );
+        Cache::forever(
+            'wesal:last-seen:' . $user->id,
+            $activityAt->toIso8601String()
+        );
 
         return $next($request);
     }
