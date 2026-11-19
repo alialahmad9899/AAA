@@ -4,6 +4,13 @@ on:
   pull_request:
     paths:
       - 'المشروع/WESAL/app/Notifications/DbStoreNotification.php'
+      - 'المشروع/WESAL/app/Http/Controllers/Api/PackageController.php'
+      - 'المشروع/WESAL/app/Services/SubscriptionNotificationService.php'
+      - 'المشروع/WESAL/app/Services/ChatService.php'
+      - 'المشروع/WESAL/app/Services/InterestService.php'
+      - 'المشروع/WESAL/app/Utility/NotificationUtility.php'
+      - 'المشروع/WESAL/app/Http/Controllers/Api/WalletController.php'
+      - 'المشروع/WESAL/app/Http/Controllers/Admin/SupportTicketAdminController.php'
       - 'المشروع/WESAL/tests/Unit/NotificationRoutingContractTest.php'
       - '.github/workflows/notification-routing-contract.yml'
       - 'فلاتر/**'
@@ -12,6 +19,13 @@ on:
       - main
     paths:
       - 'المشروع/WESAL/app/Notifications/DbStoreNotification.php'
+      - 'المشروع/WESAL/app/Http/Controllers/Api/PackageController.php'
+      - 'المشروع/WESAL/app/Services/SubscriptionNotificationService.php'
+      - 'المشروع/WESAL/app/Services/ChatService.php'
+      - 'المشروع/WESAL/app/Services/InterestService.php'
+      - 'المشروع/WESAL/app/Utility/NotificationUtility.php'
+      - 'المشروع/WESAL/app/Http/Controllers/Api/WalletController.php'
+      - 'المشروع/WESAL/app/Http/Controllers/Admin/SupportTicketAdminController.php'
       - 'المشروع/WESAL/tests/Unit/NotificationRoutingContractTest.php'
       - '.github/workflows/notification-routing-contract.yml'
       - 'فلاتر/**'
@@ -34,7 +48,15 @@ jobs:
 
       - name: Run notification routing contract tests
         working-directory: المشروع/WESAL
-        run: phpunit --no-configuration tests/Unit/NotificationRoutingContractTest.php
+        run: |
+          php -l app/Http/Controllers/Api/PackageController.php
+          php -l app/Services/SubscriptionNotificationService.php
+          php -l app/Services/ChatService.php
+          php -l app/Services/InterestService.php
+          php -l app/Utility/NotificationUtility.php
+          php -l app/Http/Controllers/Api/WalletController.php
+          php -l app/Http/Controllers/Admin/SupportTicketAdminController.php
+          phpunit --no-configuration tests/Unit/NotificationRoutingContractTest.php
 
   flutter-android-build:
     runs-on: ubuntu-latest
