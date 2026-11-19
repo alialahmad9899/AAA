@@ -510,7 +510,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                             color: AppColors.lineColor),
                       ),
                       child: Material(
-                        color: Colors.transparent,
+                        color: AppColors.sectionBackground,
                         borderRadius: BorderRadius.circular(16),
                         child: ListTile(
                           leading: _getReasonIcon(item['type']!),
