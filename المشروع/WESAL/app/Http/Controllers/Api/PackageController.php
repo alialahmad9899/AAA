@@ -267,8 +267,10 @@ class PackageController extends Controller
             return response()->json(['result' => false, 'message' => $errorMessage], 404);
         }
 
-        // Never expose another member's invoice by guessing a payment ID.
-        $payment = PackagePayment::where('user_id', auth()->id())
+        // PackagePayment uses SoftDeletes. Preserve an owner's invoice even if
+        // an admin soft-deleted the payment row; never relax the user ownership check.
+        $payment = PackagePayment::withTrashed()
+            ->where('user_id', auth()->id())
             ->whereKey((int) $paymentId)
             ->first();
 
@@ -277,6 +279,20 @@ class PackageController extends Controller
                 'result' => true
             ]);
         }
+
+        $anyPayment = PackagePayment::withTrashed()
+            ->whereKey((int) $paymentId)
+            ->first();
+
+        Log::warning('Member package invoice lookup failed.', [
+            'requesting_user_id' => auth()->id(),
+            'payment_id' => (int) $paymentId,
+            'payment_record_exists' => $anyPayment !== null,
+            'owner_matches' => $anyPayment
+                ? (int) $anyPayment->user_id === (int) auth()->id()
+                : false,
+            'payment_was_soft_deleted' => $anyPayment ? $anyPayment->trashed() : false,
+        ]);
 
         $errorMessage = ($lang === 'en') ? 'Sorry!!, Invalid Data.' : 'عفواً، الفاتورة غير موجودة.';
         return response()->json(['result' => false, 'message' => $errorMessage], 404);
