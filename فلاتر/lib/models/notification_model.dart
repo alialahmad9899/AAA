@@ -84,7 +84,10 @@ class NotificationModel {
         json['header']?.toString() ??
         '';
 
-    String typeStr = (json['type'] ?? json['notification_type'] ?? json['action'])?.toString() ?? '';
+    String typeStr =
+        (json['type'] ?? json['notification_type'] ?? json['action'])
+                ?.toString() ??
+            '';
 
     final isUnderscoreTitle = RegExp(r'^_+$').hasMatch(extractedTitle.trim());
     bool isBadTitle = extractedTitle.trim().isEmpty ||
