@@ -232,7 +232,9 @@ class _MainHomeScreenState extends State<MainHomeScreen>
       final userId = prefs.getInt('user_id') ?? 0;
       if (userId <= 0 ||
           prefs.getInt('wesal_blocked_user_id') != userId ||
-          prefs.getBool('wesal_account_blocked') != true) return;
+          prefs.getBool('wesal_account_blocked') != true) {
+        return;
+      }
       if (!mounted) return;
       setState(() {
         _isBlocked = true;
