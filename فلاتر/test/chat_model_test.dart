@@ -34,4 +34,28 @@ void main() {
     }, 18, currentUserId: 42);
     expect(message.time, '2026-11-08T12:29:00+00:00');
   });
+
+  test('ChatThreadModel treats API active boolean as online', () {
+    final thread = ChatThreadModel.fromJson({
+      'id': 8,
+      'user_id': 19,
+      'active': true,
+      'last_seen': 'منذ دقيقة',
+    });
+
+    expect(thread.isOnline, isTrue);
+    expect(thread.lastSeen, 'منذ دقيقة');
+  });
+
+  test('ChatThreadModel preserves offline state when API marker is false', () {
+    final thread = ChatThreadModel.fromJson({
+      'id': 9,
+      'user_id': 20,
+      'active': false,
+      'last_seen': 'منذ 4 دقائق',
+    });
+
+    expect(thread.isOnline, isFalse);
+    expect(thread.lastSeen, 'منذ 4 دقائق');
+  });
 }
