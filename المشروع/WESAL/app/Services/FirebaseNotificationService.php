@@ -133,8 +133,8 @@ class FirebaseNotificationService
         // 5. Android channels are split so quiet replacements remain quiet.
         $androidNotificationConfig = [
             "channel_id" => $isChatNotification
-                ? ($isSilent ? "wesal_chat_silent_channel" : "wesal_chat_alert_channel")
-                : "wesal_high_importance_channel",
+                ? ($isSilent ? "wesal_chat_silent_channel" : "wesal_chat_alert_channel_v2")
+                : "wesal_high_importance_channel_v2",
             // Android reads click_action from the notification object, not only
             // from custom data fields, when constructing the system tray intent.
             "click_action" => "FLUTTER_NOTIFICATION_CLICK",
