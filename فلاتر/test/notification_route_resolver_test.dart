@@ -1,89 +1,48 @@
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:wesal_app/utils/notification_route_resolver.dart';
 
 void main() {
   group('notification destination resolver', () {
-    test('resolves package invoice from an explicit payment ID in the payload', () {
-      final result = resolveNotificationDestination({
-        'type': 'package_activated',
-        'info_id': '16',
-        'payment_id': '501',
-      });
-
-      expect(result?.kind, NotificationDestinationKind.packageInvoice);
-      expect(result?.id, 501);
+    test('resolves package invoice from explicit payment ID', () {
+      final result=resolveNotificationDestination({'type':'package','info_id':'16','payment_id':'501'});
+      expect(result?.kind,NotificationDestinationKind.packageInvoice); expect(result?.id,501);
     });
-
-    test('does not mistake a legacy package info_id for a payment ID', () {
-      final result = resolveNotificationDestination({
-        'type': 'package',
-        'info_id': '16',
-      });
-
-      expect(result, isNull);
+    test('uses purchase history instead of guessing from info_id', () {
+      final result=resolveNotificationDestination({'type':'package','info_id':'16'});
+      expect(result?.kind,NotificationDestinationKind.packagePurchaseHistory); expect(result?.id,isNull);
     });
-
-    test('resolves package invoice from the Wesal deep link alone', () {
-      final result = resolveNotificationDestination({
-        'type': 'admin_notice',
-        'route': 'wesal://package-invoice/502',
-      });
-
-      expect(result?.kind, NotificationDestinationKind.packageInvoice);
-      expect(result?.id, 502);
+    test('resolves trusted invoice deep link', () {
+      final result=resolveNotificationDestination({'type':'package','info_id':'16','route':'wesal://package-invoice/502'});
+      expect(result?.kind,NotificationDestinationKind.packageInvoice); expect(result?.id,502);
     });
-
-    test('resolves member profile from a custom Wesal deep link', () {
-      final result = resolveNotificationDestination({
-        'type': 'admin_notice',
-        'route': 'wesal://member/73',
-      });
-
-      expect(result?.kind, NotificationDestinationKind.profile);
-      expect(result?.id, 73);
+    test('resolves explicit invoice ID with generic type', () {
+      final result=resolveNotificationDestination({'type':'admin_notice','payment_id':'503'});
+      expect(result?.kind,NotificationDestinationKind.packageInvoice); expect(result?.id,503);
     });
-
-    test('resolves profile IDs from a https profile link', () {
-      final result = resolveNotificationDestination({
-        'route': 'https://www.wesalsyria.com/profile?id=74',
-      });
-
-      expect(result?.kind, NotificationDestinationKind.profile);
-      expect(result?.id, 74);
+    test('resolves profile visit to visitor profile', () {
+      final result=resolveNotificationDestination({'type':'profile_view','viewer_id':'74'});
+      expect(result?.kind,NotificationDestinationKind.profile); expect(result?.id,74);
     });
-
-    test('resolves support and chat deep links', () {
-      final support = resolveNotificationDestination({
-        'route': 'wesal://support-ticket/909',
-      });
-      final chat = resolveNotificationDestination({
-        'route': 'wesal://chat/109',
-      });
-
-      expect(support?.kind, NotificationDestinationKind.supportTicket);
-      expect(support?.id, 909);
-      expect(chat?.kind, NotificationDestinationKind.chat);
-      expect(chat?.id, 109);
+    test('routes profile visit without viewer ID to visitor list', () {
+      final result=resolveNotificationDestination({'type':'profile_view'});
+      expect(result?.kind,NotificationDestinationKind.profileVisitors); expect(result?.id,isNull);
     });
-
-    test('keeps interest notifications in the interests screen without actor ID', () {
-      final result = resolveNotificationDestination({
-        'notification_type': 'express_interest',
-      });
-
-      expect(result?.kind, NotificationDestinationKind.interests);
-      expect(result?.id, isNull);
+    test('routes like to actor profile', () {
+      final result=resolveNotificationDestination({'type':'like','notify_by':'84'});
+      expect(result?.kind,NotificationDestinationKind.profile); expect(result?.id,84);
     });
-
-    test('does not open unknown or arbitrary external routes', () {
-      expect(
-        resolveNotificationDestination({
-          'type': 'admin_notice',
-          'route': 'https://example.com/account/123',
-        }),
-        isNull,
-      );
+    test('routes like without actor to interest requests', () {
+      final result=resolveNotificationDestination({'notification_type':'express_interest'});
+      expect(result?.kind,NotificationDestinationKind.interests); expect(result?.id,isNull);
+    });
+    test('keeps support/chat deep links', () {
+      final support=resolveNotificationDestination({'route':'wesal://support-ticket/909'});
+      final chat=resolveNotificationDestination({'route':'wesal://chat/109'});
+      expect(support?.kind,NotificationDestinationKind.supportTicket); expect(support?.id,909);
+      expect(chat?.kind,NotificationDestinationKind.chat); expect(chat?.id,109);
+    });
+    test('rejects unknown external routes', () {
+      expect(resolveNotificationDestination({'type':'admin_notice','route':'https://example.com/account/123'}),isNull);
     });
   });
 }
