@@ -142,11 +142,13 @@ class NotificationUtility
                         'type' => $type,
                     ]);
                 }
-            } elseif (empty($user->fcm_token)) {
-                Log::info('In-app notification saved without a registered FCM token.', [
+            } else {
+                Log::warning('In-app notification saved but push delivery was skipped.', [
                     'receiver_id' => $receiver,
                     'notification_id' => $notificationId,
                     'type' => $type,
+                    'push_enabled' => (int) get_setting('firebase_push_notification') === 1,
+                    'has_device_token' => !empty($user->fcm_token),
                 ]);
             }
 
