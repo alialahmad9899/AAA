@@ -263,6 +263,22 @@ class ProfileController extends Controller
     }
 
     /**
+     * Minimal account restriction state for the authenticated mobile app.
+     * This route intentionally lives outside normal api_member middleware.
+     */
+    public function blocked_status()
+    {
+        $user = auth()->user();
+        $member = Member::withTrashed()->where('user_id', $user->id)->first();
+        $blocked = (int) $user->blocked === 1;
+        return response()->json([
+            'result' => true,
+            'blocked' => $blocked,
+            'blocking_reason' => $blocked ? trim((string) ($member->blocked_reason ?? '')) : '',
+        ]);
+    }
+
+    /**
      * Compact mobile identity and access flags.
      * Avoids serializing the full editable profile for navigation/tab badges.
      */
