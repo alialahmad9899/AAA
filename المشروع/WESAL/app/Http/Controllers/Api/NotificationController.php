@@ -97,6 +97,7 @@ class NotificationController extends Controller
     {
         $validated = $request->validate([
             'thread_id' => 'required|integer|min:0',
+            'app_active' => 'sometimes|boolean',
         ]);
         $threadId = (int) $validated['thread_id'];
         $userId = (int) auth()->id();
@@ -125,7 +126,25 @@ class NotificationController extends Controller
             Cache::forget('wesal:active-chat:' . $userId);
         }
 
-        return response()->json(['result' => true]);
+        $activityAt = now();
+        $onlineKey = 'user-is-online-' . $userId;
+        Cache::forever(
+            'wesal:last-seen:' . $userId,
+            $activityAt->toIso8601String()
+        );
+        $appIsActive = array_key_exists('app_active', $validated)
+            ? (bool) $validated['app_active']
+            : true;
+        if ($appIsActive) {
+            Cache::put($onlineKey, true, $activityAt->copy()->addMinutes(3));
+        } else {
+            Cache::forget($onlineKey);
+        }
+
+        return response()->json([
+            'result' => true,
+            'app_active' => $appIsActive,
+        ]);
     }
 
     /**
