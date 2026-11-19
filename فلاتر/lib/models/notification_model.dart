@@ -9,6 +9,7 @@ class NotificationModel {
   final String type;
   final int notifyBy;
   final String infoId;
+  final int? paymentId;
   final String route;
   final String photo;
   final String title;
@@ -22,6 +23,7 @@ class NotificationModel {
     required this.type,
     required this.notifyBy,
     this.infoId = '',
+    this.paymentId,
     this.route = '',
     required this.photo,
     required this.title,
@@ -122,6 +124,7 @@ class NotificationModel {
               json['conversation_id'] ??
               '')
           .toString(),
+      paymentId: _firstPositiveId(json, const ['payment_id', 'package_payment_id', 'invoice_id']),
       route: json['route']?.toString() ?? json['link']?.toString() ?? '',
       photo: json['photo']?.toString() ?? '',
       title: extractedTitle,
@@ -196,12 +199,20 @@ class NotificationModel {
     }
   }
 
+  static int? _firstPositiveId(Map<String, dynamic> json, List<String> keys) {
+    for (final String key in keys) { final int? value=int.tryParse(json[key]?.toString().trim()??''); if(value!=null&&value>0)return value; }
+    return null;
+  }
+
   /// Payload shared by notification-center taps and FCM tray taps.
   Map<String, dynamic> toRoutePayload() => {
         'type': type,
         'notify_by': notifyBy.toString(),
         'info_id': infoId,
+        if (paymentId != null) 'payment_id': paymentId.toString(),
         'route': route,
+        'title': title,
+        'message': message,
         'notification_id': notificationId,
       };
 
