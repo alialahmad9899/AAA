@@ -518,9 +518,149 @@ class _MainHomeScreenState extends State<MainHomeScreen>
   }
 
   Widget _buildBlockedAccessScreen() {
-    final isArabic = _currentLanguage.toLowerCase().startsWith('ar');
-    final reason = _blockingReason.isNotEmpty ? _blockingReason : (isArabic ? 'لم يتم تسجيل سبب إضافي.' : 'No further reason was provided.');
-    return SafeArea(child: Center(child: SingleChildScrollView(padding: const EdgeInsets.all(24), child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 520), child: Container(width: double.infinity, padding: const EdgeInsets.all(24), decoration: BoxDecoration(color: AppColors.cardColor, borderRadius: BorderRadius.circular(26), border: Border.all(color: AppColors.error.withValues(alpha: 0.30), width: 1.2), boxShadow: [BoxShadow(color: AppColors.textDark.withValues(alpha: 0.08), blurRadius: 24, offset: const Offset(0, 10))]), child: Column(mainAxisSize: MainAxisSize.min, children: [Container(width: 74, height: 74, decoration: BoxDecoration(color: AppColors.error.withValues(alpha: 0.10), shape: BoxShape.circle), child: const Icon(Icons.gpp_bad_rounded, color: AppColors.error, size: 40)), const SizedBox(height: 20), Text(isArabic ? 'تم حظر حسابك' : 'Your account is blocked', textAlign: TextAlign.center, style: const TextStyle(color: AppColors.textDark, fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Cairo')), const SizedBox(height: 12), Text(isArabic ? 'أنت محظور من استخدام التطبيق بسبب مخالفة قواعد وشروط الاستخدام.' : 'You are blocked from using the app because the Terms of Use were violated.', textAlign: TextAlign.center, style: const TextStyle(color: AppColors.textDark, fontSize: 14, height: 1.7, fontFamily: 'Cairo')), const SizedBox(height: 18), Container(width: double.infinity, padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: AppColors.sectionBackground, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.lineColor)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(isArabic ? 'السبب:' : 'Reason:', style: const TextStyle(color: AppColors.textDark, fontSize: 13, fontWeight: FontWeight.bold, fontFamily: 'Cairo')), const SizedBox(height: 7), Text(reason, style: const TextStyle(color: AppColors.textDark, fontSize: 14, height: 1.6, fontFamily: 'Cairo'))])), const SizedBox(height: 22), SizedBox(width: double.infinity, height: 52, child: ElevatedButton.icon(onPressed: _openBlockedSupportMessage, style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryTeal, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))), icon: const Icon(Icons.support_agent_rounded, color: Colors.white), label: Text(isArabic ? 'إرسال رسالة للدعم' : 'Send a message to support', style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold, fontFamily: 'Cairo'))))]))))));
+    final bool isArabic = _currentLanguage.toLowerCase().startsWith('ar');
+    final String reason = _blockingReason.isNotEmpty
+        ? _blockingReason
+        : (isArabic
+            ? 'لم يتم تسجيل سبب إضافي.'
+            : 'No further reason was provided.');
+
+    return SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppColors.cardColor,
+                borderRadius: BorderRadius.circular(26),
+                border: Border.all(
+                  color: AppColors.error.withValues(alpha: 0.30),
+                  width: 1.2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.textDark.withValues(alpha: 0.08),
+                    blurRadius: 24,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 74,
+                    height: 74,
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.10),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.gpp_bad_rounded,
+                      color: AppColors.error,
+                      size: 40,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    isArabic ? 'تم حظر حسابك' : 'Your account is blocked',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: AppColors.textDark,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Cairo',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    isArabic
+                        ? 'أنت محظور من استخدام التطبيق بسبب مخالفة قواعد وشروط الاستخدام.'
+                        : 'You are blocked from using the app because the Terms of Use were violated.',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: AppColors.textDark,
+                      fontSize: 14,
+                      height: 1.7,
+                      fontFamily: 'Cairo',
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.sectionBackground,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.lineColor),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isArabic ? 'السبب:' : 'Reason:',
+                          style: const TextStyle(
+                            color: AppColors.textDark,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Cairo',
+                          ),
+                        ),
+                        const SizedBox(height: 7),
+                        Text(
+                          reason,
+                          textAlign: TextAlign.start,
+                          style: const TextStyle(
+                            color: AppColors.textDark,
+                            fontSize: 14,
+                            height: 1.6,
+                            fontFamily: 'Cairo',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton.icon(
+                      onPressed: _openBlockedSupportMessage,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryTeal,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                      ),
+                      icon: const Icon(
+                        Icons.support_agent_rounded,
+                        color: Colors.white,
+                      ),
+                      label: Text(
+                        isArabic
+                            ? 'إرسال رسالة للدعم'
+                            : 'Send a message to support',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Cairo',
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   void _onTabSelected(int index) {
