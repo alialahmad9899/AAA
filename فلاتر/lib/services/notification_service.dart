@@ -28,6 +28,7 @@ import 'api_service.dart';
 import 'fcm_service.dart';
 import '../utils/chat_notification_utils.dart';
 import '../utils/chat_activity_state.dart';
+import '../utils/notification_route_resolver.dart';
 
 const AndroidNotificationChannel _notificationChannel =
     AndroidNotificationChannel(
@@ -67,18 +68,26 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     WidgetsFlutterBinding.ensureInitialized();
     await Firebase.initializeApp();
 
-    // رسائل المحادثات ذات notification payload يعرضها النظام تلقائياً،
-    // ورسائلها data-only لا تنشئ إشعاراً محلياً مستقلاً حتى لا تتكرر.
+    // Notification payloads are rendered by the operating system while the
+    // app is in the background. Only data-only messages need a local alert.
     if (message.notification != null) return;
-    if (isChatNotificationType(message.data)) return;
 
-    final String title =
-        message.data['title']?.toString().trim() ?? '';
-    final String body =
-        (message.data['body'] ?? message.data['message'] ?? '').toString().trim();
+    final bool isChatMessage = isChatNotificationType(message.data);
+    final bool isSilent = isChatMessage &&
+        isSilentChatNotification(message.data['silent']);
+    final String title = message.data['title']?.toString().trim() ?? '';
+    final String body = (message.data['body'] ??
+            message.data['message'] ??
+            message.data['content'] ??
+            '')
+        .toString()
+        .trim();
 
     if (title.isEmpty || body.isEmpty) return;
 
+    final AndroidNotificationChannel selectedChannel = !isChatMessage
+        ? _notificationChannel
+        : (isSilent ? _silentChatChannel : _chatAlertChannel);
     final plugin = FlutterLocalNotificationsPlugin();
     const androidSettings = AndroidInitializationSettings('ic_stat_wesal');
     const iosSettings = DarwinInitializationSettings();
@@ -91,7 +100,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     await plugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(_notificationChannel);
+        ?.createNotificationChannel(selectedChannel);
 
     await plugin.show(
       message.messageId?.hashCode ?? message.hashCode,
@@ -99,20 +108,20 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       body,
       NotificationDetails(
         android: AndroidNotificationDetails(
-          _notificationChannel.id,
-          _notificationChannel.name,
-          channelDescription: _notificationChannel.description,
+          selectedChannel.id,
+          selectedChannel.name,
+          channelDescription: selectedChannel.description,
           icon: 'ic_stat_wesal',
-          importance: Importance.max,
-          priority: Priority.high,
-          playSound: true,
-          enableVibration: true,
+          importance: isSilent ? Importance.low : Importance.max,
+          priority: isSilent ? Priority.low : Priority.high,
+          playSound: !isSilent,
+          enableVibration: !isSilent,
           styleInformation: BigTextStyleInformation(body),
         ),
-        iOS: const DarwinNotificationDetails(
+        iOS: DarwinNotificationDetails(
           presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
+          presentBadge: !isChatMessage,
+          presentSound: !isSilent,
         ),
       ),
       payload: jsonEncode(message.data),
@@ -545,67 +554,41 @@ class NotificationService {
     Map<String, dynamic> data,
     String language,
   ) async {
-    final String type = (data['type'] ??
-            data['notification_type'] ??
-            data['action'] ??
-            '')
-        .toString()
-        .toLowerCase()
-        .replaceAll('-', '_')
-        .replaceAll(' ', '_');
+    final NotificationDestination? destination =
+        resolveNotificationDestination(data);
+    if (destination == null) return null;
 
-    final int? ticketId = _firstPositiveInt(data, const [
-      'ticket_id',
-      'ticketId',
-      'support_ticket_id',
-      'support_id',
-      'thread_id',
-      'info_id',
-      'id',
-    ]);
-    if ((type.contains('support') || type.contains('ticket')) &&
-        ticketId != null) {
-      return (_) => SupportTicketDetailScreen(
-            ticketId: ticketId,
-            currentLanguage: language,
-          );
-    }
-
-    // Interest events belong to the actor, not just the generic interests list.
-    if (type.contains('interest') ||
-        type.contains('match') ||
-        type.contains('like')) {
-      final int? actorId = _firstPositiveInt(data, const [
-        'notify_by',
-        'actor_id',
-        'sender_id',
-        'interested_by',
-        'user_id',
-        'member_id',
-        'viewer_id',
-      ]);
-      if (actorId != null) {
-        return (_) => MemberProfileScreen(
-              userId: actorId,
+    switch (destination.kind) {
+      case NotificationDestinationKind.supportTicket:
+        final int? ticketId = destination.id;
+        if (ticketId == null || ticketId < 1) return null;
+        return (_) => SupportTicketDetailScreen(
+              ticketId: ticketId,
               currentLanguage: language,
             );
-      }
-      return (_) => MyInterestsScreen(currentLanguage: language);
-    }
 
-    if (type.contains('chat') ||
-        type.contains('message') ||
-        type.contains('conversation')) {
-      final int? threadId = _firstPositiveInt(data, const [
-        'thread_id',
-        'threadId',
-        'chat_thread_id',
-        'chat_id',
-        'chatId',
-        'conversation_id',
-        'conversationId',
-      ]);
-      if (threadId != null) {
+      case NotificationDestinationKind.interests:
+        return (_) => MyInterestsScreen(currentLanguage: language);
+
+      case NotificationDestinationKind.profile:
+        final int? memberId = destination.id;
+        if (memberId == null || memberId < 1) return null;
+        return (_) => MemberProfileScreen(
+              userId: memberId,
+              currentLanguage: language,
+            );
+
+      case NotificationDestinationKind.packageInvoice:
+        final int? paymentId = destination.id;
+        if (paymentId == null || paymentId < 1) return null;
+        return (_) => PackageInvoiceScreen(
+              paymentId: paymentId,
+              currentLanguage: language,
+            );
+
+      case NotificationDestinationKind.chat:
+        final int? threadId = destination.id;
+        if (threadId == null || threadId < 1) return null;
         try {
           final List<ChatThreadModel> threads =
               await ApiService.getChatThreads(lang: language);
@@ -620,66 +603,8 @@ class NotificationService {
         } catch (error) {
           debugPrint('[Notification Chat Route] $error');
         }
-      }
-      return null;
+        return null;
     }
-
-    if (type == 'package' ||
-        type == 'package_purchase' ||
-        type == 'package_activated') {
-      final int? paymentId = _firstPositiveInt(data, const [
-        'payment_id',
-        'package_payment_id',
-        'invoice_id',
-        'info_id',
-      ]);
-      if (paymentId != null) {
-        return (_) => PackageInvoiceScreen(
-              paymentId: paymentId,
-              currentLanguage: language,
-            );
-      }
-      return null;
-    }
-
-    if (type.contains('profile') ||
-        type.contains('member') ||
-        type.contains('visitor')) {
-      final int? memberId = _firstPositiveInt(data, const [
-        'viewer_id',
-        'user_id',
-        'userId',
-        'member_id',
-        'memberId',
-        'profile_id',
-        'sender_id',
-        'visitor_id',
-        'info_id',
-        'notify_by',
-      ]);
-      if (memberId != null) {
-        return (_) => MemberProfileScreen(
-              userId: memberId,
-              currentLanguage: language,
-            );
-      }
-    }
-
-    // Unknown and lifecycle-only events stay in the center; never guess a route.
-    return null;
-  }
-
-  static int? _firstPositiveInt(
-    Map<String, dynamic> data,
-    List<String> keys,
-  ) {
-    for (final String key in keys) {
-      final dynamic value = data[key];
-      if (value == null) continue;
-      final int? parsed = int.tryParse(value.toString());
-      if (parsed != null && parsed > 0) return parsed;
-    }
-    return null;
   }
 
   static Future<bool> _pushWhenNavigatorReady(WidgetBuilder builder) async {
