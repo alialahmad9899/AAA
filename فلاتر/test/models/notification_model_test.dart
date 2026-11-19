@@ -45,6 +45,7 @@ void main() {
       final notification = NotificationModel.fromJson({
         'notification_id': 'notif-43',
         'type': 'package_purchase',
+        'info_id': '16',
         'payment_id': 501,
         'notify_by': '0',
         'title': 'فاتورة',
@@ -52,7 +53,9 @@ void main() {
         'read_at': '2026-11-18 01:00:00',
       });
 
-      expect(notification.infoId, '501');
+      expect(notification.infoId, '16');
+      expect(notification.paymentId, 501);
+      expect(notification.toRoutePayload(), containsPair('payment_id', '501'));
     });
   });
 }
