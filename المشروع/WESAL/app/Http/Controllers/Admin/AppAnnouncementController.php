@@ -35,6 +35,7 @@ class AppAnnouncementController extends Controller
             'title_en' => ['nullable', 'string', 'max:150'],
             'message_en' => ['nullable', 'string', 'max:10000'],
             'target_type' => ['required', 'in:all,male,female,age'],
+            'target_gender' => ['nullable', 'required_if:target_type,age', 'in:all,male,female'],
             'age_min' => ['nullable', 'required_if:target_type,age', 'integer', 'min:18', 'max:100'],
             'age_max' => ['nullable', 'required_if:target_type,age', 'integer', 'min:18', 'max:100'],
             'button_enabled' => ['nullable', 'boolean'],
@@ -76,6 +77,10 @@ class AppAnnouncementController extends Controller
             'title_en' => trim((string) ($validated['title_en'] ?? '')) ?: null,
             'message_en' => trim((string) ($validated['message_en'] ?? '')) ?: null,
             'target_type' => $validated['target_type'],
+            // The age-based audience can target both genders or one selected gender.
+            'target_gender' => $validated['target_type'] === 'age'
+                ? $validated['target_gender']
+                : 'all',
             'age_min' => $validated['target_type'] === 'age' ? (int) $validated['age_min'] : null,
             'age_max' => $validated['target_type'] === 'age' ? (int) $validated['age_max'] : null,
             'button_enabled' => $buttonEnabled,
