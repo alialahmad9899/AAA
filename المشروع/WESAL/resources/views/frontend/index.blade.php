@@ -60,7 +60,6 @@
     .ws-nav a { color: var(--ws-ink); font-size: 13px; font-weight: 800; text-decoration: none !important; transition: color .2s ease; }
     .ws-nav a:hover { color: var(--ws-coral); }
     .ws-header-actions { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
-    .ws-login-link { color: var(--ws-primary); font-weight: 800; font-size: 13px; text-decoration: none !important; padding: 10px 12px; }
     .ws-header-cta, .ws-button-primary {
         display: inline-flex; align-items: center; justify-content: center; gap: 9px;
         border: 0; border-radius: 999px; padding: 12px 21px;
@@ -307,10 +306,6 @@
                 </nav>
                 <div class="ws-header-actions">
                     @include('frontend.inc.language_switcher')
-                    @guest
-                        <a class="ws-login-link" href="{{ route('login') }}">{{ $isEnglish ? 'Log in' : 'تسجيل الدخول' }}</a>
-                        <a class="ws-header-cta" href="{{ route('register') }}">{{ $isEnglish ? 'Create account' : 'إنشاء حساب' }} <i class="las {{ $isEnglish ? 'la-arrow-right' : 'la-arrow-left' }}"></i></a>
-                    @endguest
                 </div>
                 <div class="ws-mobile-header-controls">
                     @include('frontend.inc.language_switcher')
@@ -323,10 +318,6 @@
                 <a href="#women">{{ $isEnglish ? 'Women' : 'العضوات' }}</a>
                 <a href="#men">{{ $isEnglish ? 'Men' : 'الأعضاء' }}</a>
                 <a href="#how-it-works">{{ $isEnglish ? 'How it works' : 'كيف يعمل' }}</a>
-                @guest
-                    <a href="{{ route('login') }}">{{ $isEnglish ? 'Log in' : 'تسجيل الدخول' }}</a>
-                    <a href="{{ route('register') }}">{{ $isEnglish ? 'Create an account' : 'إنشاء حساب جديد' }}</a>
-                @endguest
             </nav>
         </div>
     </header>
