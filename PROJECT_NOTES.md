@@ -2313,3 +2313,29 @@ ALTER TABLE `users`
 - §257 HGB (القانون التجاري الألماني): https://www.gesetze-im-internet.de/hgb/__257.html
 - المادة 2 من EGBGB Annex 2 (نموذج الانسحاب للمستهلك): https://www.gesetze-im-internet.de/bgbeg/art_248anlage_2.html
 - §355 BGB (حق الانسحاب): https://www.gesetze-im-internet.de/bgb/__355.html
+
+
+## 2026-11-20 — تدقيق نهائي لتبديل لغة موقع وصال وتوحيد مدد الاحتفاظ في نسختي الخصوصية
+
+### سبب الإصلاح
+- أظهر التدقيق أن `SetWebsiteLocale` كان مسجلاً كـ route middleware alias فقط، ولم يكن مضافاً فعلياً إلى مجموعة Laravel `web`. لذلك كان اكتشاف لغة المتصفح وحفظ الاختيار في الجلسة غير مضمونين عند طلب صفحات لاحقة، رغم وجود زر التبديل والاختبارات الساكنة السابقة.
+- أُضيف `SetWebsiteLocale` مباشرة بعد `StartSession` داخل مجموعة `web` حتى تُقرأ الجلسة وتُحفظ اللغة عبر الطلبات العامة. يظل middleware متجاوزاً لمسارات لوحة الإدارة والتثبيت والتحديث كما هو مصمم.
+
+### الإصلاحات
+- إصلاح ربط middleware في `المشروع/WESAL/app/Http/Kernel.php` بعد بدء الجلسة، لضمان اختيار لغة المتصفح أول زيارة واستمرار العربية/الإنجليزية عند الانتقال بين الرئيسية والدعم والوثائق.
+- تحديث `المشروع/WESAL/tests/Unit/BilingualWebsiteContractTest.php` ليتحقق من وجود middleware داخل مجموعة `web` فعلياً ومن ترتيبه بعد `StartSession`؛ لم يعد يكفي وجود اسم alias في Kernel.
+- استكمال جدول الاحتفاظ العربي في `المشروع/WESAL/resources/views/frontend/legal/privacy_policy.blade.php` ليطابق النسخة الإنجليزية: 8 سنوات للفواتير وسندات القيد، و10 سنوات للدفاتر والجرد والحسابات السنوية، و6 سنوات للسجلات/المراسلات التجارية أو الضريبية التي ينطبق عليها الحكم، مع توضيح بدء المدة من نهاية السنة التقويمية والاستثناءات القانونية.
+- تحديث `المشروع/WESAL/tests/Unit/LegalDocumentPagesContractTest.php` و`المشروع/WESAL/tests/Unit/BilingualWebsiteContractTest.php` لتثبيت اكتمال مدد الحفظ في العربية والإنجليزية.
+
+### التحقق
+- PR #22: https://github.com/alialahmad9899/AAA/pull/22
+- GitHub Actions run `44731830689` اكتمل بنجاح لجميع الوظائف: Backend PHP، Flutter regression، وحزمة ZIP.
+- `LegalDocumentPagesContractTest`: 5 اختبارات / 103 تأكيدات ناجحة.
+- `BilingualWebsiteContractTest`: 10 اختبارات / 203 تأكيدات؛ ظهرت ملاحظة Warning واحدة في تقرير PHPUnit دون فشل الاختبار أو الوظيفة.
+- `dart analyze --fatal-infos`: لا توجد مشاكل.
+- `flutter test`: 157 اختباراً ناجحاً.
+- ZIP الأصلي لهذا التصحيح يحتوي ملفات المصدر والاختبارات الأربعة فقط؛ جرى دمج هذه التعديلات أيضاً في حزمة التسليم الكاملة ذات الـ24 ملفاً الخاصة بتنفيذ الموقع ثنائي اللغة.
+- لم يتم نشر التغييرات إلى Hostinger من هذه الجلسة. ظهورها على الموقع الحي يتطلب نشر ملفات الموقع، كما أن مهمة تنظيف الرسائل بعد 30 يوماً تتطلب تفعيل Laravel Scheduler/cron في الاستضافة.
+
+### التحقق القانوني لمدد حفظ السجلات
+- تمت مطابقة مدد 10/8/6 سنوات وبداية الاحتساب مع النص الرسمي الحالي § 257 HGB و§ 147 AO: https://www.gesetze-im-internet.de/hgb/__257.html وhttps://www.gesetze-im-internet.de/ao_1977/__147.html
