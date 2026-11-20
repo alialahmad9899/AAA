@@ -38,7 +38,7 @@ class RegisterController extends Controller
 
     public function showRegistrationForm()
     {
-        return view('frontend.user_registration');
+        abort(404);
     }
 
     protected function validator(array $data)
@@ -152,6 +152,9 @@ class RegisterController extends Controller
 
     public function register(Request $request)
     {
+        // Public website registration is disabled. Mobile API registration is handled separately.
+        abort(404);
+
         // 🛑 التعديل هنا: إرجاع الخطأ كـ JSON ليتوافق مع الـ AJAX ولتجنب خطأ 500
         if (filter_var($request->email, FILTER_VALIDATE_EMAIL)) {
             if (User::where('email', $request->email)->first() != null) {
