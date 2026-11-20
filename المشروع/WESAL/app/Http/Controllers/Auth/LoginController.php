@@ -85,53 +85,6 @@ class LoginController extends Controller
     public function handleAppleCallback(Request $request)
     {
         abort(404);
-
-        try {
-            $user = Socialite::driver("sign-in-with-apple")->user();
-        } catch (\Exception $e) {
-            flash(translate("Something Went wrong. Please try again."))->error();
-            return redirect()->route('user.login');
-        }
-        //check if provider_id exist
-        $existingUserByProviderId = User::where('provider_id', $user->id)->first();
-
-        if ($existingUserByProviderId) {
-            $existingUserByProviderId->access_token = $user->token;
-            $existingUserByProviderId->refresh_token = $user->refreshToken;
-            if (!isset($user->user['is_private_email'])) {
-                $existingUserByProviderId->email = $user->email;
-            }
-            $existingUserByProviderId->save();
-            //proceed to login
-            auth()->login($existingUserByProviderId, true);
-        } else {
-            //check if email exist
-            $existing_or_new_user = User::firstOrNew([
-                'email' => $user->email
-            ]);
-            $existing_or_new_user->provider_id = $user->id;
-            $existing_or_new_user->access_token = $user->token;
-            $existing_or_new_user->refresh_token = $user->refreshToken;
-            $existing_or_new_user->provider = 'apple';
-            if (!$existing_or_new_user->exists) {
-                $existing_or_new_user->name = 'Apple User';
-                if ($user->name) {
-                    $existing_or_new_user->name = $user->name;
-                }
-                $existing_or_new_user->email = $user->email;
-                $existing_or_new_user->email_verified_at = date('Y-m-d H:m:s');
-            }
-            $existing_or_new_user->save();
-
-            auth()->login($existing_or_new_user, true);
-        }
-
-        
-        if (session('link') != null) {
-            return redirect(session('link'));
-        } else {
-            return redirect()->route('dashboard');
-        }
     }
 
     public function mobileHandleProviderCallback($request, $provider)
