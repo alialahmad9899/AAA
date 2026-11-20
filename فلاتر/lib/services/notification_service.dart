@@ -564,7 +564,9 @@ class NotificationService {
       inProgress: _messagesBeingHandled,
       allowHandledRepeat: allowHandledRepeat,
     )) {
-      return false;
+      // A repeated tap from the notification center while the same tap is
+      // still routing is already being handled; do not show a fallback popup.
+      return allowHandledRepeat && _messagesBeingHandled.contains(dedupeId);
     }
 
     String? claimedDestinationKey;
