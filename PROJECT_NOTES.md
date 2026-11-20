@@ -2243,3 +2243,70 @@ ALTER TABLE `users`
 - خطوة الأرشفة نجحت: ZIP يحوي 9 ملفات مصدر/اختبار/إعداد تغيّرت بهذه الدفعة فقط وبالمسارات الأصلية، وفحص `unzip -t` نجح. SHA256: `75fd56b0254ad52f406c2a9655f83174e425c2bccc1b9a044270cb840b6bb98d`.
 - رابط CI: https://github.com/alialahmad9899/AAA/actions/runs/44717327189.
 - التغييرات على `main` هي تحديث مصدر Git فقط؛ لم يتم رفع الصفحات إلى Hostinger أو نشرها على الموقع الحي، ولم يتم تنفيذ أي تعديل على قاعدة البيانات.
+
+## 2026-11-20 — تعريب/ترجمة موقع وصال للغتين العربية والإنجليزية وإكمال وثائق الخصوصية والاحتفاظ
+
+### المطلوب والنتيجة
+- أصبح الموقع العام يدعم العربية والإنجليزية، مع زر تبديل ظاهر في رأس الموقع على سطح المكتب والهاتف، وفي رأس الصفحتين القانونيتين المستقلتين.
+- عند أول زيارة، يختار الموقع العربية إذا كانت لغة المتصفح العربية، وإلا الإنجليزية. بعد اختيار المستخدم يَحفظ الموقع اللغة في Session ويُبقيها عند التنقل بين صفحات الموقع. يظل اتجاه الصفحة وخطها ومحاذاتها وملف Bootstrap RTL متوافقاً مع اللغة المختارة.
+- يطبق middleware على مجموعة طلبات الويب العامة بعد بدء Session؛ ويتجاوز لوحة الإدارة ومسارات التثبيت والتحديث حتى لا يغير نظام لغتها الخاص.
+- تمت ترجمة الصفحة الرئيسية، وبطاقات الأعضاء/الباقات النصية، ورأس الموقع وقائمة الهاتف، وتذييل الموقع والتنقل السفلي، وصفحة الدعم ونموذجها ورسائل التحقق والنجاح، وسياسة الخصوصية، وشروط الاستخدام العامة.
+- الصفحتان القانونيتان بقيتا مستقلتين بلا Header أو Footer أو تسجيل دخول أو عناصر عضوية، وتستخدمان شعار وصال والـLayout المتجاوب نفسه. النسخة الإنجليزية تعرض الأقسام والجداول كاملة، والجداول تتحول إلى بطاقات قابلة للقراءة على الشاشات الصغيرة.
+- تم الحفاظ على أسماء الأعضاء والبيانات التي يكتبونها كما هي؛ لا تتم ترجمة الأسماء الشخصية أو محتوى المستخدم.
+
+### حل الملاحظات التحريرية في سياسة الخصوصية
+- حُذفت عبارة `[يؤكده المبرمج]` بعد تنفيذ سلوك حذف رسائل المحادثة تقنياً: عند حذف الحساب تختفي المحادثة، ثم تُحذف الرسائل وسجل المحادثة نهائياً بعد 30 يوماً من تاريخ حذف الحساب عبر مهمة Laravel يومية.
+- حُذفت عبارة `[يؤكده المحاسب]` واستُبدلت بمدد الحفظ المحددة في التشريعات الألمانية: 8 سنوات للفواتير وسندات القيود، و10 سنوات للدفاتر والجرد والحسابات السنوية، و6 سنوات للمراسلات التجارية/الضريبية التي تنطبق عليها المدة. أُضيف توضيح أن المدد النظامية قد تبدأ من نهاية السنة التقويمية المعنية وأن التمديدات القانونية تسري عند انطباقها.
+- حُذف صف `[مكتب المحاسبة أو المستشار الضريبي]` لأنه لم يكن هناك اسم مزود محدد موثق في ملفات المشروع؛ لم يُخترع مزود أو موقع حفظ بيانات.
+- تمت إضافة إيضاح أن مزايا Google Analytics وMeta Pixel، إذا فُعّلت في إعدادات الموقع، لا تعمل إلا بعد الموافقة الاختيارية. أضيفت أسماء هذه الجهات في جدول المستلمين وفي الإفصاح عن النقل الدولي.
+- زر الموافقة الاختيارية يقدم قبولاً أو رفضاً، ويمكن إعادة فتح تفضيلات ملفات الارتباط من التذييل. عند سحب الموافقة بعد قبول سابق، تُرسل إشارات رفض إلى Google وMeta، وتبقى التحليلات والإعلانات مفصولة بحسب المزوّد المفعّل. التقنيات الضرورية لتشغيل الموقع لا تتطلب هذا الاختيار.
+
+### استكمال شروط الاستخدام
+- أضيف الملحق الذي كان البند 8 يشير إليه: نموذج إلغاء العقد للمستهلك باللغتين العربية والإنجليزية، مع بيانات الخدمة والتاريخ واسم وعنوان المستهلك والتوقيع والتاريخ.
+- تم تحديث رابط سياسة الخصوصية داخل شروط الاستخدام إلى `/privacy-policy`، مع بقاء تحويل المسار القديم `/privacy` إلى العنوان الجديد.
+
+### الاحتفاظ بالمحادثات بعد حذف الحساب
+- أضيف أمر Laravel `wesal:purge-deleted-chat-threads` وجدولته يومياً عند 02:45 حسب المنطقة الزمنية للتطبيق.
+- يعتمد cutoff على `users.deleted_at` (تاريخ حذف الحساب)، وليس تاريخ إخفاء المحادثة، ولذلك لا تحذف الرسائل قبل اكتمال 30 يوماً من حذف الحساب.
+- يعالج الأمر المحادثات المخفية ذات الطرف المرسل أو المستقبل المحذوف، ثم يحذف رسائلها (بما فيها soft-deleted) وسجل المحادثة نهائياً داخل معاملات قاعدة البيانات وبمجموعات صغيرة.
+- يلزم أن يكون Laravel Scheduler/cron المعتاد مفعلاً في الاستضافة حتى تعمل المهمة اليومية في الإنتاج؛ لم يتم تشغيلها على قاعدة الإنتاج من هذه الجلسة.
+
+### المسارات والملفات المتغيرة في هذه الدفعة
+- `.github/workflows/wesal-integration-validation.yml`
+- `المشروع/WESAL/app/Console/Commands/PurgeDeletedChatThreads.php`
+- `المشروع/WESAL/app/Console/Kernel.php`
+- `المشروع/WESAL/app/Http/Controllers/ContactUsController.php`
+- `المشروع/WESAL/app/Http/Controllers/LanguageController.php`
+- `المشروع/WESAL/app/Http/Kernel.php`
+- `المشروع/WESAL/app/Http/Middleware/SetWebsiteLocale.php`
+- `المشروع/WESAL/app/Http/Requests/ContactUsRequest.php`
+- `المشروع/WESAL/resources/views/frontend/contact_us.blade.php`
+- `المشروع/WESAL/resources/views/frontend/inc/footer.blade.php`
+- `المشروع/WESAL/resources/views/frontend/inc/header.blade.php`
+- `المشروع/WESAL/resources/views/frontend/inc/language_switcher.blade.php`
+- `المشروع/WESAL/resources/views/frontend/inc/marketing_member_card.blade.php`
+- `المشروع/WESAL/resources/views/frontend/inc/optional_tracking_consent.blade.php`
+- `المشروع/WESAL/resources/views/frontend/index.blade.php`
+- `المشروع/WESAL/resources/views/frontend/layouts/app.blade.php`
+- `المشروع/WESAL/resources/views/frontend/layouts/legal.blade.php`
+- `المشروع/WESAL/resources/views/frontend/legal/en/privacy_policy.blade.php`
+- `المشروع/WESAL/resources/views/frontend/legal/en/terms_conditions.blade.php`
+- `المشروع/WESAL/resources/views/frontend/legal/privacy_policy.blade.php`
+- `المشروع/WESAL/resources/views/frontend/legal/terms_conditions.blade.php`
+- `المشروع/WESAL/routes/web.php`
+- `المشروع/WESAL/tests/Unit/BilingualWebsiteContractTest.php`
+- `المشروع/WESAL/tests/Unit/LegalDocumentPagesContractTest.php`
+
+### التحقق
+- GitHub Actions run `44725161765` على commit `b54566fb55fb8224f73e425af4f9249aecd830cf` اكتمل بنجاح لجميع الوظائف.
+- PHP syntax وPHPUnit: `LegalDocumentPagesContractTest` = `5 tests / 99 assertions`، و`BilingualWebsiteContractTest` = `10 tests / 198 assertions`. نجحت بقية مجموعات PHPUnit المحددة كذلك. ظهرت تحذيرات داخل اختبارات/ملفات قديمة في Workflow: تحذيران في `MobileApiPerformanceContractTest`، وتحذير واحد في اختبار اللغة، وتحذير PHP معروف في Migration قديمة حول `use RuntimeException`؛ لم تؤدِ هذه التحذيرات إلى فشل الوظائف.
+- `dart analyze --fatal-infos`: `No issues found!`.
+- `flutter test`: `157 tests passed`.
+- خطوة ZIP في التشغيل أعلاه نجحت، لكن commit الذي شُغّل عليه لم يحمل علامة تجميع الدفعة الكاملة؛ لذلك ستُعاد عملية packaging في التشغيل التالي على marker `[package-wesal-bilingual-legal-site]` للتحقق من الحزمة الكاملة ذات الـ24 ملفاً.
+- لم يتم نشر الملفات إلى Hostinger، ولم يتم التعديل مباشرة على قاعدة الإنتاج أو تشغيل Scheduler الإنتاجي من هذه الجلسة. تحديث `main` وحده لا يغير الموقع الحي قبل النشر.
+
+### المراجع التشريعية التي بُنيت عليها مدد حفظ السجلات ونموذج الإلغاء
+- §147 AO (قانون الضرائب الألماني): https://www.gesetze-im-internet.de/ao_1977/__147.html
+- §257 HGB (القانون التجاري الألماني): https://www.gesetze-im-internet.de/hgb/__257.html
+- المادة 2 من EGBGB Annex 2 (نموذج الانسحاب للمستهلك): https://www.gesetze-im-internet.de/bgbeg/art_248anlage_2.html
+- §355 BGB (حق الانسحاب): https://www.gesetze-im-internet.de/bgb/__355.html
