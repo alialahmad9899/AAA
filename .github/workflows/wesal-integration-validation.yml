@@ -205,7 +205,7 @@ jobs:
           mkdir -p "$package_dir"
           changed_list="$RUNNER_TEMP/wesal-session-files.txt"
           git -c core.quotePath=false diff --name-only --diff-filter=ACMRT "$BASE_SHA" "$HEAD_SHA" \
-            | grep -E '^(المشروع/WESAL/|فلاتر/)' \
+            | grep -E '^(المشروع/WESAL/|فلاتر/|\\.github/workflows/wesal-integration-validation\\.yml$)' \
             | grep -Ev '(^|/)(AGENTS\.md|PROJECT_NOTES\.md|تعليمات العمل\.md)$' \
             > "$changed_list" || true
 
