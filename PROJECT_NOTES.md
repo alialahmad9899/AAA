@@ -2237,9 +2237,9 @@ ALTER TABLE `users`
 
 ### التحقق والتسليم
 - أضيف اختبار تعاقدي يغطي المسارات وترتيبها قبل مسار catch-all، استقلال الـLayout والشعار وتجربة الجداول على الهاتف، وجود بنود وجداول الوثيقتين، والروابط المنفصلة في التذييلين.
-- أُضيف الاختبار إلى Workflow التحقق في GitHub Actions. تشغيل GitHub Actions رقم `44716956264` على Commit الكود `c58fff78a59ec16758fe6e4a27f037438ebaa4d9` انتهى `success` لجميع الوظائف.
+- أُضيف الاختبار إلى Workflow التحقق في GitHub Actions. تشغيل GitHub Actions النهائي رقم `44717327189` على Commit التحقق `c82f679c49ef082bf876558147b5b1478d7e0234` انتهى `success` لجميع الوظائف.
 - `php -l` نجح للملفات المحددة في فحص PHP، واختبار `LegalDocumentPagesContractTest` نجح: `5 tests / 98 assertions`. بقية اختبارات PHPUnit المحددة في Workflow اجتازت أيضاً؛ ظهر تحذيران في اختبار الأداء التعاقدي القديم `MobileApiPerformanceContractTest` دون فشل.
 - `dart analyze --fatal-infos`: `No issues found!`، و`flutter test`: `157 tests passed`.
-- خطوة الأرشفة نجحت: ZIP يحوي 8 ملفات تشغيلية فقط بالمسارات الأصلية، وفحص `unzip -t` نجح. SHA256: `c459b5d3064f0dae2f20c9e960c31fd986d8d9f785aafd6c8989a04d3442697b`.
-- رابط CI: https://github.com/alialahmad9899/AAA/actions/runs/44716956264.
+- خطوة الأرشفة نجحت: ZIP يحوي 9 ملفات مصدر/اختبار/إعداد تغيّرت بهذه الدفعة فقط وبالمسارات الأصلية، وفحص `unzip -t` نجح. SHA256: `75fd56b0254ad52f406c2a9655f83174e425c2bccc1b9a044270cb840b6bb98d`.
+- رابط CI: https://github.com/alialahmad9899/AAA/actions/runs/44717327189.
 - التغييرات على `main` هي تحديث مصدر Git فقط؛ لم يتم رفع الصفحات إلى Hostinger أو نشرها على الموقع الحي، ولم يتم تنفيذ أي تعديل على قاعدة البيانات.
