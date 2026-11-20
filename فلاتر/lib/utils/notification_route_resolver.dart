@@ -63,3 +63,14 @@ void releaseNotificationDestination(
 }) {
   activeDestinations.remove(key);
 }
+
+/// Returns true when the requested chat is already the visible conversation.
+/// Opening it again from a notification would only stack a duplicate route.
+bool isNotificationDestinationAlreadyVisible(
+  NotificationDestination? destination, {
+  required int activeChatThreadId,
+}) {
+  return activeChatThreadId > 0 &&
+      destination?.kind == NotificationDestinationKind.chat &&
+      destination?.id == activeChatThreadId;
+}
