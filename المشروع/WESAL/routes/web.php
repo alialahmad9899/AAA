@@ -64,8 +64,8 @@ Auth::routes();
 
 Route::controller(HomeController::class)->group(function () {
     //Home Page
-    Route::get('/', 'index')->name('index');
-    Route::get('/', 'index')->name('home');
+    Route::get('/', 'index')->middleware('website_locale')->name('index');
+    Route::get('/', 'index')->middleware('website_locale')->name('home');
 
     // === قائمة الأعضاء والملف الشخصي مفتوحة للزوار ===
     Route::any('/member-listing', 'member_listing')->name('member.listing');
@@ -110,7 +110,7 @@ Route::controller(VerificationController::class)->group(function () {
     Route::get('/verification-confirmation/{code}', 'verification_confirmation')->name('email.verification.confirmation');
 });
 
-Route::post('/language', [LanguageController::class, 'changeLanguage'])->name('language.change');
+Route::post('/language', [LanguageController::class, 'changeLanguage'])->middleware('throttle:30,1')->name('language.change');
 Route::get('/packages', [PackageController::class, 'select_package'])->name('packages');
 
 //Blog
@@ -292,7 +292,7 @@ Route::group(['middleware' => ['auth', 'activated']], function () {
 
 // Contact Us page
 Route::controller(ContactUsController::class)->group(function () {
-    Route::get('/contact-us/page', 'show_contact_us_page')->name('contact_us');
+    Route::get('/contact-us/page', 'show_contact_us_page')->middleware('website_locale')->name('contact_us');
     Route::post('/contact-us', 'store')->name('contact-us.store');
 });
 
@@ -342,9 +342,9 @@ Route::controller(PhonepeController::class)->group(function () {
 Route::get('/match_profiles', 'ProfileMatchController@match_profiles')->name('match_profiles');
 
 // Standalone Wesal legal documents (must stay before the custom-page catch-all).
-Route::view('/privacy-policy', 'frontend.legal.privacy_policy')->name('legal.privacy-policy');
+Route::view('/privacy-policy', 'frontend.legal.privacy_policy')->middleware('website_locale')->name('legal.privacy-policy');
 Route::redirect('/privacy', '/privacy-policy', 301)->name('legal.privacy-legacy');
-Route::view('/terms-conditions', 'frontend.legal.terms_conditions')->name('legal.terms-conditions');
+Route::view('/terms-conditions', 'frontend.legal.terms_conditions')->middleware('website_locale')->name('legal.terms-conditions');
 
 //Custom page
 Route::get('/{slug}', 'PageController@show_custom_page')->name('custom-pages.show_custom_page');
