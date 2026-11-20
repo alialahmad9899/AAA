@@ -7,6 +7,7 @@ use Illuminate\Validation\Rule;
 use App\Models\Language;
 use App\Models\Translation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Validator;
 use Redirect;
 use Cache;
@@ -180,9 +181,29 @@ class LanguageController extends Controller
 
     public function changeLanguage(Request $request)
     {
-        $request->session()->put('locale', $request->locale);
-        $language = Language::where('code', $request->locale)->first();
-        flash(translate('Language changed to ').$language->name)->success();
+        $validated = $request->validate([
+            'locale' => ['required', Rule::in(['ar', 'en'])],
+            'redirect_to' => ['nullable', 'string', 'max:2048'],
+        ]);
+
+        $locale = $validated['locale'];
+        $request->session()->put('locale', $locale);
+        App::setLocale($locale);
+
+        // Only redirect to a local path. The switcher sends the current
+        // request URI so the visitor stays on the same page after switching.
+        $target = (string) ($validated['redirect_to'] ?? $request->headers->get('referer', '/'));
+        $path = parse_url($target, PHP_URL_PATH);
+        $query = parse_url($target, PHP_URL_QUERY);
+
+        if (!is_string($path) || $path === '' || $path[0] !== '/' || strpos($path, '//') === 0) {
+            $path = '/';
+            $query = null;
+        }
+
+        $redirectTo = $path . (is_string($query) && $query !== '' ? '?' . $query : '');
+
+        return redirect()->to($redirectTo);
     }
 
     /**
