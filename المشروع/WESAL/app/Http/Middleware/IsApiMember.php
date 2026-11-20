@@ -70,7 +70,7 @@ class IsApiMember
                             ->update([
                                 'last_seen_at' => $activityAt->toDateTimeString(),
                             ]);
-                    } catch (\\Throwable $exception) {
+                    } catch (\Throwable $exception) {
                         Cache::forget($persistKey);
                         Log::warning('Could not persist mobile last-seen timestamp.', [
                             'user_id' => (int) $user->id,
@@ -79,7 +79,7 @@ class IsApiMember
                     }
                 }
             }
-        } catch (\\Throwable $exception) {
+        } catch (\Throwable $exception) {
             // Presence persistence must never make an otherwise valid API
             // request fail, especially before the database column is deployed.
             Log::warning('Mobile last-seen persistence check failed.', [
