@@ -72,7 +72,7 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString('ws-mobile-header-controls', $home);
         $this->assertStringContainsString("frontend.inc.language_switcher", $home);
         $this->assertStringContainsString("frontend.inc.language_switcher", $header);
-        $this->assertStringContainsString("lang=\"{{ $websiteLocale }}\" dir=\"{{ $websiteIsArabic ? 'rtl' : 'ltr' }}\"", $layout);
+        $this->assertStringContainsString('lang="{{ $websiteLocale }}" dir="{{ $websiteIsArabic ? \'rtl\' : \'ltr\' }}"', $layout);
         $this->assertStringContainsString('Privacy Policy', $home);
         $this->assertStringContainsString('General Terms of Use', $home);
         $this->assertStringContainsString('Cookie preferences', $footer);
@@ -126,6 +126,7 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString('wesalsyrien@gmail.com', $arabic);
         $this->assertStringContainsString('wesalsyrien@gmail.com', $english);
         $this->assertStringNotContainsString('href="https://www.wesalsyria.com/privacy"', $arabic);
+        $this->assertStringNotContainsString('https://www.wesalsyria.com/privacy</a>', $arabic);
         $this->assertStringContainsString('privacy-policy', $arabic);
         $this->assertStringContainsString('privacy-policy', $english);
         $this->assertSame(2, substr_count($arabic, '<table class="legal-table">'));
@@ -147,7 +148,7 @@ class BilingualWebsiteContractTest extends TestCase
         ] as $expected) {
             $this->assertStringContainsString($expected, $contact);
         }
-        $this->assertStringContainsString("dir=\"{{ $isEnglish ? 'ltr' : 'rtl' }}\"", $contact);
+        $this->assertStringContainsString('dir="{{ $isEnglish ? \'ltr\' : \'rtl\' }}"', $contact);
         $this->assertStringContainsString("app()->getLocale() === 'en'", $request);
         $this->assertStringContainsString('Please enter a valid email address.', $request);
         $this->assertStringContainsString('يرجى إدخال بريد إلكتروني صحيح.', $request);
