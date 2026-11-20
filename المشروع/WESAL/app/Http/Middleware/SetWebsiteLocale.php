@@ -25,21 +25,39 @@ class SetWebsiteLocale
             return $next($request);
         }
 
-        $locale = strtolower((string) $request->session()->get('locale', ''));
+        // A dedicated cookie is the source of truth for a manually selected
+        // website language. This prevents unrelated admin/app code that also
+        // uses the generic `locale` session key from resetting the public site.
+        $cookieLocale = strtolower((string) $request->cookie('wesal_website_locale', ''));
+        $sessionLocale = strtolower((string) $request->session()->get('website_locale', ''));
+        $legacyLocale = strtolower((string) $request->session()->get('locale', ''));
 
-        if (!in_array($locale, ['ar', 'en'], true)) {
+        if (in_array($cookieLocale, ['ar', 'en'], true)) {
+            $locale = $cookieLocale;
+        } elseif (in_array($sessionLocale, ['ar', 'en'], true)) {
+            $locale = $sessionLocale;
+        } elseif (in_array($legacyLocale, ['ar', 'en'], true)) {
+            // Migrate an existing visitor's choice without losing continuity.
+            $locale = $legacyLocale;
+        } else {
             $preferred = $request->getPreferredLanguage(['ar', 'en']);
             $locale = $preferred && strpos(strtolower($preferred), 'ar') === 0
                 ? 'ar'
                 : 'en';
-
-            $request->session()->put('locale', $locale);
         }
+
+        $request->session()->put('website_locale', $locale);
+        // Keep compatibility with the existing website translation helpers.
+        $request->session()->put('locale', $locale);
 
         App::setLocale($locale);
 
         $response = $next($request);
         $response->headers->set('Content-Language', $locale);
+        // Locale-sensitive HTML must not be served from a shared cache using
+        // another visitor's language variant.
+        $response->headers->set('Cache-Control', 'private, no-cache, must-revalidate');
+        $response->headers->set('Vary', 'Cookie', false);
 
         return $response;
     }
