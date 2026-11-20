@@ -1926,3 +1926,38 @@
 - `flutter test`: `140 tests passed`.
 - تم فحص أرشيف الدفعة النهائي: 6 ملفات فقط بمساراتها الأصلية، وسلامة ZIP ناجحة؛ لا يحتوي الموقع العام أو سجل الملاحظات أو ملفات قديمة.
 - لم يتم نشر الملفات على Hostinger، ولم يتم تنفيذ دفعة فعلية أو اختبار Stripe/شام كاش على حساب إنتاجي، ولم يتم تعديل بيانات قاعدة الإنتاج. لذلك لا يُدّعى أن معاملة دفع حقيقية قد جُرّبت. بوابة Stripe ما زالت تتطلب أن تكون قيمة `stripe_payment_activation` مساوية لـ `1` في قاعدة البيانات؛ الإصلاح لا يتجاوز إعداد الأدمن.
+
+
+## 2026-11-20 — متابعة إصلاح دفع الاشتراكات بعد سجلات الإنتاج
+
+### أدلة الإنتاج والسبب الجذري
+- سجل Stripe الفعلي في الإنتاج بتاريخ 2026-11-20 أظهر `setting_found=true` و`activation_value=0` لعنصر `stripe_payment_activation`. هذا يؤكد أن إعداد بوابة Stripe في جدول `settings` معطّل حالياً. التطبيق لا يتجاوز ذلك عمداً؛ يلزم تشغيل مفتاح Stripe من لوحة الأدمن وحفظه، والتأكد من صحة مفاتيح Stripe.
+- سجل طلب شام كاش أظهر `SQLSTATE[42S22]` و`Unknown column 'activation_key' in 'WHERE'` داخل `PackageController::package_purchase` عند البحث عن الطلب المكرر قبل إنشاء سجل جديد. جدول `package_payments` في الإنتاج لا يطابق مخطط الكود الحالي.
+- كان مستودع الكود يحتوي بالفعل على محاولة إضافة العمود ضمن Migration `2026_11_04_000000_add_subscription_lifecycle_tracking.php`، لكن سجل الإنتاج يثبت أن العمود غير موجود فعلياً. لذلك تمت إضافة Migration إصلاح مستقلة لا تعتمد على افتراض تطبيق الترحيل القديم.
+
+### الإصلاح
+- إضافة `2026_11_20_000001_ensure_package_payment_activation_key.php`: تتحقق من وجود جدول `package_payments`، وتضيف `activation_key VARCHAR(64) NULL` والفهرس الفريد عند غيابهما، وتتحقق من الفهرس إن كان العمود موجوداً مسبقاً. التراجع لا يحذف بيانات مفاتيح منع التكرار عمداً.
+- توسيع `SubscriptionPaymentContractTest` لتغطية Migration الجديدة، بما في ذلك التحقق من العمود والفهرس وسلوكها غير الهدّام.
+- لم يتم تغيير قيمة Stripe تلقائياً إلى 1، لأن ذلك يفعّل بوابة تحصيل أموال ويجب أن يبقى قراراً إدارياً بعد التأكد من المفاتيح.
+
+### تنفيذ التحديث على قاعدة الإنتاج عبر phpMyAdmin
+- لأن سجل الإنتاج يثبت أن العمود غير موجود، يمكن تطبيق الإصلاح المباشر من تبويب SQL في phpMyAdmin بتنفيذ الأمر التالي مرة واحدة:
+```sql
+ALTER TABLE `package_payments`
+    ADD COLUMN `activation_key` VARCHAR(64) NULL AFTER `payment_method`,
+    ADD UNIQUE KEY `package_payments_activation_key_unique` (`activation_key`);
+```
+- بعده يمكن التحقق عبر:
+```sql
+SHOW COLUMNS FROM `package_payments` LIKE 'activation_key';
+SHOW INDEX FROM `package_payments` WHERE `Key_name` = 'package_payments_activation_key_unique';
+```
+- Migration الجديدة آمنة بعد التنفيذ اليدوي؛ إذا وجد العمود والفهرس فلن تكررهما عند تشغيلها لاحقاً.
+
+### الملفات والتحقق
+- Commit المصدر على `main`: `d5422f103443ec9824d6a69c2c5dec22d06f91b7`.
+- GitHub Actions run `44642752918`: جميع الوظائف الثلاث `success` (PHP syntax/PHPUnit، ZIP، Flutter).
+- اختبارات الدفع: `3 tests / 40 assertions` ناجحة.
+- `dart analyze --fatal-infos`: `No issues found!`; `flutter test`: `140 tests passed`.
+- ZIP الدفعة يحتوي ملفي migration والاختبار فقط بمساراتهما الأصلية، وسلامة الأرشيف مؤكدة.
+- لم يتم تعديل قاعدة الإنتاج أو تنفيذ ALTER TABLE نيابة عن المستخدم، ولم يتم تفعيل Stripe. كما لم تنفذ معاملة دفع حقيقية على Stripe أو شام كاش بعد الإصلاح.
