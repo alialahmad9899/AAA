@@ -51,4 +51,20 @@ SOURCE;
         $this->assertStringContainsString("'partner_is_online'", $chatResource);
         $this->assertStringContainsString("'wesal:last-seen:' . \$partnerUser->id", $chatResource);
     }
+    public function test_last_seen_is_persisted_and_read_from_a_durable_user_column(): void
+    {
+        $middleware = $this->source('app/Http/Middleware/IsApiMember.php');
+        $threadResource = $this->source('app/Http/Resources/ChatThreadResource.php');
+        $chatResource = $this->source('app/Http/Resources/ChatResource.php');
+        $migration = $this->source('database/migrations/2026_11_20_000004_add_last_seen_at_to_users_table.php');
+
+        $this->assertStringContainsString("Schema::hasColumn('users', 'last_seen_at')", $middleware);
+        $this->assertStringContainsString("DB::table('users')", $middleware);
+        $this->assertStringContainsString("'last_seen_at' => \$activityAt->toDateTimeString()", $middleware);
+        $this->assertStringContainsString("Cache::add(", $middleware);
+        $this->assertStringContainsString("getAttribute('last_seen_at')", $threadResource);
+        $this->assertStringContainsString("getAttribute('last_seen_at')", $chatResource);
+        $this->assertStringContainsString("Schema::hasColumn('users', 'last_seen_at')", $migration);
+    }
+
 }
