@@ -1,9 +1,21 @@
 @extends('frontend.layouts.legal')
 
-@section('document_title', 'شروط الاستخدام العامة (AGB) – وصال (Wesal)')
-@section('document_description', 'النص الكامل لشروط استخدام تطبيق وصال وموقعه والخدمات المجانية والمدفوعة.')
+@php
+    $isEnglish = app()->getLocale() === 'en';
+@endphp
+
+@section('document_title')
+    {{ $isEnglish ? 'General Terms of Use (AGB) – Wesal' : 'شروط الاستخدام العامة (AGB) – وصال (Wesal)' }}
+@endsection
+@section('document_description')
+    {{ $isEnglish ? 'The complete terms governing use of the Wesal application, website, and free and paid services.' : 'النص الكامل لشروط استخدام تطبيق وصال وموقعه والخدمات المجانية والمدفوعة.' }}
+@endsection
 
 @section('content')
+@if ($isEnglish)
+    @include('frontend.legal.en.terms_conditions')
+@else
+
 <p class="document-label">نص الشروط</p>
 
 <section class="legal-section" id="terms-1">
@@ -203,6 +215,28 @@
     <p>Eisenbahnstr. 106, 04315 Leipzig, Deutschland</p>
     <p>البريد: <a href="mailto:wesalsyrien@gmail.com">wesalsyrien@gmail.com</a></p>
     <p>الموقع: <a href="https://www.wesalsyria.com" target="_blank" rel="noopener noreferrer">https://www.wesalsyria.com</a> · البيانات القانونية: <a href="https://www.wesalsyria.com/impressum" target="_blank" rel="noopener noreferrer">https://www.wesalsyria.com/impressum</a></p>
-    <p>سياسة الخصوصية: <a href="https://www.wesalsyria.com/privacy" target="_blank" rel="noopener noreferrer">https://www.wesalsyria.com/privacy</a></p>
+    <p>سياسة الخصوصية: <a href="https://www.wesalsyria.com/privacy-policy" target="_blank" rel="noopener noreferrer">https://www.wesalsyria.com/privacy</a></p>
 </section>
+
+
+
+<section class="legal-section" id="terms-appendix">
+    <h2>الملحق – نموذج إلغاء العقد</h2>
+    <p>املأ هذا النموذج وأرسله فقط إذا كنت ترغب في إلغاء العقد.</p>
+    <div class="document-lead">
+        <p><strong>إلى:</strong> Hulul – Inhaber Malek Alabdulah</p>
+        <p>Eisenbahnstr. 106, 04315 Leipzig, Deutschland</p>
+        <p>البريد الإلكتروني: <a href="mailto:wesalsyrien@gmail.com">wesalsyrien@gmail.com</a></p>
+    </div>
+    <p>أُخطر بموجب هذا أنا/نحن (*) بأنني/بأننا (*) ألغي العقد الذي أبرمته/أبرمناه (*) لتقديم الخدمة التالية:</p>
+    <p>الخدمة / الباقة: ______________________________________________</p>
+    <p>تاريخ الطلب (*) / تاريخ إبرام العقد (*): ____________________________</p>
+    <p>اسم المستهلك/المستهلكين: _____________________________________</p>
+    <p>عنوان المستهلك/المستهلكين: ___________________________________</p>
+    <p>توقيع المستهلك/المستهلكين (فقط إذا أُرسل النموذج ورقياً): _______________________</p>
+    <p>التاريخ: _______________________</p>
+    <p>(*) يُحذف ما لا ينطبق.</p>
+</section>
+
+@endif
 @stop
