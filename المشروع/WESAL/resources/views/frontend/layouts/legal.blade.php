@@ -1,15 +1,19 @@
+@php
+    $legalLocale = app()->getLocale() === 'ar' ? 'ar' : 'en';
+    $legalIsArabic = $legalLocale === 'ar';
+@endphp
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="{{ $legalLocale }}" dir="{{ $legalIsArabic ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#FDFBF7">
     <meta name="description" content="@yield('document_description')">
     <link rel="canonical" href="{{ url()->current() }}">
-    <title>@yield('document_title') | وصال</title>
+    <title>@yield('document_title') | Wesal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
             color-scheme: light;
@@ -26,7 +30,7 @@
         html { min-width: 320px; scroll-behavior: smooth; background: var(--legal-paper); }
         body {
             min-width: 320px; margin: 0; color: var(--legal-ink); background: var(--legal-paper);
-            font-family: 'Cairo', Tahoma, Arial, sans-serif; -webkit-text-size-adjust: 100%;
+            font-family: {{ $legalIsArabic ? "'Cairo', Tahoma, Arial, sans-serif" : "'Inter', Arial, sans-serif" }}; -webkit-text-size-adjust: 100%;
             text-rendering: optimizeLegibility;
         }
         .legal-page {
@@ -38,6 +42,27 @@
                 var(--legal-paper);
         }
         .legal-shell { width: 100%; max-width: 920px; margin: 0 auto; }
+
+        .legal-topbar {
+            display: flex; align-items: center; justify-content: flex-end;
+            min-height: 38px; margin: 0 auto 10px;
+        }
+        .legal-topbar .wesal-language-switcher {
+            display: inline-flex; align-items: center; gap: 3px; padding: 3px;
+            border: 1px solid rgba(15,76,92,.16); border-radius: 999px;
+            background: rgba(255,255,255,.96); direction: ltr; white-space: nowrap;
+        }
+        .legal-topbar .wesal-language-switcher button {
+            min-height: 31px; padding: 5px 10px; border: 0; border-radius: 999px;
+            background: transparent; color: var(--legal-teal); font: 800 11px/1.2 inherit; cursor: pointer;
+        }
+        .legal-topbar .wesal-language-switcher button.is-active { background: var(--legal-teal); color: #fff; }
+        .legal-hero { direction: inherit; }
+        .legal-document { direction: inherit; }
+        .legal-document .document-lead { border-radius: 0 13px 13px 0; }
+        html[dir="ltr"] .legal-document .document-lead { border-radius: 13px 0 0 13px; }
+        html[dir="ltr"] .legal-section h2 { border-radius: 12px 0 0 12px; }
+
         .legal-brand { display: flex; justify-content: center; align-items: center; margin: 0 auto 18px; }
         .legal-brand img { display: block; width: auto; max-width: min(190px, 55vw); max-height: 84px; object-fit: contain; }
         .legal-hero {
@@ -160,11 +185,14 @@
 <body>
     <main class="legal-page">
         <div class="legal-shell">
+            <div class="legal-topbar">
+                @include('frontend.inc.language_switcher')
+            </div>
             <div class="legal-brand">
-                <img src="{{ static_asset('assets/img/wesal-legal-logo.png') }}" alt="وصال Wesal">
+                <img src="{{ static_asset('assets/img/wesal-legal-logo.png') }}" alt="{{ $legalIsArabic ? 'وصال' : 'Wesal' }}">
             </div>
             <header class="legal-hero">
-                <div class="legal-kicker">وصال · الوثائق الرسمية</div>
+                <div class="legal-kicker">{{ $legalIsArabic ? 'وصال · الوثائق الرسمية' : 'Wesal · Official documents' }}</div>
                 <h1>@yield('document_title')</h1>
                 <p>@yield('document_description')</p>
             </header>
