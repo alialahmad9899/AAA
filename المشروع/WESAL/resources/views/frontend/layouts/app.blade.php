@@ -210,27 +210,60 @@
     @endif
 
     <script>
+        var wesalGoogleAnalyticsEnabled = @json(get_setting('google_analytics_activation') == 1);
+        var wesalGoogleAnalyticsId = @json((string) env('GOOGLE_ANALYTICS_TRACKING_ID'));
+        var wesalMetaPixelEnabled = @json(get_setting('facebook_pixel_activation') == 1);
+        var wesalMetaPixelId = @json((string) env('FACEBOOK_PIXEL_ID'));
+
+        window.wesalDisableOptionalTracking = function () {
+            if (window.gtag) {
+                window.gtag('consent', 'update', {
+                    analytics_storage: 'denied',
+                    ad_storage: 'denied',
+                    ad_user_data: 'denied',
+                    ad_personalization: 'denied'
+                });
+            }
+            if (window.fbq) {
+                window.fbq('consent', 'revoke');
+            }
+        };
+
         window.wesalOptionalTracking = function () {
-            if (window.__wesalOptionalTrackingLoaded) return;
+            if (window.__wesalOptionalTrackingLoaded) {
+                if (window.gtag) {
+                    window.gtag('consent', 'update', {
+                        analytics_storage: 'granted',
+                        ad_storage: 'granted',
+                        ad_user_data: 'granted',
+                        ad_personalization: 'granted'
+                    });
+                }
+                if (window.fbq) {
+                    window.fbq('consent', 'grant');
+                }
+                return;
+            }
             window.__wesalOptionalTrackingLoaded = true;
 
-            var googleEnabled = @json(get_setting('google_analytics_activation') == 1);
-            var googleId = @json((string) env('GOOGLE_ANALYTICS_TRACKING_ID'));
-            var facebookEnabled = @json(get_setting('facebook_pixel_activation') == 1);
-            var facebookId = @json((string) env('FACEBOOK_PIXEL_ID'));
-
-            if (googleEnabled && googleId) {
+            if (wesalGoogleAnalyticsEnabled && wesalGoogleAnalyticsId) {
                 window.dataLayer = window.dataLayer || [];
                 window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+                window.gtag('consent', 'update', {
+                    analytics_storage: 'granted',
+                    ad_storage: 'granted',
+                    ad_user_data: 'granted',
+                    ad_personalization: 'granted'
+                });
                 window.gtag('js', new Date());
-                window.gtag('config', googleId);
+                window.gtag('config', wesalGoogleAnalyticsId);
                 var googleScript = document.createElement('script');
                 googleScript.async = true;
-                googleScript.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(googleId);
+                googleScript.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(wesalGoogleAnalyticsId);
                 document.head.appendChild(googleScript);
             }
 
-            if (facebookEnabled && facebookId) {
+            if (wesalMetaPixelEnabled && wesalMetaPixelId) {
                 (function (f, b, e, v, n, t, s) {
                     if (f.fbq) return;
                     n = f.fbq = function () {
@@ -247,7 +280,8 @@
                     s = b.getElementsByTagName(e)[0];
                     s.parentNode.insertBefore(t, s);
                 })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
-                window.fbq('init', facebookId);
+                window.fbq('consent', 'grant');
+                window.fbq('init', wesalMetaPixelId);
                 window.fbq('track', 'PageView');
             }
         };
@@ -482,6 +516,8 @@
                     if (banner) banner.hidden = true;
                     if (value === 'accepted' && window.wesalOptionalTracking) {
                         window.wesalOptionalTracking();
+                    } else if (value === 'rejected' && window.wesalDisableOptionalTracking) {
+                        window.wesalDisableOptionalTracking();
                     }
                 }
 
