@@ -2093,7 +2093,7 @@ ALTER TABLE `app_announcements`
 - GitHub Actions run `44650793486`: جميع الوظائف الثلاث ناجحة (PHP syntax/PHPUnit، Flutter regression، وحزمة التعديلات).
 - `dart analyze --fatal-infos`: `No issues found!`.
 - `flutter test`: `147 tests passed`.
-- PHP syntax لجميع الملفات المدرجة ناجح؛ واختبارات PHPUnit، بما فيها عقد إرسال الرسالة وعقد الحضور/آخر ظهور، ناجحة. ظهرت تحذيرات PHPUnit قديمة ضمن اختبار الحضور لكنها لم تفشل الاختبارات.
+- PHP syntax لجميع الملفات المدرجة ناجح؛ واختبارات PHPUnit، بما فيها عقد إرسال الرسالة وعقد الحضور/آخر ظهور، ناجحة. ظهر تحذيران في تشغيل اختبار الأداء التعاقدي الموجود مسبقاً (`MobileApiPerformanceContractTest`)، لكن الاختبار اكتمل دون فشل.
 - حزمة التسليم المباشرة: `WESAL_CHAT_STABILITY_FIX.zip`، تحتوي 12 ملفاً فقط بالمسارات الأصلية، وتم فحصها بـ`unzip -t`.
 - SHA256: `695fa31dc72b992be43793cf4c87ed0b9b3534b9209099ab0890339184154994`.
 
