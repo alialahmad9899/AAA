@@ -209,48 +209,49 @@
     </style>
     @endif
 
-    @if (get_setting('google_analytics_activation') == 1)
-        <script async src="https://www.googletagmanager.com/gtag/js?id={{ env('GOOGLE_ANALYTICS_TRACKING_ID') }}"></script>
+    <script>
+        window.wesalOptionalTracking = function () {
+            if (window.__wesalOptionalTrackingLoaded) return;
+            window.__wesalOptionalTrackingLoaded = true;
 
-        <script>
-            window.dataLayer = window.dataLayer || [];
+            var googleEnabled = @json(get_setting('google_analytics_activation') == 1);
+            var googleId = @json((string) env('GOOGLE_ANALYTICS_TRACKING_ID'));
+            var facebookEnabled = @json(get_setting('facebook_pixel_activation') == 1);
+            var facebookId = @json((string) env('FACEBOOK_PIXEL_ID'));
 
-            function gtag() {
-                dataLayer.push(arguments);
+            if (googleEnabled && googleId) {
+                window.dataLayer = window.dataLayer || [];
+                window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+                window.gtag('js', new Date());
+                window.gtag('config', googleId);
+                var googleScript = document.createElement('script');
+                googleScript.async = true;
+                googleScript.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(googleId);
+                document.head.appendChild(googleScript);
             }
-            gtag('js', new Date());
-            gtag('config', '{{ env('GOOGLE_ANALYTICS_TRACKING_ID') }}');
-        </script>
-    @endif
 
-    @if (get_setting('facebook_pixel_activation') == 1)
-        <script>
-            ! function(f, b, e, v, n, t, s) {
-                if (f.fbq) return;
-                n = f.fbq = function() {
-                    n.callMethod ?
-                        n.callMethod.apply(n, arguments) : n.queue.push(arguments)
-                };
-                if (!f._fbq) f._fbq = n;
-                n.push = n;
-                n.loaded = !0;
-                n.version = '2.0';
-                n.queue = [];
-                t = b.createElement(e);
-                t.async = !0;
-                t.src = v;
-                s = b.getElementsByTagName(e)[0];
-                s.parentNode.insertBefore(t, s)
-            }(window, document, 'script',
-                'https://connect.facebook.net/en_US/fbevents.js');
-            fbq('init', {{ env('FACEBOOK_PIXEL_ID') }});
-            fbq('track', 'PageView');
-        </script>
-        <noscript>
-            <img height="1" width="1" style="display:none"
-                src="https://www.facebook.com/tr?id={{ env('FACEBOOK_PIXEL_ID') }}/&ev=PageView&noscript=1" />
-        </noscript>
-        @endif
+            if (facebookEnabled && facebookId) {
+                (function (f, b, e, v, n, t, s) {
+                    if (f.fbq) return;
+                    n = f.fbq = function () {
+                        n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+                    };
+                    if (!f._fbq) f._fbq = n;
+                    n.push = n;
+                    n.loaded = true;
+                    n.version = '2.0';
+                    n.queue = [];
+                    t = b.createElement(e);
+                    t.async = true;
+                    t.src = v;
+                    s = b.getElementsByTagName(e)[0];
+                    s.parentNode.insertBefore(t, s);
+                })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+                window.fbq('init', facebookId);
+                window.fbq('track', 'PageView');
+            }
+        };
+    </script>
 
     {!! get_setting('header_script') !!}
 
@@ -285,12 +286,12 @@
 
     </div>
 
-    @if (get_setting('show_cookies_agreement') == 'on')
+    @if (get_setting('google_analytics_activation') == 1 || get_setting('facebook_pixel_activation') == 1)
+        @include('frontend.inc.optional_tracking_consent')
+    @elseif (get_setting('show_cookies_agreement') == 'on')
         <div class="aiz-cookie-alert shadow-premium">
             <div class="p-3 rounded bg-secondary-grad text-white" style="border-radius: 15px !important;">
-                <div class="mb-3 fs-14">
-                    {{strip_tags(get_setting('cookies_agreement_text')) }}
-                </div>
+                <div class="mb-3 fs-14">{{ strip_tags(get_setting('cookies_agreement_text')) }}</div>
                 <button class="btn btn-primary aiz-cookie-accepet w-100 fw-700" style="border-radius: 10px;">
                     {{ translate('Ok. I Understood') }}
                 </button>
@@ -466,6 +467,36 @@
                 })();
             </script>
         @endauth
+    @endif
+
+    @if (get_setting('google_analytics_activation') == 1 || get_setting('facebook_pixel_activation') == 1)
+        <script>
+            (function () {
+                var key = 'wesal_optional_tracking_consent_v1';
+                var banner = document.getElementById('wesal-optional-consent');
+                var choice = null;
+                try { choice = window.localStorage.getItem(key); } catch (error) {}
+                if (choice === 'accepted') {
+                    if (window.wesalOptionalTracking) window.wesalOptionalTracking();
+                    return;
+                }
+                if (choice === 'rejected' || !banner) return;
+                banner.hidden = false;
+
+                function saveChoice(value) {
+                    try { window.localStorage.setItem(key, value); } catch (error) {}
+                    banner.hidden = true;
+                    if (value === 'accepted' && window.wesalOptionalTracking) {
+                        window.wesalOptionalTracking();
+                    }
+                }
+
+                var accept = document.getElementById('wesal-consent-accept');
+                var reject = document.getElementById('wesal-consent-reject');
+                if (accept) accept.addEventListener('click', function () { saveChoice('accepted'); });
+                if (reject) reject.addEventListener('click', function () { saveChoice('rejected'); });
+            })();
+        </script>
     @endif
 
     @yield('script')
