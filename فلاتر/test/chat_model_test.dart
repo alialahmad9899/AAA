@@ -95,4 +95,15 @@ void main() {
     expect(message.attachmentUrl, 'https://cdn.example.test/chat/photo.jpg');
   });
 
+  test('ChatThreadModel uses durable last_seen_at when formatted value is empty', () {
+    final thread = ChatThreadModel.fromJson({
+      'id': 10,
+      'user_id': 21,
+      'last_seen': '',
+      'last_seen_at': '2026-11-20T01:20:00Z',
+    });
+
+    expect(thread.lastSeen, '2026-11-20T01:20:00Z');
+  });
+
 }
