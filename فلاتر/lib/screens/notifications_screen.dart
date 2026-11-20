@@ -218,7 +218,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     showDialog(
       context: context,
       barrierDismissible: true,
-      barrierColor: Colors.black.withValues(alpha: 0.65),
+      barrierColor: AppColors.textDark.withValues(alpha: 0.48),
       builder: (BuildContext context) {
         final styleConfig = _getNotificationStyle(notification.type);
         final Color themeColor = styleConfig['color'] as Color;
@@ -234,8 +234,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           child: Dialog(
             backgroundColor: Colors.transparent,
             elevation: 0,
-            insetPadding:
-                const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            insetPadding: const EdgeInsets.all(8),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(32),
               child: BackdropFilter(
@@ -243,7 +242,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(22),
                   decoration: BoxDecoration(
-                    color: AppColors.cardColor.withValues(alpha: 0.92),
+                    color: AppColors.cardColor,
                     borderRadius: BorderRadius.circular(32),
                     border: Border.all(
                       color: themeColor.withValues(alpha: 0.4),
