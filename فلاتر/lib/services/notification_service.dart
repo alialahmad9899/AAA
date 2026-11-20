@@ -588,16 +588,9 @@ class NotificationService {
         _trimProcessedMessageIds();
         return true;
       }
-      final WidgetBuilder? resolved = await _resolveDestination(
-        data,
-        language,
-      );
 
-      if (resolved == null && !fallbackToCenter) return false;
-
-      // Deduplicate by the actual destination as well as by message ID.
-      // FCM initial-message and local-notification launch callbacks can carry
-      // different IDs while pointing to the same chat thread.
+      // Claim the destination before any asynchronous route lookup. This
+      // blocks a second transport from fetching/pushing the same chat twice.
       claimedDestinationKey = notificationDestinationKey(route);
       if (!claimNotificationDestination(
         claimedDestinationKey,
@@ -607,6 +600,12 @@ class NotificationService {
         _trimProcessedMessageIds();
         return true;
       }
+
+      final WidgetBuilder? resolved = await _resolveDestination(
+        data,
+        language,
+      );
+      if (resolved == null && !fallbackToCenter) return false;
 
       final WidgetBuilder destination = resolved ??
           (_) => NotificationsScreen(currentLanguage: language);
