@@ -324,4 +324,28 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString("wesal:purge-deleted-chat-threads')->dailyAt('02:45')", $kernel);
         $this->assertStringContainsString('permanently removed by the scheduled cleanup after 30 days', $privacy);
     }
+
+    public function test_explicit_language_query_override_takes_precedence_over_stale_cookie_and_session(): void
+    {
+        $middleware = $this->source('app/Http/Middleware/SetWebsiteLocale.php');
+        $queryLocalePosition = strpos($middleware, "\$request->query('wesal_locale'");
+        $queryBranchPosition = strpos($middleware, "if (in_array(\$queryLocale, ['ar', 'en'], true))");
+        $cookieBranchPosition = strpos($middleware, "} elseif (in_array(\$cookieLocale, ['ar', 'en'], true))");
+
+        $this->assertNotFalse($queryLocalePosition, 'The middleware must read the one-time locale override.');
+        $this->assertNotFalse($queryBranchPosition, 'The explicit locale override branch must exist.');
+        $this->assertNotFalse($cookieBranchPosition, 'The saved locale cookie branch must remain available.');
+        $this->assertLessThan($cookieBranchPosition, $queryBranchPosition, 'The explicit choice must win over a stale cookie.');
+        $this->assertStringContainsString('Cookie::queue(cookie(', $middleware);
+        $this->assertStringContainsString("'wesal_website_locale'", $middleware);
+    }
+
+    public function test_language_switch_redirect_carries_the_selected_locale_to_the_destination_request(): void
+    {
+        $controller = $this->source('app/Http/Controllers/LanguageController.php');
+        $this->assertStringContainsString("\$queryParameters['wesal_locale'] = \$locale;", $controller);
+        $this->assertStringContainsString('http_build_query($queryParameters)', $controller);
+        $this->assertStringContainsString('Only redirect to a local path.', $controller);
+    }
+
 }
