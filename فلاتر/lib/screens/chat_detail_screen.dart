@@ -138,6 +138,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   void initState() {
     super.initState();
     _activeThreadId = widget.thread.id;
+    // Publish the visible thread immediately, before async cache/API loading,
+    // so a simultaneous notification tap cannot stack the same conversation.
+    ChatActivityState.activeThreadId.value = _activeThreadId;
     _partnerIsOnline = widget.thread.isOnline;
     _partnerLastSeen = widget.thread.lastSeen;
     WidgetsBinding.instance.addObserver(this);

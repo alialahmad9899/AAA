@@ -193,14 +193,14 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.cardColor.withValues(alpha: 0.85),
+        color: AppColors.cardColor,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.textDark.withValues(alpha: 0.15)),
+        border: Border.all(color: AppColors.lineColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
+            color: AppColors.textDark.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -269,7 +269,7 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.textDark.withValues(alpha: 0.06),
+              color: AppColors.sectionBackground,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
@@ -314,10 +314,10 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardColor.withValues(alpha: 0.8),
+        color: AppColors.cardColor,
         borderRadius: BorderRadius.circular(20),
         border:
-            Border.all(color: AppColors.primaryTeal.withValues(alpha: 0.3)),
+            Border.all(color: AppColors.lineColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -347,7 +347,7 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                     Text(
                       reply.createdAt,
                       style: TextStyle(
-                        color: AppColors.textDark.withValues(alpha: 0.45),
+                        color: AppColors.textMuted,
                         fontSize: 11,
                       ),
                     ),
