@@ -49,8 +49,8 @@ class BilingualWebsiteContractTest extends TestCase
         $kernel = $this->source('app/Http/Kernel.php');
         $routes = $this->source('routes/web.php');
 
-        $sessionPosition = strpos($kernel, \\Illuminate\\Session\\Middleware\\StartSession::class);
-        $localePosition = strpos($kernel, \\App\\Http\\Middleware\\SetWebsiteLocale::class);
+        $sessionPosition = strpos($kernel, 'StartSession::class,');
+        $localePosition = strpos($kernel, 'SetWebsiteLocale::class,');
         $this->assertNotFalse($sessionPosition);
         $this->assertNotFalse($localePosition);
         $this->assertLessThan($localePosition, $sessionPosition);
