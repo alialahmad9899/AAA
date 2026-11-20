@@ -54,7 +54,7 @@ class SetWebsiteLocale
         $response->headers->set('Cache-Control', 'private, no-store, no-cache, must-revalidate, max-age=0');
         $response->headers->set('Pragma', 'no-cache');
         $response->headers->set('Expires', '0');
-        $response->headers->set('Vary', 'Cookie, Accept-Language');
+        $response->headers->set('Vary', 'Cookie');
 
         // Attach the direct-link locale cookie to THIS response. Queued cookies
         // are already collected earlier in the web middleware pipeline.
