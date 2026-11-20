@@ -1,8 +1,8 @@
 <?php
 
-namespace Tests\\Unit;
+namespace Tests\Unit;
 
-use PHPUnit\\Framework\\TestCase;
+use PHPUnit\Framework\TestCase;
 
 class AccountDeletionPrivacyContractTest extends TestCase
 {
@@ -19,7 +19,7 @@ class AccountDeletionPrivacyContractTest extends TestCase
         $source = $this->source('app/Http/Controllers/MemberController.php');
         $start = strpos($source, 'public function account_delete(Request $request)');
         $this->assertNotFalse($start, 'Website account deletion method must exist.');
-        $end = strpos($source, "\\n    public function ", $start + 20);
+        $end = strpos($source, "\n    public function ", $start + 20);
         $this->assertNotFalse($end, 'Expected another controller method after account deletion.');
 
         return substr($source, $start, $end - $start);
