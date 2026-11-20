@@ -18,8 +18,8 @@ class LegalDocumentPagesContractTest extends TestCase
     {
         $routes = $this->source('routes/web.php');
 
-        $privacyRoute = "Route::view('/privacy-policy', 'frontend.legal.privacy_policy')->name('legal.privacy-policy')";
-        $termsRoute = "Route::view('/terms-conditions', 'frontend.legal.terms_conditions')->name('legal.terms-conditions')";
+        $privacyRoute = "Route::view('/privacy-policy', 'frontend.legal.privacy_policy')->middleware('website_locale')->name('legal.privacy-policy')";
+        $termsRoute = "Route::view('/terms-conditions', 'frontend.legal.terms_conditions')->middleware('website_locale')->name('legal.terms-conditions')";
         $legacyRedirect = "Route::redirect('/privacy', '/privacy-policy', 301)->name('legal.privacy-legacy')";
         $catchAll = "Route::get('/{slug}', 'PageController@show_custom_page')->name('custom-pages.show_custom_page')";
 
@@ -66,8 +66,8 @@ class LegalDocumentPagesContractTest extends TestCase
             '90 يوماً',
             '12 شهراً بعد إغلاق البلاغ',
             'الحذف خلال 30 يوماً',
-            '[يؤكده المبرمج]',
-            '[يؤكده المحاسب]',
+            'يؤكده المبرمج',
+            'يؤكده المحاسب',
             '[مكتب المحاسبة أو المستشار الضريبي]',
             'Devrientstraße 5, 01067 Dresden',
         ] as $requiredText) {
@@ -103,7 +103,7 @@ class LegalDocumentPagesContractTest extends TestCase
         }
 
         $this->assertSame(2, substr_count($terms, '<table class="legal-table">'));
-        $this->assertStringContainsString('https://www.wesalsyria.com/privacy', $terms);
+        $this->assertStringContainsString('https://www.wesalsyria.com/privacy-policy', $terms);
     }
 
     public function test_homepage_and_shared_footer_link_to_each_document_separately(): void
