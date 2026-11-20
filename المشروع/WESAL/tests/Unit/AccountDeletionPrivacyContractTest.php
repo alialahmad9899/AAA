@@ -66,6 +66,9 @@ class AccountDeletionPrivacyContractTest extends TestCase
             "ProfileMatch::where('user_id', \$user->id)",
             "ChatThread::where(function (\$query) use (\$user)",
             "Upload::where('user_id', \$user->id)->delete();",
+            '$user->notifications()->delete();',
+            '$user->tokens()->delete();',
+            '$user->fcm_token = null;',
         ] as $expected) {
             self::assertStringContainsString($expected, $method);
         }
