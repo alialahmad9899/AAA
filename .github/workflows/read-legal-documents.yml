@@ -1,0 +1,31 @@
+name: Temporary legal document text check
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/read-legal-documents.yml"
+  workflow_dispatch:
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract source Word documents
+        run: |
+          python - <<'PY'
+          import zipfile, xml.etree.ElementTree as ET
+          files = [
+            "سياسة الخصوصية – تطبيق وصال (Wesal).docx",
+            "شروط الاستخدام العامة.docx",
+          ]
+          ns = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
+          for path in files:
+              print("\\n===== " + path + " =====")
+              with zipfile.ZipFile(path) as z:
+                  root = ET.fromstring(z.read("word/document.xml"))
+              body = root.find("w:body", ns)
+              for child in body:
+                  if child.tag.endswith("}p"):
+                      value = "".join((t.text or "") for t in child.findall(".//w:t", ns))
+                      if value.strip():
+                          print(value)
+          PY
