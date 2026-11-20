@@ -21,3 +21,4 @@
 - Changed the public language selector to a GET preference endpoint (retaining the POST route for backwards compatibility) so switching does not depend on a stale CSRF form token.
 - The support page now skips the global navigation and footer, including their login links and legacy footer logo. It has its own compact language selector and uses the transparent Wesal logo asset.
 - Full live verification remains dependent on deploying this PR to Hostinger; no production configuration or data was changed during the simulation.
+- Final regression assertions now verify the request-cookie source, GET form method, standalone support layout and branded support-page controls.
