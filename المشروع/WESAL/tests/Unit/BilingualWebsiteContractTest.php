@@ -24,6 +24,8 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString("session()->put('locale', $locale)", $middleware);
         $this->assertStringContainsString('App::setLocale($locale)', $middleware);
         $this->assertStringContainsString("Content-Language", $middleware);
+        $this->assertStringContainsString("admin/*", $middleware);
+        $this->assertStringContainsString("update/*", $middleware);
     }
 
     public function test_language_switcher_accepts_only_arabic_and_english_and_returns_locally(): void
@@ -42,16 +44,22 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString("request()->getRequestUri()", $switcher);
     }
 
-    public function test_browser_locale_middleware_is_attached_to_all_requested_public_pages(): void
+    public function test_browser_locale_middleware_is_applied_to_every_public_web_request(): void
     {
+        $kernel = $this->source('app/Http/Kernel.php');
         $routes = $this->source('routes/web.php');
 
-        $this->assertStringContainsString("Route::get('/', 'index')->middleware('website_locale')", $routes);
-        $this->assertStringContainsString("Route::get('/', 'index')->middleware('website_locale')->name('home')", $routes);
-        $this->assertStringContainsString("Route::get('/contact-us/page', 'show_contact_us_page')->middleware('website_locale')", $routes);
-        $this->assertStringContainsString("Route::post('/contact-us', 'store')->middleware('website_locale')", $routes);
-        $this->assertStringContainsString("Route::view('/privacy-policy', 'frontend.legal.privacy_policy')->middleware('website_locale')", $routes);
-        $this->assertStringContainsString("Route::view('/terms-conditions', 'frontend.legal.terms_conditions')->middleware('website_locale')", $routes);
+        $sessionPosition = strpos($kernel, \\Illuminate\\Session\\Middleware\\StartSession::class);
+        $localePosition = strpos($kernel, \\App\\Http\\Middleware\\SetWebsiteLocale::class);
+        $this->assertNotFalse($sessionPosition);
+        $this->assertNotFalse($localePosition);
+        $this->assertLessThan($localePosition, $sessionPosition);
+
+        $this->assertStringContainsString("Route::get('/', 'index')->name('home')", $routes);
+        $this->assertStringContainsString("Route::get('/contact-us/page', 'show_contact_us_page')->name('contact_us')", $routes);
+        $this->assertStringContainsString("Route::post('/contact-us', 'store')->name('contact-us.store')", $routes);
+        $this->assertStringContainsString("Route::view('/privacy-policy', 'frontend.legal.privacy_policy')->name('legal.privacy-policy')", $routes);
+        $this->assertStringContainsString("Route::view('/terms-conditions', 'frontend.legal.terms_conditions')->name('legal.terms-conditions')", $routes);
     }
 
     public function test_homepage_and_shared_navigation_show_language_controls_on_mobile_and_desktop(): void
