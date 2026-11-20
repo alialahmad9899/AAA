@@ -1,3 +1,20 @@
+@php
+    $isEnglish = app()->getLocale() === 'en';
+    $footerLabelMap = [
+        'الرئيسية' => 'Home',
+        'عن وصال' => 'About Wesal',
+        'الأعضاء النشطين' => 'Active members',
+        'الأعضاء' => 'Members',
+        'العضوات' => 'Women',
+        'الباقات المميزة' => 'Premium plans',
+        'تواصل معنا' => 'Support',
+        'اتصل بنا' => 'Contact us',
+        'الأسئلة الشائعة' => 'FAQ',
+        'سياسة الخصوصية' => 'Privacy Policy',
+        'شروط الاستخدام العامة' => 'General Terms of Use',
+    ];
+@endphp
+
 <style>
     /* 🛑 اللمسات الملكية للفوتر والشريط السفلي (بدون المساس بالهيكلية) 🛑 */
     .aiz-footer {
@@ -109,7 +126,7 @@
 </style>
 
 <footer class="aiz-footer fs-13 mt-auto text-white pt-5 pb-4">
-    <div class="container text-right" dir="rtl">
+    <div class="container {{ $isEnglish ? 'text-left' : 'text-right' }}" dir="{{ $isEnglish ? 'ltr' : 'rtl' }}">
         
         {{-- الجزء العلوي: اللوجو والوصف --}}
         <div class="row mb-5">
@@ -117,11 +134,11 @@
                 <div class="footer-logo mb-3">
                     <a href="{{ route('home') }}" class="d-inline-block">
                         <img src="{{ get_setting('footer_logo') ? uploaded_asset(get_setting('footer_logo')) : static_asset('assets/img/logo.png') }}" 
-                             alt="{{ env('APP_NAME') }}" class="mw-100" style="height: 55px;">
+                             alt="{{ $isEnglish ? 'Wesal' : 'وصال' }}" class="mw-100" style="height: 55px;">
                     </a>
                 </div>
                 <p class="opacity-70 fs-16 lh-1-8 px-md-5">
-                    {!! get_setting('about_us_description') !!}
+                    {{ $isEnglish ? 'A serious marriage platform connecting Arabs and Syrians around the world.' : strip_tags(get_setting('about_us_description')) }}
                 </p>
             </div>
         </div>
@@ -130,11 +147,11 @@
         <div class="row justify-content-center">
             @if ( !empty(get_setting('widget_one_labels')) )
             <div class="col-md-3 mb-4 text-center">
-                <h4 class="footer-widget-title">{{ get_setting('widget_one_title') }}</h4>
+                <h4 class="footer-widget-title">{{ $isEnglish ? ($footerLabelMap[get_setting('widget_one_title')] ?? get_setting('widget_one_title')) : get_setting('widget_one_title') }}</h4>
                 <ul class="list-unstyled">
                     @foreach (json_decode( get_setting('widget_one_labels'), true) as $key => $value)
                         <li class="mb-3">
-                            <a href="{{ json_decode( get_setting('widget_one_links'), true)[$key] }}" class="text-white opacity-60 transition-03">{{ $value }}</a>
+                            <a href="{{ json_decode( get_setting('widget_one_links'), true)[$key] }}" class="text-white opacity-60 transition-03">{{ $isEnglish ? ($footerLabelMap[$value] ?? $value) : $value }}</a>
                         </li>
                     @endforeach
                 </ul>
@@ -143,7 +160,7 @@
 
             @if ( !empty(get_setting('widget_two_labels')) )
             <div class="col-md-3 mb-4 text-center">
-                <h4 class="footer-widget-title">{{ get_setting('widget_two_title') }}</h4>
+                <h4 class="footer-widget-title">{{ $isEnglish ? ($footerLabelMap[get_setting('widget_two_title')] ?? get_setting('widget_two_title')) : get_setting('widget_two_title') }}</h4>
                 <ul class="list-unstyled">
                     @foreach (json_decode( get_setting('widget_two_labels'), true) as $key => $value)
                         <li class="my-3">
@@ -156,7 +173,7 @@
 
             @if ( !empty(get_setting('widget_three_labels')) )
             <div class="col-md-3 mb-4 text-center">
-                <h4 class="footer-widget-title">{{ get_setting('widget_three_title') }}</h4>
+                <h4 class="footer-widget-title">{{ $isEnglish ? ($footerLabelMap[get_setting('widget_three_title')] ?? get_setting('widget_three_title')) : get_setting('widget_three_title') }}</h4>
                 <ul class="list-unstyled">
                     @foreach (json_decode( get_setting('widget_three_labels'), true) as $key => $value)
                         <li class="mb-3">
@@ -172,8 +189,8 @@
         <div class="row justify-content-center mb-4" dir="rtl">
             <div class="col-12 text-center">
                 <div class="d-inline-flex flex-wrap justify-content-center align-items-center" style="gap: 12px 22px;">
-                    <a href="{{ route('legal.privacy-policy') }}" class="text-white opacity-80 fw-700">سياسة الخصوصية</a>
-                    <a href="{{ route('legal.terms-conditions') }}" class="text-white opacity-80 fw-700">شروط الاستخدام العامة</a>
+                    <a href="{{ route('legal.privacy-policy') }}" class="text-white opacity-80 fw-700">{{ $isEnglish ? 'Privacy Policy' : 'سياسة الخصوصية' }}</a>
+                    <a href="{{ route('legal.terms-conditions') }}" class="text-white opacity-80 fw-700">{{ $isEnglish ? 'General Terms of Use' : 'شروط الاستخدام العامة' }}</a>
                 </div>
             </div>
         </div>
@@ -182,7 +199,7 @@
         <div class="footer-copyright">
             <div class="row align-items-center">
                 <div class="col-md-6 text-center text-md-right mb-3 mb-md-0">
-                    {!! get_setting('footer_copyright_text') !!}
+                    {{ $isEnglish ? '© ' . date('Y') . ' Wesal. All rights reserved.' : strip_tags(get_setting('footer_copyright_text')) }}
                 </div>
                 <div class="col-md-6 text-center text-md-left">
                     <div class="social-links">
@@ -203,7 +220,7 @@
             <div class="col">
                 <a href="{{ route('home') }}" class="text-reset d-block py-2 {{ areActiveRoutes(['home'],'active-link')}}">
                     <i class="las la-home {{ areActiveRoutes(['home'],'text-primary','opacity-60')}}"></i>
-                    <span class="d-block fs-10 fw-700 {{ areActiveRoutes(['home'],'text-primary','opacity-60')}}">{{ translate('Home') }}</span>
+                    <span class="d-block fs-10 fw-700 {{ areActiveRoutes(['home'],'text-primary','opacity-60')}}">{{ $isEnglish ? 'Home' : 'الرئيسية' }}</span>
                 </a>
             </div>
             @if (Auth::check() && Auth::user()->user_type == 'member')
@@ -214,7 +231,7 @@
                             @php $u_count = \App\Models\Notification::where('notifiable_id', Auth::user()->id)->where('read_at', null)->count(); @endphp
                             @if($u_count > 0)<span class="badge position-absolute">{{ $u_count }}</span>@endif
                         </span>
-                        <span class="d-block fs-10 fw-700 {{ areActiveRoutes(['frontend.notifications'],'text-primary','opacity-60')}}">{{ translate('Notifications') }}</span>
+                        <span class="d-block fs-10 fw-700 {{ areActiveRoutes(['frontend.notifications'],'text-primary','opacity-60')}}">{{ $isEnglish ? 'Notifications' : 'الإشعارات' }}</span>
                     </a>
                 </div>
                 <div class="col">
@@ -224,7 +241,7 @@
                             @php $m_count = count(chat_threads()); @endphp
                             @if($m_count > 0)<span class="badge position-absolute">{{ $m_count }}</span>@endif
                         </span>
-                        <span class="d-block fs-10 fw-700 {{ areActiveRoutes(['all.messages'],'text-primary','opacity-60')}}">{{ translate('Messages') }}</span>
+                        <span class="d-block fs-10 fw-700 {{ areActiveRoutes(['all.messages'],'text-primary','opacity-60')}}">{{ $isEnglish ? 'Messages' : 'الرسائل' }}</span>
                     </a>
                 </div>
                 <div class="col">
@@ -232,26 +249,26 @@
                         <span class="d-block mx-auto mb-1">
                             <img src="{{ uploaded_asset(Auth::user()->photo) }}" class="rounded-circle shadow-sm" style="width:24px; height:24px; border: 1px solid rgba(0,0,0,0.1); object-fit: cover;" onerror="this.onerror=null;this.src='{{ static_asset('assets/img/avatar-place.png') }}';">
                         </span>
-                        <span class="d-block fs-10 opacity-60 fw-700">{{ translate('Account') }}</span>
+                        <span class="d-block fs-10 opacity-60 fw-700">{{ $isEnglish ? 'Account' : 'الحساب' }}</span>
                     </a>
                 </div>
             @else
                 <div class="col">
                     <a href="{{ route('member.listing') }}" class="text-reset d-block py-2 {{ areActiveRoutes(['member.listing'],'active-link')}}">
                         <i class="las la-users {{ areActiveRoutes(['member.listing'],'text-primary','opacity-60')}}"></i>
-                        <span class="d-block fs-10 fw-700">{{ translate('Active Members') }}</span>
+                        <span class="d-block fs-10 fw-700">{{ $isEnglish ? 'Active members' : 'الأعضاء النشطون' }}</span>
                     </a>
                 </div>
                 <div class="col">
                     <a href="{{ route('packages') }}" class="text-reset d-block py-2 {{ areActiveRoutes(['packages'],'active-link')}}">
                         <i class="las la-gem {{ areActiveRoutes(['packages'],'text-primary','opacity-60')}}"></i>
-                        <span class="d-block fs-10 fw-700">{{ translate('Premium Plans') }}</span>
+                        <span class="d-block fs-10 fw-700">{{ $isEnglish ? 'Premium plans' : 'الباقات المميزة' }}</span>
                     </a>
                 </div>
                 <div class="col">
                     <a href="{{ route('contact_us') }}" class="text-reset d-block py-2 {{ areActiveRoutes(['contact_us'],'active-link')}}">
                         <i class="las la-headset {{ areActiveRoutes(['contact_us'],'text-primary','opacity-60')}}"></i>
-                        <span class="d-block fs-10 fw-700">{{ translate('Contact Us') }}</span>
+                        <span class="d-block fs-10 fw-700">{{ $isEnglish ? 'Support' : 'تواصل معنا' }}</span>
                     </a>
                 </div>
             @endif
