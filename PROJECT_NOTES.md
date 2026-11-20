@@ -2339,3 +2339,35 @@ ALTER TABLE `users`
 
 ### التحقق القانوني لمدد حفظ السجلات
 - تمت مطابقة مدد 10/8/6 سنوات وبداية الاحتساب مع النص الرسمي الحالي § 257 HGB و§ 147 AO: https://www.gesetze-im-internet.de/hgb/__257.html وhttps://www.gesetze-im-internet.de/ao_1977/__147.html
+
+## 2026-11-20 — إكمال تدقيق الموقع ثنائي اللغة وإصلاح حذف الحساب ومرجع حق الإلغاء
+
+### الإصلاحات الإضافية بعد PR #22
+- PR #23: https://github.com/alialahmad9899/AAA/pull/23 — دُمج بنجاح إلى `main` بعد نجاح جميع وظائف CI.
+- إصلاح `MemberController::account_delete()` على الموقع: تنفيذ حذف الملف والبيانات المرتبطة داخل معاملة قاعدة بيانات واحدة، ثم تسجيل الخروج وإبطال الجلسة وتجديد CSRF، وإظهار رسالة نجاح واحدة وإعادة التوجيه إلى الصفحة الرئيسية بدلاً من الاستمرار وإظهار رسالة خطأ زائفة.
+- حذف بيانات النشاط المرتبطة بالحساب (قائمة المفضلة، التجاهل، الصور المنشورة، الاهتمامات، المطابقات، المحادثات والملفات)، مع حذف إشعارات الحساب وإلغاء جميع رموز Sanctum ومسح رمز FCM حتى لا تبقى جلسة API أو إشعارات دفع مرتبطة بالحساب المحذوف.
+- إبقاء سجلات `package_payments` وعدم حذفها من مسار حذف الحساب حتى تبقى مستندات الدفع متاحة لفترات الاحتفاظ المحاسبي النظامية. كما بقيت سجلات `reported_users` خارج الحذف لهذا المسار لاحترام فترة حفظ البلاغات وسجلات السلامة المحددة في السياسة.
+- تمت مطابقة آلية الباقات: شراء الباقات يتم دفعة واحدة مسبقاً عبر Stripe `mode=payment`/PaymentIntent، ومدد الباقات تحسب بتاريخ انتهاء ثابت؛ لا يوجد اشتراك Stripe متكرر أو سحب آلي دوري في المسارات الحالية. لذلك لا يستدعي حذف الحساب إلغاء Subscription دوري غير موجود.
+- تصحيح مرجع حق الانسحاب من العقد بعد إتمام الخدمة في النسختين العربية والإنجليزية من § 356(4) إلى § 356(5) BGB، وإضافة اختبار يثبت صحة الفقرة الحالية في النسختين.
+
+### ملفات PR #23
+- `المشروع/WESAL/app/Http/Controllers/MemberController.php`
+- `المشروع/WESAL/resources/views/frontend/legal/terms_conditions.blade.php`
+- `المشروع/WESAL/resources/views/frontend/legal/en/terms_conditions.blade.php`
+- `المشروع/WESAL/tests/Unit/AccountDeletionPrivacyContractTest.php` (جديد)
+- `المشروع/WESAL/tests/Unit/LegalDocumentPagesContractTest.php`
+- `.github/workflows/wesal-integration-validation.yml`
+
+### التحقق النهائي
+- GitHub Actions run `44736251893` اكتمل بنجاح لجميع الوظائف: Backend PHP/PHPUnit، Flutter regression، وحزمة ZIP.
+- `AccountDeletionPrivacyContractTest`: 3 اختبارات / 46 تأكيداً ناجحاً.
+- `LegalDocumentPagesContractTest`: 6 اختبارات / 109 تأكيدات ناجحة، بما فيها مطابقة § 356(5) BGB باللغتين.
+- `BilingualWebsiteContractTest`: 10 اختبارات / 203 تأكيدات؛ انتهى الاختبار بنجاح مع Warning واحدة غير مانعة.
+- `dart analyze --fatal-infos`: `No issues found!`.
+- `flutter test`: `157 tests passed`.
+- ظهرت تحذيرات PHPUnit قديمة في `MobileApiPerformanceContractTest` (4 اختبارات / 24 تأكيداً / تحذيران) و`BilingualWebsiteContractTest` (تحذير واحد)، وكذلك تحذير PHP قديم عن `use RuntimeException` في Migration مختلفة. لم تفشل أي وظيفة بسببها.
+- لم يتم تعديل بيانات الإنتاج أو نشر الموقع إلى Hostinger في هذه الجلسة. تغييرات `main` جاهزة؛ الصفحة الحية تظل على نسختها المنشورة إلى أن يتم نشر الملفات على الاستضافة.
+- حزمة ZIP النهائية الموحدة تجمع 24 ملفاً من التنفيذ الثنائي اللغة مع تحديثات PR #22 وملفات PR #23 الستة، مع إزالة التكرارات. تم التحقق من سلامة ZIP بمقارنة جميع الملفات ومساراتها واختبار `unzip -t`.
+
+### مرجع قانوني
+- § 356 BGB، الفقرة (5) الحالية لزوال حق الانسحاب بعد التنفيذ الكامل للخدمة بناءً على طلب وموافقة مسبقين: https://www.gesetze-im-internet.de/bgb/__356.html
