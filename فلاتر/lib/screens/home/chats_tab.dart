@@ -53,6 +53,7 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
   String? _chatsErrorMessage;
   int _chatFetchCounter = 0;
   bool _isFetchingChats = false;
+  Future<void>? _cachedThreadsFuture;
   Timer? _chatRefreshTimer;
 
   bool _isSubscribedOrFemale = true;
@@ -137,13 +138,19 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
   /// التحقق من حالة حساب العضو وجلب المحادثات دائماً للجميع
   Future<void> _checkSubscriptionAndFetch() async {
     if (!mounted) return;
-    // Read-only cache is account-scoped; display it while network refresh runs.
-    unawaited(_loadCachedThreads());
-    unawaited(_fetchChats(silent: _chatThreads.isNotEmpty));
+    // Read cached rows first, then start the server refresh. A late SQLite
+    // completion can therefore never replace a newer server result.
+    await _loadCachedThreads();
+    if (!mounted) return;
+    await _fetchChats(silent: _chatThreads.isNotEmpty);
     unawaited(_refreshSubscriptionStatus());
   }
 
-  Future<void> _loadCachedThreads() async {
+  Future<void> _loadCachedThreads() {
+    return _cachedThreadsFuture ??= _readCachedThreads();
+  }
+
+  Future<void> _readCachedThreads() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final accountId = prefs.getInt('user_id') ?? 0;
@@ -306,12 +313,6 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
             .compareTo(_parseChatTimeToDateTime(a.time));
         return timeOrder != 0 ? timeOrder : b.id.compareTo(a.id);
       });
-      try {
-        final accountId = (await SharedPreferences.getInstance()).getInt('user_id') ?? 0;
-        if (accountId > 0) await ChatLocalStore.saveThreads(accountId, threads);
-      } catch (cacheError) {
-        debugPrint('[Chats Tab] Could not save chat cache: $cacheError');
-      }
       if (mounted && currentFetch == _chatFetchCounter) {
         setState(() {
           _chatThreads = threads;
@@ -347,6 +348,13 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
       if (!mounted) return;
 
       if (result['success'] == true) {
+        try {
+          final accountId =
+              (await SharedPreferences.getInstance()).getInt('user_id') ?? 0;
+          await ChatLocalStore.deleteThread(accountId, targetId);
+        } catch (cacheError) {
+          debugPrint('[Chats Tab] Could not clear deleted chat cache: $cacheError');
+        }
         AppSnackBar.showDeleted(
           context: context,
           isArabic: isArabicLocale,
