@@ -387,7 +387,7 @@ class ChatController extends Controller
                 'result' => true,
                 'message' => 'تم إرسال الرسالة بنجاح',
                 'chat_thread_id' => $chat_thread_id,
-                'data' => $new_chat
+                'data' => (new ChatViewResource($new_chat))->resolve($request)
             ], 200);
 
         } catch (Throwable $e) {
