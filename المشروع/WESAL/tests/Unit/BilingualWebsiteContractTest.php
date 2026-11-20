@@ -36,6 +36,7 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString("'redirect_to' => ['nullable', 'string', 'max:2048']", $controller);
         $this->assertStringContainsString("strpos($path, '//') === 0", $controller);
         $this->assertStringContainsString("Route::post('/language'", $routes);
+        $this->assertStringContainsString("middleware(['website_locale', 'throttle:30,1'])", $routes);
         $this->assertStringContainsString("value=\"ar\"", $switcher);
         $this->assertStringContainsString("value=\"en\"", $switcher);
         $this->assertStringContainsString("request()->getRequestUri()", $switcher);
@@ -48,6 +49,7 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString("Route::get('/', 'index')->middleware('website_locale')", $routes);
         $this->assertStringContainsString("Route::get('/', 'index')->middleware('website_locale')->name('home')", $routes);
         $this->assertStringContainsString("Route::get('/contact-us/page', 'show_contact_us_page')->middleware('website_locale')", $routes);
+        $this->assertStringContainsString("Route::post('/contact-us', 'store')->middleware('website_locale')", $routes);
         $this->assertStringContainsString("Route::view('/privacy-policy', 'frontend.legal.privacy_policy')->middleware('website_locale')", $routes);
         $this->assertStringContainsString("Route::view('/terms-conditions', 'frontend.legal.terms_conditions')->middleware('website_locale')", $routes);
     }
@@ -128,7 +130,7 @@ class BilingualWebsiteContractTest extends TestCase
         $request = $this->source('app/Http/Requests/ContactUsRequest.php');
 
         foreach ([
-            'Help &amp; Support',
+            'Help & Support',
             'The Wesal team is here',
             'Technical support',
             'Plans and payments',
