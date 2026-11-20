@@ -212,7 +212,7 @@ class LanguageController extends Controller
             60 * 24 * 365,
             '/',
             null,
-            $request->isSecure(),
+            $request->isSecure() || strtolower((string) $request->header('X-Forwarded-Proto')) === 'https',
             true,
             false,
             'lax'
