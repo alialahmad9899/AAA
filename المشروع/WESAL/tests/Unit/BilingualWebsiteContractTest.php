@@ -23,8 +23,8 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString("->session()->get('website_locale'", $middleware);
         $this->assertStringContainsString("->cookie('wesal_website_locale'", $middleware);
         $this->assertStringContainsString("->session()->get('locale'", $middleware);
-        $this->assertStringContainsString("->session()->put('website_locale', $locale)", $middleware);
-        $this->assertStringContainsString("->session()->put('locale', $locale)", $middleware);
+        $this->assertStringContainsString('$request->session()->put(\'website_locale\', $locale)', $middleware);
+        $this->assertStringContainsString('$request->session()->put(\'locale\', $locale)', $middleware);
         $this->assertStringContainsString('App::setLocale($locale)', $middleware);
         $this->assertStringContainsString("Content-Language", $middleware);
         $this->assertStringContainsString("admin/*", $middleware);
@@ -36,8 +36,8 @@ class BilingualWebsiteContractTest extends TestCase
         $controller = $this->source('app/Http/Controllers/LanguageController.php');
         $middleware = $this->source('app/Http/Middleware/SetWebsiteLocale.php');
 
-        $this->assertStringContainsString("->session()->put('website_locale', $locale)", $controller);
-        $this->assertStringContainsString("->session()->put('locale', $locale)", $controller);
+        $this->assertStringContainsString('$request->session()->put(\'website_locale\', $locale)', $controller);
+        $this->assertStringContainsString('$request->session()->put(\'locale\', $locale)', $controller);
         $this->assertStringContainsString('->session()->save()', $controller);
         $this->assertStringContainsString("cookie(", $controller);
         $this->assertStringContainsString("'wesal_website_locale'", $controller);
@@ -45,7 +45,7 @@ class BilingualWebsiteContractTest extends TestCase
             strpos($controller, "cookie("),
             strpos($controller, "'wesal_website_locale'")
         );
-        $this->assertStringContainsString("cookie('wesal_website_locale'", $middleware);
+        $this->assertStringContainsString("->cookie('wesal_website_locale'", $middleware);
         $this->assertStringContainsString("'private, no-cache, must-revalidate'", $middleware);
         $this->assertStringContainsString("'Vary', 'Cookie'", $middleware);
     }
