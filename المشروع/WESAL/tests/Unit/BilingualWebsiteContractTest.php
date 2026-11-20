@@ -395,4 +395,38 @@ class BilingualWebsiteContractTest extends TestCase
         }
     }
 
+
+    public function test_legal_and_contact_pages_prioritize_the_explicit_locale_over_inherited_state(): void
+    {
+        foreach ([
+            'resources/views/frontend/legal/privacy_policy.blade.php',
+            'resources/views/frontend/legal/terms_conditions.blade.php',
+            'resources/views/frontend/contact_us.blade.php',
+            'resources/views/frontend/layouts/legal.blade.php',
+            'resources/views/frontend/layouts/app.blade.php',
+        ] as $path) {
+            $view = $this->source($path);
+            $queryPosition = strpos($view, "request()->query('wesal_locale')");
+            $inheritedPosition = strpos($view, '$websiteLocale ?? null');
+
+            $this->assertNotFalse($queryPosition, "{$path} must read the explicit locale query.");
+            $this->assertNotFalse($inheritedPosition, "{$path} must still accept inherited state as a fallback.");
+            $this->assertLessThan(
+                $inheritedPosition,
+                $queryPosition,
+                "{$path} must prioritize the URL over inherited view state."
+            );
+            $this->assertStringContainsString("request()->attributes->set('wesal_website_locale'", $view);
+        }
+
+        $contact = $this->source('resources/views/frontend/contact_us.blade.php');
+        $this->assertStringContainsString("route('contact-us.store', ['wesal_locale' => $websiteLocale])", $contact);
+
+        $request = $this->source('app/Http/Requests/ContactUsRequest.php');
+        $controller = $this->source('app/Http/Controllers/ContactUsController.php');
+        $this->assertStringContainsString("$this->query('wesal_locale')", $request);
+        $this->assertStringContainsString("$request->query('wesal_locale')", $controller);
+        $this->assertStringContainsString('Your message has been sent successfully.', $controller);
+    }
+
 }
