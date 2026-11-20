@@ -21,12 +21,15 @@ class PurgeDeletedChatThreads extends Command
         $purgedMessages = 0;
 
         ChatThread::onlyTrashed()
-            ->where('deleted_at', '<=', $cutoff)
-            ->where(function ($query) {
-                $query->whereHas('sender', function ($userQuery) {
-                    $userQuery->withTrashed()->whereNotNull('users.deleted_at');
-                })->orWhereHas('receiver', function ($userQuery) {
-                    $userQuery->withTrashed()->whereNotNull('users.deleted_at');
+            ->where(function ($query) use ($cutoff) {
+                $query->whereHas('sender', function ($userQuery) use ($cutoff) {
+                    $userQuery->withTrashed()
+                        ->whereNotNull('users.deleted_at')
+                        ->where('users.deleted_at', '<=', $cutoff);
+                })->orWhereHas('receiver', function ($userQuery) use ($cutoff) {
+                    $userQuery->withTrashed()
+                        ->whereNotNull('users.deleted_at')
+                        ->where('users.deleted_at', '<=', $cutoff);
                 });
             })
             ->orderBy('id')
