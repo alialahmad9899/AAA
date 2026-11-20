@@ -22,7 +22,13 @@ class AppActionBottomSheet {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.cardColor,
+      showDragHandle: false,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      elevation: 10,
       builder: (sheetContext) => Directionality(
         textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
         child: SafeArea(

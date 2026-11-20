@@ -145,22 +145,21 @@ class AppTheme {
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: AppColors.cardColor,
         surfaceTintColor: Colors.transparent,
-        showDragHandle: true,
+        // Custom sheets draw their own handle when needed; prevent duplicate handles.
+        showDragHandle: false,
         dragHandleColor: AppColors.textLight,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          side: BorderSide(color: AppColors.lineColor),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
         clipBehavior: Clip.antiAlias,
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: AppColors.cardColor,
         surfaceTintColor: Colors.transparent,
-        // Keep a small, even breathing space instead of Flutter's wide
-        // default gutters around every Dialog and AlertDialog.
+        // A consistent, intentional gap around dialogs on all screen sizes.
         insetPadding: const EdgeInsets.symmetric(
-          horizontal: 8,
-          vertical: 8,
+          horizontal: 20,
+          vertical: 24,
         ),
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(

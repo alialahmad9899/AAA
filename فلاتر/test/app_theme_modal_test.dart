@@ -8,9 +8,10 @@ void main() {
     test('dialogs use a small, consistent inset on all four sides', () {
       expect(
         AppTheme.light.dialogTheme.insetPadding,
-        const EdgeInsets.all(8),
+        const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       );
       expect(AppTheme.light.dialogTheme.backgroundColor, AppColors.cardColor);
+      expect(AppTheme.light.dialogTheme.clipBehavior, Clip.antiAlias);
       expect(
         AppTheme.light.dialogTheme.surfaceTintColor,
         Colors.transparent,
@@ -29,6 +30,11 @@ void main() {
       expect(
         AppTheme.light.bottomSheetTheme.clipBehavior,
         Clip.antiAlias,
+      );
+      expect(AppTheme.light.bottomSheetTheme.showDragHandle, isFalse);
+      expect(
+        AppTheme.light.bottomSheetTheme.shape,
+        isA<RoundedRectangleBorder>(),
       );
     });
   });
