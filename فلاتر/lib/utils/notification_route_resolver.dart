@@ -39,3 +39,27 @@ NotificationDestination? _resolveKnownRoute(String rawRoute){
   if(const {'interests','my_interests','interest_requests'}.contains(name))return const NotificationDestination(NotificationDestinationKind.interests);
   return null;
 }
+
+
+/// Stable key for a resolved destination, independent of the notification
+/// transport (FCM, local notification, or in-app notification center).
+String notificationDestinationKey(NotificationDestination? destination) {
+  if (destination == null) return 'notification-center';
+  return '${destination.kind.name}:${destination.id ?? 0}';
+}
+
+/// Keeps one route per destination on the navigation stack. A notification
+/// delivered through two transports must not open the same screen twice.
+bool claimNotificationDestination(
+  String key, {
+  required Set<String> activeDestinations,
+}) {
+  return activeDestinations.add(key);
+}
+
+void releaseNotificationDestination(
+  String key, {
+  required Set<String> activeDestinations,
+}) {
+  activeDestinations.remove(key);
+}
