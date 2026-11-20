@@ -19,10 +19,10 @@ class ChatDeliveryContractTest extends TestCase
         $controller = $this->source('app/Http/Controllers/Api/ChatController.php');
         $resource = $this->source('app/Http/Resources/Chat/ChatViewResource.php');
 
-        $this->assertStringContainsString(
-            "'data' => (new ChatViewResource($new_chat))->resolve($request)",
-            $controller
-        );
+        $expectedControllerSnippet = <<<'SOURCE'
+'data' => (new ChatViewResource($new_chat))->resolve($request)
+SOURCE;
+        $this->assertStringContainsString($expectedControllerSnippet, $controller);
         $this->assertStringContainsString("'id'             => $this->id", $resource);
         $this->assertStringContainsString("'sender_user_id' => $this->sender_user_id", $resource);
         $this->assertStringContainsString("'attachment'     => $attachments", $resource);
