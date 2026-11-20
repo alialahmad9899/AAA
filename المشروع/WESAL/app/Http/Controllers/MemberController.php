@@ -1086,6 +1086,10 @@ class MemberController extends Controller
             })->delete();
 
             Upload::where('user_id', $user->id)->delete();
+            $user->notifications()->delete();
+            $user->tokens()->delete();
+            $user->fcm_token = null;
+            $user->save();
 
             // Keep PackagePayment rows available for statutory accounting retention.
             // The purchased packages are prepaid once and do not automatically renew.
