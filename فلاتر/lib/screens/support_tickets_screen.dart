@@ -186,9 +186,9 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppColors.cardColor.withValues(alpha: 0.6),
+        color: AppColors.cardColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.textDark.withValues(alpha: 0.12)),
+        border: Border.all(color: AppColors.lineColor),
       ),
       child: Material(
         color: Colors.transparent,
@@ -386,9 +386,9 @@ class _CreateTicketModalState extends State<_CreateTicketModal> {
         child: Container(
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
-            color: AppColors.cardColor.withValues(alpha: 0.98),
+            color: AppColors.cardColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border.all(color: AppColors.textDark.withValues(alpha: 0.2)),
+            border: Border.all(color: AppColors.lineColor),
           ),
           child: SingleChildScrollView(
             child: Column(
@@ -433,7 +433,7 @@ class _CreateTicketModalState extends State<_CreateTicketModal> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
-                    color: AppColors.textDark.withValues(alpha: 0.08),
+                    color: AppColors.sectionBackground,
                     borderRadius: BorderRadius.circular(16),
                     border:
                         Border.all(color: AppColors.lineColor),
@@ -490,17 +490,16 @@ class _CreateTicketModalState extends State<_CreateTicketModal> {
                     hintText: widget.isArabic
                         ? 'اكتب تفاصيل استفسارك أو المشكلة التي تواجهها...'
                         : 'Enter problem details...',
-                    hintStyle: TextStyle(
-                        color: AppColors.textDark.withValues(alpha: 0.35),
+                    hintStyle: const TextStyle(
+                        color: AppColors.textMuted,
                         fontFamily: 'Cairo',
                         fontSize: 13),
                     filled: true,
-                    fillColor: AppColors.textDark.withValues(alpha: 0.08),
+                    fillColor: AppColors.sectionBackground,
                     contentPadding: const EdgeInsets.all(16),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(
-                          color: AppColors.textDark.withValues(alpha: 0.15)),
+                      borderSide: const BorderSide(color: AppColors.lineColor),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -520,7 +519,7 @@ class _CreateTicketModalState extends State<_CreateTicketModal> {
                       backgroundColor: AppColors.primaryTeal,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16)),
-                      elevation: 4,
+                      elevation: 0,
                     ),
                     onPressed: _isSubmitting ? null : _submitTicket,
                     child: _isSubmitting
@@ -529,7 +528,7 @@ class _CreateTicketModalState extends State<_CreateTicketModal> {
                         : Text(
                             widget.isArabic ? 'إرسال التذكرة' : 'Submit Ticket',
                             style: const TextStyle(
-                              color: AppColors.textDark,
+                              color: Colors.white,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               fontFamily: 'Cairo',
