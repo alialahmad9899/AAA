@@ -4351,6 +4351,22 @@ class ApiService {
     }
   }
 
+  /// Fetch the announcement targeted to the authenticated member by the server.
+  static Future<Map<String, dynamic>?> getMemberAppAnnouncement({String? lang}) async {
+    try {
+      final response = await get('/member/app-announcement', lang: lang);
+      if (response == null || response['result'] != true) return null;
+
+      final dynamic data = response['data'];
+      if (data is Map<String, dynamic>) return data;
+      if (data is Map) return Map<String, dynamic>.from(data);
+      return null;
+    } catch (error) {
+      if (kDebugMode) debugPrint('⚠️ [App Announcement] $error');
+      return null;
+    }
+  }
+
   static Future<BlockedAccountStatus?> getBlockedAccountStatus({String? lang}) async {
     try {
       final response = await get('/member/blocked-status', lang: lang);
