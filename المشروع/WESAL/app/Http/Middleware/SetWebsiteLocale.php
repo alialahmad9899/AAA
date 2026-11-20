@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
 
 class SetWebsiteLocale
 {
@@ -28,11 +29,31 @@ class SetWebsiteLocale
         // A dedicated cookie is the source of truth for a manually selected
         // website language. This prevents unrelated admin/app code that also
         // uses the generic `locale` session key from resetting the public site.
+        // A one-time query override is added to the redirect target by
+        // LanguageController. It makes the very first page after a switch use
+        // the requested locale even when an old cookie is still present or a
+        // hosting/browser cache interferes with the cookie update.
+        $queryLocale = strtolower((string) $request->query('wesal_locale', ''));
         $cookieLocale = strtolower((string) $request->cookie('wesal_website_locale', ''));
         $sessionLocale = strtolower((string) $request->session()->get('website_locale', ''));
         $legacyLocale = strtolower((string) $request->session()->get('locale', ''));
 
-        if (in_array($cookieLocale, ['ar', 'en'], true)) {
+        if (in_array($queryLocale, ['ar', 'en'], true)) {
+            $locale = $queryLocale;
+
+            // Persist the explicit choice for subsequent pages as well.
+            Cookie::queue(cookie(
+                'wesal_website_locale',
+                $locale,
+                60 * 24 * 365,
+                '/',
+                null,
+                $request->isSecure() || strtolower((string) $request->header('X-Forwarded-Proto')) === 'https',
+                true,
+                false,
+                'lax'
+            ));
+        } elseif (in_array($cookieLocale, ['ar', 'en'], true)) {
             $locale = $cookieLocale;
         } elseif (in_array($sessionLocale, ['ar', 'en'], true)) {
             $locale = $sessionLocale;
