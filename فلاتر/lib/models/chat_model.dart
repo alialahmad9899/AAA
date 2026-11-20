@@ -318,9 +318,6 @@ class ChatMessageModel {
     this.attachmentUrl,
   });
 
-  /// Merge server updates into the locally loaded history without dropping
-  /// older pages. Negative IDs are reserved for optimistic messages and remain
-  /// at the end until the server confirms them with a real message ID.
   /// Converts the stored oldest-to-newest transcript into the newest-first
   /// child order required by a reverse ListView.
   static List<ChatMessageModel> newestFirst(
@@ -328,6 +325,9 @@ class ChatMessageModel {
   ) =>
       chronological.reversed.toList(growable: false);
 
+  /// Merge server updates into the locally loaded history without dropping
+  /// older pages. Negative IDs are reserved for optimistic messages and remain
+  /// at the end until the server confirms them with a real message ID.
   static List<ChatMessageModel> mergeHistory(
     List<ChatMessageModel> existing,
     List<ChatMessageModel> incoming,
