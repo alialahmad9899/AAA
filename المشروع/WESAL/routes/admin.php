@@ -41,6 +41,7 @@ use App\Http\Controllers\WalletController;
 use App\Http\Controllers\Admin\VipSurveyAdminController;
 use App\Http\Controllers\Admin\VipServiceAdminController;
 use App\Http\Controllers\Admin\SupportTicketAdminController;
+use App\Http\Controllers\Admin\AppAnnouncementController;
 
 /*
   |--------------------------------------------------------------------------
@@ -69,6 +70,10 @@ Route::get('/admin/login', [HomeController::class, 'admin_login'])->name('admin.
 
 Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function () {
     Route::get('/dashboard', [HomeController::class, 'admin_dashboard'])->name('admin.dashboard');
+
+    // Manage the mobile app announcement popup (admin panel only).
+    Route::get('/app-announcement', [AppAnnouncementController::class, 'edit'])->name('admin.app-announcement.edit');
+    Route::post('/app-announcement', [AppAnnouncementController::class, 'update'])->name('admin.app-announcement.update');
 
     Route::resource('profile', ProfileController::class);
 
