@@ -1,9 +1,16 @@
 @php
-    $legalLocale = app()->getLocale() === 'ar' ? 'ar' : 'en';
+    $legalLocale = strtolower((string) ($websiteLocale ?? request()->attributes->get(
+        'wesal_website_locale',
+        request()->query('wesal_locale', session('website_locale', app()->getLocale()))
+    )));
+    if (!in_array($legalLocale, ['ar', 'en'], true)) {
+        $legalLocale = 'ar';
+    }
+    app()->setLocale($legalLocale);
     $legalIsArabic = $legalLocale === 'ar';
 @endphp
 <!doctype html>
-<html lang="{{ $legalLocale }}" dir="{{ $legalIsArabic ? 'rtl' : 'ltr' }}">
+<html lang="{{ $legalLocale }}" dir="{{ $legalIsArabic ? 'rtl' : 'ltr' }}" data-wesal-locale="{{ $legalLocale }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -182,7 +189,7 @@
         @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
     </style>
 </head>
-<body>
+<body lang="{{ $legalLocale }}" dir="{{ $legalIsArabic ? 'rtl' : 'ltr' }}" class="{{ $legalIsArabic ? 'text-right website-locale-ar' : 'text-left website-locale-en' }}">
     <main class="legal-page">
         <div class="legal-shell">
             <div class="legal-topbar">
