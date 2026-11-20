@@ -13,6 +13,17 @@
         'سياسة الخصوصية' => 'Privacy Policy',
         'شروط الاستخدام العامة' => 'General Terms of Use',
     ];
+    $footerText = function ($value) use ($isEnglish, $footerLabelMap) {
+        if (!$isEnglish) {
+            return $value;
+        }
+
+        $translated = $footerLabelMap[$value] ?? translate($value, 'en');
+
+        return preg_match('/[\\x{0600}-\\x{06FF}]/u', (string) $translated)
+            ? 'More'
+            : $translated;
+    };
 @endphp
 
 <style>
@@ -87,7 +98,7 @@
         border: 2px solid #fff !important;
         border-radius: 50%;
         top: -3px !important;
-        right: 0px !important;
+        inset-inline-end: 0px !important;
         box-shadow: 0 2px 5px rgba(239, 68, 68, 0.4);
     }
 
@@ -147,11 +158,11 @@
         <div class="row justify-content-center">
             @if ( !empty(get_setting('widget_one_labels')) )
             <div class="col-md-3 mb-4 text-center">
-                <h4 class="footer-widget-title">{{ $isEnglish ? ($footerLabelMap[get_setting('widget_one_title')] ?? get_setting('widget_one_title')) : get_setting('widget_one_title') }}</h4>
+                <h4 class="footer-widget-title">{{ $footerText(get_setting('widget_one_title')) }}</h4>
                 <ul class="list-unstyled">
                     @foreach (json_decode( get_setting('widget_one_labels'), true) as $key => $value)
                         <li class="mb-3">
-                            <a href="{{ json_decode( get_setting('widget_one_links'), true)[$key] }}" class="text-white opacity-60 transition-03">{{ $isEnglish ? ($footerLabelMap[$value] ?? $value) : $value }}</a>
+                            <a href="{{ json_decode( get_setting('widget_one_links'), true)[$key] }}" class="text-white opacity-60 transition-03">{{ $footerText($value) }}</a>
                         </li>
                     @endforeach
                 </ul>
@@ -160,7 +171,7 @@
 
             @if ( !empty(get_setting('widget_two_labels')) )
             <div class="col-md-3 mb-4 text-center">
-                <h4 class="footer-widget-title">{{ $isEnglish ? ($footerLabelMap[get_setting('widget_two_title')] ?? get_setting('widget_two_title')) : get_setting('widget_two_title') }}</h4>
+                <h4 class="footer-widget-title">{{ $footerText(get_setting('widget_two_title')) }}</h4>
                 <ul class="list-unstyled">
                     @foreach (json_decode( get_setting('widget_two_labels'), true) as $key => $value)
                         <li class="my-3">
@@ -173,7 +184,7 @@
 
             @if ( !empty(get_setting('widget_three_labels')) )
             <div class="col-md-3 mb-4 text-center">
-                <h4 class="footer-widget-title">{{ $isEnglish ? ($footerLabelMap[get_setting('widget_three_title')] ?? get_setting('widget_three_title')) : get_setting('widget_three_title') }}</h4>
+                <h4 class="footer-widget-title">{{ $footerText(get_setting('widget_three_title')) }}</h4>
                 <ul class="list-unstyled">
                     @foreach (json_decode( get_setting('widget_three_labels'), true) as $key => $value)
                         <li class="mb-3">
