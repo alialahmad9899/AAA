@@ -230,7 +230,7 @@ class BilingualWebsiteContractTest extends TestCase
             $this->assertStringContainsString($expected, $contact);
         }
         $this->assertStringContainsString('dir="{{ $isEnglish ? \'ltr\' : \'rtl\' }}"', $contact);
-        $this->assertStringContainsString("$this->query('wesal_locale')", $request);
+        $this->assertStringContainsString('$this->query(\'wesal_locale\')', $request);
         $this->assertStringContainsString('Please enter a valid email address.', $request);
         $this->assertStringContainsString('يرجى إدخال بريد إلكتروني صحيح.', $request);
     }
