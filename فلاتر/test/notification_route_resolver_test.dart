@@ -44,5 +44,51 @@ void main() {
     test('rejects unknown external routes', () {
       expect(resolveNotificationDestination({'type':'admin_notice','route':'https://example.com/account/123'}),isNull);
     });
+
+    test('normalizes FCM and local notification taps to the same chat destination', () {
+      final fcmDestination = resolveNotificationDestination({
+        'type': 'chat_message',
+        'thread_id': '51',
+        'message_id': 'message-1',
+      });
+      final localDestination = resolveNotificationDestination({
+        'route': 'wesal://chat/51',
+        'notification_id': 'notification-1',
+      });
+      final fcmKey = notificationDestinationKey(fcmDestination);
+      final localKey = notificationDestinationKey(localDestination);
+      final active = <String>{};
+
+      expect(fcmKey, 'chat:51');
+      expect(localKey, fcmKey);
+      expect(
+        claimNotificationDestination(fcmKey, activeDestinations: active),
+        isTrue,
+      );
+      expect(
+        claimNotificationDestination(localKey, activeDestinations: active),
+        isFalse,
+      );
+
+      releaseNotificationDestination(fcmKey, activeDestinations: active);
+      expect(
+        claimNotificationDestination(localKey, activeDestinations: active),
+        isTrue,
+      );
+    });
+
+    test('allows different chat threads to open independently', () {
+      final first = notificationDestinationKey(
+        resolveNotificationDestination({'type': 'chat_message', 'thread_id': '51'}),
+      );
+      final second = notificationDestinationKey(
+        resolveNotificationDestination({'type': 'chat_message', 'thread_id': '52'}),
+      );
+      final active = <String>{};
+
+      expect(first, isNot(second));
+      expect(claimNotificationDestination(first, activeDestinations: active), isTrue);
+      expect(claimNotificationDestination(second, activeDestinations: active), isTrue);
+    });
   });
 }
