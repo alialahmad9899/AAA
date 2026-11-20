@@ -238,6 +238,9 @@
     }
     @media (max-width: 560px) {
         .ws-container { width: calc(100% - 30px); }
+        .ws-mobile-header-controls { gap: 6px; }
+        .ws-mobile-header-controls .wesal-language-switcher button { padding: 4px 6px; font-size: 9px; min-height: 29px; }
+        .ws-mobile-toggle { width: 40px; height: 40px; font-size: 21px; }
         .ws-wordmark { font-size: 24px; }
         .ws-hero h1 { font-size: clamp(34px,10vw,45px); letter-spacing: -1px; }
         .ws-hero-copy { font-size: 14px; line-height: 1.95; }
@@ -267,6 +270,12 @@
         .ws-store-buttons { display: grid; grid-template-columns: 1fr; }
         .ws-store-button { width: 100%; }
         .ws-footer-links { gap: 12px; }
+    }
+    @media (max-width: 380px) {
+        .ws-header-inner { gap: 8px; }
+        .ws-wordmark span { display: none; }
+        .ws-mobile-header-controls { gap: 4px; }
+        .ws-mobile-header-controls .wesal-language-switcher button { padding-inline: 5px; }
     }
     @media (max-width: 350px) {
         .ws-container { width: calc(100% - 24px); }
