@@ -204,7 +204,15 @@ class LanguageController extends Controller
             $query = null;
         }
 
-        $redirectTo = $path . (is_string($query) && $query !== '' ? '?' . $query : '');
+        // Carry the selected locale into the first destination request.
+        // The middleware consumes this one-time hint before consulting any
+        // previously stored cookie/session value, then persists the choice.
+        $queryParameters = [];
+        if (is_string($query) && $query !== '') {
+            parse_str($query, $queryParameters);
+        }
+        $queryParameters['wesal_locale'] = $locale;
+        $redirectTo = $path . '?' . http_build_query($queryParameters);
 
         $languageCookie = cookie(
             'wesal_website_locale',
