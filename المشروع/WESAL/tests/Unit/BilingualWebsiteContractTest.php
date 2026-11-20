@@ -44,16 +44,23 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString("request()->getRequestUri()", $switcher);
     }
 
-    public function test_browser_locale_middleware_is_applied_to_every_public_web_request(): void
+    public function test_browser_locale_middleware_runs_after_session_start_for_web_requests(): void
     {
         $kernel = $this->source('app/Http/Kernel.php');
         $routes = $this->source('routes/web.php');
 
-        $sessionPosition = strpos($kernel, 'StartSession::class,');
-        $localePosition = strpos($kernel, 'SetWebsiteLocale::class,');
-        $this->assertNotFalse($sessionPosition);
-        $this->assertNotFalse($localePosition);
-        $this->assertLessThan($localePosition, $sessionPosition);
+        $webGroupStart = strpos($kernel, "'web' => [");
+        $apiGroupStart = strpos($kernel, "'api' => [", $webGroupStart === false ? 0 : $webGroupStart);
+        $this->assertNotFalse($webGroupStart, 'The Laravel web middleware group must exist.');
+        $this->assertNotFalse($apiGroupStart, 'The Laravel API middleware group must follow the web group.');
+
+        $webGroup = substr($kernel, $webGroupStart, $apiGroupStart - $webGroupStart);
+        $sessionPosition = strpos($webGroup, '\\Illuminate\\Session\\Middleware\\StartSession::class,');
+        $localePosition = strpos($webGroup, '\\App\\Http\\Middleware\\SetWebsiteLocale::class,');
+
+        $this->assertNotFalse($sessionPosition, 'The web group must start the session.');
+        $this->assertNotFalse($localePosition, 'The website locale middleware must be attached to the web group, not merely registered as an alias.');
+        $this->assertGreaterThan($sessionPosition, $localePosition, 'The locale middleware must run after the session starts.');
 
         $this->assertStringContainsString("Route::get('/', 'index')->name('home')", $routes);
         $this->assertStringContainsString("Route::get('/contact-us/page', 'show_contact_us_page')->name('contact_us')", $routes);
@@ -122,6 +129,9 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString('Eight years', $english);
         $this->assertStringContainsString('Ten years', $english);
         $this->assertStringContainsString('Six years', $english);
+        $this->assertStringContainsString('8 سنوات وفق § 147 AO و§ 257 HGB', $arabic);
+        $this->assertStringContainsString('10 سنوات وفق § 147 AO و§ 257 HGB', $arabic);
+        $this->assertStringContainsString('6 سنوات عندما تنطبق مدة الحفظ القانونية البالغة ست سنوات', $arabic);
         $this->assertStringContainsString('30 days', $english);
         $this->assertSame(4, substr_count($arabic, '<table class="legal-table">'));
         $this->assertSame(4, substr_count($english, '<table class="legal-table">'));
