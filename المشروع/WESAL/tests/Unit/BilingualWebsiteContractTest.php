@@ -182,6 +182,10 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString("choice === 'accepted'", $layout);
         $this->assertStringContainsString("choice === 'rejected'", $layout);
         $this->assertStringContainsString('wesalOpenCookiePreferences', $layout);
+        $this->assertStringContainsString('window.wesalDisableOptionalTracking', $layout);
+        $this->assertStringContainsString("window.fbq('consent', 'revoke')", $layout);
+        $this->assertStringContainsString("analytics_storage: 'denied'", $layout);
+        $this->assertStringContainsString("ad_storage: (wesalMetaPixelEnabled && wesalMetaPixelId) ? 'granted' : 'denied'", $layout);
         $this->assertStringContainsString('Accept optional', $banner);
         $this->assertStringContainsString('Reject optional', $banner);
         $this->assertStringContainsString('Google Analytics', $privacyEnglish);
