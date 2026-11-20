@@ -19,6 +19,12 @@ class SetWebsiteLocale
      */
     public function handle(Request $request, Closure $next)
     {
+        // The admin panel and installer/update flows keep their own language
+        // behaviour. The public website uses only Arabic and English.
+        if ($request->is('admin', 'admin/*', 'install', 'install/*', 'update', 'update/*')) {
+            return $next($request);
+        }
+
         $locale = strtolower((string) $request->session()->get('locale', ''));
 
         if (!in_array($locale, ['ar', 'en'], true)) {
