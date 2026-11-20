@@ -424,8 +424,8 @@ class BilingualWebsiteContractTest extends TestCase
 
         $request = $this->source('app/Http/Requests/ContactUsRequest.php');
         $controller = $this->source('app/Http/Controllers/ContactUsController.php');
-        $this->assertStringContainsString("$this->query('wesal_locale')", $request);
-        $this->assertStringContainsString("$request->query('wesal_locale')", $controller);
+        $this->assertStringContainsString('$this->query(\'wesal_locale\')', $request);
+        $this->assertStringContainsString('$request->query(\'wesal_locale\')', $controller);
         $this->assertStringContainsString('Your message has been sent successfully.', $controller);
     }
 
