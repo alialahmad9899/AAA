@@ -24,6 +24,9 @@ class ChatResource extends JsonResource
             'wesal:last-seen:' . $partnerUser->id
         );
         if (empty($partnerLastSeenValue)) {
+            $partnerLastSeenValue = $partnerUser->getAttribute('last_seen_at');
+        }
+        if (empty($partnerLastSeenValue)) {
             $partnerLastSeenValue = $partnerUser->getAttribute('last_seen');
         }
         $partnerLastSeenAt = !empty($partnerLastSeenValue)
