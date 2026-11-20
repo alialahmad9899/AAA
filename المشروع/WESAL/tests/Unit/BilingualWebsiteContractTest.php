@@ -20,12 +20,40 @@ class BilingualWebsiteContractTest extends TestCase
 
         $this->assertStringContainsString("getPreferredLanguage(['ar', 'en'])", $middleware);
         $this->assertStringContainsString("['ar', 'en']", $middleware);
+        $this->assertStringContainsString("session()->get('website_locale'", $middleware);
+        $this->assertStringContainsString("cookie('wesal_website_locale'", $middleware);
         $this->assertStringContainsString("session()->get('locale'", $middleware);
-        $this->assertStringContainsString('session()->put(\'locale\', $locale)', $middleware);
+        $this->assertStringContainsString("session()->put('website_locale', $locale)", $middleware);
+        $this->assertStringContainsString("session()->put('locale', $locale)", $middleware);
         $this->assertStringContainsString('App::setLocale($locale)', $middleware);
         $this->assertStringContainsString("Content-Language", $middleware);
         $this->assertStringContainsString("admin/*", $middleware);
         $this->assertStringContainsString("update/*", $middleware);
+    }
+
+    public function test_manual_language_selection_is_saved_in_a_dedicated_cookie_and_session(): void
+    {
+        $controller = $this->source('app/Http/Controllers/LanguageController.php');
+        $middleware = $this->source('app/Http/Middleware/SetWebsiteLocale.php');
+
+        $this->assertStringContainsString("session()->put('website_locale', $locale)", $controller);
+        $this->assertStringContainsString('session()->save()', $controller);
+        $this->assertStringContainsString("cookie(\\n            'wesal_website_locale'", $controller);
+        $this->assertStringContainsString("cookie('wesal_website_locale'", $middleware);
+        $this->assertStringContainsString("'private, no-cache, must-revalidate'", $middleware);
+        $this->assertStringContainsString("'Vary', 'Cookie'", $middleware);
+    }
+
+    public function test_homepage_uses_the_transparent_wesal_logo_at_top_and_bottom(): void
+    {
+        $home = $this->source('resources/views/frontend/index.blade.php');
+        $logoAsset = dirname(__DIR__, 2) . '/public/assets/img/wesal-legal-logo.png';
+
+        $this->assertFileExists($logoAsset, 'The transparent Wesal logo asset must be present.');
+        $this->assertSame(2, substr_count($home, "static_asset('assets/img/wesal-legal-logo.png')"));
+        $this->assertStringNotContainsString('ws-wordmark', $home);
+        $this->assertStringContainsString('ws-home-logo-link', $home);
+        $this->assertStringContainsString('ws-footer-brand', $home);
     }
 
     public function test_language_switcher_accepts_only_arabic_and_english_and_returns_locally(): void
@@ -101,6 +129,8 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString("'وصال | منصة زواج جاد للعرب والسوريين حول العالم'", $home);
         $this->assertStringContainsString("'Wesal | A serious marriage platform for Arabs and Syrians worldwide'", $home);
         $this->assertStringContainsString("'Wesal. All rights reserved.'", $home);
+        $this->assertStringContainsString('Choose the store that suits your device', $home);
+        $this->assertStringNotContainsString('اختر المتجر المناسب لجهازك، و{{ $isEnglish', $home);
     }
 
     public function test_privacy_policy_is_complete_in_both_languages_and_has_no_editorial_placeholders(): void
