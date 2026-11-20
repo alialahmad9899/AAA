@@ -18,8 +18,8 @@ class LegalDocumentPagesContractTest extends TestCase
     {
         $routes = $this->source('routes/web.php');
 
-        $privacyRoute = "Route::view('/privacy-policy', 'frontend.legal.privacy_policy')->middleware('website_locale')->name('legal.privacy-policy')";
-        $termsRoute = "Route::view('/terms-conditions', 'frontend.legal.terms_conditions')->middleware('website_locale')->name('legal.terms-conditions')";
+        $privacyRoute = "Route::view('/privacy-policy', 'frontend.legal.privacy_policy')->name('legal.privacy-policy')";
+        $termsRoute = "Route::view('/terms-conditions', 'frontend.legal.terms_conditions')->name('legal.terms-conditions')";
         $legacyRedirect = "Route::redirect('/privacy', '/privacy-policy', 301)->name('legal.privacy-legacy')";
         $catchAll = "Route::get('/{slug}', 'PageController@show_custom_page')->name('custom-pages.show_custom_page')";
 
