@@ -1,7 +1,8 @@
 @extends('frontend.layouts.app')
 
 @php
-    $isEnglish = app()->getLocale() === 'en';
+    $websiteLocale = strtolower((string) ($websiteLocale ?? request()->attributes->get('wesal_website_locale', app()->getLocale())));
+    $isEnglish = $websiteLocale === 'en';
 @endphp
 
 @section('meta_title')

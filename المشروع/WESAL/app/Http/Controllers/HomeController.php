@@ -51,6 +51,17 @@ class HomeController extends Controller
      */
     public function index()
     {
+        // Keep the requested public-site language stable through view rendering.
+        // Do not let a legacy translation/session helper change homepage branches.
+        $websiteLocale = strtolower((string) request()->attributes->get(
+            'wesal_website_locale',
+            request()->query('wesal_locale', session('website_locale', app()->getLocale()))
+        ));
+        if (!in_array($websiteLocale, ['ar', 'en'], true)) {
+            $websiteLocale = 'ar';
+        }
+        app()->setLocale($websiteLocale);
+
         // واجهة الموقع العامة تعرض الجنسين لكل الزوار، ولا تطبق فلاتر العضو المسجل.
         // الصور نفسها تبقى خاضعة لدالة show_profile_picture وإعدادات الخصوصية الحالية.
         $publicMembers = User::query()
@@ -121,7 +132,8 @@ class HomeController extends Controller
             'maleMembers',
             'playStoreUrl',
             'appStoreUrl',
-            'appDownloadUrl'
+            'appDownloadUrl',
+            'websiteLocale'
         ));
     }
 

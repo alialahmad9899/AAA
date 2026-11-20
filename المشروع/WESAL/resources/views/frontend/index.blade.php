@@ -1,7 +1,8 @@
 @extends('frontend.layouts.app')
 
 @php
-    $isEnglish = app()->getLocale() === 'en';
+    $websiteLocale = strtolower((string) ($websiteLocale ?? request()->attributes->get('wesal_website_locale', app()->getLocale())));
+    $isEnglish = $websiteLocale === 'en';
 @endphp
 
 @section('meta_title')
@@ -16,7 +17,7 @@
     $hasAndroidLink = !empty($playStoreUrl);
     $hasIosLink = !empty($appStoreUrl);
     $hasAnyAppLink = !empty($appDownloadUrl);
-    $isEnglish = app()->getLocale() === 'en';
+    $isEnglish = $websiteLocale === 'en';
 @endphp
 
 <style>
@@ -288,6 +289,85 @@
         html { scroll-behavior: auto; }
         *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
     }
+
+    /* Arabic landing-page layout: explicit RTL rules for every textual region. */
+    .ws-landing-ar {
+        direction: rtl !important;
+        text-align: right;
+    }
+    .ws-landing-ar .ws-header-inner,
+    .ws-landing-ar .ws-nav,
+    .ws-landing-ar .ws-mobile-menu,
+    .ws-landing-ar .ws-hero-grid,
+    .ws-landing-ar .ws-proof-grid,
+    .ws-landing-ar .ws-benefits-grid,
+    .ws-landing-ar .ws-members-head,
+    .ws-landing-ar .ws-members-grid,
+    .ws-landing-ar .ws-steps-grid,
+    .ws-landing-ar .ws-download-inner,
+    .ws-landing-ar .ws-footer-inner,
+    .ws-landing-ar .ws-footer-links {
+        direction: rtl;
+    }
+    .ws-landing-ar .ws-hero-content,
+    .ws-landing-ar .ws-eyebrow,
+    .ws-landing-ar .ws-hero-copy,
+    .ws-landing-ar .ws-section-heading,
+    .ws-landing-ar .ws-benefit,
+    .ws-landing-ar .ws-members-head > div,
+    .ws-landing-ar .ws-member-card,
+    .ws-landing-ar .ws-member-details,
+    .ws-landing-ar .ws-member-subtitle,
+    .ws-landing-ar .ws-package-name,
+    .ws-landing-ar .ws-step,
+    .ws-landing-ar .ws-download-inner > div:first-child,
+    .ws-landing-ar .ws-footer-copy,
+    .ws-landing-ar .ws-footer-links {
+        direction: rtl;
+        text-align: right;
+    }
+    .ws-landing-ar .ws-nav { justify-content: flex-start; }
+    .ws-landing-ar .ws-hero-actions { direction: rtl; justify-content: flex-start; }
+    .ws-landing-ar .ws-proof-item { direction: rtl; justify-content: flex-start; text-align: right; }
+    .ws-landing-ar .ws-members-head { flex-direction: row; }
+    .ws-landing-ar .ws-member-card { text-align: right; }
+    .ws-landing-ar .ws-member-name {
+        text-align: right;
+        unicode-bidi: plaintext;
+        overflow-wrap: anywhere;
+    }
+    .ws-landing-ar .ws-member-subtitle,
+    .ws-landing-ar .ws-package-name span {
+        text-align: right;
+        unicode-bidi: plaintext;
+    }
+    .ws-landing-ar .ws-benefit h3,
+    .ws-landing-ar .ws-benefit p,
+    .ws-landing-ar .ws-step h3,
+    .ws-landing-ar .ws-step p,
+    .ws-landing-ar .ws-download h2,
+    .ws-landing-ar .ws-download p {
+        direction: rtl;
+        text-align: right;
+    }
+    .ws-landing-ar .ws-phone-top,
+    .ws-landing-ar .ws-phone-profile,
+    .ws-landing-ar .ws-float-card {
+        direction: rtl;
+    }
+    .ws-landing-ar .ws-store-buttons,
+    .ws-landing-ar .wesal-language-switcher {
+        direction: ltr;
+    }
+    @media (max-width: 820px) {
+        .ws-landing-ar .ws-hero-grid { direction: rtl; }
+        .ws-landing-ar .ws-members-head { display: block; }
+        .ws-landing-ar .ws-members-count { margin-inline-start: 0; margin-inline-end: 0; }
+        .ws-landing-ar .ws-benefit { direction: rtl; text-align: right; }
+        .ws-landing-ar .ws-benefit-icon { grid-column: 1; }
+        .ws-landing-ar .ws-footer-inner { align-items: flex-start; }
+    }
+
 </style>
 
 <div class="ws-landing {{ $isEnglish ? 'ws-landing-en' : 'ws-landing-ar' }}" id="top" dir="{{ $isEnglish ? 'ltr' : 'rtl' }}">

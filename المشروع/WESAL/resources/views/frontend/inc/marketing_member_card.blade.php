@@ -8,7 +8,8 @@
     $photoUrl = $canShowPhoto ? uploaded_asset($profile->photo) : static_asset($avatarPath);
     $displayName = trim((string) ($profile->first_name ?? ''));
     $activePackageName = trim((string) (optional(optional($profile->member)->package)->name ?? ''));
-    $isEnglish = app()->getLocale() === 'en';
+    $websiteLocale = strtolower((string) ($websiteLocale ?? request()->attributes->get('wesal_website_locale', app()->getLocale())));
+    $isEnglish = $websiteLocale === 'en';
     $packageNameMap = [
         'أسبوعي' => 'Weekly',
         'اسبوعي' => 'Weekly',
@@ -50,7 +51,7 @@
         <span class="ws-member-photo-shade" aria-hidden="true"></span>
     </div>
     <div class="ws-member-details">
-        <h3 class="ws-member-name">{{ $displayName }}</h3>
+        <h3 class="ws-member-name" dir="auto">{{ $displayName }}</h3>
         @if (!empty($featured))
             <div class="ws-package-name" title="{{ $displayPackageName ?: ($isEnglish ? 'Featured member' : 'عضو مميز') }}">
                 <i class="las la-gem" aria-hidden="true"></i>
