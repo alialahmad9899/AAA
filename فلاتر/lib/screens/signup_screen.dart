@@ -342,8 +342,8 @@ class _SignupScreenState extends State<SignupScreen> {
       if (!_agreedToTerms) {
         _showNotification(
           isAr
-              ? 'يجب الموافقة على الشروط والأحكام'
-              : 'Terms agreement is required',
+              ? 'يجب الموافقة على سياسة الخصوصية وشروط الاستخدام'
+              : 'You must accept the Privacy Policy and Terms of Use',
           NotificationType.warning,
         );
         return;
