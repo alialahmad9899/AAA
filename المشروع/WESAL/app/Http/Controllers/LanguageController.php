@@ -187,7 +187,10 @@ class LanguageController extends Controller
         ]);
 
         $locale = $validated['locale'];
+        $request->session()->put('website_locale', $locale);
         $request->session()->put('locale', $locale);
+        // Save immediately so the following redirect request sees the choice.
+        $request->session()->save();
         App::setLocale($locale);
 
         // Only redirect to a local path. The switcher sends the current
@@ -203,7 +206,19 @@ class LanguageController extends Controller
 
         $redirectTo = $path . (is_string($query) && $query !== '' ? '?' . $query : '');
 
-        return redirect()->to($redirectTo);
+        $languageCookie = cookie(
+            'wesal_website_locale',
+            $locale,
+            60 * 24 * 365,
+            '/',
+            null,
+            $request->isSecure(),
+            true,
+            false,
+            'lax'
+        );
+
+        return redirect()->to($redirectTo)->withCookie($languageCookie);
     }
 
     /**
