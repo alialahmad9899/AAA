@@ -21,7 +21,7 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString("getPreferredLanguage(['ar', 'en'])", $middleware);
         $this->assertStringContainsString("['ar', 'en']", $middleware);
         $this->assertStringContainsString("session()->get('locale'", $middleware);
-        $this->assertStringContainsString("session()->put('locale', $locale)", $middleware);
+        $this->assertStringContainsString('session()->put(\'locale\', $locale)', $middleware);
         $this->assertStringContainsString('App::setLocale($locale)', $middleware);
         $this->assertStringContainsString("Content-Language", $middleware);
         $this->assertStringContainsString("admin/*", $middleware);
@@ -36,7 +36,7 @@ class BilingualWebsiteContractTest extends TestCase
 
         $this->assertStringContainsString("Rule::in(['ar', 'en'])", $controller);
         $this->assertStringContainsString("'redirect_to' => ['nullable', 'string', 'max:2048']", $controller);
-        $this->assertStringContainsString("strpos($path, '//') === 0", $controller);
+        $this->assertStringContainsString('strpos($path, \'//\') === 0', $controller);
         $this->assertStringContainsString("Route::post('/language'", $routes);
         $this->assertStringContainsString("middleware('throttle:30,1')", $routes);
         $this->assertStringContainsString("value=\"ar\"", $switcher);
@@ -125,7 +125,7 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString('Model withdrawal form', $english);
         $this->assertStringContainsString('wesalsyrien@gmail.com', $arabic);
         $this->assertStringContainsString('wesalsyrien@gmail.com', $english);
-        $this->assertStringNotContainsString('https://www.wesalsyria.com/privacy</a>', $arabic);
+        $this->assertStringNotContainsString('href="https://www.wesalsyria.com/privacy"', $arabic);
         $this->assertStringContainsString('privacy-policy', $arabic);
         $this->assertStringContainsString('privacy-policy', $english);
         $this->assertSame(2, substr_count($arabic, '<table class="legal-table">'));
@@ -176,10 +176,10 @@ class BilingualWebsiteContractTest extends TestCase
         $privacy = $this->source('resources/views/frontend/legal/en/privacy_policy.blade.php');
 
         $this->assertStringContainsString("ChatThread::onlyTrashed()", $command);
-        $this->assertStringContainsString("where('deleted_at', '<=', $cutoff)", $command);
+        $this->assertStringContainsString('where(\'deleted_at\', \'<=\', $cutoff)', $command);
         $this->assertStringContainsString("withTrashed()->whereNotNull('users.deleted_at')", $command);
         $this->assertStringContainsString("chats()->withTrashed()->forceDelete()", $command);
-        $this->assertStringContainsString("$thread->forceDelete()", $command);
+        $this->assertStringContainsString('$thread->forceDelete()', $command);
         $this->assertStringContainsString("wesal:purge-deleted-chat-threads')->dailyAt('02:45')", $kernel);
         $this->assertStringContainsString('permanently removed by the scheduled cleanup after 30 days', $privacy);
     }
