@@ -53,13 +53,24 @@ class ContactUsRequest extends FormRequest
      */
     public function messages()
     {
+        if (app()->getLocale() === 'en') {
+            return [
+                'name.required' => 'Please enter your name.',
+                'email.required' => 'Please enter a valid email address.',
+                'email.email' => 'The email address format is invalid.',
+                'subject.required' => 'Please enter a subject for your message.',
+                'description.required' => 'Please describe your request.',
+                'g-recaptcha-response.required' => 'Please complete the security verification.',
+            ];
+        }
+
         return [
-            'name.required' => translate('Name is required'),
-            'email.required' => translate('Email is required'),
-            'email.email' => translate('Email field requires an email'),
-            'subject.required' => translate('Subject field is required'),
-            'description.required' => translate('Description is required'),
-            'g-recaptcha-response.required' => translate('Google reCAPTCHA is required'),
+            'name.required' => 'يرجى إدخال الاسم الكامل.',
+            'email.required' => 'يرجى إدخال بريد إلكتروني صحيح.',
+            'email.email' => 'صيغة البريد الإلكتروني غير صحيحة.',
+            'subject.required' => 'يرجى إدخال موضوع الرسالة.',
+            'description.required' => 'يرجى كتابة تفاصيل الرسالة.',
+            'g-recaptcha-response.required' => 'يرجى إكمال التحقق الأمني.',
         ];
     }
     
