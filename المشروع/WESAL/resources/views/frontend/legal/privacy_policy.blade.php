@@ -1,9 +1,21 @@
 @extends('frontend.layouts.legal')
 
-@section('document_title', 'سياسة الخصوصية – تطبيق وصال (Wesal)')
-@section('document_description', 'تعرّف على كيفية معالجة وصال لبياناتك الشخصية عند استخدام التطبيق والموقع والخدمات.')
+@php
+    $isEnglish = app()->getLocale() === 'en';
+@endphp
+
+@section('document_title')
+    {{ $isEnglish ? 'Privacy Policy – Wesal Application' : 'سياسة الخصوصية – تطبيق وصال (Wesal)' }}
+@endsection
+@section('document_description')
+    {{ $isEnglish ? 'Learn how Wesal processes your personal data when you use the application, website and services.' : 'تعرّف على كيفية معالجة وصال لبياناتك الشخصية عند استخدام التطبيق والموقع والخدمات.' }}
+@endsection
 
 @section('content')
+@if ($isEnglish)
+    @include('frontend.legal.en.privacy_policy')
+@else
+
 <p class="document-label">نص السياسة</p>
 <p class="document-lead">توضح هذه السياسة كيف نعالج بياناتك الشخصية عند استخدام تطبيق وصال وموقعه الإلكتروني وخدماته، وذلك وفق اللائحة العامة لحماية البيانات (DSGVO) والقانون الاتحادي الألماني لحماية البيانات (BDSG) وقانون حماية البيانات في الاتصالات والخدمات الرقمية (TDDDG). وصال منصة رقمية لوساطة الزواج لمن يبحثون عن زواج جاد، وهي لمن بلغوا 18 عاماً أو أكثر فقط.</p>
 <p>هذه السياسة تعطيك المعلومات التي يفرضها القانون. قراءتها لا تعني موافقتك على النشر أو على معالجة البيانات الحساسة. عندما نحتاج موافقتك نطلبها بشكل منفصل وواضح، بمربع غير معلَّم مسبقاً.</p>
@@ -141,8 +153,7 @@
                 <tr><td data-label="الجهة">بريد النطاق wesalsyria.com</td><td data-label="الغرض">رسائل الحساب والتأكيد</td><td data-label="المكان">ألمانيا</td></tr>
                 <tr><td data-label="الجهة">Firebase Cloud Messaging (Google)</td><td data-label="الغرض">إرسال الإشعارات</td><td data-label="المكان">الاتحاد الأوروبي، مع نقل محتمل إلى الولايات المتحدة (البند 15)</td></tr>
                 <tr><td data-label="الجهة">Stripe</td><td data-label="الغرض">تنفيذ الدفع</td><td data-label="المكان">أيرلندا، مع نقل محتمل إلى الولايات المتحدة (البند 15)</td></tr>
-                <tr><td data-label="الجهة">[مكتب المحاسبة أو المستشار الضريبي]</td><td data-label="الغرض">المحاسبة والضرائب</td><td data-label="المكان">ألمانيا</td></tr>
-                <tr><td data-label="الجهة">TikTok وFacebook</td><td data-label="الغرض">النشر بموافقتك فقط (البند 8)</td><td data-label="المكان">أيرلندا، مع نقل محتمل خارج الاتحاد الأوروبي (البند 15)</td></tr>
+                                <tr><td data-label="الجهة">TikTok وFacebook</td><td data-label="الغرض">النشر بموافقتك فقط (البند 8)</td><td data-label="المكان">أيرلندا، مع نقل محتمل خارج الاتحاد الأوروبي (البند 15)</td></tr>
                 <tr><td data-label="الجهة">المستخدمون الآخرون</td><td data-label="الغرض">مشاهدة ملفك حسب المعلومات التي أدخلتها أنت</td><td data-label="المكان">داخل وصال</td></tr>
             </tbody>
         </table>
@@ -163,13 +174,13 @@
             <thead><tr><th>البيانات</th><th>المدة</th></tr></thead>
             <tbody>
                 <tr><td data-label="البيانات">الحساب والملف والصور</td><td data-label="المدة">طوال وجود الحساب، ثم الحذف خلال 30 يوماً</td></tr>
-                <tr><td data-label="البيانات">الرسائل</td><td data-label="المدة">حتى حذف الحساب، ثم 30 يوماً. عند الحذف تُخفى رسائلك أيضاً عند الطرف الآخر [يؤكده المبرمج]</td></tr>
+                <tr><td data-label="البيانات">الرسائل</td><td data-label="المدة">تُخفى المحادثة عند حذف الحساب، ثم تُحذف الرسائل وسجل المحادثة نهائياً بعد 30 يوماً عبر مهمة تنظيف يومية مجدولة.</td></tr>
                 <tr><td data-label="البيانات">البلاغات وسجلات الأمان</td><td data-label="المدة">12 شهراً بعد إغلاق البلاغ، وأطول فقط عند نزاع قائم</td></tr>
                 <tr><td data-label="البيانات">وثيقة إثبات الهوية</td><td data-label="المدة">تُحذف بعد انتهاء التحقق</td></tr>
                 <tr><td data-label="البيانات">سجلات الخادم</td><td data-label="المدة">90 يوماً</td></tr>
                 <tr><td data-label="البيانات">مواد المقابلة والفيديو والمنشورات</td><td data-label="المدة">حتى 6 أشهر، أو حتى طلبك أو سحب موافقتك (عندها الحذف خلال 3 أيام)</td></tr>
                 <tr><td data-label="البيانات">سجل الموافقات</td><td data-label="المدة">3 سنوات بعد انتهائها، لإثباتها (مدة التقادم العامة، § 195 BGB)</td></tr>
-                <tr><td data-label="البيانات">الفواتير والمستندات المحاسبية</td><td data-label="المدة">8 سنوات، والدفاتر السنوية 10 سنوات (§ 147 AO، § 257 HGB) [يؤكده المحاسب]</td></tr>
+                <tr><td data-label="البيانات">الفواتير والمستندات المحاسبية</td><td data-label="المدة">8 سنوات للفواتير وسندات القيد وفق § 147 AO و§ 257 HGB</td></tr>
                 <tr><td data-label="البيانات">بيانات العقد والإلغاءات</td><td data-label="المدة">3 سنوات بعد نهاية العقد</td></tr>
             </tbody>
         </table>
@@ -178,7 +189,7 @@
 
 <section class="legal-section" id="privacy-17">
     <h2>17. حذف الحساب</h2>
-    <p>يمكنك حذف حسابك في أي وقت من [الإعدادات ← الحساب ← حذف الحساب] داخل التطبيق، أو عبر <a href="https://www.wesalsyria.com/delete-account" target="_blank" rel="noopener noreferrer">https://www.wesalsyria.com/delete-account</a>، أو بالبريد. بعد الحذف يختفي ملفك فوراً عن المستخدمين وتتوقف روابط النشر إليه. نحتفظ فقط بما يلزم قانوناً أو لإثبات حقوقنا، وللمدد المذكورة في البند 16. عند حذف الحساب تنتهي كل الباقات، ولا يُسحب أي مبلغ بعدها.</p>
+    <p>يمكنك حذف حسابك في أي وقت من خيار حذف الحساب ضمن إعدادات الحساب داخل التطبيق، أو عبر <a href="https://www.wesalsyria.com/delete-account" target="_blank" rel="noopener noreferrer">https://www.wesalsyria.com/delete-account</a>، أو بالبريد. بعد الحذف يختفي ملفك فوراً عن المستخدمين وتتوقف روابط النشر إليه. نحتفظ فقط بما يلزم قانوناً أو لإثبات حقوقنا، وللمدد المذكورة في البند 16. عند حذف الحساب تنتهي كل الباقات، ولا يُسحب أي مبلغ بعدها.</p>
 </section>
 
 <section class="legal-section" id="privacy-18">
@@ -229,4 +240,6 @@
     <p>البريد: <a href="mailto:wesalsyrien@gmail.com">wesalsyrien@gmail.com</a></p>
     <p>الموقع: <a href="https://www.wesalsyria.com" target="_blank" rel="noopener noreferrer">https://www.wesalsyria.com</a></p>
 </section>
+
+@endif
 @stop
