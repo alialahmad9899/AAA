@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import '../lib/models/app_announcement.dart';
+import 'package:wesal_app/models/app_announcement.dart';
 
 void main() {
   group('AppAnnouncement', () {
