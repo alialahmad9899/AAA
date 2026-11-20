@@ -1,7 +1,26 @@
 @extends('frontend.layouts.app')
 
 @php
-    $websiteLocale = strtolower((string) ($websiteLocale ?? request()->attributes->get('wesal_website_locale', app()->getLocale())));
+    // Resolve an explicit URL choice before inherited view data and saved state.
+    $localeCandidates = [
+        request()->query('wesal_locale'),
+        request()->cookie('wesal_website_locale'),
+        request()->session()->get('website_locale'),
+        request()->session()->get('locale'),
+        request()->attributes->get('wesal_website_locale'),
+        $websiteLocale ?? null,
+        app()->getLocale(),
+    ];
+    $websiteLocale = 'ar';
+    foreach ($localeCandidates as $localeCandidate) {
+        $localeCandidate = strtolower(trim((string) $localeCandidate));
+        if (in_array($localeCandidate, ['ar', 'en'], true)) {
+            $websiteLocale = $localeCandidate;
+            break;
+        }
+    }
+    request()->attributes->set('wesal_website_locale', $websiteLocale);
+    app()->setLocale($websiteLocale);
     $isEnglish = $websiteLocale === 'en';
 @endphp
 
@@ -194,7 +213,7 @@
                         </div>
                     @endif
 
-                    <form action="{{ route('contact-us.store') }}" method="post" id="contact-form">
+                    <form action="{{ route('contact-us.store', ['wesal_locale' => $websiteLocale]) }}" method="post" id="contact-form">
                         @csrf
                         <div class="row">
                             <div class="col-md-6 mb-4">

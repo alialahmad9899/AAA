@@ -1,11 +1,23 @@
 @php
-    $legalLocale = strtolower((string) ($websiteLocale ?? request()->attributes->get(
-        'wesal_website_locale',
-        request()->query('wesal_locale', session('website_locale', app()->getLocale()))
-    )));
-    if (!in_array($legalLocale, ['ar', 'en'], true)) {
-        $legalLocale = 'ar';
+    // Resolve an explicit URL choice before inherited view data and saved state.
+    $legalLocaleCandidates = [
+        request()->query('wesal_locale'),
+        request()->cookie('wesal_website_locale'),
+        request()->session()->get('website_locale'),
+        request()->session()->get('locale'),
+        request()->attributes->get('wesal_website_locale'),
+        $websiteLocale ?? null,
+        app()->getLocale(),
+    ];
+    $legalLocale = 'ar';
+    foreach ($legalLocaleCandidates as $localeCandidate) {
+        $localeCandidate = strtolower(trim((string) $localeCandidate));
+        if (in_array($localeCandidate, ['ar', 'en'], true)) {
+            $legalLocale = $localeCandidate;
+            break;
+        }
     }
+    request()->attributes->set('wesal_website_locale', $legalLocale);
     app()->setLocale($legalLocale);
     $legalIsArabic = $legalLocale === 'ar';
 @endphp
