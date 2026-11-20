@@ -1,3 +1,7 @@
+@php
+    $isEnglish = app()->getLocale() === 'en';
+@endphp
+
 <style>
     /* --- لمسات الفخامة الخاصة بالهيدر --- */
     .top-navbar-premium {
@@ -151,6 +155,27 @@
     .btn-mobile-explicit:active {
         transform: scale(0.96);
     }
+    .wesal-language-switcher {
+        display: inline-flex; align-items: center; gap: 3px; padding: 3px;
+        border: 1px solid rgba(15,76,92,.16); border-radius: 999px;
+        background: rgba(255,255,255,.96); direction: ltr; white-space: nowrap;
+        box-shadow: 0 3px 12px rgba(15,76,92,.06);
+    }
+    .wesal-language-switcher button {
+        min-height: 31px; padding: 5px 10px; border: 0; border-radius: 999px;
+        background: transparent; color: #0F4C5C; font-family: inherit;
+        font-size: 11px; line-height: 1.2; font-weight: 800; cursor: pointer;
+    }
+    .wesal-language-switcher button.is-active {
+        background: #0F4C5C; color: #fff;
+    }
+    .wesal-language-mobile {
+        display: flex; justify-content: flex-end; padding: 8px 0 2px;
+    }
+    @media (min-width: 992px) {
+        .wesal-language-mobile { display: none !important; }
+    }
+
 </style>
 
 <div class="@if(get_setting('header_stikcy') == 'on') position-fixed @else position-absolute @endif w-100 top-0 z-1020">
@@ -247,6 +272,9 @@
     </div>
     
     <header class="aiz-header shadow-sm glass-header border-0">
+        <div class="container wesal-language-mobile d-lg-none">
+            @include('frontend.inc.language_switcher')
+        </div>
         <div class="aiz-navbar position-relative py-2 py-lg-0">
             <div class="container">
                 <div class="d-flex justify-content-between align-items-center">
@@ -268,7 +296,7 @@
                             {{-- 🛑 الزر الجديد بدون اللون الزهري ومقاسات فخمة 🛑 --}}
                             <button class="btn btn-mobile-explicit rounded-pill" onclick="toggleMobileMenu()">
                                 <i class="las la-bars fs-18"></i>
-                                <span>القائمة السريعة</span>
+                                <span>{{ $isEnglish ? "Quick menu" : "القائمة السريعة" }}</span>
                                 <img src="{{ uploaded_asset(Auth::user()->photo) }}" class="rounded-circle ml-1 border" width="22" height="22" style="object-fit: cover; border-color: var(--primary) !important;" onerror="this.src='{{ static_asset('assets/img/avatar-place.png') }}'">
                             </button>
                         @else
@@ -302,6 +330,9 @@
                             </a>
                         </li>
                     </ul>
+                    <div class="d-none d-lg-flex align-items-center ml-3">
+                        @include('frontend.inc.language_switcher')
+                    </div>
                 </div>
             </div>
         </div>
@@ -340,41 +371,41 @@
             <button class="close-mobile-menu" onclick="toggleMobileMenu()"><i class="las la-times fs-20"></i></button>
             <img src="{{ uploaded_asset(Auth::user()->photo) }}" class="rounded-circle mb-3 border" width="80" height="80" style="object-fit: cover; border: 3px solid #D4AF37;" onerror="this.src='{{ static_asset('assets/img/avatar-place.png') }}'">
             <h6 class="mb-0 text-white fw-800">{{ Auth::user()->first_name }}</h6>
-            <p class="fs-12 opacity-70 mb-0 mt-1">عضو في وصال</p>
+            <p class="fs-12 opacity-70 mb-0 mt-1">{{ $isEnglish ? 'Wesal member' : 'عضو في وصال' }}</p>
         </div>
         
         <div class="pb-3">
-            <div class="mobile-nav-heading">قائمة التنقل بالموقع</div>
-            <a href="{{ route('home') }}" class="mobile-nav-item"><i class="las la-home mobile-nav-icon"></i> الرئيسية</a>
-            <a href="{{ route('member.listing') }}" class="mobile-nav-item"><i class="las la-users mobile-nav-icon"></i> الأعضاء النشطين</a>
-            <a href="{{ route('packages') }}" class="mobile-nav-item"><i class="las la-gem mobile-nav-icon"></i> الباقات المميزة</a>
-            <a href="{{ route('contact_us') }}" class="mobile-nav-item"><i class="las la-headset mobile-nav-icon"></i> تواصل معنا</a>
+            <div class="mobile-nav-heading">{{ $isEnglish ? "Website navigation" : "قائمة التنقل بالموقع" }}</div>
+            <a href="{{ route('home') }}" class="mobile-nav-item"><i class="las la-home mobile-nav-icon"></i> {{ $isEnglish ? "Home" : "الرئيسية" }}</a>
+            <a href="{{ route('member.listing') }}" class="mobile-nav-item"><i class="las la-users mobile-nav-icon"></i> {{ $isEnglish ? "Active members" : "الأعضاء النشطين" }}</a>
+            <a href="{{ route('packages') }}" class="mobile-nav-item"><i class="las la-gem mobile-nav-icon"></i> {{ $isEnglish ? "Premium plans" : "الباقات المميزة" }}</a>
+            <a href="{{ route('contact_us') }}" class="mobile-nav-item"><i class="las la-headset mobile-nav-icon"></i> {{ $isEnglish ? "Support" : "تواصل معنا" }}</a>
             
-            <div class="mobile-nav-heading mt-3">حسابي الشخصي</div>
-            <a href="{{ route('dashboard') }}" class="mobile-nav-item"><i class="las la-tachometer-alt mobile-nav-icon"></i> لوحة التحكم</a>
-            <a href="{{ route('profile_settings') }}" class="mobile-nav-item"><i class="las la-user-edit mobile-nav-icon"></i> تعديل ملفي الشخصي</a>
+            <div class="mobile-nav-heading mt-3">{{ $isEnglish ? "My account" : "حسابي الشخصي" }}</div>
+            <a href="{{ route('dashboard') }}" class="mobile-nav-item"><i class="las la-tachometer-alt mobile-nav-icon"></i> {{ $isEnglish ? "Dashboard" : "لوحة التحكم" }}</a>
+            <a href="{{ route('profile_settings') }}" class="mobile-nav-item"><i class="las la-user-edit mobile-nav-icon"></i> {{ $isEnglish ? "Edit my profile" : "تعديل ملفي الشخصي" }}</a>
             <a href="{{ route('frontend.notifications') }}" class="mobile-nav-item d-flex justify-content-between">
-                <div><i class="las la-bell mobile-nav-icon"></i> الإشعارات</div>
+                <div><i class="las la-bell mobile-nav-icon"></i> {{ $isEnglish ? "Notifications" : "الإشعارات" }}</div>
                 @if(isset($unseen_notification) && $unseen_notification > 0)
                     <span class="badge bg-danger rounded-pill">{{ $unseen_notification }}</span>
                 @endif
             </a>
-            <a href="{{ route('my_interests.index') }}" class="mobile-nav-item"><i class="las la-heart mobile-nav-icon"></i> الإعجابات الواردة</a>
+            <a href="{{ route('my_interests.index') }}" class="mobile-nav-item"><i class="las la-heart mobile-nav-icon"></i> {{ $isEnglish ? "Received interests" : "الإعجابات الواردة" }}</a>
             
-            <a href="{{ route('logout') }}" class="mobile-nav-item text-danger mt-3 border-top"><i class="las la-sign-out-alt mobile-nav-icon text-danger"></i> تسجيل الخروج</a>
+            <a href="{{ route('logout') }}" class="mobile-nav-item text-danger mt-3 border-top"><i class="las la-sign-out-alt mobile-nav-icon text-danger"></i> {{ $isEnglish ? "Log out" : "تسجيل الخروج" }}</a>
         </div>
     @else
         <div class="mobile-menu-header text-center pb-4">
             <button class="close-mobile-menu" onclick="toggleMobileMenu()"><i class="las la-times fs-20"></i></button>
             <i class="las la-heart text-white opacity-75" style="font-size: 60px;"></i>
-            <h6 class="mb-0 text-white mt-3 fw-800">أهلاً بك في وصال</h6>
+            <h6 class="mb-0 text-white mt-3 fw-800">{{ $isEnglish ? "Welcome to Wesal" : "أهلاً بك في وصال" }}</h6>
         </div>
         <div class="p-4">
-            <div class="mobile-nav-heading">قائمة التنقل بالموقع</div>
-            <a href="{{ route('home') }}" class="mobile-nav-item"><i class="las la-home mobile-nav-icon"></i> الرئيسية</a>
-            <a href="{{ route('member.listing') }}" class="mobile-nav-item"><i class="las la-users mobile-nav-icon"></i> الأعضاء النشطين</a>
-            <a href="{{ route('packages') }}" class="mobile-nav-item"><i class="las la-gem mobile-nav-icon"></i> الباقات المميزة</a>
-            <a href="{{ route('contact_us') }}" class="mobile-nav-item border-0"><i class="las la-headset mobile-nav-icon"></i> تواصل معنا</a>
+            <div class="mobile-nav-heading">{{ $isEnglish ? "Website navigation" : "قائمة التنقل بالموقع" }}</div>
+            <a href="{{ route('home') }}" class="mobile-nav-item"><i class="las la-home mobile-nav-icon"></i> {{ $isEnglish ? "Home" : "الرئيسية" }}</a>
+            <a href="{{ route('member.listing') }}" class="mobile-nav-item"><i class="las la-users mobile-nav-icon"></i> {{ $isEnglish ? "Active members" : "الأعضاء النشطين" }}</a>
+            <a href="{{ route('packages') }}" class="mobile-nav-item"><i class="las la-gem mobile-nav-icon"></i> {{ $isEnglish ? "Premium plans" : "الباقات المميزة" }}</a>
+            <a href="{{ route('contact_us') }}" class="mobile-nav-item border-0"><i class="las la-headset mobile-nav-icon"></i> {{ $isEnglish ? "Support" : "تواصل معنا" }}</a>
         </div>
     @endif
 </div>
