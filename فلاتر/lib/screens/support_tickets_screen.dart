@@ -53,7 +53,8 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.cardColor,
+      elevation: 0,
       builder: (context) => _CreateTicketModal(
         isArabic: _isAr,
         currentLanguage: widget.currentLanguage,
