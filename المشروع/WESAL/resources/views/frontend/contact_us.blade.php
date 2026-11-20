@@ -1,5 +1,16 @@
 @extends('frontend.layouts.app')
 
+@php
+    $isEnglish = app()->getLocale() === 'en';
+@endphp
+
+@section('meta_title')
+    {{ $isEnglish ? 'Wesal Support and Contact' : 'الدعم والتواصل | وصال' }}
+@endsection
+@section('meta_description')
+    {{ $isEnglish ? 'Contact the Wesal team for technical support, payment questions, reports and suggestions.' : 'تواصل مع فريق وصال للدعم الفني واستفسارات المدفوعات والبلاغات والاقتراحات.' }}
+@endsection
+
 @section('content')
 <style>
     #wesal-contact-page {
@@ -9,7 +20,7 @@
             radial-gradient(circle at 12% 10%, rgba(212, 175, 55, .10), transparent 28rem),
             linear-gradient(180deg, #ffffff 0%, var(--bg-body, #F8FAFC) 100%);
         color: var(--contact-ink);
-        font-family: 'Cairo', sans-serif;
+        font-family: {{ $isEnglish ? "'Inter', Arial, sans-serif" : "'Cairo', sans-serif" }};
         padding: 64px 0 76px;
         min-height: 70vh;
     }
@@ -51,7 +62,7 @@
         color: #fff; font-family: inherit; font-weight: 900; font-size: 15px;
         box-shadow: 0 10px 22px rgba(15,23,42,.16); transition: transform .2s ease, box-shadow .2s ease;
     }
-    #wesal-contact-page .contact-submit i { color: var(--contact-gold); margin-left: 8px; font-size: 18px; }
+    #wesal-contact-page .contact-submit i { color: var(--contact-gold); margin-inline-start: 8px; font-size: 18px; }
     #wesal-contact-page .contact-submit:hover { transform: translateY(-2px); box-shadow: 0 14px 28px rgba(15,23,42,.20); }
     #wesal-contact-page .contact-info-panel {
         position: relative; padding: clamp(24px, 3vw, 34px); color: #e2e8f0;
@@ -83,9 +94,9 @@
     #wesal-contact-page .contact-info-item h3 { color: #fff; font-size: 14px; font-weight: 900; margin: 1px 0 5px; }
     #wesal-contact-page .contact-info-item p { color: #cbd5e1; font-size: 12px; font-weight: 600; line-height: 1.85; margin: 0; }
     #wesal-contact-page .contact-privacy-note { margin-top: 24px; padding: 13px 14px; border-radius: 12px; background: rgba(255,255,255,.06); color: #cbd5e1; font-size: 12px; font-weight: 600; line-height: 1.85; }
-    #wesal-contact-page .contact-privacy-note i { color: var(--contact-gold); margin-left: 6px; }
+    #wesal-contact-page .contact-privacy-note i { color: var(--contact-gold); margin-inline-start: 6px; }
     #wesal-contact-page .contact-errors { border-radius: 13px; border: 1px solid #fecaca; background: #fff7f7; color: #991b1b; padding: 14px 18px; font-weight: 700; }
-    #wesal-contact-page .contact-errors ul { margin: 0; padding-right: 20px; }
+    #wesal-contact-page .contact-errors ul { margin: 0; padding-inline-start: 20px; }
     @media (max-width: 767.98px) {
         #wesal-contact-page { padding: 42px 0 52px; }
         #wesal-contact-page .contact-title { font-size: 29px; }
@@ -95,49 +106,49 @@
     }
 </style>
 
-<section id="wesal-contact-page" dir="rtl" aria-labelledby="wesal-contact-title">
+<section id="wesal-contact-page" dir="{{ $isEnglish ? 'ltr' : 'rtl' }}" aria-labelledby="wesal-contact-title">
     <div class="container contact-shell">
         <div class="text-center mb-5">
-            <span class="contact-eyebrow"><i class="las la-headset"></i> مركز المساعدة والتواصل</span>
-            <h1 id="wesal-contact-title" class="contact-title">نحن هنا <span>لمساعدتك</span></h1>
-            <p class="contact-lead">يسعد فريق وصال باستقبال استفساراتك وملاحظاتك. أرسل رسالتك عبر النموذج، واذكر التفاصيل التي تساعدنا على فهم طلبك والرد عليه.</p>
+            <span class="contact-eyebrow"><i class="las la-headset"></i> {{ $isEnglish ? "Help & Support" : "مركز المساعدة والتواصل" }}</span>
+            <h1 id="wesal-contact-title" class="contact-title">{{ $isEnglish ? "We are here" : "نحن هنا" }} <span>{{ $isEnglish ? "to help you" : "لمساعدتك" }}</span></h1>
+            <p class="contact-lead">{{ $isEnglish ? "The Wesal team is here to help with your questions and feedback. Send us a message using the form and include the details we need to understand and respond to your request." : "يسعد فريق وصال باستقبال استفساراتك وملاحظاتك. أرسل رسالتك عبر النموذج، واذكر التفاصيل التي تساعدنا على فهم طلبك والرد عليه." }}</p>
             <div class="contact-heading-line"></div>
         </div>
 
         <div class="row align-items-stretch">
             <div class="col-lg-4 mb-4 mb-lg-0 order-2 order-lg-1">
                 <aside class="contact-info-panel">
-                    <span class="contact-info-kicker">وصال — تواصل واضح وآمن</span>
-                    <h2 class="contact-info-title">كيف يمكننا<br>مساعدتك اليوم؟</h2>
-                    <p class="contact-info-copy">اختر موضوعاً واضحاً واكتب رسالتك بالتفصيل، حتى يتمكن الفريق المختص من مراجعتها ومتابعتها.</p>
+                    <span class="contact-info-kicker">{{ $isEnglish ? "Wesal — clear and secure support" : "وصال — تواصل واضح وآمن" }}</span>
+                    <h2 class="contact-info-title">{{ $isEnglish ? "How can we" : "كيف يمكننا" }}<br>{{ $isEnglish ? "help you today?" : "مساعدتك اليوم؟" }}</h2>
+                    <p class="contact-info-copy">{{ $isEnglish ? "Choose a clear subject and describe your request in detail so the appropriate team can review and follow up." : "اختر موضوعاً واضحاً واكتب رسالتك بالتفصيل، حتى يتمكن الفريق المختص من مراجعتها ومتابعتها." }}</p>
 
                     <div class="contact-policy-alert" role="note">
                         <i class="las la-exclamation-circle"></i>
-                        <span>هذه الصفحة مخصصة للدعم الفني والمدفوعات والشكاوى المتعلقة بإساءة الاستخدام. لا ترسل طلبات زواج أو تعارف هنا؛ فالإدارة لا تتدخل في الاختيارات الشخصية للأعضاء.</span>
+                        <span>{{ $isEnglish ? "This page is for technical support, payment questions and reports about misuse. Please do not send marriage or introduction requests here; Wesal does not interfere with members’ personal choices." : "هذه الصفحة مخصصة للدعم الفني والمدفوعات والشكاوى المتعلقة بإساءة الاستخدام. لا ترسل طلبات زواج أو تعارف هنا؛ فالإدارة لا تتدخل في الاختيارات الشخصية للأعضاء." }}</span>
                     </div>
 
                     <div class="contact-info-item">
                         <span class="contact-info-icon"><i class="las la-tools"></i></span>
-                        <div><h3>الدعم الفني</h3><p>أخبرنا عن أي مشكلة تقنية واجهتك أثناء استخدام الموقع أو التطبيق.</p></div>
+                        <div><h3>{{ $isEnglish ? "Technical support" : "الدعم الفني" }}</h3><p>{{ $isEnglish ? "Tell us about any technical issue you experienced while using the website or application." : "أخبرنا عن أي مشكلة تقنية واجهتك أثناء استخدام الموقع أو التطبيق." }}</p></div>
                     </div>
                     <div class="contact-info-item">
                         <span class="contact-info-icon"><i class="las la-credit-card"></i></span>
-                        <div><h3>الباقات والمدفوعات</h3><p>أرسل استفساراتك المتعلقة بالاشتراكات أو عمليات الدفع.</p></div>
+                        <div><h3>{{ $isEnglish ? "Plans and payments" : "الباقات والمدفوعات" }}</h3><p>{{ $isEnglish ? "Send us your questions about subscriptions or payments." : "أرسل استفساراتك المتعلقة بالاشتراكات أو عمليات الدفع." }}</p></div>
                     </div>
                     <div class="contact-info-item">
                         <span class="contact-info-icon"><i class="las la-lightbulb"></i></span>
-                        <div><h3>الملاحظات والاقتراحات</h3><p>شاركنا رأيك وأفكارك للمساهمة في تطوير تجربة وصال.</p></div>
+                        <div><h3>{{ $isEnglish ? "Feedback and suggestions" : "الملاحظات والاقتراحات" }}</h3><p>{{ $isEnglish ? "Share your thoughts and ideas to help us improve the Wesal experience." : "شاركنا رأيك وأفكارك للمساهمة في تطوير تجربة وصال." }}</p></div>
                     </div>
 
-                    <div class="contact-privacy-note"><i class="las la-shield-alt"></i> نستخدم البريد الإلكتروني الذي تدخله للرد على رسالتك ومتابعة استفسارك.</div>
+                    <div class="contact-privacy-note"><i class="las la-shield-alt"></i> {{ $isEnglish ? "We use the email address you provide to reply to your message and follow up on your request." : "نستخدم {{ $isEnglish ? "Email address" : "البريد الإلكتروني" }} الذي تدخله للرد على رسالتك ومتابعة استفسارك." }}</div>
                 </aside>
             </div>
 
             <div class="col-lg-8 order-1 order-lg-2">
                 <div class="contact-panel contact-form-panel">
                     <div class="mb-4">
-                        <h2 class="contact-panel-title">أرسل رسالتك إلى فريق وصال</h2>
-                        <p class="contact-panel-subtitle">جميع الحقول المعلّمة بنجمة مطلوبة لإرسال الرسالة.</p>
+                        <h2 class="contact-panel-title">{{ $isEnglish ? "Send a message to the Wesal team" : "أرسل رسالتك إلى فريق وصال" }}</h2>
+                        <p class="contact-panel-subtitle">{{ $isEnglish ? "All fields marked with an asterisk are required." : "جميع الحقول المعلّمة بنجمة مطلوبة ل{{ $isEnglish ? "Send message" : "إرسال الرسالة" }}." }}</p>
                     </div>
 
                     @if ($errors->any())
@@ -154,24 +165,24 @@
                         @csrf
                         <div class="row">
                             <div class="col-md-6 mb-4">
-                                <label class="contact-label" for="contact-name">الاسم الكامل <span class="contact-required">*</span></label>
-                                <input id="contact-name" type="text" class="contact-field" name="name" value="{{ old('name') }}" placeholder="اكتب اسمك الكامل" autocomplete="name" maxlength="255" required>
+                                <label class="contact-label" for="contact-name">{{ $isEnglish ? "Full name" : "الاسم الكامل" }} <span class="contact-required">*</span></label>
+                                <input id="contact-name" type="text" class="contact-field" name="name" value="{{ old('name') }}" placeholder="{{ $isEnglish ? "Enter your full name" : "اكتب اسمك الكامل" }}" autocomplete="name" maxlength="255" required>
                             </div>
                             <div class="col-md-6 mb-4">
-                                <label class="contact-label" for="contact-email">البريد الإلكتروني <span class="contact-required">*</span></label>
+                                <label class="contact-label" for="contact-email">{{ $isEnglish ? "Email address" : "البريد الإلكتروني" }} <span class="contact-required">*</span></label>
                                 <input id="contact-email" type="email" class="contact-field" name="email" value="{{ old('email') }}" placeholder="name@example.com" autocomplete="email" maxlength="255" required>
-                                <small class="contact-help">سيتم استخدامه للرد على رسالتك.</small>
+                                <small class="contact-help">{{ $isEnglish ? "We will use this address to reply to your message." : "سيتم استخدامه للرد على رسالتك." }}</small>
                             </div>
                         </div>
 
                         <div class="mb-4">
-                            <label class="contact-label" for="contact-subject">موضوع الرسالة <span class="contact-required">*</span></label>
-                            <input id="contact-subject" type="text" class="contact-field" name="subject" value="{{ old('subject') }}" placeholder="مثال: استفسار عن اشتراك أو مشكلة تقنية" maxlength="255" required>
+                            <label class="contact-label" for="contact-subject">{{ $isEnglish ? "Subject" : "موضوع الرسالة" }} <span class="contact-required">*</span></label>
+                            <input id="contact-subject" type="text" class="contact-field" name="subject" value="{{ old('subject') }}" placeholder="{{ $isEnglish ? "For example: a question about a plan or a technical issue" : "مثال: استفسار عن اشتراك أو مشكلة تقنية" }}" maxlength="255" required>
                         </div>
 
                         <div class="mb-4">
-                            <label class="contact-label" for="contact-description">تفاصيل الرسالة <span class="contact-required">*</span></label>
-                            <textarea id="contact-description" class="contact-field" rows="6" name="description" placeholder="اكتب تفاصيل استفسارك هنا..." required>{{ old('description') }}</textarea>
+                            <label class="contact-label" for="contact-description">{{ $isEnglish ? "Message details" : "تفاصيل الرسالة" }} <span class="contact-required">*</span></label>
+                            <textarea id="contact-description" class="contact-field" rows="6" name="description" placeholder="{{ $isEnglish ? "Describe your request here..." : "اكتب تفاصيل استفسارك هنا..." }}" required>{{ old('description') }}</textarea>
                         </div>
 
                         @if(get_setting('google_recaptcha_activation') == 1 && get_setting('recaptcha_contact_form') == 1)
@@ -180,7 +191,7 @@
                             @endif
                         @endif
 
-                        <button type="submit" class="contact-submit"><i class="las la-paper-plane"></i> إرسال الرسالة</button>
+                        <button type="submit" class="contact-submit"><i class="las la-paper-plane"></i> {{ $isEnglish ? "Send message" : "إرسال الرسالة" }}</button>
                     </form>
                 </div>
             </div>
