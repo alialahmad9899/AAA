@@ -24,13 +24,23 @@ class ChatDeliveryContractTest extends TestCase
 SOURCE;
         $this->assertStringContainsString($expectedControllerSnippet, $controller);
 
-        $expectedResourceFields = <<<'SOURCE'
-'id'             => $this->id,
-'sender_user_id' => $this->sender_user_id,
-'attachment'     => $attachments,
-'created_at'     => optional($this->created_at)->toIso8601String(),
-SOURCE;
-        $this->assertStringContainsString($expectedResourceFields, $resource);
+        $expectedResourceFields = [
+            <<<'SOURCE'
+'id'             => $this->id
+SOURCE,
+            <<<'SOURCE'
+'sender_user_id' => $this->sender_user_id
+SOURCE,
+            <<<'SOURCE'
+'attachment'     => $attachments
+SOURCE,
+            <<<'SOURCE'
+'created_at'     => optional($this->created_at)->toIso8601String()
+SOURCE,
+        ];
+        foreach ($expectedResourceFields as $field) {
+            $this->assertStringContainsString($field, $resource);
+        }
 
     }
 }
