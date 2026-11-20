@@ -147,10 +147,22 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         showDragHandle: true,
         dragHandleColor: AppColors.textLight,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          side: BorderSide(color: AppColors.lineColor),
+        ),
+        clipBehavior: Clip.antiAlias,
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: AppColors.cardColor,
         surfaceTintColor: Colors.transparent,
+        // Keep a small, even breathing space instead of Flutter's wide
+        // default gutters around every Dialog and AlertDialog.
+        insetPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
+        clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(22),
           side: const BorderSide(color: AppColors.lineColor),
