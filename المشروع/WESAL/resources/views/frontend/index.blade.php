@@ -76,7 +76,7 @@
     }
     .ws-mobile-header-controls .wesal-language-switcher button {
         min-height: 30px; padding: 4px 8px; border: 0; border-radius: 999px;
-        color: var(--ws-primary); background: transparent; font: 800 10px/1.2 inherit;
+        color: var(--ws-primary); background: transparent; font-family: inherit; font-size: 10px; line-height: 1.2; font-weight: 800;
     }
     .ws-mobile-header-controls .wesal-language-switcher button.is-active { color: #fff; background: var(--ws-primary); }
     .ws-mobile-toggle { display: none; border: 1px solid var(--ws-line); color: var(--ws-primary); background: white; border-radius: 13px; width: 44px; height: 44px; font-size: 23px; }
@@ -340,7 +340,7 @@
                     <span class="ws-hero-spark ws-spark-one">✦</span><span class="ws-hero-spark ws-spark-two">✧</span>
                     <div class="ws-phone">
                         <div class="ws-phone-notch"></div>
-                        <div class="ws-phone-top"><span>وصال</span><span class="ws-phone-status"><i></i><i></i><i></i></span></div>
+                        <div class="ws-phone-top"><span>{{ $isEnglish ? 'Wesal' : 'وصال' }}</span><span class="ws-phone-status"><i></i><i></i><i></i></span></div>
                         <div class="ws-phone-heading">{{ $isEnglish ? "Find a compatible life partner" : "ابحث عن شريك الحياة المناسب" }}</div>
                         <div class="ws-phone-caption">{{ $isEnglish ? "Compatibility, respect and privacy" : "توافق واحترام وخصوصية" }}</div>
                         <div class="ws-phone-profile"><div class="ws-phone-avatar"><i class="las la-user"></i></div><div class="ws-phone-lines"><b></b><span></span></div></div>
