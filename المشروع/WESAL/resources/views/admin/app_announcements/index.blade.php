@@ -92,23 +92,36 @@
                     <option value="age" {{ old('target_type', $announcement->target_type ?? 'all') === 'age' ? 'selected' : '' }}>حسب الفئة العمرية</option>
                 </select>
             </div>
-            <div class="row" id="announcement-age-range">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label class="font-weight-bold">العمر من</label>
-                        <input type="number" name="age_min" class="form-control" min="18" max="100"
-                            value="{{ old('age_min', $announcement->age_min ?? 18) }}">
+
+            <div id="announcement-age-range">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="font-weight-bold">العمر من</label>
+                            <input type="number" name="age_min" class="form-control" min="18" max="100"
+                                value="{{ old('age_min', $announcement->age_min ?? 18) }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="font-weight-bold">العمر إلى</label>
+                            <input type="number" name="age_max" class="form-control" min="18" max="100"
+                                value="{{ old('age_max', $announcement->age_max ?? 100) }}">
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label class="font-weight-bold">العمر إلى</label>
-                        <input type="number" name="age_max" class="form-control" min="18" max="100"
-                            value="{{ old('age_max', $announcement->age_max ?? 100) }}">
-                    </div>
+                <div class="form-group">
+                    <label class="font-weight-bold">الجنس ضمن الفئة العمرية</label>
+                    <select name="target_gender" class="form-control" required>
+                        <option value="all" {{ old('target_gender', $announcement->target_gender ?? 'all') === 'all' ? 'selected' : '' }}>الذكور والإناث</option>
+                        <option value="male" {{ old('target_gender', $announcement->target_gender ?? 'all') === 'male' ? 'selected' : '' }}>الذكور فقط</option>
+                        <option value="female" {{ old('target_gender', $announcement->target_gender ?? 'all') === 'female' ? 'selected' : '' }}>الإناث فقط</option>
+                    </select>
+                    <small class="text-muted">مثال: ذكور من عمر 25 إلى 40، أو إناث من عمر 30 إلى 45.</small>
                 </div>
             </div>
-            <small class="text-muted">عند اختيار العمر، تُحسب الفئة من تاريخ الميلاد المسجل في ملف العضو، والحدّان مشمولان.</small>
+
+            <small class="text-muted">تُحسب الأعمار من تاريخ الميلاد المسجل في ملف العضو، والحدّان مشمولان.</small>
         </div>
     </div>
 
