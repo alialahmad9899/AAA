@@ -168,6 +168,16 @@
             @endif
         </div>
 
+        {{-- روابط الوثائق القانونية الرسمية --}} 
+        <div class="row justify-content-center mb-4" dir="rtl">
+            <div class="col-12 text-center">
+                <div class="d-inline-flex flex-wrap justify-content-center align-items-center" style="gap: 12px 22px;">
+                    <a href="{{ route('legal.privacy-policy') }}" class="text-white opacity-80 fw-700">سياسة الخصوصية</a>
+                    <a href="{{ route('legal.terms-conditions') }}" class="text-white opacity-80 fw-700">شروط الاستخدام العامة</a>
+                </div>
+            </div>
+        </div>
+
         {{-- الجزء السفلي: الحقوق والسوشيال ميديا --}}
         <div class="footer-copyright">
             <div class="row align-items-center">
