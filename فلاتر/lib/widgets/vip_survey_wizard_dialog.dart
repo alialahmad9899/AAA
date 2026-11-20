@@ -336,8 +336,7 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           backgroundColor: AppColors.cardColor,
-          insetPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          insetPadding: const EdgeInsets.all(8),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             padding: EdgeInsets.only(
