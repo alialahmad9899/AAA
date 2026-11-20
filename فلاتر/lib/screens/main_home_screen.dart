@@ -10,9 +10,11 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../constants/colors.dart';
 
 import '../services/api_service.dart';
+import '../models/app_announcement.dart';
 import '../services/notification_service.dart';
 import 'notifications_screen.dart';
 import 'my_profile_viewers_screen.dart';
@@ -46,6 +48,7 @@ class _MainHomeScreenState extends State<MainHomeScreen>
   bool _isResolvingBlockedStatus = true;
   bool _isCheckingBlockedStatus = false;
   String _blockingReason = '';
+  bool _hasCheckedAppAnnouncement = false;
   Timer? _blockedStatusTimer;
   final Set<int> _loadedTabs = {0};
 
@@ -214,8 +217,191 @@ class _MainHomeScreenState extends State<MainHomeScreen>
       );
       if (!_isBlocked) {
         _fetchNotificationsCount();
+        unawaited(_loadAndShowAppAnnouncement());
       }
     });
+  }
+
+  Future<void> _loadAndShowAppAnnouncement() async {
+    if (_hasCheckedAppAnnouncement || !mounted || _isBlocked) return;
+    _hasCheckedAppAnnouncement = true;
+
+    try {
+      final payload = await ApiService.getMemberAppAnnouncement(
+        lang: _currentLanguage,
+      );
+      if (!mounted || _isBlocked || payload == null) return;
+
+      final announcement = AppAnnouncement.fromJson(payload);
+      if (!announcement.hasContent || _isModalActive) return;
+
+      final bool isArabic = _currentLanguage.toLowerCase().startsWith('ar');
+      _isModalActive = true;
+      try {
+        await showDialog<void>(
+          context: context,
+          barrierDismissible: true,
+          builder: (dialogContext) {
+            return Directionality(
+              textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+              child: Dialog(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(22),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardColor,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: AppColors.primaryTeal.withValues(alpha: 0.18),
+                      width: 1.2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.textDark.withValues(alpha: 0.12),
+                        blurRadius: 28,
+                        offset: const Offset(0, 12),
+                      ),
+                    ],
+                  ),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryTeal.withValues(alpha: 0.10),
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: Icon(
+                                announcement.type == 'app_update'
+                                    ? Icons.system_update_alt_rounded
+                                    : Icons.campaign_rounded,
+                                color: AppColors.primaryTeal,
+                                size: 27,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                announcement.type == 'app_update'
+                                    ? (isArabic ? 'تحديث التطبيق' : 'App update')
+                                    : (isArabic ? 'ملاحظة من وصال' : 'A note from Wesal'),
+                                style: const TextStyle(
+                                  color: AppColors.primaryTeal,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Cairo',
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: isArabic ? 'إغلاق' : 'Close',
+                              visualDensity: VisualDensity.compact,
+                              onPressed: () => Navigator.of(dialogContext).pop(),
+                              icon: const Icon(Icons.close_rounded, color: AppColors.textMuted),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        Text(
+                          announcement.title,
+                          textAlign: TextAlign.start,
+                          style: const TextStyle(
+                            color: AppColors.textDark,
+                            fontSize: 19,
+                            height: 1.4,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Cairo',
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          announcement.message,
+                          textAlign: TextAlign.start,
+                          style: const TextStyle(
+                            color: AppColors.textDark,
+                            fontSize: 14,
+                            height: 1.8,
+                            fontFamily: 'Cairo',
+                          ),
+                        ),
+                        const SizedBox(height: 22),
+                        if (announcement.hasButton)
+                          SizedBox(
+                            height: 50,
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: () async {
+                                Navigator.of(dialogContext).pop();
+                                final uri = Uri.parse(announcement.buttonUrl);
+                                try {
+                                  final launched = await launchUrl(
+                                    uri,
+                                    mode: LaunchMode.externalApplication,
+                                  );
+                                  if (!launched) {
+                                    debugPrint('[App Announcement] Unable to open CTA URL.');
+                                  }
+                                } catch (error) {
+                                  debugPrint('[App Announcement] CTA launch failed: $error');
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primaryTeal,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                              ),
+                              icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                              label: Text(
+                                announcement.buttonText,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Cairo',
+                                ),
+                              ),
+                            ),
+                          ),
+                        TextButton(
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                          child: Text(
+                            isArabic ? 'إغلاق' : 'Close',
+                            style: const TextStyle(
+                              color: AppColors.textMuted,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Cairo',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      } finally {
+        _isModalActive = false;
+      }
+    } catch (error) {
+      debugPrint('[App Announcement] Failed to load or show popup: $error');
+    }
   }
 
   void _onForegroundNotificationReceived() {
