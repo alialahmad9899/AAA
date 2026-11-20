@@ -191,6 +191,9 @@
                 <div class="d-inline-flex flex-wrap justify-content-center align-items-center" style="gap: 12px 22px;">
                     <a href="{{ route('legal.privacy-policy') }}" class="text-white opacity-80 fw-700">{{ $isEnglish ? 'Privacy Policy' : 'سياسة الخصوصية' }}</a>
                     <a href="{{ route('legal.terms-conditions') }}" class="text-white opacity-80 fw-700">{{ $isEnglish ? 'General Terms of Use' : 'شروط الاستخدام العامة' }}</a>
+                    @if (get_setting('google_analytics_activation') == 1 || get_setting('facebook_pixel_activation') == 1)
+                        <a href="#" onclick="event.preventDefault(); if (window.wesalOpenCookiePreferences) window.wesalOpenCookiePreferences();" class="text-white opacity-80 fw-700">{{ $isEnglish ? 'Cookie preferences' : 'إعدادات ملفات الارتباط' }}</a>
+                    @endif
                 </div>
             </div>
         </div>
