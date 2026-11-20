@@ -54,7 +54,7 @@
         }
         .legal-topbar .wesal-language-switcher button {
             min-height: 31px; padding: 5px 10px; border: 0; border-radius: 999px;
-            background: transparent; color: var(--legal-teal); font: 800 11px/1.2 inherit; cursor: pointer;
+            background: transparent; color: var(--legal-teal); font-family: inherit; font-size: 11px; line-height: 1.2; font-weight: 800; cursor: pointer;
         }
         .legal-topbar .wesal-language-switcher button.is-active { background: var(--legal-teal); color: #fff; }
         .legal-hero { direction: inherit; }
