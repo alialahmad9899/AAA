@@ -129,6 +129,9 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString('Eight years', $english);
         $this->assertStringContainsString('Ten years', $english);
         $this->assertStringContainsString('Six years', $english);
+        $this->assertStringContainsString('8 سنوات وفق § 147 AO و§ 257 HGB', $arabic);
+        $this->assertStringContainsString('10 سنوات وفق § 147 AO و§ 257 HGB', $arabic);
+        $this->assertStringContainsString('6 سنوات عندما تنطبق مدة الحفظ القانونية البالغة ست سنوات', $arabic);
         $this->assertStringContainsString('30 days', $english);
         $this->assertSame(4, substr_count($arabic, '<table class="legal-table">'));
         $this->assertSame(4, substr_count($english, '<table class="legal-table">'));
