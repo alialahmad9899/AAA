@@ -25,6 +25,29 @@
         min-height: 70vh;
     }
     #wesal-contact-page .contact-shell { max-width: 1180px; }
+    #wesal-contact-page .contact-page-topbar {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 18px; margin: 0 auto 38px; min-height: 62px;
+    }
+    #wesal-contact-page .contact-page-brand {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 74px; height: 74px; flex: 0 0 auto; line-height: 0;
+    }
+    #wesal-contact-page .contact-page-brand img {
+        display: block; width: 100%; height: 100%; object-fit: contain;
+    }
+    #wesal-contact-page .wesal-language-switcher {
+        display: inline-flex; align-items: center; gap: 3px; padding: 3px;
+        border: 1px solid rgba(15,76,92,.16); border-radius: 999px;
+        background: rgba(255,255,255,.96); direction: ltr; white-space: nowrap;
+        box-shadow: 0 3px 12px rgba(15,76,92,.06);
+    }
+    #wesal-contact-page .wesal-language-switcher button {
+        min-height: 34px; padding: 6px 12px; border: 0; border-radius: 999px;
+        background: transparent; color: #0F4C5C; font-family: inherit;
+        font-size: 11px; line-height: 1.2; font-weight: 800; cursor: pointer;
+    }
+    #wesal-contact-page .wesal-language-switcher button.is-active { background: #0F4C5C; color: #fff; }
     #wesal-contact-page .contact-eyebrow {
         display: inline-flex; align-items: center; gap: 9px;
         padding: 8px 16px; border-radius: 999px;
@@ -98,7 +121,10 @@
     #wesal-contact-page .contact-errors { border-radius: 13px; border: 1px solid #fecaca; background: #fff7f7; color: #991b1b; padding: 14px 18px; font-weight: 700; }
     #wesal-contact-page .contact-errors ul { margin: 0; padding-inline-start: 20px; }
     @media (max-width: 767.98px) {
-        #wesal-contact-page { padding: 42px 0 52px; }
+        #wesal-contact-page { padding: 24px 0 42px; }
+        #wesal-contact-page .contact-page-topbar { margin-bottom: 26px; }
+        #wesal-contact-page .contact-page-brand { width: 62px; height: 62px; }
+        #wesal-contact-page .wesal-language-switcher button { padding-inline: 8px; font-size: 10px; }
         #wesal-contact-page .contact-title { font-size: 29px; }
     }
     @media (prefers-reduced-motion: reduce) {
@@ -108,6 +134,12 @@
 
 <section id="wesal-contact-page" dir="{{ $isEnglish ? 'ltr' : 'rtl' }}" aria-labelledby="wesal-contact-title">
     <div class="container contact-shell">
+        <div class="contact-page-topbar">
+            <a class="contact-page-brand" href="{{ route('home') }}" aria-label="{{ $isEnglish ? 'Wesal home' : 'وصال - الرئيسية' }}">
+                <img src="{{ static_asset('assets/img/wesal-legal-logo.png') }}" alt="{{ $isEnglish ? 'Wesal logo' : 'شعار وصال' }}" width="74" height="74" fetchpriority="high" decoding="async">
+            </a>
+            @include('frontend.inc.language_switcher')
+        </div>
         <div class="text-center mb-5">
             <span class="contact-eyebrow"><i class="las la-headset"></i> {{ $isEnglish ? "Help & Support" : "مركز المساعدة والتواصل" }}</span>
             <h1 id="wesal-contact-title" class="contact-title">{{ $isEnglish ? "We are here" : "نحن هنا" }} <span>{{ $isEnglish ? "to help you" : "لمساعدتك" }}</span></h1>
