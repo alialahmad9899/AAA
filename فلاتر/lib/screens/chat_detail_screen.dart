@@ -40,8 +40,6 @@ class ChatDetailScreen extends StatefulWidget {
 
 class _ChatDetailScreenState extends State<ChatDetailScreen>
     with WidgetsBindingObserver {
-  static final Map<int, List<ChatMessageModel>> _globalMessagesCache = {};
-
   final TextEditingController _messageController = TextEditingController();
   final TextEditingController _captionController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -146,13 +144,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     _scrollController.addListener(_scrollListener);
     _inputFocusNode.addListener(_onFocusChange);
 
-    if (_activeThreadId > 0 &&
-        _globalMessagesCache.containsKey(_activeThreadId)) {
-      _messages = List.from(_globalMessagesCache[_activeThreadId]!);
-      _isLoading = false;
-    } else {
-      _isLoading = true;
-    }
+    _isLoading = true;
 
     unawaited(_initializeChatExperience());
 
@@ -212,8 +204,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           _isChatMuted = muted;
           if (_messages.isEmpty && cachedMessages.isNotEmpty) {
             _messages = cachedMessages;
-            _globalMessagesCache[_activeThreadId] =
-                List<ChatMessageModel>.from(cachedMessages);
             _isLoading = false;
           }
         });
@@ -293,10 +283,26 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     });
   }
 
-  void _restoreSavedReadPosition() {
+  void _restoreSavedReadPosition({int attempt = 0}) {
     if (_hasRestoredScrollPosition) return;
-    _hasRestoredScrollPosition = true;
-    _scrollToBottom();
+    if (_messages.isEmpty) {
+      _hasRestoredScrollPosition = true;
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _hasRestoredScrollPosition) return;
+      if (!_scrollController.hasClients) {
+        if (attempt < 5) {
+          _restoreSavedReadPosition(attempt: attempt + 1);
+        }
+        return;
+      }
+
+      final position = _scrollController.position;
+      _scrollController.jumpTo(position.maxScrollExtent);
+      _hasRestoredScrollPosition = true;
+    });
   }
 
   void _toggleMessageSearch() {
@@ -699,7 +705,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   }
 
   void _scrollListener() {
-    if (_scrollController.hasClients &&
+    if (_hasRestoredScrollPosition &&
+        _scrollController.hasClients &&
         _scrollController.position.pixels <= 30 &&
         !_isLoadingMore &&
         _hasMoreOldMessages &&
@@ -710,16 +717,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
 
   List<ChatMessageModel> _mergeMessageHistory(
       List<ChatMessageModel> existing, List<ChatMessageModel> incoming) {
-    final byId = <int, ChatMessageModel>{};
-    for (final message in existing) {
-      if (message.id > 0) byId[message.id] = message;
-    }
-    for (final message in incoming) {
-      if (message.id > 0) byId[message.id] = message;
-    }
-    final merged = byId.values.toList()
-      ..sort((a, b) => a.id.compareTo(b.id));
-    return merged;
+    return ChatMessageModel.mergeHistory(existing, incoming);
   }
 
   Future<void> _loadMessages({
@@ -727,18 +725,24 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     bool preserveHistory = false,
   }) async {
     if (!mounted) return;
-    if (_isFetchingMessages) {
+    if (_isFetchingMessages || _isLoadingMore) {
       _pendingMessageRefresh = true;
       return;
     }
+
     _isFetchingMessages = true;
     final requestedThreadId = _activeThreadId;
-    final int? previousLatestMessageId =
-        _messages.isNotEmpty ? _messages.last.id : null;
+    final positiveExistingIds = _messages
+        .where((message) => message.id > 0)
+        .map((message) => message.id);
+    final int? previousLatestMessageId = positiveExistingIds.isEmpty
+        ? null
+        : positiveExistingIds.reduce((left, right) => left > right ? left : right);
     final bool wasNearBottom = _scrollController.hasClients &&
         (_scrollController.position.maxScrollExtent -
                 _scrollController.position.pixels <=
             120);
+
     try {
       final res = await ApiService.getChatMessages(
         requestedThreadId,
@@ -768,42 +772,50 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         return;
       }
 
-      final List<ChatMessageModel> messages = res['messages'] ?? [];
+      final List<ChatMessageModel> messages = res['messages'] is List
+          ? (res['messages'] as List).whereType<ChatMessageModel>().toList()
+          : <ChatMessageModel>[];
       final ChatRulesModel? rules = res['chat_rules'];
-      final displayedMessages = preserveHistory
-          ? _mergeMessageHistory(_messages, messages)
-          : messages;
-      if (_activeThreadId > 0) {
-        _globalMessagesCache[_activeThreadId] = List.from(displayedMessages);
-      }
-      final int? latestMessageId =
-          displayedMessages.isNotEmpty ? displayedMessages.last.id : null;
+      // Keep locally loaded older pages and optimistic messages through every
+      // refresh; the server response updates matching IDs rather than replacing
+      // the entire in-memory transcript with only its latest 40 messages.
+      final displayedMessages = _mergeMessageHistory(_messages, messages);
+      final positiveDisplayedIds = displayedMessages
+          .where((message) => message.id > 0)
+          .map((message) => message.id);
+      final int? latestMessageId = positiveDisplayedIds.isEmpty
+          ? null
+          : positiveDisplayedIds.reduce((left, right) => left > right ? left : right);
       final bool hasNewLatestMessage = latestMessageId != null &&
           (previousLatestMessageId == null ||
               latestMessageId > previousLatestMessageId);
+      final incomingLastSeen = res['partner_last_seen']?.toString().trim() ?? '';
+
       setState(() {
         _messages = displayedMessages;
         if (res.containsKey('partner_is_online')) {
           _partnerIsOnline = res['partner_is_online'] == true;
         }
-        if (res.containsKey('partner_last_seen')) {
-          _partnerLastSeen = res['partner_last_seen']?.toString() ?? '';
+        // A blank response must not erase the last valid value already shown.
+        if (incomingLastSeen.isNotEmpty) {
+          _partnerLastSeen = incomingLastSeen;
         }
         _chatRules = rules;
         _hasMoreOldMessages = preserveHistory
-            ? (_hasMoreOldMessages && res['has_more_old_messages'] == true)
+            ? (_hasMoreOldMessages || res['has_more_old_messages'] == true)
             : res['has_more_old_messages'] == true;
         _isLoading = false;
         _hasMessageLoadError = false;
         _messageLoadError = '';
       });
+
       if (!_hasRestoredScrollPosition) {
         _restoreSavedReadPosition();
       } else if (!silent ||
           (preserveHistory && wasNearBottom && hasNewLatestMessage)) {
         _scrollToBottom();
       }
-    } catch (e) {
+    } catch (error) {
       if (!mounted) return;
       if (!silent) {
         setState(() {
@@ -825,63 +837,84 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       }
     } finally {
       _isFetchingMessages = false;
-      if (_pendingMessageRefresh && mounted) {
+      if (_pendingMessageRefresh && mounted && !_isLoadingMore) {
         _pendingMessageRefresh = false;
-        _loadMessages(silent: true, preserveHistory: true);
+        unawaited(_loadMessages(silent: true, preserveHistory: true));
       }
     }
   }
 
   Future<void> _loadOldMessages() async {
-    if (_messages.isEmpty || _isLoadingMore || !_hasMoreOldMessages) return;
+    if (!_hasRestoredScrollPosition ||
+        _isFetchingMessages ||
+        _messages.isEmpty ||
+        _isLoadingMore ||
+        !_hasMoreOldMessages) {
+      return;
+    }
+
+    final storedMessages = _messages.where((message) => message.id > 0).toList();
+    if (storedMessages.isEmpty) return;
+
+    final requestThreadId = _activeThreadId;
+    final firstMessageId = storedMessages.first.id;
     final previousPixels = _scrollController.hasClients
-        ? _scrollController.position.pixels : 0.0;
+        ? _scrollController.position.pixels
+        : 0.0;
     final previousMax = _scrollController.hasClients
-        ? _scrollController.position.maxScrollExtent : 0.0;
+        ? _scrollController.position.maxScrollExtent
+        : 0.0;
+
     setState(() => _isLoadingMore = true);
     try {
       final result = await ApiService.getOldMessages(
-        _messages.first.id,
+        firstMessageId,
         widget.thread.userId,
         lang: widget.currentLanguage,
-        threadId: _activeThreadId,
+        threadId: requestThreadId,
       );
-      final List<ChatMessageModel> oldMsgs =
-          result['messages'] is List ? result['messages'] : <ChatMessageModel>[];
-      if (mounted) {
-        setState(() {
-          _isLoadingMore = false;
-          if (result['success'] == true) {
-            if (oldMsgs.isNotEmpty) {
-              _messages.insertAll(0, oldMsgs);
-              if (_activeThreadId > 0) {
-                _globalMessagesCache[_activeThreadId] = List.from(_messages);
-              }
-            }
-            _hasMoreOldMessages = result['has_more'] == true;
+      if (!mounted || requestThreadId != _activeThreadId) return;
+
+      final oldMessages = result['messages'] is List
+          ? (result['messages'] as List).whereType<ChatMessageModel>().toList()
+          : <ChatMessageModel>[];
+      setState(() {
+        _isLoadingMore = false;
+        if (result['success'] == true) {
+          if (oldMessages.isNotEmpty) {
+            _messages = _mergeMessageHistory(oldMessages, _messages);
           }
-        });
-        if (result['success'] != true) {
-          AppSnackBar.show(
-            context: context,
-            type: NotificationType.error,
-            isArabic: _isArabic,
-            messageAr: result['message']?.toString() ?? 'تعذر تحميل الرسائل السابقة',
-            messageEn: result['message']?.toString() ?? 'Could not load older messages',
-          );
-        } else if (oldMsgs.isNotEmpty) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!_scrollController.hasClients) return;
-            final addedExtent = _scrollController.position.maxScrollExtent - previousMax;
-            final target = (previousPixels + addedExtent)
-                .clamp(0.0, _scrollController.position.maxScrollExtent)
-                .toDouble();
-            _scrollController.jumpTo(target);
-          });
+          _hasMoreOldMessages = result['has_more'] == true;
         }
+      });
+
+      if (result['success'] != true) {
+        AppSnackBar.show(
+          context: context,
+          type: NotificationType.error,
+          isArabic: _isArabic,
+          messageAr: result['message']?.toString() ?? 'تعذر تحميل الرسائل السابقة',
+          messageEn: result['message']?.toString() ?? 'Could not load older messages',
+        );
+      } else if (oldMessages.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!_scrollController.hasClients) return;
+          final addedExtent =
+              _scrollController.position.maxScrollExtent - previousMax;
+          final target = (previousPixels + addedExtent)
+              .clamp(0.0, _scrollController.position.maxScrollExtent)
+              .toDouble();
+          _scrollController.jumpTo(target);
+        });
       }
-    } catch (e) {
+    } catch (error) {
+      debugPrint('[Chat History] Could not load older messages: $error');
       if (mounted) setState(() => _isLoadingMore = false);
+    } finally {
+      if (mounted && _pendingMessageRefresh && !_isFetchingMessages) {
+        _pendingMessageRefresh = false;
+        unawaited(_loadMessages(silent: true, preserveHistory: true));
+      }
     }
   }
 
@@ -1054,8 +1087,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     if (customText == null) _messageController.clear();
 
     final tempMsg = ChatMessageModel(
-      id: DateTime.now().millisecondsSinceEpoch,
-      senderId: 0,
+      id: -DateTime.now().millisecondsSinceEpoch,
+      senderId: _currentUserId,
       message:
           text.isNotEmpty ? text : (_isArabic ? 'أرسل صورة' : 'Sent an image'),
       time: _isArabic ? 'الآن' : 'Now',
@@ -1068,9 +1101,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       _isSending = true;
       _hasSentMessage = true;
       _messages.add(tempMsg);
-      if (_activeThreadId > 0) {
-        _globalMessagesCache[_activeThreadId] = List.from(_messages);
-      }
     });
     _scrollToBottom();
 
@@ -1082,19 +1112,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         partnerUserId: widget.thread.userId,
         lang: widget.currentLanguage,
       );
-
       if (!mounted) return;
-      setState(() => _isSending = false);
 
       if (result['success'] == true) {
-        int? newThreadId;
-        if (result['data'] != null &&
-            result['data']['chat_thread_id'] != null) {
-          newThreadId =
-              int.tryParse(result['data']['chat_thread_id'].toString());
-        } else if (result['chat_thread_id'] != null) {
-          newThreadId = int.tryParse(result['chat_thread_id'].toString());
-        }
+        final responseEnvelope = result['data'] is Map
+            ? Map<String, dynamic>.from(result['data'] as Map)
+            : <String, dynamic>{};
+        final rawThreadId =
+            responseEnvelope['chat_thread_id'] ?? result['chat_thread_id'];
+        final newThreadId = int.tryParse(rawThreadId?.toString() ?? '');
 
         if (newThreadId != null && newThreadId > 0) {
           _activeThreadId = newThreadId;
@@ -1102,17 +1128,50 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           unawaited(ApiService.updateChatPresence(threadId: newThreadId));
           _startMessageRefreshTimer();
         }
-        _messages.removeWhere((message) => message.id == tempMsg.id);
-        if (_activeThreadId > 0) {
-          _globalMessagesCache[_activeThreadId] = List.from(_messages);
+
+        final rawMessage = responseEnvelope['data'] is Map
+            ? Map<String, dynamic>.from(responseEnvelope['data'] as Map)
+            : (responseEnvelope.containsKey('id') ? responseEnvelope : null);
+        final parsedMessage = rawMessage == null
+            ? null
+            : ChatMessageModel.fromJson(
+                rawMessage,
+                widget.thread.userId,
+                currentUserId: _currentUserId,
+              );
+        final sentMessage =
+            (parsedMessage != null && parsedMessage.id > 0) ? parsedMessage : null;
+
+        setState(() {
+          _isSending = false;
+          if (sentMessage != null) {
+            _messages.removeWhere((message) =>
+                message.id == tempMsg.id || message.id == sentMessage.id);
+            _messages = _mergeMessageHistory(_messages, [sentMessage]);
+          }
+        });
+
+        if (sentMessage != null &&
+            _currentUserId > 0 &&
+            _activeThreadId > 0) {
+          try {
+            await ChatLocalStore.saveMessages(
+              _currentUserId,
+              _activeThreadId,
+              [sentMessage],
+            );
+          } catch (cacheError) {
+            debugPrint('[Chat Cache] Could not save sent message: $cacheError');
+          }
         }
-        _loadMessages(silent: true);
+
+        // Keep the confirmed (or still optimistic) item visible through refresh.
+        _scrollToBottom();
+        unawaited(_loadMessages(silent: true, preserveHistory: true));
       } else {
         setState(() {
-          _messages.removeWhere((m) => m.id == tempMsg.id);
-          if (_activeThreadId > 0) {
-            _globalMessagesCache[_activeThreadId] = List.from(_messages);
-          }
+          _isSending = false;
+          _messages.removeWhere((message) => message.id == tempMsg.id);
         });
 
         final String status = result['status'] ?? '';
@@ -1135,14 +1194,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           );
         }
       }
-    } catch (e) {
+    } catch (error) {
       if (!mounted) return;
       setState(() {
         _isSending = false;
-        _messages.removeWhere((m) => m.id == tempMsg.id);
-        if (_activeThreadId > 0) {
-          _globalMessagesCache[_activeThreadId] = List.from(_messages);
-        }
+        _messages.removeWhere((message) => message.id == tempMsg.id);
       });
       AppSnackBar.show(
         context: context,
@@ -1767,7 +1823,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
 
       if (result['success'] == true) {
         await ApiService.deleteChatThread(_activeThreadId);
-        _globalMessagesCache.remove(_activeThreadId);
+        await ChatLocalStore.deleteThread(_currentUserId, _activeThreadId);
         if (!mounted) return;
         Navigator.pop(context, true);
 
@@ -1808,7 +1864,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
 
       if (result['success'] == true) {
         await ApiService.deleteChatThread(_activeThreadId);
-        _globalMessagesCache.remove(_activeThreadId);
+        await ChatLocalStore.deleteThread(_currentUserId, _activeThreadId);
         if (!mounted) return;
         Navigator.pop(context, true);
 
@@ -1846,7 +1902,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       final result = await ApiService.deleteChatThread(_activeThreadId);
       if (!mounted) return;
       if (result['success'] == true) {
-        _globalMessagesCache.remove(_activeThreadId);
+        await ChatLocalStore.deleteThread(_currentUserId, _activeThreadId);
         if (!mounted) return;
         Navigator.pop(context, true);
 
