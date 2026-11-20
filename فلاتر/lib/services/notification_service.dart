@@ -580,6 +580,14 @@ class NotificationService {
           'ar';
       final NotificationDestination? route =
           resolveNotificationDestination(data);
+      if (isNotificationDestinationAlreadyVisible(
+        route,
+        activeChatThreadId: ChatActivityState.activeThreadId.value,
+      )) {
+        _handledNotificationTapIds.add(dedupeId);
+        _trimProcessedMessageIds();
+        return true;
+      }
       final WidgetBuilder? resolved = await _resolveDestination(
         data,
         language,
