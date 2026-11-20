@@ -1,18 +1,10 @@
 @php
-if (Session::has('locale')) {
-    $locale = Session::get('locale', Config::get('app.locale'));
-} else {
-    $locale = env('DEFAULT_LANGUAGE');
-}
-$lang = \App\Models\Language::where('code', $locale)->first();
+    $websiteLocale = app()->getLocale() === 'ar' ? 'ar' : 'en';
+    $websiteIsArabic = $websiteLocale === 'ar';
 @endphp
 
 <!DOCTYPE html>
-@if (optional($lang)->rtl == 1)
-    <html dir="rtl" lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="{{ Route::currentRouteName() == 'all.messages' ? 'h-100' : '' }}">
-@else
-    <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="{{ Route::currentRouteName() == 'all.messages' ? 'h-100' : '' }}">
-@endif
+<html lang="{{ $websiteLocale }}" dir="{{ $websiteIsArabic ? 'rtl' : 'ltr' }}" class="{{ Route::currentRouteName() == 'all.messages' ? 'h-100' : '' }}">
 
 <head>
 
@@ -265,8 +257,8 @@ $lang = \App\Models\Language::where('code', $locale)->first();
 </head>
 
 @php
-    $isTermsConditionsPage = Route::currentRouteName() === 'custom-pages.show_custom_page'
-        && request()->route('slug') === 'terms-conditions';
+    $isTermsConditionsPage = in_array(Route::currentRouteName(), ['legal.terms-conditions', 'legal.privacy-policy'], true)
+        || (Route::currentRouteName() === 'custom-pages.show_custom_page' && request()->route('slug') === 'terms-conditions');
     $isWesalLandingPage = in_array(Route::currentRouteName(), ['home', 'index'], true);
 @endphp
 
