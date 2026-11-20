@@ -11,9 +11,8 @@ class SetWebsiteLocale
     /**
      * Resolve one stable public-site locale for the complete request.
      *
-     * A direct response cookie is used for the explicit query override. This
-     * middleware runs after AddQueuedCookiesToResponse in the web stack, so
-     * Cookie::queue() here would be too late to be attached by that middleware.
+     * The explicit query override is persisted directly on the response so
+     * the browser keeps the selected language after the one-time URL hint.
      */
     public function handle(Request $request, Closure $next)
     {
