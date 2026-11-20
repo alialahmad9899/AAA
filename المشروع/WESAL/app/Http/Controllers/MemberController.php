@@ -1041,8 +1041,14 @@ class MemberController extends Controller
     public function account_delete(Request $request)
     {
         $user = auth()->user();
-        if ($user) {
-            $user->member ?  $user->member->delete() : '';
+
+        if (!$user) {
+            flash(translate('Something Went Wrong!'))->error();
+            return back();
+        }
+
+        DB::transaction(function () use ($user) {
+            $user->member()->delete();
             Address::where('user_id', $user->id)->delete();
             Education::where('user_id', $user->id)->delete();
             Career::where('user_id', $user->id)->delete();
@@ -1055,19 +1061,45 @@ class MemberController extends Controller
             Family::where('user_id', $user->id)->delete();
             PartnerExpectation::where('user_id', $user->id)->delete();
             SpiritualBackground::where('user_id', $user->id)->delete();
-            PackagePayment::where('user_id', $user->id)->delete();
             HappyStory::where('user_id', $user->id)->delete();
             Staff::where('user_id', $user->id)->delete();
-            ChatThread::where('sender_user_id', auth()->user()->id)->orWhere('receiver_user_id', auth()->user()->id)->delete();
-            Upload::where('user_id', $user->id)->delete();
-            User::destroy(auth()->user()->id);
-            flash(translate('Your account has deleted successfully!'))->success();
-            auth()->guard()->logout();
-        }
-        flash(translate('Something Went Wrong!'))->error();
-        return back();
-    }
 
+            // Remove account-specific activity, but retain reported-user records
+            // for the 12-month safety/report retention period in the privacy policy.
+            Shortlist::where('user_id', $user->id)
+                ->orWhere('shortlisted_by', $user->id)
+                ->delete();
+            IgnoredUser::where('user_id', $user->id)
+                ->orWhere('ignored_by', $user->id)
+                ->delete();
+            GalleryImage::where('user_id', $user->id)->delete();
+            ExpressInterest::where('user_id', $user->id)
+                ->orWhere('interested_by', $user->id)
+                ->delete();
+            ProfileMatch::where('user_id', $user->id)
+                ->orWhere('match_id', $user->id)
+                ->delete();
+
+            ChatThread::where(function ($query) use ($user) {
+                $query->where('sender_user_id', $user->id)
+                    ->orWhere('receiver_user_id', $user->id);
+            })->delete();
+
+            Upload::where('user_id', $user->id)->delete();
+
+            // Keep PackagePayment rows available for statutory accounting retention.
+            // The purchased packages are prepaid once and do not automatically renew.
+            $user->delete();
+        });
+
+        auth()->guard()->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        flash(translate('Your account has deleted successfully!'))->success();
+
+        return redirect()->route('home');
+    }
     public function filterbyStatus(Request $request, $status)
     {
         $sort_search  = null;
