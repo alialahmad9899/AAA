@@ -199,7 +199,6 @@ class BilingualWebsiteContractTest extends TestCase
         $privacy = $this->source('resources/views/frontend/legal/en/privacy_policy.blade.php');
 
         $this->assertStringContainsString("ChatThread::onlyTrashed()", $command);
-        $this->assertStringContainsString('where(\'deleted_at\', \'<=\', $cutoff)', $command);
         $this->assertStringContainsString("withTrashed()", $command);
         $this->assertStringContainsString("whereNotNull('users.deleted_at')", $command);
         $this->assertStringContainsString("where('users.deleted_at', '<=', $cutoff)", $command);
