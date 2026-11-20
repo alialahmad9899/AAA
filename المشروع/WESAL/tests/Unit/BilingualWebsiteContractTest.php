@@ -238,6 +238,8 @@ class BilingualWebsiteContractTest extends TestCase
     public function test_public_website_login_and_registration_are_disabled(): void
     {
         $routes = $this->source('routes/web.php');
+        $adminRoutes = $this->source('routes/admin.php');
+        $apiRoutes = $this->source('routes/api.php');
         $home = $this->source('resources/views/frontend/index.blade.php');
         $login = $this->source('app/Http/Controllers/Auth/LoginController.php');
         $register = $this->source('app/Http/Controllers/Auth/RegisterController.php');
@@ -262,6 +264,10 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString('public function showRegistrationForm()', $register);
         $this->assertStringContainsString('abort(404);', $register);
         $this->assertStringContainsString('Public website registration is disabled', $register);
+        $this->assertStringContainsString("Route::get('/admin/login'", $adminRoutes);
+        $this->assertStringContainsString("Route::post('/signup'", $apiRoutes);
+        $this->assertStringContainsString("Route::post('/signin'", $apiRoutes);
+        $this->assertStringContainsString("Route::post('/auth/google'", $apiRoutes);
     }
 
     public function test_english_legal_documents_are_real_english_only_view_files(): void
