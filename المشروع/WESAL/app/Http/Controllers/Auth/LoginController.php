@@ -53,6 +53,12 @@ class LoginController extends Controller
 
     public function redirectToProvider($provider)
     {
+        // Browser-based social sign-in is disabled for the public website.
+        // The mobile application's existing OAuth hand-off remains supported.
+        if (request()->get('query') !== 'mobile_app') {
+            abort(404);
+        }
+
         if (request()->get('query') == 'mobile_app') {
             request()->session()->put('login_from', 'mobile_app');
         }
@@ -66,79 +72,20 @@ class LoginController extends Controller
 
     public function handleProviderCallback(Request $request, $provider)
     {
-        if (session('login_from') == 'mobile_app') {
-            return $this->mobileHandleProviderCallback($request, $provider);
-        }
-        try {
-            if ($provider == 'twitter') {
-                $user = Socialite::driver('twitter')->user();
-            } else {
-                $user = Socialite::driver($provider)->stateless()->user();
-            }
-        } catch (\Exception $e) {
-            flash("Something Went wrong. Please try again.")->error();
-            return redirect()->route('user.login');
+        // Do not create or sign in website accounts through a social callback.
+        // Continue to serve the mobile-app callback contract.
+        if (session('login_from') !== 'mobile_app') {
+            abort(404);
         }
 
-        //check if provider_id exist
-        $existingUserByProviderId = User::where('provider_id', $user->id)->first();
+        return $this->mobileHandleProviderCallback($request, $provider);
 
-        if ($existingUserByProviderId) {
-            $existingUserByProviderId->access_token = $user->token;
-            $existingUserByProviderId->save();
-            //proceed to login
-            auth()->login($existingUserByProviderId, true);
-        } else {
-            // check if email exist
-            $existingUser = User::where('email', '!=', null)->where('email', $user->email)->first();
-
-            if ($existingUser) {
-                auth()->login($existingUser, true);
-            } else {
-
-                // create a new user
-                $newUser                     = new User;
-                $newUser->first_name         = $user->name;
-                $newUser->email              = $user->email;
-                $newUser->email_verified_at  = date('Y-m-d H:m:s');
-                $newUser->provider_id        = $user->id;
-                $newUser->code               = unique_code();
-                $newUser->membership         = 1;
-                $newUser->approved           = get_setting('member_verification') == 1 ? 0 : 1;
-                $newUser->save();
-
-                $member                             = new Member;
-                $member->user_id                    = $newUser->id;
-                $member->gender                     = null;
-                $member->on_behalves_id             = null;
-                $member->birthday                   = null;
-
-                $package                                = Package::where('id', 1)->first();
-                $member->current_package_id             = $package->id;
-                $member->remaining_interest             = $package->express_interest;
-                $member->remaining_photo_gallery        = $package->photo_gallery;
-                $member->remaining_contact_view         = $package->contact;
-                $member->remaining_profile_viewer_view  = $package->profile_viewers_view;
-                $member->remaining_profile_image_view   = $package->profile_image_view;
-                $member->remaining_gallery_image_view   = $package->gallery_image_view;
-                $member->auto_profile_match             = $package->auto_profile_match;
-                $member->package_validity               = Date('Y-m-d', strtotime($package->validity . " days"));
-                $member->save();
-
-                auth()->login($newUser, true);
-                flash(translate('Registration successfull.'))->success();
-            }
-        }
-        
-        if (session('link') != null) {
-            return redirect(session('link'));
-        } else {
-            return redirect()->route('dashboard');
-        }
     }
 
     public function handleAppleCallback(Request $request)
     {
+        abort(404);
+
         try {
             $user = Socialite::driver("sign-in-with-apple")->user();
         } catch (\Exception $e) {
@@ -242,7 +189,7 @@ class LoginController extends Controller
 
     public function showLoginForm()
     {
-        return view('frontend.user_login');
+        abort(404);
     }
 
     public function logout(Request $request)
