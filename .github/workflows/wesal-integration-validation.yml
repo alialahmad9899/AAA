@@ -111,6 +111,7 @@ jobs:
             "المشروع/WESAL/app/Models/ProfileViewer.php"
             "المشروع/WESAL/tests/Unit/SubscriptionUtilityProfileViewerQuotaTest.php"
             "المشروع/WESAL/tests/Unit/MobileApiPerformanceContractTest.php"
+            "المشروع/WESAL/tests/Unit/AccountDeletionPrivacyContractTest.php"
             "المشروع/WESAL/tests/Unit/LegalDocumentPagesContractTest.php"
             "المشروع/WESAL/tests/Unit/BilingualWebsiteContractTest.php"
             "المشروع/WESAL/tests/Unit/AccountBlockAccessContractTest.php"
@@ -161,6 +162,7 @@ jobs:
             phpunit --no-configuration tests/Unit/PasswordResetIntegrationContractTest.php
             phpunit --no-configuration tests/Unit/NotificationRoutingContractTest.php
             phpunit --no-configuration tests/Unit/MobileApiPerformanceContractTest.php
+            phpunit --no-configuration tests/Unit/AccountDeletionPrivacyContractTest.php
             phpunit --no-configuration tests/Unit/LegalDocumentPagesContractTest.php
             phpunit --no-configuration tests/Unit/BilingualWebsiteContractTest.php
             phpunit --no-configuration tests/Unit/ChatPresenceContractTest.php

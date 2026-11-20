@@ -116,6 +116,17 @@ class LegalDocumentPagesContractTest extends TestCase
         $this->assertStringContainsString('https://www.wesalsyria.com/privacy-policy', $terms);
     }
 
+    public function test_withdrawal_section_uses_the_current_bgb_service_completion_paragraph(): void
+    {
+        $arabic = $this->source('resources/views/frontend/legal/terms_conditions.blade.php');
+        $english = $this->source('resources/views/frontend/legal/en/terms_conditions.blade.php');
+
+        self::assertStringContainsString('§ 356 فقرة 5 BGB', $arabic);
+        self::assertStringContainsString('§ 356(5) BGB', $english);
+        self::assertStringNotContainsString('§ 356 فقرة 4 BGB', $arabic);
+        self::assertStringNotContainsString('§ 356(4) BGB', $english);
+    }
+
     public function test_homepage_and_shared_footer_link_to_each_document_separately(): void
     {
         $homepage = $this->source('resources/views/frontend/index.blade.php');
