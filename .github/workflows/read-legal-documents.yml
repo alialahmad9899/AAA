@@ -1,5 +1,8 @@
 name: Temporary legal document text check
 on:
+  push:
+    branches:
+      - 'chore/read-legal-docx-2026-11-20'
   pull_request:
     paths:
       - ".github/workflows/read-legal-documents.yml"
