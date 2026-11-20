@@ -302,9 +302,9 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
             (m) =>
                 m['id'].toString() == strVal ||
                 _cleanText((m['name'] ?? '').toString()) == cleanVal,
-            orElse: () => null,
+            orElse: () => <String, dynamic>{},
           );
-          if (match != null) {
+          if (match.isNotEmpty) {
             _selectedMaritalStatusId = match['id'].toString();
           }
         }
@@ -318,9 +318,9 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
             (r) =>
                 r['id'].toString() == strVal ||
                 _cleanText((r['name'] ?? '').toString()) == _cleanText(strVal),
-            orElse: () => null,
+            orElse: () => <String, dynamic>{},
           );
-          if (match != null) {
+          if (match.isNotEmpty) {
             _selectedReligionId = match['id'].toString();
           }
         }
@@ -331,9 +331,9 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
           final strVal = rawLang.toString().trim();
           final match = _languages.firstWhere(
             (l) => l['id'].toString() == strVal,
-            orElse: () => null,
+            orElse: () => <String, dynamic>{},
           );
-          if (match != null) {
+          if (match.isNotEmpty) {
             _selectedLanguageId = match['id'].toString();
           }
         }
@@ -349,9 +349,9 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
             (c) =>
                 c['id'].toString() == strVal ||
                 _cleanText((c['name'] ?? '').toString()) == _cleanText(strVal),
-            orElse: () => null,
+            orElse: () => <String, dynamic>{},
           );
-          if (match != null) {
+          if (match.isNotEmpty) {
             _selectedPartnerCountryId = match['id'].toString();
             final rawStateVal = expectations['preferred_state_id'] ??
                 expectations['partner_state_id'];
@@ -408,9 +408,9 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
             (s) =>
                 s['id'].toString() == strVal ||
                 _cleanText((s['name'] ?? '').toString()) == _cleanText(strVal),
-            orElse: () => null,
+            orElse: () => <String, dynamic>{},
           );
-          if (match != null) _selectedStateId = match['id'].toString();
+          if (match.isNotEmpty) _selectedStateId = match['id'].toString();
         }
       });
     } catch (e) {
@@ -937,45 +937,45 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
     if (_selectedMaritalStatusId != null && _maritalStatuses.isNotEmpty) {
       final match = _maritalStatuses.firstWhere(
         (m) => m['id'].toString() == _selectedMaritalStatusId,
-        orElse: () => null,
+        orElse: () => <String, dynamic>{},
       );
-      if (match != null) maritalName = match['name']?.toString();
+      if (match.isNotEmpty) maritalName = match['name']?.toString();
     }
 
     String? religionName;
     if (_selectedReligionId != null && _religions.isNotEmpty) {
       final match = _religions.firstWhere(
         (r) => r['id'].toString() == _selectedReligionId,
-        orElse: () => null,
+        orElse: () => <String, dynamic>{},
       );
-      if (match != null) religionName = match['name']?.toString();
+      if (match.isNotEmpty) religionName = match['name']?.toString();
     }
 
     String? languageName;
     if (_selectedLanguageId != null && _languages.isNotEmpty) {
       final match = _languages.firstWhere(
         (l) => l['id'].toString() == _selectedLanguageId,
-        orElse: () => null,
+        orElse: () => <String, dynamic>{},
       );
-      if (match != null) languageName = match['name']?.toString();
+      if (match.isNotEmpty) languageName = match['name']?.toString();
     }
 
     String? countryName;
     if (_selectedPartnerCountryId != null && _countries.isNotEmpty) {
       final match = _countries.firstWhere(
         (c) => c['id'].toString() == _selectedPartnerCountryId,
-        orElse: () => null,
+        orElse: () => <String, dynamic>{},
       );
-      if (match != null) countryName = match['name']?.toString();
+      if (match.isNotEmpty) countryName = match['name']?.toString();
     }
 
     String? stateName;
     if (_selectedStateId != null && _states.isNotEmpty) {
       final match = _states.firstWhere(
         (s) => s['id'].toString() == _selectedStateId,
-        orElse: () => null,
+        orElse: () => <String, dynamic>{},
       );
-      if (match != null) stateName = match['name']?.toString();
+      if (match.isNotEmpty) stateName = match['name']?.toString();
     }
 
     return AnnotatedRegion<SystemUiOverlayStyle>(

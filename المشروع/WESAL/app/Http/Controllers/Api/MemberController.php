@@ -172,6 +172,9 @@ class MemberController extends Controller
             ->orderByDesc('created_at')
             ->orderByDesc('id');
 
+        $matchingService = app(SmartMatchingService::class);
+        $matchingService->applyPartnerAgeRangeFilter($usersQuery, $user);
+
         if ($isPagedRequest) {
             $members = $usersQuery
                 ->offset(($page - 1) * $perPage)
@@ -191,7 +194,7 @@ class MemberController extends Controller
         }
 
         // Compatibility data is calculated only for the requested page.
-        $members = app(SmartMatchingService::class)->scoreCandidates(
+        $members = $matchingService->scoreCandidates(
             $user,
             $members,
             false

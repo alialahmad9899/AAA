@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 /**
@@ -61,10 +62,90 @@ class SmartMatchingService
                 $query->select('ignored_by')
                     ->from('ignored_users')
                     ->where('user_id', $viewerId);
-            })
-            ->get();
+            });
+
+        $this->applyPartnerAgeRangeFilter($candidates, $viewer);
+        $candidates = $candidates->get();
 
         return $this->scoreCandidates($viewer, $candidates, true);
+    }
+
+    /**
+     * Normalise canonical and legacy partner-age fields into one safe range.
+     * Missing sides use the supported adult-age boundary; invalid/reversed
+     * persisted values are ignored rather than producing an empty home feed.
+     *
+     * @return array{min_age:int,max_age:int}|null
+     */
+    public function normalisePartnerAgeRange(array $expectations): ?array
+    {
+        $readAge = static function (array $keys) use ($expectations): ?int {
+            foreach ($keys as $key) {
+                $raw = $expectations[$key] ?? null;
+                if (!is_numeric($raw)) {
+                    continue;
+                }
+                $numeric = (float) $raw;
+                if (!is_finite($numeric) || floor($numeric) !== $numeric) {
+                    continue;
+                }
+                $age = (int) $numeric;
+                if ($age >= 18 && $age <= 100) {
+                    return $age;
+                }
+            }
+            return null;
+        };
+
+        $minimum = $readAge(['min_age', 'partner_age']);
+        $maximum = $readAge(['max_age', 'partner_max_age']);
+        if ($minimum === null && $maximum === null) {
+            return null;
+        }
+
+        $minimum ??= 18;
+        $maximum ??= 100;
+        if ($minimum > $maximum) {
+            return null;
+        }
+
+        return ['min_age' => $minimum, 'max_age' => $maximum];
+    }
+
+    /**
+     * Apply the member's saved age range before pagination so out-of-range
+     * profiles cannot leak into later pages of the home feed.
+     */
+    public function applyPartnerAgeRangeFilter(Builder $query, User $viewer): Builder
+    {
+        $viewer->loadMissing(['partner_expectations']);
+        $expectations = $viewer->partner_expectations;
+        $ageRange = $this->normalisePartnerAgeRange(
+            $expectations ? $expectations->getAttributes() : []
+        );
+        if ($ageRange === null) {
+            return $query;
+        }
+
+        $today = now()->startOfDay();
+        $youngestAllowedBirthDate = $today->copy()
+            ->subYears($ageRange['min_age'])
+            ->toDateString();
+        $oldestAllowedBirthDateExclusive = $today->copy()
+            ->subYears($ageRange['max_age'] + 1)
+            ->toDateString();
+
+        $query->whereHas('member', static function (Builder $memberQuery) use (
+            $youngestAllowedBirthDate,
+            $oldestAllowedBirthDateExclusive
+        ) {
+            $memberQuery
+                ->whereNotNull('birthday')
+                ->where('birthday', '<=', $youngestAllowedBirthDate)
+                ->where('birthday', '>', $oldestAllowedBirthDateExclusive);
+        });
+
+        return $query;
     }
 
     /**
@@ -255,11 +336,16 @@ class SmartMatchingService
             $add('state', 7, $score);
         }
 
-        $minAge = $this->numericOrNull($expectations['min_age'] ?? $expectations['partner_age'] ?? null);
-        $maxAge = $this->numericOrNull($expectations['max_age'] ?? $expectations['partner_max_age'] ?? null);
-        if ($minAge !== null || $maxAge !== null) {
+        $ageRange = $this->normalisePartnerAgeRange($expectations);
+        if ($ageRange !== null) {
             $age = $this->numericOrNull($candidate['age'] ?? null);
-            $score = $age === null ? null : $this->rangeScore($age, $minAge, $maxAge, 2, 5);
+            $score = $age === null ? null : $this->rangeScore(
+                $age,
+                (float) $ageRange['min_age'],
+                (float) $ageRange['max_age'],
+                2,
+                5
+            );
             $add('age', 12, $score);
         }
 

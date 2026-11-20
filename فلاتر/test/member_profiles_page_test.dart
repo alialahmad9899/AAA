@@ -22,6 +22,21 @@ void main() {
       expect(page.members.first.name, 'Rana Ali');
     });
 
+    test('sorts real compatibility scores descending and uncalculated last', () {
+      final page = MemberProfilesPage.fromJson({
+        'data': [
+          {'user_id': 1, 'profile_match_percentage': null, 'match_status': 'insufficient_data'},
+          {'user_id': 2, 'profile_match_percentage': 100, 'match_status': 'calculated'},
+          {'user_id': 3, 'profile_match_percentage': 37, 'match_status': 'calculated'},
+          {'user_id': 4, 'profile_match_percentage': 0, 'match_status': 'calculated'},
+        ],
+      });
+
+      final sorted = MemberProfilesPage.sortByCompatibility(page.members);
+      expect(sorted.map((member) => member.id).toList(), [2, 3, 4, 1]);
+      expect(sorted.map((member) => member.matchPercentage).toList(), [100, 37, 0, null]);
+    });
+
     test('preserves an empty final page', () {
       final page = MemberProfilesPage.fromJson({
         'result': true,

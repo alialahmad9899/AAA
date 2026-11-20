@@ -238,11 +238,14 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
         perPage: _matchPageSize,
       );
       if (mounted && currentRequestToken == _fetchCounter) {
+        final members = _isMatchFilterEnabled
+            ? MemberProfilesPage.sortByCompatibility(page.members)
+            : page.members;
         setState(() {
-          _matchedMembers = page.members;
+          _matchedMembers = members;
           _likedUserIds
             ..clear()
-            ..addAll(page.members.where((member) => member.isInterested).map((member) => member.id));
+            ..addAll(members.where((member) => member.isInterested).map((member) => member.id));
           _currentProfileIndex = 0;
           _currentMatchPage = page.currentPage;
           _hasMoreMatches = page.hasMore;
@@ -270,11 +273,14 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
             perPage: _matchPageSize,
           );
           if (mounted && currentRequestToken == _fetchCounter) {
+            final members = _isMatchFilterEnabled
+                ? MemberProfilesPage.sortByCompatibility(page.members)
+                : page.members;
             setState(() {
-              _matchedMembers = page.members;
+              _matchedMembers = members;
               _likedUserIds
                 ..clear()
-                ..addAll(page.members.where((member) => member.isInterested).map((member) => member.id));
+                ..addAll(members.where((member) => member.isInterested).map((member) => member.id));
               _currentProfileIndex = 0;
               _currentMatchPage = page.currentPage;
               _hasMoreMatches = page.hasMore;
@@ -314,8 +320,12 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
       if (!mounted || requestToken != _fetchCounter) return;
       final knownIds = _matchedMembers.map((member) => member.id).toSet();
       final newMembers = page.members.where((member) => knownIds.add(member.id)).toList(growable: false);
+      final combinedMembers = [..._matchedMembers, ...newMembers];
+      final orderedMembers = _isMatchFilterEnabled
+          ? MemberProfilesPage.sortByCompatibility(combinedMembers)
+          : combinedMembers;
       setState(() {
-        _matchedMembers = [..._matchedMembers, ...newMembers];
+        _matchedMembers = orderedMembers;
         _likedUserIds.addAll(newMembers.where((member) => member.isInterested).map((member) => member.id));
         _currentMatchPage = page.currentPage;
         _hasMoreMatches = page.hasMore && newMembers.isNotEmpty;

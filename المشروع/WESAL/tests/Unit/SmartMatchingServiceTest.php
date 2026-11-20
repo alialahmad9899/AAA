@@ -248,4 +248,38 @@ class SmartMatchingServiceTest extends TestCase
         $this->assertSame(2, $result['evaluated_criteria_count']);
     }
 
+    public function test_partner_age_range_normalises_canonical_legacy_and_one_sided_values(): void
+    {
+        $this->assertSame(
+            ['min_age' => 22, 'max_age' => 45],
+            $this->service->normalisePartnerAgeRange(['min_age' => '22', 'max_age' => '45'])
+        );
+        $this->assertSame(
+            ['min_age' => 26, 'max_age' => 100],
+            $this->service->normalisePartnerAgeRange(['partner_age' => 26])
+        );
+        $this->assertNull(
+            $this->service->normalisePartnerAgeRange(['min_age' => 46, 'max_age' => 45])
+        );
+        $this->assertNull($this->service->normalisePartnerAgeRange([]));
+    }
+
+    public function test_multiple_real_preferences_produce_a_weighted_intermediate_percentage(): void
+    {
+        $result = $this->service->scoreData([
+            'min_age' => 22,
+            'max_age' => 45,
+            'preferred_country_id' => 12,
+        ], [
+            'age' => 48,
+            'country_id' => 44,
+        ]);
+
+        // Age scores 30% (three years outside the range); country scores 25%.
+        $this->assertSame(27, $result['percentage']);
+        $this->assertSame(2, $result['criteria_count']);
+        $this->assertSame(2, $result['evaluated_criteria_count']);
+        $this->assertSame('calculated', $result['status']);
+    }
+
 }

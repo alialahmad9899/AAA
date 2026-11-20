@@ -345,6 +345,30 @@ class MemberProfilesPage {
     required this.hasMore,
   });
 
+  /// Sorts actual compatibility scores first (highest to lowest), keeping
+  /// profiles without a calculated score at the end. Zero is a valid score.
+  static List<MemberModel> sortByCompatibility(Iterable<MemberModel> source) {
+    final members = source.toList(growable: false);
+    final indexed = <MapEntry<int, MemberModel>>[
+      for (var index = 0; index < members.length; index++)
+        MapEntry(index, members[index]),
+    ];
+
+    indexed.sort((left, right) {
+      final leftScore = left.value.matchPercentage;
+      final rightScore = right.value.matchPercentage;
+      if (leftScore == null && rightScore != null) return 1;
+      if (leftScore != null && rightScore == null) return -1;
+      if (leftScore != null && rightScore != null) {
+        final scoreOrder = rightScore.compareTo(leftScore);
+        if (scoreOrder != 0) return scoreOrder;
+      }
+      return left.key.compareTo(right.key);
+    });
+
+    return indexed.map((entry) => entry.value).toList(growable: false);
+  }
+
   factory MemberProfilesPage.fromJson(
     Map<String, dynamic> json, {
     int fallbackPage = 1,
