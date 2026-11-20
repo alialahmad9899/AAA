@@ -156,6 +156,9 @@ class NotificationService {
   static final Set<String> _processedMessageIds = <String>{};
   static final Set<String> _handledNotificationTapIds = <String>{};
   static final Set<String> _messagesBeingHandled = <String>{};
+  // A single chat thread may be delivered through both FCM and local launch
+  // details. Keep its destination claimed for as long as its route is open.
+  static final Set<String> _activeNotificationDestinations = <String>{};
 
   /// تهيئة مشتركة؛ أي استدعاء متزامن ينتظر نفس عملية Firebase والـlisteners.
   static Future<void> initialize() {
@@ -564,6 +567,7 @@ class NotificationService {
       return false;
     }
 
+    String? claimedDestinationKey;
     try {
       if (requireAuthToken) {
         final String? userToken = await ApiService.getToken();
@@ -574,22 +578,53 @@ class NotificationService {
       final String language = languageOverride ??
           prefs.getString('app_language') ??
           'ar';
+      final NotificationDestination? route =
+          resolveNotificationDestination(data);
       final WidgetBuilder? resolved = await _resolveDestination(
         data,
         language,
       );
 
       if (resolved == null && !fallbackToCenter) return false;
+
+      // Deduplicate by the actual destination as well as by message ID.
+      // FCM initial-message and local-notification launch callbacks can carry
+      // different IDs while pointing to the same chat thread.
+      claimedDestinationKey = notificationDestinationKey(route);
+      if (!claimNotificationDestination(
+        claimedDestinationKey,
+        activeDestinations: _activeNotificationDestinations,
+      )) {
+        _handledNotificationTapIds.add(dedupeId);
+        _trimProcessedMessageIds();
+        return true;
+      }
+
       final WidgetBuilder destination = resolved ??
           (_) => NotificationsScreen(currentLanguage: language);
 
-      final bool pushed = await _pushWhenNavigatorReady(destination);
+      final bool pushed = await _pushWhenNavigatorReady(
+        destination,
+        claimedDestinationKey,
+      );
+      if (!pushed) {
+        releaseNotificationDestination(
+          claimedDestinationKey,
+          activeDestinations: _activeNotificationDestinations,
+        );
+      }
       if (pushed) {
         _handledNotificationTapIds.add(dedupeId);
         _trimProcessedMessageIds();
       }
       return pushed;
     } catch (error, stackTrace) {
+      if (claimedDestinationKey != null) {
+        releaseNotificationDestination(
+          claimedDestinationKey,
+          activeDestinations: _activeNotificationDestinations,
+        );
+      }
       debugPrint('[Notification Navigation] $error');
       debugPrintStack(stackTrace: stackTrace);
       return false;
@@ -661,15 +696,23 @@ class NotificationService {
     }
   }
 
-  static Future<bool> _pushWhenNavigatorReady(WidgetBuilder builder) async {
+  static Future<bool> _pushWhenNavigatorReady(
+    WidgetBuilder builder,
+    String destinationKey,
+  ) async {
     for (int attempt = 0; attempt < 24; attempt++) {
       final NavigatorState? navigator = FCMService.navigatorKey.currentState;
       if (navigator != null && navigator.mounted) {
         unawaited(
           navigator
               .push<void>(MaterialPageRoute<void>(builder: builder))
-              .then((_) {
-            // حدّث الشارة بعد إغلاق الوجهة التي فُتحت من إشعار النظام.
+              .whenComplete(() {
+            // Hold the destination lock until the opened page is closed.
+            releaseNotificationDestination(
+              destinationKey,
+              activeDestinations: _activeNotificationDestinations,
+            );
+            // Refresh the notification badge after the notification route closes.
             foregroundMessageVersion.value++;
           }),
         );
