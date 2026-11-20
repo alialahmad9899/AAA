@@ -233,11 +233,11 @@
             if (window.__wesalOptionalTrackingLoaded) {
                 if (window.gtag) {
                     window.gtag('consent', 'update', {
-                        analytics_storage: 'granted',
-                        ad_storage: 'granted',
-                        ad_user_data: 'granted',
-                        ad_personalization: 'granted'
-                    });
+                            analytics_storage: (wesalGoogleAnalyticsEnabled && wesalGoogleAnalyticsId) ? 'granted' : 'denied',
+                            ad_storage: (wesalMetaPixelEnabled && wesalMetaPixelId) ? 'granted' : 'denied',
+                            ad_user_data: (wesalMetaPixelEnabled && wesalMetaPixelId) ? 'granted' : 'denied',
+                            ad_personalization: (wesalMetaPixelEnabled && wesalMetaPixelId) ? 'granted' : 'denied'
+                        });
                 }
                 if (window.fbq) {
                     window.fbq('consent', 'grant');
@@ -250,11 +250,11 @@
                 window.dataLayer = window.dataLayer || [];
                 window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
                 window.gtag('consent', 'update', {
-                    analytics_storage: 'granted',
-                    ad_storage: 'granted',
-                    ad_user_data: 'granted',
-                    ad_personalization: 'granted'
-                });
+                            analytics_storage: (wesalGoogleAnalyticsEnabled && wesalGoogleAnalyticsId) ? 'granted' : 'denied',
+                            ad_storage: (wesalMetaPixelEnabled && wesalMetaPixelId) ? 'granted' : 'denied',
+                            ad_user_data: (wesalMetaPixelEnabled && wesalMetaPixelId) ? 'granted' : 'denied',
+                            ad_personalization: (wesalMetaPixelEnabled && wesalMetaPixelId) ? 'granted' : 'denied'
+                        });
                 window.gtag('js', new Date());
                 window.gtag('config', wesalGoogleAnalyticsId);
                 var googleScript = document.createElement('script');
