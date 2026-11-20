@@ -128,10 +128,6 @@ class NotificationController extends Controller
 
         $activityAt = now();
         $onlineKey = 'user-is-online-' . $userId;
-        Cache::forever(
-            'wesal:last-seen:' . $userId,
-            $activityAt->toIso8601String()
-        );
         $appIsActive = array_key_exists('app_active', $validated)
             ? (bool) $validated['app_active']
             : true;
