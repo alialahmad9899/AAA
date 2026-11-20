@@ -263,7 +263,7 @@
     $isWesalLandingPage = in_array(Route::currentRouteName(), ['home', 'index'], true);
 @endphp
 
-<body class="text-left {{ Route::currentRouteName() == 'all.messages' ? 'h-100' : '' }} {{ $isTermsConditionsPage ? 'wesal-terms-document-body' : '' }} {{ $isWesalLandingPage ? 'wesal-landing-body' : '' }}">
+<body class="{{ $websiteIsArabic ? 'text-right' : 'text-left' }} {{ Route::currentRouteName() == 'all.messages' ? 'h-100' : '' }} {{ $isTermsConditionsPage ? 'wesal-terms-document-body' : '' }} {{ $isWesalLandingPage ? 'wesal-landing-body' : '' }}">
 
     {{-- 🛑 تجريد الغلاف من الـ Flexbox والهوامش إذا كنا في صفحة المحادثة 🛑 --}}
     <div
