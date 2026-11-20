@@ -22,3 +22,12 @@
 - The support page now skips the global navigation and footer, including their login links and legacy footer logo. It has its own compact language selector and uses the transparent Wesal logo asset.
 - Full live verification remains dependent on deploying this PR to Hostinger; no production configuration or data was changed during the simulation.
 - Final regression assertions now verify the request-cookie source, GET form method, standalone support layout and branded support-page controls.
+
+## Public website account access removal — 2026-11-20
+- Removed desktop and mobile homepage links for website login and account registration.
+- Disabled public website `/login`, `/register`, `/users/login`, web password-reset entry points and website registration-verification endpoints with explicit 404 responses.
+- Disabled the default Laravel UI registration and password-reset route registration; retained route names for compatibility where the URL is now intentionally blocked.
+- Disabled browser-based social sign-in and its account-creation callback. The existing mobile OAuth callback path is retained only when the `mobile_app` hand-off marker is present.
+- Kept the separate admin login route at `/admin/login` and the mobile API authentication endpoints `/api/signup`, `/api/signin`, `/api/auth/google`, and `/api/social-login` unchanged.
+- The public website is now intentionally informational/contact/legal only; users cannot create or sign into member accounts through website pages.
+- Added contract tests for disabled website account access, English document files, and preservation of the separate admin and mobile API auth routes.
