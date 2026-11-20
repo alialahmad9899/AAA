@@ -46,7 +46,7 @@ class BilingualWebsiteContractTest extends TestCase
             strpos($controller, "'wesal_website_locale'")
         );
         $this->assertStringContainsString('$request->cookie(\'wesal_website_locale\'', $middleware);
-        $this->assertStringContainsString("'private, no-cache, must-revalidate'", $middleware);
+        $this->assertStringContainsString("'private, no-store, no-cache, must-revalidate, max-age=0'", $middleware);
         $this->assertStringContainsString("'Vary', 'Cookie'", $middleware);
     }
 
