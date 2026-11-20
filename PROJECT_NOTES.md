@@ -1961,3 +1961,70 @@ SHOW INDEX FROM `package_payments` WHERE `Key_name` = 'package_payments_activati
 - `dart analyze --fatal-infos`: `No issues found!`; `flutter test`: `140 tests passed`.
 - ZIP الدفعة يحتوي ملفي migration والاختبار فقط بمساراتهما الأصلية، وسلامة الأرشيف مؤكدة.
 - لم يتم تعديل قاعدة الإنتاج أو تنفيذ ALTER TABLE نيابة عن المستخدم، ولم يتم تفعيل Stripe. كما لم تنفذ معاملة دفع حقيقية على Stripe أو شام كاش بعد الإصلاح.
+
+
+## 2026-11-20 — نافذة الملاحظات وتحديثات تطبيق وصال (Mobile + API + Admin)
+
+### نطاق الميزة
+- إضافة نافذة منبثقة داخل تطبيق Flutter عند دخول العضو إلى الشاشة الرئيسية، مع منع تكرار عرضها خلال عمر جلسة الشاشة.
+- أنواع النافذة: ملاحظة/تنبيه أو تحديث التطبيق.
+- يدير الأدمن تفعيل النافذة وإيقافها، العنوان والنص بالعربية والإنجليزية، جمهورها، والزر الاختياري.
+- الجمهور: جميع الأعضاء، الذكور فقط، الإناث فقط، أو مجال عمري شامل للحدين.
+- عند تفعيل الزر، يحفظ الأدمن نصه ورابطه. يقبل الخادم روابط HTTP/HTTPS فقط، ويتحقق تطبيق Flutter من البروتوكول والمضيف قبل فتح الرابط خارج التطبيق.
+
+### التنفيذ
+- Migration: `2026_11_20_000002_create_app_announcements_table.php` لإنشاء جدول `app_announcements` بحقول المحتوى، النوع، الاستهداف، المجال العمري، الزر، والتفعيل.
+- Model: `AppAnnouncement` يطابق الجمهور اعتماداً على سجل العضو المخزن في قاعدة البيانات، وليس على قيم يرسلها الهاتف. الجنس في مخطط وصال: `1 = ذكر` و`2 = أنثى`، والعمر محسوب من `members.birthday`.
+- Admin: صفحة `admin/app_announcements/index.blade.php` ومسارات محمية، مع تحقق إضافي داخل وحدة التحكم لقصر التحكم على حساب `user_type=admin`.
+- Mobile API: `GET /api/member/app-announcement` ضمن `auth:sanctum` و`api_member`؛ يعيد محتوى النافذة فقط إذا كانت فعالة وعضو الحساب ضمن الجمهور.
+- Flutter: نموذج `AppAnnouncement`، جلب البيانات عبر `ApiService`، عرض نافذة عربية/إنجليزية في `MainHomeScreen` بعد التحقق من حالة الحظر. لا تُعرض النافذة للحساب المحظور، والزر يظهر فقط عند تفعيله ووجود رابط آمن.
+- لم يتم تعديل صفحات أو مسارات الموقع العام.
+
+### الملفات التشغيلية في حزمة هذه المهمة
+- `المشروع/WESAL/app/Models/AppAnnouncement.php`
+- `المشروع/WESAL/app/Http/Controllers/Admin/AppAnnouncementController.php`
+- `المشروع/WESAL/app/Http/Controllers/Api/AppAnnouncementController.php`
+- `المشروع/WESAL/database/migrations/2026_11_20_000002_create_app_announcements_table.php`
+- `المشروع/WESAL/resources/views/admin/app_announcements/index.blade.php`
+- `المشروع/WESAL/resources/views/admin/inc/sidenav.blade.php`
+- `المشروع/WESAL/routes/admin.php`
+- `المشروع/WESAL/routes/api.php`
+- `المشروع/WESAL/tests/Unit/AppAnnouncementContractTest.php`
+- `فلاتر/lib/models/app_announcement.dart`
+- `فلاتر/lib/screens/main_home_screen.dart`
+- `فلاتر/lib/services/api_service.dart`
+- `فلاتر/test/app_announcement_test.dart`
+
+### التحقق
+- Source commit على `main`: `89050403901c9c644b124ad8508b20f5752dd0c3`.
+- GitHub Actions run `44645467660`: الوظائف الثلاث نجحت (PHP syntax/PHPUnit، Flutter، وإنشاء حزمة ZIP).
+- PHPUnit: اختبار العقد الجديد `4 tests / 48 assertions` ناجح؛ وملفات PHP المعدلة اجتازت `php -l`.
+- `dart analyze --fatal-infos`: نجح دون مشكلات.
+- `flutter test`: `143 tests passed`.
+- حزمة التغييرات تضم 13 ملفاً بالمسارات الأصلية، وسلامة ZIP ناجحة. لا تضم `PROJECT_NOTES.md` أو ملف workflow أو ملفات الموقع العام.
+
+### تجهيز قاعدة البيانات والإطلاق
+- لم يتم نشر الملفات على Hostinger، ولم يتم إنشاء الجدول في قاعدة الإنتاج، ولم يجر اختبار نافذة فعلية على جهاز أو لوحة الإدارة الحية.
+- بما أن صاحب المشروع لا يعتمد على Laravel CLI، يمكن إنشاء الجدول من phpMyAdmin عبر SQL التالي بعد رفع الملفات:
+```sql
+CREATE TABLE IF NOT EXISTS `app_announcements` (
+    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `announcement_type` VARCHAR(20) NOT NULL DEFAULT 'note',
+    `title_ar` VARCHAR(150) NOT NULL,
+    `message_ar` TEXT NOT NULL,
+    `title_en` VARCHAR(150) NULL,
+    `message_en` TEXT NULL,
+    `target_type` VARCHAR(20) NOT NULL DEFAULT 'all',
+    `age_min` TINYINT UNSIGNED NULL,
+    `age_max` TINYINT UNSIGNED NULL,
+    `button_enabled` TINYINT(1) NOT NULL DEFAULT 0,
+    `button_text_ar` VARCHAR(80) NULL,
+    `button_text_en` VARCHAR(80) NULL,
+    `button_url` VARCHAR(2048) NULL,
+    `is_active` TINYINT(1) NOT NULL DEFAULT 0,
+    `created_at` TIMESTAMP NULL DEFAULT NULL,
+    `updated_at` TIMESTAMP NULL DEFAULT NULL,
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
+- تنفيذ SQL أعلاه ينشئ بنية الجدول فقط ولا يفعّل أي نافذة. بعد ذلك يدخل الأدمن إلى «نافذة ملاحظات وتحديثات التطبيق»، يكتب المحتوى، يحدد الجمهور والزر اختيارياً، ثم يفعّل النافذة ويحفظها.
