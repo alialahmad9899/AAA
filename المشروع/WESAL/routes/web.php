@@ -341,6 +341,11 @@ Route::controller(PhonepeController::class)->group(function () {
 
 Route::get('/match_profiles', 'ProfileMatchController@match_profiles')->name('match_profiles');
 
+// Standalone Wesal legal documents (must stay before the custom-page catch-all).
+Route::view('/privacy-policy', 'frontend.legal.privacy_policy')->name('legal.privacy-policy');
+Route::redirect('/privacy', '/privacy-policy', 301)->name('legal.privacy-legacy');
+Route::view('/terms-conditions', 'frontend.legal.terms_conditions')->name('legal.terms-conditions');
+
 //Custom page
 Route::get('/{slug}', 'PageController@show_custom_page')->name('custom-pages.show_custom_page');
 
