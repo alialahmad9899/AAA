@@ -14,6 +14,7 @@ class AppAnnouncement extends Model
         'title_en',
         'message_en',
         'target_type',
+        'target_gender',
         'age_min',
         'age_max',
         'button_enabled',
@@ -56,6 +57,15 @@ class AppAnnouncement extends Model
 
         if ($target !== 'age' || empty($member->birthday)
             || $this->age_min === null || $this->age_max === null) {
+            return false;
+        }
+
+        // Age targeting can optionally be restricted to one gender as well.
+        $targetGender = (string) ($this->target_gender ?? 'all');
+        if ($targetGender === 'male' && (int) $member->gender !== 1) {
+            return false;
+        }
+        if ($targetGender === 'female' && (int) $member->gender !== 2) {
             return false;
         }
 
