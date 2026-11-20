@@ -58,4 +58,41 @@ void main() {
     expect(thread.isOnline, isFalse);
     expect(thread.lastSeen, 'منذ 4 دقائق');
   });
+  test('ChatMessageModel mergeHistory preserves older pages and pending messages', () {
+    ChatMessageModel message(int id, String text) => ChatMessageModel(
+          id: id,
+          senderId: 42,
+          message: text,
+          time: '2026-11-20T00:00:00Z',
+          isMe: true,
+          isSeen: false,
+        );
+
+    final merged = ChatMessageModel.mergeHistory(
+      [message(1, 'old copy'), message(2, 'older page'), message(-7, 'sending')],
+      [message(1, 'server copy'), message(3, 'new message')],
+    );
+
+    expect(merged.map((item) => item.id).toList(), [1, 2, 3, -7]);
+    expect(merged.first.message, 'server copy');
+    expect(merged.last.message, 'sending');
+  });
+
+  test('ChatMessageModel parses an API-confirmed message attachment resource', () {
+    final message = ChatMessageModel.fromJson({
+      'id': 24,
+      'sender_user_id': 42,
+      'message': 'صورة',
+      'created_at': '2026-11-20T00:00:00Z',
+      'attachment': [
+        {'attachment': 'https://cdn.example.test/chat/photo.jpg'},
+      ],
+      'seen': 0,
+    }, 18, currentUserId: 42);
+
+    expect(message.id, 24);
+    expect(message.isMe, isTrue);
+    expect(message.attachmentUrl, 'https://cdn.example.test/chat/photo.jpg');
+  });
+
 }
