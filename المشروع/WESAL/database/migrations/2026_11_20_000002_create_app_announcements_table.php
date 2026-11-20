@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('title_en', 150)->nullable();
             $table->text('message_en')->nullable();
             $table->string('target_type', 20)->default('all');
+            $table->string('target_gender', 10)->default('all');
             $table->unsignedTinyInteger('age_min')->nullable();
             $table->unsignedTinyInteger('age_max')->nullable();
             $table->boolean('button_enabled')->default(false);
