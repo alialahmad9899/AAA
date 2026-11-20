@@ -201,7 +201,7 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString("ChatThread::onlyTrashed()", $command);
         $this->assertStringContainsString("withTrashed()", $command);
         $this->assertStringContainsString("whereNotNull('users.deleted_at')", $command);
-        $this->assertStringContainsString("where('users.deleted_at', '<=', $cutoff)", $command);
+        $this->assertStringContainsString('where(\'users.deleted_at\', \'<=\', $cutoff)', $command);
         $this->assertStringContainsString("chats()->withTrashed()->forceDelete()", $command);
         $this->assertStringContainsString('$thread->forceDelete()', $command);
         $this->assertStringContainsString("wesal:purge-deleted-chat-threads')->dailyAt('02:45')", $kernel);
