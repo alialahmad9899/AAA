@@ -34,6 +34,7 @@ class AppAnnouncementContractTest extends TestCase
             "'title_en'",
             "'message_en'",
             "'target_type'",
+            "'target_gender'",
             "'age_min'",
             "'age_max'",
             "'button_enabled'",
@@ -46,8 +47,21 @@ class AppAnnouncementContractTest extends TestCase
         $this->assertStringContainsString('function matchesMember(?Member $member): bool', $model);
         $this->assertStringContainsString('(int) $member->gender === 1', $model);
         $this->assertStringContainsString('(int) $member->gender === 2', $model);
+        $this->assertStringContainsString('$targetGender === \'male\'', $model);
+        $this->assertStringContainsString('$targetGender === \'female\'', $model);
         $this->assertStringContainsString('Carbon::parse($member->birthday)->age', $model);
         $this->assertStringContainsString('$age >= (int) $this->age_min && $age <= (int) $this->age_max', $model);
+    }
+
+    public function test_existing_announcement_rows_receive_a_safe_gender_column_migration(): void
+    {
+        $migration = $this->source('database/migrations/2026_11_20_000003_add_target_gender_to_app_announcements_table.php');
+
+        $this->assertStringContainsString("Schema::hasTable('app_announcements')", $migration);
+        $this->assertStringContainsString("Schema::hasColumn('app_announcements', 'target_gender')", $migration);
+        $this->assertStringContainsString("->default('all')", $migration);
+        $this->assertStringContainsString("->after('target_type')", $migration);
+        $this->assertStringContainsString('Keep audience settings intact on rollback', $migration);
     }
 
     public function test_member_api_is_scoped_to_authenticated_active_members(): void
@@ -80,10 +94,14 @@ class AppAnnouncementContractTest extends TestCase
         $this->assertGreaterThan($adminGate, $editRoute);
         $this->assertStringContainsString("user_type === 'admin'", $controller);
         $this->assertStringContainsString("'required_if:target_type,age'", $controller);
+        $this->assertStringContainsString("'target_gender' => ['nullable', 'required_if:target_type,age', 'in:all,male,female']", $controller);
+        $this->assertStringContainsString("'target_gender' => $validated['target_type'] === 'age'", $controller);
         $this->assertStringContainsString("'required_if:button_enabled,1'", $controller);
         $this->assertStringContainsString("['http', 'https']", $controller);
         $this->assertStringContainsString('button_enabled', $view);
         $this->assertStringContainsString('target_type', $view);
+        $this->assertStringContainsString('name="target_gender"', $view);
+        $this->assertStringContainsString('الجنس ضمن الفئة العمرية', $view);
     }
 
     public function test_flutter_parses_safe_action_and_loads_popup_once_after_block_check(): void
