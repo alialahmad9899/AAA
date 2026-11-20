@@ -53,7 +53,6 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
   String? _chatsErrorMessage;
   int _chatFetchCounter = 0;
   bool _isFetchingChats = false;
-  Future<void>? _cachedThreadsFuture;
   Timer? _chatRefreshTimer;
 
   bool _isSubscribedOrFemale = true;
@@ -146,9 +145,7 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
     unawaited(_refreshSubscriptionStatus());
   }
 
-  Future<void> _loadCachedThreads() {
-    return _cachedThreadsFuture ??= _readCachedThreads();
-  }
+  Future<void> _loadCachedThreads() => _readCachedThreads();
 
   Future<void> _readCachedThreads() async {
     try {
