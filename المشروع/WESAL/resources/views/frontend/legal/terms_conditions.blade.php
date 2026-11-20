@@ -215,7 +215,7 @@
     <p>Eisenbahnstr. 106, 04315 Leipzig, Deutschland</p>
     <p>البريد: <a href="mailto:wesalsyrien@gmail.com">wesalsyrien@gmail.com</a></p>
     <p>الموقع: <a href="https://www.wesalsyria.com" target="_blank" rel="noopener noreferrer">https://www.wesalsyria.com</a> · البيانات القانونية: <a href="https://www.wesalsyria.com/impressum" target="_blank" rel="noopener noreferrer">https://www.wesalsyria.com/impressum</a></p>
-    <p>سياسة الخصوصية: <a href="https://www.wesalsyria.com/privacy-policy" target="_blank" rel="noopener noreferrer">https://www.wesalsyria.com/privacy</a></p>
+    <p>سياسة الخصوصية: <a href="https://www.wesalsyria.com/privacy-policy" target="_blank" rel="noopener noreferrer">https://www.wesalsyria.com/privacy-policy</a></p>
 </section>
 
 
