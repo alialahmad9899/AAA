@@ -106,4 +106,28 @@ void main() {
     expect(thread.lastSeen, '2026-11-20T01:20:00Z');
   });
 
+  test('ChatMessageModel mergeHistory deduplicates repeated server IDs', () {
+    ChatMessageModel message(int id, String text) => ChatMessageModel(
+          id: id,
+          senderId: 42,
+          message: text,
+          time: '2026-11-20T00:00:00Z',
+          isMe: true,
+          isSeen: false,
+        );
+
+    final merged = ChatMessageModel.mergeHistory(
+      [message(30, 'existing')],
+      [
+        message(31, 'new'),
+        message(30, 'server-updated'),
+        message(31, 'duplicate-latest'),
+      ],
+    );
+
+    expect(merged.map((item) => item.id).toList(), [30, 31]);
+    expect(merged.map((item) => item.message).toList(),
+        ['server-updated', 'duplicate-latest']);
+  });
+
 }
