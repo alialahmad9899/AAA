@@ -11,9 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../constants/colors.dart';
-import '../../widgets/app_snackbar.dart';
+import '../../utils/legal_document_links.dart';
 import '../../utils/arabic_number_formatter.dart';
 
 class Step1BasicInfo extends StatefulWidget {
@@ -64,10 +63,8 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
   bool _obscureConfirmPassword = true;
 
   late final TapGestureRecognizer _termsToggleRecognizer;
+  late final TapGestureRecognizer _privacyLinkRecognizer;
   late final TapGestureRecognizer _termsLinkRecognizer;
-
-  static final Uri _termsUri =
-      Uri.parse('https://www.wesalsyria.com/terms-conditions');
 
   String? _selectedDay;
   String? _selectedMonth;
@@ -84,8 +81,10 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
     super.initState();
     _termsToggleRecognizer = TapGestureRecognizer()
       ..onTap = () => widget.onTermsChanged(!widget.agreedToTerms);
+    _privacyLinkRecognizer = TapGestureRecognizer()
+      ..onTap = _openPrivacyPolicy;
     _termsLinkRecognizer = TapGestureRecognizer()
-      ..onTap = _openTermsAndConditions;
+      ..onTap = _openTermsOfUse;
     _days = List.generate(31, (i) => (i + 1).toString());
     _months = List.generate(12, (i) => (i + 1).toString());
     final currentYear = DateTime.now().year;
@@ -94,46 +93,18 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
     _parseDobFromController();
   }
 
-  Future<void> _openTermsAndConditions() async {
-    try {
-      final opened = await launchUrl(
-        _termsUri,
-        mode: LaunchMode.externalApplication,
-      );
-      if (!opened && mounted) {
-        AppSnackBar.show(
-          context: context,
-          type: NotificationType.error,
-          isArabic: _isAr,
-          titleAr: 'تعذّر فتح صفحة الشروط',
-          titleEn: 'Could not open the terms',
-          messageAr: 'لم نتمكن من فتح صفحة الخصوصية وشروط التسجيل.',
-          messageEn: 'We could not open the privacy policy and registration terms.',
-          detailsAr: 'تحقق من اتصال الإنترنت ثم حاول فتح الرابط مجدداً.',
-          detailsEn: 'Check your internet connection and open the link again.',
-        );
-      }
-    } catch (error) {
-      debugPrint('Failed to open Wesal terms and conditions: $error');
-      if (mounted) {
-        AppSnackBar.show(
-          context: context,
-          type: NotificationType.error,
-          isArabic: _isAr,
-          titleAr: 'تعذّر فتح صفحة الشروط',
-          titleEn: 'Could not open the terms',
-          messageAr: 'لم نتمكن من فتح صفحة الخصوصية وشروط التسجيل.',
-          messageEn: 'We could not open the privacy policy and registration terms.',
-          detailsAr: 'تحقق من اتصال الإنترنت ثم حاول فتح الرابط مجدداً.',
-          detailsEn: 'Check your internet connection and open the link again.',
-        );
-      }
-    }
+  void _openPrivacyPolicy() {
+    LegalDocumentLinks.openPrivacyPolicy(context, isArabic: _isAr);
+  }
+
+  void _openTermsOfUse() {
+    LegalDocumentLinks.openTermsOfUse(context, isArabic: _isAr);
   }
 
   @override
   void dispose() {
     _termsToggleRecognizer.dispose();
+    _privacyLinkRecognizer.dispose();
     _termsLinkRecognizer.dispose();
     super.dispose();
   }
@@ -832,9 +803,20 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                               recognizer: _termsToggleRecognizer,
                             ),
                             TextSpan(
-                              text: _isAr
-                                  ? 'الخصوصية وشروط التسجيل'
-                                  : 'Privacy Policy & Registration Terms',
+                              text: _isAr ? 'سياسة الخصوصية' : 'Privacy Policy',
+                              style: const TextStyle(
+                                color: AppColors.primaryTeal,
+                                decoration: TextDecoration.underline,
+                                decorationColor: AppColors.primaryTeal,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              recognizer: _privacyLinkRecognizer,
+                            ),
+                            TextSpan(
+                              text: _isAr ? ' و' : ' and ',
+                            ),
+                            TextSpan(
+                              text: _isAr ? 'شروط الاستخدام' : 'Terms of Use',
                               style: const TextStyle(
                                 color: AppColors.primaryTeal,
                                 decoration: TextDecoration.underline,
@@ -843,10 +825,7 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                               ),
                               recognizer: _termsLinkRecognizer,
                             ),
-                            TextSpan(
-                              text: ' *',
-                              recognizer: _termsToggleRecognizer,
-                            ),
+                            const TextSpan(text: ' *'),
                           ],
                         ),
                       ),
