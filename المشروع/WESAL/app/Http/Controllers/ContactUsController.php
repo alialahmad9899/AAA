@@ -64,7 +64,14 @@ class ContactUsController extends Controller
             Log::error('فشل إرسال إشعار الأدمن: ' . $e->getMessage());
         }
 
-        flash(app()->getLocale() === 'en' ? 'Your message has been sent successfully.' : translate('Your query has been sent successfully'))->success();
+        $websiteLocale = strtolower((string) (
+            $request->query('wesal_locale')
+            ?: $request->cookie('wesal_website_locale')
+            ?: $request->session()->get('website_locale')
+            ?: $request->session()->get('locale')
+            ?: app()->getLocale()
+        ));
+        flash($websiteLocale === 'en' ? 'Your message has been sent successfully.' : translate('Your query has been sent successfully'))->success();
         return back();
     }
 
