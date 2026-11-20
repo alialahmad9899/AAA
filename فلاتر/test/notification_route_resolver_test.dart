@@ -78,6 +78,21 @@ void main() {
     });
 
 
+    test('keeps null active chat IDs safe', () {
+      final current = resolveNotificationDestination({
+        'type': 'chat_message',
+        'thread_id': '81',
+      });
+
+      expect(
+        isNotificationDestinationAlreadyVisible(
+          current,
+          activeChatThreadId: null,
+        ),
+        isFalse,
+      );
+    });
+
     test('does not reopen the chat that is already visible', () {
       final current = resolveNotificationDestination({
         'type': 'chat_message',
