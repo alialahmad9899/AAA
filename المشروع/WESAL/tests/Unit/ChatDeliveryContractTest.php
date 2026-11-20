@@ -23,9 +23,14 @@ class ChatDeliveryContractTest extends TestCase
 'data' => (new ChatViewResource($new_chat))->resolve($request)
 SOURCE;
         $this->assertStringContainsString($expectedControllerSnippet, $controller);
-        $this->assertStringContainsString("'id'             => $this->id", $resource);
-        $this->assertStringContainsString("'sender_user_id' => $this->sender_user_id", $resource);
-        $this->assertStringContainsString("'attachment'     => $attachments", $resource);
-        $this->assertStringContainsString("'created_at'     => optional($this->created_at)->toIso8601String()", $resource);
+
+        $expectedResourceFields = <<<'SOURCE'
+'id'             => $this->id,
+'sender_user_id' => $this->sender_user_id,
+'attachment'     => $attachments,
+'created_at'     => optional($this->created_at)->toIso8601String(),
+SOURCE;
+        $this->assertStringContainsString($expectedResourceFields, $resource);
+
     }
 }
