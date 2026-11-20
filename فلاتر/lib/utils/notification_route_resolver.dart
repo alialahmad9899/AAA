@@ -68,9 +68,10 @@ void releaseNotificationDestination(
 /// Opening it again from a notification would only stack a duplicate route.
 bool isNotificationDestinationAlreadyVisible(
   NotificationDestination? destination, {
-  required int activeChatThreadId,
+  required int? activeChatThreadId,
 }) {
-  return activeChatThreadId > 0 &&
+  return activeChatThreadId != null &&
+      activeChatThreadId > 0 &&
       destination?.kind == NotificationDestinationKind.chat &&
       destination?.id == activeChatThreadId;
 }
