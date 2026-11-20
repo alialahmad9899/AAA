@@ -735,6 +735,16 @@
                 </li>
                 @endif
 
+                @if (auth()->user()->user_type === 'admin')
+                <!-- Mobile app announcement management -->
+                <li class="aiz-side-nav-item">
+                    <a href="{{ route('admin.app-announcement.edit') }}" class="aiz-side-nav-link {{ areActiveRoutes(['admin.app-announcement.edit']) }}">
+                        <i class="las la-bullhorn aiz-side-nav-icon"></i>
+                        <span class="aiz-side-nav-text">نافذة ملاحظات وتحديثات التطبيق</span>
+                    </a>
+                </li>
+                @endif
+
                 <!-- 👑 خيار استبيانات باقة VIP -->
                 <li class="aiz-side-nav-item">
                     <a href="{{ route('vip-surveys.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['vip-surveys.index', 'vip-surveys.show']) }}">
