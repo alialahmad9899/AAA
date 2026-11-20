@@ -1,11 +1,23 @@
 @php
-    $websiteLocale = strtolower((string) ($websiteLocale ?? request()->attributes->get(
-        'wesal_website_locale',
-        request()->query('wesal_locale', session('website_locale', app()->getLocale()))
-    )));
-    if (!in_array($websiteLocale, ['ar', 'en'], true)) {
-        $websiteLocale = 'ar';
+    // Resolve an explicit URL choice before inherited view data and saved state.
+    $localeCandidates = [
+        request()->query('wesal_locale'),
+        request()->cookie('wesal_website_locale'),
+        request()->session()->get('website_locale'),
+        request()->session()->get('locale'),
+        request()->attributes->get('wesal_website_locale'),
+        $websiteLocale ?? null,
+        app()->getLocale(),
+    ];
+    $websiteLocale = 'ar';
+    foreach ($localeCandidates as $localeCandidate) {
+        $localeCandidate = strtolower(trim((string) $localeCandidate));
+        if (in_array($localeCandidate, ['ar', 'en'], true)) {
+            $websiteLocale = $localeCandidate;
+            break;
+        }
     }
+    request()->attributes->set('wesal_website_locale', $websiteLocale);
     app()->setLocale($websiteLocale);
     $websiteIsArabic = $websiteLocale === 'ar';
 @endphp
