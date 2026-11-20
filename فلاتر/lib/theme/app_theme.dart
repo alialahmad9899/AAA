@@ -159,8 +159,8 @@ class AppTheme {
         // Keep a small, even breathing space instead of Flutter's wide
         // default gutters around every Dialog and AlertDialog.
         insetPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 14,
+          horizontal: 8,
+          vertical: 8,
         ),
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
