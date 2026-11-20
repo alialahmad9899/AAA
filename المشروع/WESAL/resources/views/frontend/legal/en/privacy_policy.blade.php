@@ -116,7 +116,7 @@
 
 <section class="legal-section" id="privacy-12">
     <h2>12. Cookies and analytics</h2>
-    <p>We use only technologies that are strictly necessary to operate the application and website, such as maintaining your login session and remembering your language (§ 25(2) TDDDG). We do not use analytics or marketing services unless and until they are activated in accordance with the applicable consent requirements. Any service that requires consent will operate only after you have given that consent.</p>
+    <p>We use technologies that are strictly necessary to operate the application and website, such as maintaining your login session and remembering your language (§ 25(2) TDDDG). Google Analytics and Meta Pixel may be enabled in the website settings to measure website use and campaign performance. These services are not loaded and do not send data unless you select “Accept optional” in the consent banner. You may reject them or change your choice later using the cookie-preferences control. If you reject them, only strictly necessary technologies remain active.</p>
 </section>
 
 <section class="legal-section" id="privacy-13">
@@ -134,6 +134,8 @@
                 <tr><td data-label="Recipient">Hostinger</td><td data-label="Purpose">Website, server and database hosting</td><td data-label="Location">Germany</td></tr>
                 <tr><td data-label="Recipient">Email service for the wesalsyria.com domain</td><td data-label="Purpose">Account and confirmation emails</td><td data-label="Location">Germany</td></tr>
                 <tr><td data-label="Recipient">Firebase Cloud Messaging (Google)</td><td data-label="Purpose">Delivery of push notifications</td><td data-label="Location">European Union, with possible transfers to the United States (section 15)</td></tr>
+                <tr><td data-label="Recipient">Google Analytics (when enabled and after your consent)</td><td data-label="Purpose">Measuring and improving website usage</td><td data-label="Location">As described in Google's policy; international transfers may occur (section 15)</td></tr>
+                <tr><td data-label="Recipient">Meta Pixel / Facebook Pixel (when enabled and after your consent)</td><td data-label="Purpose">Measuring advertising campaigns and their performance</td><td data-label="Location">As described in Meta's policy; international transfers may occur (section 15)</td></tr>
                 <tr><td data-label="Recipient">Stripe</td><td data-label="Purpose">Payment processing</td><td data-label="Location">Ireland, with possible transfers to the United States (section 15)</td></tr>
                 <tr><td data-label="Recipient">TikTok and Facebook</td><td data-label="Purpose">Publication only with your consent (section 8)</td><td data-label="Location">Ireland, with possible transfers outside the European Union (section 15)</td></tr>
                 <tr><td data-label="Recipient">Other users</td><td data-label="Purpose">Viewing your profile according to the information you chose to provide</td><td data-label="Location">Within Wesal</td></tr>
@@ -145,7 +147,7 @@
 
 <section class="legal-section" id="privacy-15">
     <h2>15. Storage location and transfers outside the European Union</h2>
-    <p>We store your data on servers in the European Union and European Economic Area. Some providers mentioned in section 14 (Google for Firebase, Stripe, social-media platforms and WhatsApp when used for an interview) may transfer data to countries outside the European Union, such as the United States. Such transfers take place only with appropriate safeguards under Articles 45 or 46 GDPR: an adequacy decision under the EU–US Data Privacy Framework for companies certified under that framework, or otherwise the European Commission’s Standard Contractual Clauses. You may request a copy of the relevant safeguards by email.</p>
+    <p>We store your data on servers in the European Union and European Economic Area. Some providers mentioned in section 14 (Google for Firebase and Google Analytics, Stripe, Meta/Facebook Pixel, social-media platforms and WhatsApp when used for an interview) may transfer data to countries outside the European Union, such as the United States. Such transfers take place only with appropriate safeguards under Articles 45 or 46 GDPR: an adequacy decision under the EU–US Data Privacy Framework for companies certified under that framework, or otherwise the European Commission’s Standard Contractual Clauses. You may request a copy of the relevant safeguards by email.</p>
 </section>
 
 <section class="legal-section" id="privacy-16">
