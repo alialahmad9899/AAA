@@ -312,6 +312,27 @@ class ChatMessageModel {
     this.attachmentUrl,
   });
 
+  /// Merge server updates into the locally loaded history without dropping
+  /// older pages. Negative IDs are reserved for optimistic messages and remain
+  /// at the end until the server confirms them with a real message ID.
+  static List<ChatMessageModel> mergeHistory(
+    List<ChatMessageModel> existing,
+    List<ChatMessageModel> incoming,
+  ) {
+    final byId = <int, ChatMessageModel>{};
+    for (final message in existing) {
+      if (message.id > 0) byId[message.id] = message;
+    }
+    for (final message in incoming) {
+      if (message.id > 0) byId[message.id] = message;
+    }
+
+    final confirmed = byId.values.toList()
+      ..sort((left, right) => left.id.compareTo(right.id));
+    final pending = existing.where((message) => message.id < 0).toList();
+    return [...confirmed, ...pending];
+  }
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'sender_user_id': senderId,
