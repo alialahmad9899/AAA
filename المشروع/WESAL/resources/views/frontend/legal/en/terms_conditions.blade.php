@@ -103,7 +103,7 @@
     <ol>
         <li>Consumers have the right to withdraw from a paid contract within 14 days without giving a reason, in accordance with the withdrawal instructions and model form in the appendix. You may withdraw by making a clear statement by email to <a href="mailto:wesalsyrien@gmail.com">wesalsyrien@gmail.com</a> or by post to the address in section 1. We will confirm receipt.</li>
         <li>If you expressly request that the service begins before the withdrawal period ends, you must pay an appropriate amount for the part of the service performed up to the time you notify us of your withdrawal (§ 357a(2) BGB).</li>
-        <li>The right of withdrawal for a service contract expires once the service has been fully performed, provided you expressly requested that performance begin before the withdrawal period ended and acknowledged that you would lose the right of withdrawal upon full performance (§ 356(4) BGB).</li>
+        <li>The right of withdrawal for a service contract expires once the service has been fully performed, provided you expressly requested that performance begin before the withdrawal period ended and acknowledged that you would lose the right of withdrawal upon full performance (§ 356(5) BGB).</li>
         <li>After the withdrawal period ends, payments for unused paid time are not refunded unless required by law or stated otherwise in these Terms.</li>
     </ol>
 </section>
