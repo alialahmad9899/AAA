@@ -69,6 +69,16 @@
         transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
     }
     .ws-header-cta:hover, .ws-button-primary:hover { background: var(--ws-primary-2); color: #fff !important; transform: translateY(-2px); box-shadow: 0 13px 28px rgba(15,76,92,.23); }
+    .ws-mobile-header-controls { display: none; align-items: center; gap: 8px; }
+    .ws-mobile-header-controls .wesal-language-switcher {
+        display: inline-flex; align-items: center; gap: 2px; padding: 2px;
+        border: 1px solid rgba(15,76,92,.16); border-radius: 999px; background: #fff; direction: ltr;
+    }
+    .ws-mobile-header-controls .wesal-language-switcher button {
+        min-height: 30px; padding: 4px 8px; border: 0; border-radius: 999px;
+        color: var(--ws-primary); background: transparent; font: 800 10px/1.2 inherit;
+    }
+    .ws-mobile-header-controls .wesal-language-switcher button.is-active { color: #fff; background: var(--ws-primary); }
     .ws-mobile-toggle { display: none; border: 1px solid var(--ws-line); color: var(--ws-primary); background: white; border-radius: 13px; width: 44px; height: 44px; font-size: 23px; }
     .ws-mobile-menu { display: none; padding: 6px 0 18px; }
     .ws-mobile-menu a { display: block; padding: 12px 4px; border-top: 1px solid var(--ws-line); color: var(--ws-ink); font-weight: 800; text-decoration: none; }
@@ -205,6 +215,7 @@
         .ws-container { width: min(100% - 34px, 620px); }
         .ws-header-inner { min-height: 68px; }
         .ws-nav, .ws-header-actions { display: none; }
+        .ws-mobile-header-controls { display: inline-flex; }
         .ws-mobile-toggle { display: inline-flex; align-items: center; justify-content: center; }
         .ws-mobile-menu.is-open { display: block; }
         .ws-hero { padding: 48px 0 56px; }
@@ -289,7 +300,10 @@
                         <a class="ws-header-cta" href="{{ route('register') }}">{{ $isEnglish ? 'Create account' : 'إنشاء حساب' }} <i class="las {{ $isEnglish ? 'la-arrow-right' : 'la-arrow-left' }}"></i></a>
                     @endguest
                 </div>
-                <button class="ws-mobile-toggle" type="button" id="wsMobileToggle" aria-label="{{ $isEnglish ? 'Open menu' : 'فتح القائمة' }}" aria-expanded="false" aria-controls="wsMobileMenu"><i class="las la-bars"></i></button>
+                <div class="ws-mobile-header-controls">
+                    @include('frontend.inc.language_switcher')
+                    <button class="ws-mobile-toggle" type="button" id="wsMobileToggle" aria-label="{{ $isEnglish ? 'Open menu' : 'فتح القائمة' }}" aria-expanded="false" aria-controls="wsMobileMenu"><i class="las la-bars"></i></button>
+                </div>
             </div>
             <nav class="ws-mobile-menu" id="wsMobileMenu" aria-label="{{ $isEnglish ? 'Mobile navigation' : 'قائمة الهاتف' }}">
                 <a href="#about">{{ $isEnglish ? 'About Wesal' : '{{ $isEnglish ? "About Wesal" : "عن وصال" }}' }}</a>
@@ -301,7 +315,6 @@
                     <a href="{{ route('login') }}">{{ $isEnglish ? 'Log in' : 'تسجيل الدخول' }}</a>
                     <a href="{{ route('register') }}">{{ $isEnglish ? 'Create an account' : 'إنشاء حساب جديد' }}</a>
                 @endguest
-                @include('frontend.inc.language_switcher')
             </nav>
         </div>
     </header>
