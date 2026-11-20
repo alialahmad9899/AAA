@@ -5,7 +5,6 @@
 //        بتصميم Modern Premium UI وترجمة ديناميكية (عربي/إنجليزي).
 // ============================================================================
 
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../constants/colors.dart';
 import '../utils/legal_document_links.dart';
@@ -28,7 +27,13 @@ class AboutAppDialog extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.cardColor,
+      showDragHandle: false,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      elevation: 12,
       barrierColor: Colors.black.withValues(alpha: 0.65),
       builder: (context) => AboutAppDialog(currentLanguage: currentLanguage),
     );
@@ -43,30 +48,14 @@ class AboutAppDialog extends StatelessWidget {
 
     return Directionality(
       textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
-      child: ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: Container(
+      child: Container(
             constraints: BoxConstraints(
               maxHeight: screenHeight * 0.85,
             ),
             decoration: BoxDecoration(
-              color: AppColors.cardColor.withValues(alpha: 0.92),
+              color: AppColors.cardColor,
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(32)),
-              border: Border.all(
-                color: AppColors.textDark.withValues(alpha: 0.18),
-                width: 1.2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primaryTeal.withValues(alpha: 0.2),
-                  blurRadius: 25,
-                  spreadRadius: 2,
-                  offset: const Offset(0, -5),
-                ),
-              ],
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -74,6 +63,7 @@ class AboutAppDialog extends StatelessWidget {
                 // 1. مقبض السحب العلوي (Drag Handle)
                 const SizedBox(height: 12),
                 Container(
+                  key: const ValueKey('about-app-drag-handle'),
                   width: 48,
                   height: 5,
                   decoration: BoxDecoration(
@@ -148,7 +138,7 @@ class AboutAppDialog extends StatelessWidget {
                                   child: Text(
                                     isAr ? 'الإصدار 2026' : 'Version 2026',
                                     style: const TextStyle(
-                                      color: AppColors.accentLight,
+                                      color: AppColors.primaryTeal,
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
                                       fontFamily: 'Cairo',
@@ -307,7 +297,7 @@ class AboutAppDialog extends StatelessWidget {
                         child: Text(
                           isAr ? 'حسناً، فهمت' : 'Okay, I understand',
                           style: const TextStyle(
-                            color: AppColors.textDark,
+                            color: Colors.white,
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'Cairo',
@@ -320,8 +310,6 @@ class AboutAppDialog extends StatelessWidget {
               ],
             ),
           ),
-        ),
-      ),
     );
   }
 
