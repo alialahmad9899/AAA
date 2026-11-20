@@ -65,13 +65,19 @@ class LegalDocumentPagesContractTest extends TestCase
             'Stripe Payments Europe Ltd.',
             '90 يوماً',
             '12 شهراً بعد إغلاق البلاغ',
-            'الحذف خلال 30 يوماً',
-            'يؤكده المبرمج',
-            'يؤكده المحاسب',
-            '[مكتب المحاسبة أو المستشار الضريبي]',
+            '30 يوماً',
             'Devrientstraße 5, 01067 Dresden',
+            'تنظيف يومية مجدولة',
         ] as $requiredText) {
             $this->assertStringContainsString($requiredText, $privacy);
+        }
+
+        foreach ([
+            'يؤكده المبرمج',
+            'يؤكده المحاسب',
+            'مكتب المحاسبة أو المستشار الضريبي',
+        ] as $editorialPlaceholder) {
+            $this->assertStringNotContainsString($editorialPlaceholder, $privacy);
         }
 
         $this->assertSame(4, substr_count($privacy, '<table class="legal-table">'));
