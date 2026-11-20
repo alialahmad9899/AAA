@@ -605,7 +605,14 @@ class NotificationService {
         data,
         language,
       );
-      if (resolved == null && !fallbackToCenter) return false;
+      if (resolved == null && !fallbackToCenter) {
+        releaseNotificationDestination(
+          claimedDestinationKey,
+          activeDestinations: _activeNotificationDestinations,
+        );
+        claimedDestinationKey = null;
+        return false;
+      }
 
       final WidgetBuilder destination = resolved ??
           (_) => NotificationsScreen(currentLanguage: language);
