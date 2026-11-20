@@ -53,7 +53,15 @@ class ContactUsRequest extends FormRequest
      */
     public function messages()
     {
-        if (app()->getLocale() === 'en') {
+        $websiteLocale = strtolower((string) (
+            $this->query('wesal_locale')
+            ?: $this->cookie('wesal_website_locale')
+            ?: $this->session()->get('website_locale')
+            ?: $this->session()->get('locale')
+            ?: app()->getLocale()
+        ));
+
+        if ($websiteLocale === 'en') {
             return [
                 'name.required' => 'Please enter your name.',
                 'email.required' => 'Please enter a valid email address.',
