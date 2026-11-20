@@ -336,7 +336,7 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertNotFalse($queryBranchPosition, 'The explicit locale override branch must exist.');
         $this->assertNotFalse($cookieBranchPosition, 'The saved locale cookie branch must remain available.');
         $this->assertLessThan($cookieBranchPosition, $queryBranchPosition, 'The explicit choice must win over a stale cookie.');
-        $this->assertStringContainsString('Cookie::queue(cookie(', $middleware);
+        $this->assertStringContainsString("\$response->headers->setCookie(cookie(", $middleware);
         $this->assertStringContainsString("'wesal_website_locale'", $middleware);
     }
 
