@@ -198,9 +198,9 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
         border: Border.all(color: AppColors.lineColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
+            color: AppColors.textDark.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
