@@ -44,16 +44,23 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString("request()->getRequestUri()", $switcher);
     }
 
-    public function test_browser_locale_middleware_is_applied_to_every_public_web_request(): void
+    public function test_browser_locale_middleware_runs_after_session_start_for_web_requests(): void
     {
         $kernel = $this->source('app/Http/Kernel.php');
         $routes = $this->source('routes/web.php');
 
-        $sessionPosition = strpos($kernel, 'StartSession::class,');
-        $localePosition = strpos($kernel, 'SetWebsiteLocale::class,');
-        $this->assertNotFalse($sessionPosition);
-        $this->assertNotFalse($localePosition);
-        $this->assertLessThan($localePosition, $sessionPosition);
+        $webGroupStart = strpos($kernel, "'web' => [");
+        $apiGroupStart = strpos($kernel, "'api' => [", $webGroupStart === false ? 0 : $webGroupStart);
+        $this->assertNotFalse($webGroupStart, 'The Laravel web middleware group must exist.');
+        $this->assertNotFalse($apiGroupStart, 'The Laravel API middleware group must follow the web group.');
+
+        $webGroup = substr($kernel, $webGroupStart, $apiGroupStart - $webGroupStart);
+        $sessionPosition = strpos($webGroup, '\\Illuminate\\Session\\Middleware\\StartSession::class,');
+        $localePosition = strpos($webGroup, '\\App\\Http\\Middleware\\SetWebsiteLocale::class,');
+
+        $this->assertNotFalse($sessionPosition, 'The web group must start the session.');
+        $this->assertNotFalse($localePosition, 'The website locale middleware must be attached to the web group, not merely registered as an alias.');
+        $this->assertGreaterThan($sessionPosition, $localePosition, 'The locale middleware must run after the session starts.');
 
         $this->assertStringContainsString("Route::get('/', 'index')->name('home')", $routes);
         $this->assertStringContainsString("Route::get('/contact-us/page', 'show_contact_us_page')->name('contact_us')", $routes);
