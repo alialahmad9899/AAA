@@ -329,7 +329,7 @@ class BilingualWebsiteContractTest extends TestCase
     {
         $middleware = $this->source('app/Http/Middleware/SetWebsiteLocale.php');
 
-        $queryLocalePosition = strpos($middleware, "$request->query('wesal_locale'");
+        $queryLocalePosition = strpos($middleware, '$request->query(\\'wesal_locale\\'');
         $queryBranchPosition = strpos($middleware, "if (in_array($queryLocale, ['ar', 'en'], true))");
         $cookieBranchPosition = strpos($middleware, "} elseif (in_array($cookieLocale, ['ar', 'en'], true))");
 
@@ -345,8 +345,8 @@ class BilingualWebsiteContractTest extends TestCase
     {
         $controller = $this->source('app/Http/Controllers/LanguageController.php');
 
-        $this->assertStringContainsString("$queryParameters['wesal_locale'] = $locale;", $controller);
-        $this->assertStringContainsString("http_build_query($queryParameters)", $controller);
+        $this->assertStringContainsString('$queryParameters[\\'wesal_locale\\'] = $locale;', $controller);
+        $this->assertStringContainsString('http_build_query($queryParameters)', $controller);
         $this->assertStringContainsString('Only redirect to a local path.', $controller);
     }
 
