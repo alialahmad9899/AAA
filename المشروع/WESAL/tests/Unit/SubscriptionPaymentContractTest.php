@@ -56,6 +56,19 @@ class SubscriptionPaymentContractTest extends TestCase
         self::assertStringNotContainsString('heading_en', $paymentTypesController);
     }
 
+    public function test_package_payment_activation_key_has_a_safe_repair_migration(): void
+    {
+        $migration = $this->source('database/migrations/2026_11_20_000001_ensure_package_payment_activation_key.php');
+
+        self::assertStringContainsString("Schema::hasTable('package_payments')", $migration);
+        self::assertStringContainsString("Schema::hasColumn('package_payments', 'activation_key')", $migration);
+        self::assertStringContainsString("$"."table->string('activation_key', 64)->nullable()->after('payment_method')", $migration);
+        self::assertStringContainsString("$"."table->unique('activation_key', 'package_payments_activation_key_unique')", $migration);
+        self::assertStringContainsString("SHOW INDEX FROM", $migration);
+        self::assertStringContainsString('hasSingleColumnUniqueIndex', $migration);
+        self::assertStringContainsString('Intentionally non-destructive', $migration);
+    }
+
     public function test_stripe_activation_is_read_from_the_current_database_setting(): void
     {
         $stripeController = $this->source('app/Http/Controllers/Api/Payment/StripeController.php');
