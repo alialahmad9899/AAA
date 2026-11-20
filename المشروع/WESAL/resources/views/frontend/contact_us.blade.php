@@ -140,7 +140,7 @@
                         <div><h3>{{ $isEnglish ? "Feedback and suggestions" : "الملاحظات والاقتراحات" }}</h3><p>{{ $isEnglish ? "Share your thoughts and ideas to help us improve the Wesal experience." : "شاركنا رأيك وأفكارك للمساهمة في تطوير تجربة وصال." }}</p></div>
                     </div>
 
-                    <div class="contact-privacy-note"><i class="las la-shield-alt"></i> {{ $isEnglish ? "We use the email address you provide to reply to your message and follow up on your request." : "نستخدم {{ $isEnglish ? "Email address" : "البريد الإلكتروني" }} الذي تدخله للرد على رسالتك ومتابعة استفسارك." }}</div>
+                    <div class="contact-privacy-note"><i class="las la-shield-alt"></i> {{ $isEnglish ? "We use the email address you provide to reply to your message and follow up on your request." : "نستخدم البريد الإلكتروني الذي تدخله للرد على رسالتك ومتابعة استفسارك." }}</div>
                 </aside>
             </div>
 
@@ -148,7 +148,7 @@
                 <div class="contact-panel contact-form-panel">
                     <div class="mb-4">
                         <h2 class="contact-panel-title">{{ $isEnglish ? "Send a message to the Wesal team" : "أرسل رسالتك إلى فريق وصال" }}</h2>
-                        <p class="contact-panel-subtitle">{{ $isEnglish ? "All fields marked with an asterisk are required." : "جميع الحقول المعلّمة بنجمة مطلوبة ل{{ $isEnglish ? "Send message" : "إرسال الرسالة" }}." }}</p>
+                        <p class="contact-panel-subtitle">{{ $isEnglish ? "All fields marked with an asterisk are required." : "جميع الحقول المعلّمة بنجمة مطلوبة لإرسال الرسالة." }}</p>
                     </div>
 
                     @if ($errors->any())
