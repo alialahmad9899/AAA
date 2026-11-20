@@ -158,7 +158,7 @@
             <thead><tr><th>Data</th><th>Retention period</th></tr></thead>
             <tbody>
                 <tr><td data-label="Data">Account, profile and photos</td><td data-label="Retention period">While the account exists, then deleted within 30 days of account deletion</td></tr>
-                <tr><td data-label="Data">Messages in a conversation involving a deleted account</td><td data-label="Retention period">The conversation is hidden when the account is deleted. Its messages and deleted conversation record are permanently removed by the scheduled cleanup after 30 days.</td></tr>
+                <tr><td data-label="Data">Messages in a conversation involving a deleted account</td><td data-label="Retention period">The conversation is hidden when the account is deleted. Its messages and deleted conversation record are permanently removed by the scheduled cleanup after 30 days from the account deletion date.</td></tr>
                 <tr><td data-label="Data">Reports and security records</td><td data-label="Retention period">12 months after a report is closed, and longer only where a dispute remains ongoing</td></tr>
                 <tr><td data-label="Data">Identity-verification document</td><td data-label="Retention period">Deleted after verification is complete</td></tr>
                 <tr><td data-label="Data">Server logs</td><td data-label="Retention period">90 days</td></tr>
