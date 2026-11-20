@@ -46,7 +46,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
 
     @php
@@ -56,7 +56,7 @@
     <link rel="stylesheet" href="{{ static_asset('assets/css/vendors.css') }}">
     <link rel="stylesheet" href="{{ static_asset('assets/css/aiz-core.css') }}?v={{ $coreCssVersion }}">
 
-    @if (optional($lang)->rtl == 1)
+    @if ($websiteIsArabic)
         <link rel="stylesheet" href="{{ static_asset('assets/css/bootstrap-rtl.min.css') }}">
     @endif
 
@@ -76,7 +76,7 @@
         }
 
         body {
-            font-family: 'Cairo', sans-serif !important;
+            font-family: {{ $websiteIsArabic ? "'Cairo', sans-serif" : "'Inter', Arial, sans-serif" }} !important;
             font-weight: 500;
             color: #334155;
             background-color: var(--bg-body) !important;
