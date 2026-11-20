@@ -27,6 +27,7 @@ class Kernel extends ConsoleKernel
         // Idempotent cleanup. Read-time checks below remain authoritative even if cron is delayed.
         $schedule->command('wesal:expire-member-packages')->dailyAt('00:10')->timezone(config('app.timezone'))->withoutOverlapping();
         $schedule->command('wesal:notify-expiring-member-packages')->hourly()->timezone(config('app.timezone'))->withoutOverlapping();
+        $schedule->command('wesal:purge-deleted-chat-threads')->dailyAt('02:45')->timezone(config('app.timezone'))->withoutOverlapping();
     }
 
     /**
