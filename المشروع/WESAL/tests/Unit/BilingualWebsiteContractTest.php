@@ -230,7 +230,7 @@ class BilingualWebsiteContractTest extends TestCase
             $this->assertStringContainsString($expected, $contact);
         }
         $this->assertStringContainsString('dir="{{ $isEnglish ? \'ltr\' : \'rtl\' }}"', $contact);
-        $this->assertStringContainsString("app()->getLocale() === 'en'", $request);
+        $this->assertStringContainsString("$this->query('wesal_locale')", $request);
         $this->assertStringContainsString('Please enter a valid email address.', $request);
         $this->assertStringContainsString('يرجى إدخال بريد إلكتروني صحيح.', $request);
     }
@@ -420,7 +420,7 @@ class BilingualWebsiteContractTest extends TestCase
         }
 
         $contact = $this->source('resources/views/frontend/contact_us.blade.php');
-        $this->assertStringContainsString("route('contact-us.store', ['wesal_locale' => $websiteLocale])", $contact);
+        $this->assertStringContainsString('route(\'contact-us.store\', [\'wesal_locale\' => $websiteLocale])', $contact);
 
         $request = $this->source('app/Http/Requests/ContactUsRequest.php');
         $controller = $this->source('app/Http/Controllers/ContactUsController.php');
