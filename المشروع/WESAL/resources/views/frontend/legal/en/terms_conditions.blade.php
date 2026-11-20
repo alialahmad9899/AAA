@@ -210,7 +210,7 @@
     </div>
     <p>I/We (*) hereby give notice that I/We (*) withdraw from the contract concluded by me/us (*) for the provision of the following service:</p>
     <p>Service / plan: ______________________________________________</p>
-    <p>Ordered on (*) / contract concluded on (*): _______________________</p>
+    <p>Ordered on (*) / received on (*): _______________________</p>
     <p>Name of consumer(s): ________________________________________</p>
     <p>Address of consumer(s): ______________________________________</p>
     <p>Signature of consumer(s) (only if this form is notified on paper): _______________________</p>
