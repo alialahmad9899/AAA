@@ -352,6 +352,7 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
         } catch (cacheError) {
           debugPrint('[Chats Tab] Could not clear deleted chat cache: $cacheError');
         }
+        if (!mounted) return;
         AppSnackBar.showDeleted(
           context: context,
           isArabic: isArabicLocale,
