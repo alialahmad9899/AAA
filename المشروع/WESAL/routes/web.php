@@ -110,7 +110,7 @@ Route::controller(VerificationController::class)->group(function () {
     Route::get('/verification-confirmation/{code}', 'verification_confirmation')->name('email.verification.confirmation');
 });
 
-Route::post('/language', [LanguageController::class, 'changeLanguage'])->middleware('throttle:30,1')->name('language.change');
+Route::post('/language', [LanguageController::class, 'changeLanguage'])->middleware(['website_locale', 'throttle:30,1'])->name('language.change');
 Route::get('/packages', [PackageController::class, 'select_package'])->name('packages');
 
 //Blog
@@ -293,7 +293,7 @@ Route::group(['middleware' => ['auth', 'activated']], function () {
 // Contact Us page
 Route::controller(ContactUsController::class)->group(function () {
     Route::get('/contact-us/page', 'show_contact_us_page')->middleware('website_locale')->name('contact_us');
-    Route::post('/contact-us', 'store')->name('contact-us.store');
+    Route::post('/contact-us', 'store')->middleware('website_locale')->name('contact-us.store');
 });
 
 // Payment gateway Redirect
