@@ -58,6 +58,23 @@ void main() {
     expect(thread.isOnline, isFalse);
     expect(thread.lastSeen, 'منذ 4 دقائق');
   });
+  test('ChatMessageModel newestFirst puts the latest and pending message at the bottom', () {
+    ChatMessageModel message(int id) => ChatMessageModel(
+          id: id,
+          senderId: 42,
+          message: 'message-$id',
+          time: '2026-11-20T00:00:00Z',
+          isMe: true,
+          isSeen: false,
+        );
+
+    final chronological = [message(1), message(2), message(-7)];
+    final rendered = ChatMessageModel.newestFirst(chronological);
+
+    expect(rendered.map((item) => item.id).toList(), [-7, 2, 1]);
+    expect(chronological.map((item) => item.id).toList(), [1, 2, -7]);
+  });
+
   test('ChatMessageModel mergeHistory preserves older pages and pending messages', () {
     ChatMessageModel message(int id, String text) => ChatMessageModel(
           id: id,

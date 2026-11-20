@@ -321,6 +321,13 @@ class ChatMessageModel {
   /// Merge server updates into the locally loaded history without dropping
   /// older pages. Negative IDs are reserved for optimistic messages and remain
   /// at the end until the server confirms them with a real message ID.
+  /// Converts the stored oldest-to-newest transcript into the newest-first
+  /// child order required by a reverse ListView.
+  static List<ChatMessageModel> newestFirst(
+    List<ChatMessageModel> chronological,
+  ) =>
+      chronological.reversed.toList(growable: false);
+
   static List<ChatMessageModel> mergeHistory(
     List<ChatMessageModel> existing,
     List<ChatMessageModel> incoming,

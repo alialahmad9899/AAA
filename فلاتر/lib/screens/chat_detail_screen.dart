@@ -49,7 +49,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
 
   late int _activeThreadId;
   int _currentUserId = 0;
-  bool _hasRestoredScrollPosition = false;
+  bool _isChatListReady = false;
   bool _partnerIsOnline = false;
   String _partnerLastSeen = '';
   bool _isChatMuted = false;
@@ -207,6 +207,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
             _isLoading = false;
           }
         });
+        _markChatListReady();
       }
     } catch (error) {
       debugPrint('[Chat Local State] $error');
@@ -276,32 +277,21 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_scrollController.hasClients) return;
       _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
+        _scrollController.position.minScrollExtent,
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
       );
     });
   }
 
-  void _restoreSavedReadPosition({int attempt = 0}) {
-    if (_hasRestoredScrollPosition) return;
-    if (_messages.isEmpty) {
-      _hasRestoredScrollPosition = true;
-      return;
-    }
-
+  // A reversed chat list starts at the newest message (minScrollExtent).
+  // Wait for its first layout before enabling older-history pagination; no
+  // initial jump is needed, so the transcript is never painted from the top.
+  void _markChatListReady() {
+    if (_isChatListReady) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _hasRestoredScrollPosition) return;
-      if (!_scrollController.hasClients) {
-        if (attempt < 5) {
-          _restoreSavedReadPosition(attempt: attempt + 1);
-        }
-        return;
-      }
-
-      final position = _scrollController.position;
-      _scrollController.jumpTo(position.maxScrollExtent);
-      _hasRestoredScrollPosition = true;
+      if (!mounted || _isChatListReady) return;
+      _isChatListReady = true;
     });
   }
 
@@ -705,9 +695,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   }
 
   void _scrollListener() {
-    if (_hasRestoredScrollPosition &&
-        _scrollController.hasClients &&
-        _scrollController.position.pixels <= 30 &&
+    if (!_isChatListReady || !_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    // In reverse mode, zero is the newest-message edge and maxScrollExtent
+    // is the oldest-message edge.
+    if (position.maxScrollExtent - position.pixels <= 30 &&
         !_isLoadingMore &&
         _hasMoreOldMessages &&
         _messages.isNotEmpty) {
@@ -739,8 +731,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         ? null
         : positiveExistingIds.reduce((left, right) => left > right ? left : right);
     final bool wasNearBottom = _scrollController.hasClients &&
-        (_scrollController.position.maxScrollExtent -
-                _scrollController.position.pixels <=
+        (_scrollController.position.pixels -
+                _scrollController.position.minScrollExtent <=
             120);
 
     try {
@@ -809,8 +801,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         _messageLoadError = '';
       });
 
-      if (!_hasRestoredScrollPosition) {
-        _restoreSavedReadPosition();
+      if (!_isChatListReady) {
+        _markChatListReady();
       } else if (!silent ||
           (preserveHistory && wasNearBottom && hasNewLatestMessage)) {
         _scrollToBottom();
@@ -845,7 +837,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   }
 
   Future<void> _loadOldMessages() async {
-    if (!_hasRestoredScrollPosition ||
+    if (!_isChatListReady ||
         _isFetchingMessages ||
         _messages.isEmpty ||
         _isLoadingMore ||
@@ -860,9 +852,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     final firstMessageId = storedMessages.first.id;
     final previousPixels = _scrollController.hasClients
         ? _scrollController.position.pixels
-        : 0.0;
-    final previousMax = _scrollController.hasClients
-        ? _scrollController.position.maxScrollExtent
         : 0.0;
 
     setState(() => _isLoadingMore = true);
@@ -897,14 +886,17 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           messageEn: result['message']?.toString() ?? 'Could not load older messages',
         );
       } else if (oldMessages.isNotEmpty) {
+        // Older items are appended at the far end of the reversed list, so
+        // the visible newest-side offset should remain unchanged.
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!_scrollController.hasClients) return;
-          final addedExtent =
-              _scrollController.position.maxScrollExtent - previousMax;
-          final target = (previousPixels + addedExtent)
-              .clamp(0.0, _scrollController.position.maxScrollExtent)
+          if (!mounted || !_scrollController.hasClients) return;
+          final position = _scrollController.position;
+          final target = previousPixels
+              .clamp(position.minScrollExtent, position.maxScrollExtent)
               .toDouble();
-          _scrollController.jumpTo(target);
+          if ((position.pixels - target).abs() > 1) {
+            _scrollController.jumpTo(target);
+          }
         });
       }
     } catch (error) {
@@ -925,7 +917,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_scrollController.hasClients) return;
       final position = _scrollController.position;
-      final target = position.maxScrollExtent;
+      final target = position.minScrollExtent;
       if ((target - position.pixels).abs() < 1) return;
       _scrollController.animateTo(
         target,
@@ -1982,7 +1974,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     final bool hasMessageSearch =
         _showMessageSearch && _messageSearchController.text.trim().isNotEmpty;
     final List<ChatMessageModel> visibleMessages =
-        hasMessageSearch ? _messageSearchResults : _messages;
+        ChatMessageModel.newestFirst(
+      hasMessageSearch ? _messageSearchResults : _messages,
+    );
     return PopScope<bool>(
       canPop: _canPopNow,
       onPopInvokedWithResult: (didPop, result) {
@@ -2127,6 +2121,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                                   )
                                 : ListView.builder(
                                 controller: _scrollController,
+                                reverse: true,
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 14,
                                   vertical: 12,
