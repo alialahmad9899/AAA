@@ -27,8 +27,17 @@ jobs:
                   root = ET.fromstring(z.read("word/document.xml"))
               body = root.find("w:body", ns)
               for child in body:
-                  if child.tag.endswith("}p"):
+                  if child.tag == "{%s}p" % ns["w"]:
                       value = "".join((t.text or "") for t in child.findall(".//w:t", ns))
                       if value.strip():
                           print(value)
+                  elif child.tag == "{%s}tbl" % ns["w"]:
+                      print("[TABLE]")
+                      for row in child.findall("w:tr", ns):
+                          cells = []
+                          for cell in row.findall("w:tc", ns):
+                              value = " ".join("".join((t.text or "") for t in p.findall(".//w:t", ns)) for p in cell.findall("w:p", ns))
+                              cells.append(value.strip())
+                          print(" | ".join(cells))
+              print("[END DOCUMENT]")
           PY
