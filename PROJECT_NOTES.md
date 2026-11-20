@@ -2028,3 +2028,40 @@ CREATE TABLE IF NOT EXISTS `app_announcements` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 - تنفيذ SQL أعلاه ينشئ بنية الجدول فقط ولا يفعّل أي نافذة. بعد ذلك يدخل الأدمن إلى «نافذة ملاحظات وتحديثات التطبيق»، يكتب المحتوى، يحدد الجمهور والزر اختيارياً، ثم يفعّل النافذة ويحفظها.
+
+
+## 2026-11-20 — توسيع استهداف نافذة وصال بالعمر والجنس معاً
+
+### المطلوب والتغيير
+- إضافة اختيار الجنس داخل الاستهداف العمري، بحيث يستطيع الأدمن تحديد «ذكور» أو «إناث» أو «الذكور والإناث» مع مجال عمر من وإلى.
+- تبقى خيارات الاستهداف السابقة كما هي: الجميع، الذكور فقط، الإناث فقط، والفئة العمرية.
+- عند اختيار «الفئة العمرية»، يُعرض حقلا العمر مع قائمة «الجنس ضمن الفئة العمرية».
+- المطابقة تنفذ في Model على بيانات العضو المسجلة على الخادم: الجنس 1 للذكور و2 للإناث، والعمر محسوب من تاريخ الميلاد. لا يعتمد القرار على بيانات مرسلة من تطبيق الهاتف.
+
+### التوافق وقاعدة البيانات
+- إضافة `target_gender VARCHAR(10) NOT NULL DEFAULT 'all'` إلى جدول `app_announcements`.
+- تم تحديث Migration الإنشاء الأصلي للتثبيتات الجديدة، وإضافة Migration مستقلة `2026_11_20_000003_add_target_gender_to_app_announcements_table.php` للتثبيتات التي لديها الجدول مسبقاً. تتحقق Migration من وجود الجدول والعمود قبل الإضافة، وتترك قيمة الاستهداف محفوظة عند rollback.
+- لقاعدة الإنتاج الموجودة، إذا لم تُشغّل Laravel Migrations عبر CLI، يمكن إضافة العمود مرة واحدة من phpMyAdmin:
+```sql
+ALTER TABLE `app_announcements`
+    ADD COLUMN `target_gender` VARCHAR(10) NOT NULL DEFAULT 'all'
+    AFTER `target_type`;
+```
+- العمود الافتراضي `all` يحافظ على إعدادات النوافذ القديمة بحيث تستمر الفئة العمرية السابقة باستهداف الجنسين إلى أن يختار الأدمن جنساً محدداً.
+
+### الملفات التي تخص هذه الدفعة
+- `المشروع/WESAL/app/Models/AppAnnouncement.php`
+- `المشروع/WESAL/app/Http/Controllers/Admin/AppAnnouncementController.php`
+- `المشروع/WESAL/database/migrations/2026_11_20_000002_create_app_announcements_table.php`
+- `المشروع/WESAL/database/migrations/2026_11_20_000003_add_target_gender_to_app_announcements_table.php`
+- `المشروع/WESAL/resources/views/admin/app_announcements/index.blade.php`
+- `المشروع/WESAL/tests/Unit/AppAnnouncementContractTest.php`
+
+### التحقق والتسليم
+- آخر Commit مصدر على `main`: `c50ed1a23f65a26e5a7b84ed148546764d59d510`.
+- GitHub Actions run `44647242770`: الوظائف الثلاث كلها `success` (PHP/PHPUnit، Flutter، ZIP).
+- اختبار عقد النافذة: `5 tests / 61 assertions` ناجح.
+- `php -l` نجح للملفات المعدلة، و`dart analyze --fatal-infos` أعاد `No issues found!`.
+- `flutter test`: `143 tests passed`.
+- أرشيف الدفعة النهائية يحتوي 6 ملفات تشغيلية فقط بالمسارات الأصلية. تم فحصه عبر `unzip -t`، وبصمته SHA256 هي `b9c6317d175c90d50bf9dd35b521f64f13a7cf8540f542c614954f1191d4d908`.
+- لم يتم تعديل الموقع العام. لم يتم تطبيق ALTER TABLE على قاعدة الإنتاج أو نشر الملفات على Hostinger أو اختبار استهداف عضو حي؛ يلزم رفع الحزمة وتنفيذ SQL أعلاه عند الحاجة.
