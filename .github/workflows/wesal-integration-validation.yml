@@ -58,6 +58,7 @@ jobs:
             "المشروع/WESAL/app/Http/Middleware/SetWebsiteLocale.php"
             "المشروع/WESAL/app/Http/Controllers/LanguageController.php"
             "المشروع/WESAL/app/Http/Requests/ContactUsRequest.php"
+            "المشروع/WESAL/app/Http/Controllers/ContactUsController.php"
             "المشروع/WESAL/app/Console/Kernel.php"
             "المشروع/WESAL/app/Console/Commands/PurgeDeletedChatThreads.php"
             "المشروع/WESAL/app/Http/Middleware/VerifyCsrfToken.php"
