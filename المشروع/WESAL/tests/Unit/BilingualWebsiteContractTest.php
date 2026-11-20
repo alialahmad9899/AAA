@@ -78,6 +78,24 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString('Cookie preferences', $footer);
     }
 
+    public function test_homepage_translation_branches_are_not_nested_blade_expressions(): void
+    {
+        $home = $this->source('resources/views/frontend/index.blade.php');
+
+        foreach ([
+            ": '{{ $isEnglish",
+            ': "زواج جاد {{ $isEnglish',
+            'ثم {{ $isEnglish',
+            'منصة {{ $isEnglish ?',
+        ] as $nestedExpression) {
+            $this->assertStringNotContainsString($nestedExpression, $home);
+        }
+
+        $this->assertStringContainsString("'وصال | منصة زواج جاد للعرب والسوريين حول العالم'", $home);
+        $this->assertStringContainsString("'Wesal | A serious marriage platform for Arabs and Syrians worldwide'", $home);
+        $this->assertStringContainsString("'Wesal. All rights reserved.'", $home);
+    }
+
     public function test_privacy_policy_is_complete_in_both_languages_and_has_no_editorial_placeholders(): void
     {
         $arabic = $this->source('resources/views/frontend/legal/privacy_policy.blade.php');
