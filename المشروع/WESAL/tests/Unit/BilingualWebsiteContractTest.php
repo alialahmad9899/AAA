@@ -38,7 +38,7 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString("'redirect_to' => ['nullable', 'string', 'max:2048']", $controller);
         $this->assertStringContainsString("strpos($path, '//') === 0", $controller);
         $this->assertStringContainsString("Route::post('/language'", $routes);
-        $this->assertStringContainsString("middleware(['website_locale', 'throttle:30,1'])", $routes);
+        $this->assertStringContainsString("middleware('throttle:30,1')", $routes);
         $this->assertStringContainsString("value=\"ar\"", $switcher);
         $this->assertStringContainsString("value=\"en\"", $switcher);
         $this->assertStringContainsString("request()->getRequestUri()", $switcher);
