@@ -21,7 +21,7 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString("getPreferredLanguage(['ar', 'en'])", $middleware);
         $this->assertStringContainsString("['ar', 'en']", $middleware);
         $this->assertStringContainsString("->session()->get('website_locale'", $middleware);
-        $this->assertStringContainsString("->cookie('wesal_website_locale'", $middleware);
+        $this->assertStringContainsString('$request->cookie(\'wesal_website_locale\'', $middleware);
         $this->assertStringContainsString("->session()->get('locale'", $middleware);
         $this->assertStringContainsString('$request->session()->put(\'website_locale\', $locale)', $middleware);
         $this->assertStringContainsString('$request->session()->put(\'locale\', $locale)', $middleware);
@@ -45,7 +45,7 @@ class BilingualWebsiteContractTest extends TestCase
             strpos($controller, "cookie("),
             strpos($controller, "'wesal_website_locale'")
         );
-        $this->assertStringContainsString("->cookie('wesal_website_locale'", $middleware);
+        $this->assertStringContainsString('$request->cookie(\'wesal_website_locale\'', $middleware);
         $this->assertStringContainsString("'private, no-cache, must-revalidate'", $middleware);
         $this->assertStringContainsString("'Vary', 'Cookie'", $middleware);
     }
