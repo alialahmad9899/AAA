@@ -77,6 +77,40 @@ void main() {
       );
     });
 
+
+    test('does not reopen the chat that is already visible', () {
+      final current = resolveNotificationDestination({
+        'type': 'chat_message',
+        'thread_id': '81',
+      });
+      final other = resolveNotificationDestination({
+        'type': 'chat_message',
+        'thread_id': '82',
+      });
+
+      expect(
+        isNotificationDestinationAlreadyVisible(
+          current,
+          activeChatThreadId: 81,
+        ),
+        isTrue,
+      );
+      expect(
+        isNotificationDestinationAlreadyVisible(
+          other,
+          activeChatThreadId: 81,
+        ),
+        isFalse,
+      );
+      expect(
+        isNotificationDestinationAlreadyVisible(
+          current,
+          activeChatThreadId: 0,
+        ),
+        isFalse,
+      );
+    });
+
     test('allows different chat threads to open independently', () {
       final first = notificationDestinationKey(
         resolveNotificationDestination({'type': 'chat_message', 'thread_id': '51'}),
