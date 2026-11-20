@@ -73,13 +73,13 @@ Route::controller(HomeController::class)->group(function () {
     Route::post('/fcm-token', 'updateToken')->name('fcmToken');
 
     Route::get('/email_change/callback', 'email_change_callback')->name('email_change.callback');
-    Route::post('/password/reset/email/submit', static function () { abort(404); })->name('password.update.code.disabled');
+    Route::post('/password/reset/email/submit', static function () { abort(404); })->name('password.update.code');
     Route::get('/users/login', static function () { abort(404); })->name('user.login');
     Route::get('/happy-stories', 'happy_stories')->name('happy_stories');
     Route::get('/story_details/{id}', 'story_details')->name('story_details');
     Route::get('/users/blocked', 'user_account_blocked')->name('user.blocked');
-    Route::post('/registration/verification-code-send', static function () { abort(404); })->middleware('throttle:registration-code-send')->name('verification_code_send.disabled');
-    Route::post('/registration/verification-code-confirmation', static function () { abort(404); })->middleware('throttle:registration-code-check')->name('verify_code_confirmation.disabled');
+    Route::post('/registration/verification-code-send', static function () { abort(404); })->middleware('throttle:registration-code-send')->name('verification_code_send');
+    Route::post('/registration/verification-code-confirmation', static function () { abort(404); })->middleware('throttle:registration-code-check')->name('verify_code_confirmation');
 });
 
 // Uploader
@@ -102,7 +102,7 @@ Auth::routes(['verify' => true, 'register' => false, 'reset' => false]);
 // Keep the named URLs as explicit 404s so stale links and bookmarks cannot open the forms.
 Route::match(['GET', 'POST'], '/login', static function () { abort(404); })->name('login');
 Route::match(['GET', 'POST'], '/register', static function () { abort(404); })->name('register');
-Route::match(['GET', 'POST'], '/password/reset', static function () { abort(404); })->name('password.request.disabled');
+Route::match(['GET', 'POST'], '/password/reset', static function () { abort(404); })->name('password.request');
 
 Route::controller(LoginController::class)->group(function () {
     Route::get('/logout', 'logout')->name('logout');
