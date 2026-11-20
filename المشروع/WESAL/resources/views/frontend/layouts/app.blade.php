@@ -295,26 +295,27 @@
     $isTermsConditionsPage = in_array(Route::currentRouteName(), ['legal.terms-conditions', 'legal.privacy-policy'], true)
         || (Route::currentRouteName() === 'custom-pages.show_custom_page' && request()->route('slug') === 'terms-conditions');
     $isWesalLandingPage = in_array(Route::currentRouteName(), ['home', 'index'], true);
+    $isWesalSupportPage = Route::currentRouteName() === 'contact_us';
 @endphp
 
-<body class="{{ $websiteIsArabic ? 'text-right' : 'text-left' }} {{ Route::currentRouteName() == 'all.messages' ? 'h-100' : '' }} {{ $isTermsConditionsPage ? 'wesal-terms-document-body' : '' }} {{ $isWesalLandingPage ? 'wesal-landing-body' : '' }}">
+<body class="{{ $websiteIsArabic ? 'text-right' : 'text-left' }} {{ Route::currentRouteName() == 'all.messages' ? 'h-100' : '' }} {{ $isTermsConditionsPage ? 'wesal-terms-document-body' : '' }} {{ $isWesalLandingPage ? 'wesal-landing-body' : '' }} {{ $isWesalSupportPage ? 'wesal-support-page-body' : '' }}">
 
     {{-- 🛑 تجريد الغلاف من الـ Flexbox والهوامش إذا كنا في صفحة المحادثة 🛑 --}}
     <div
         class="aiz-main-wrapper position-relative 
-        @if (!$isWesalLandingPage && Route::currentRouteName() != 'all.messages' && !$isTermsConditionsPage)
+        @if (!$isWesalLandingPage && !$isWesalSupportPage && Route::currentRouteName() != 'all.messages' && !$isTermsConditionsPage)
             d-flex flex-column pt-8 pt-lg-10
         @endif
         {{ Route::currentRouteName() == 'all.messages' ? 'chat-wrapper-clean' : '' }}">
 
-        @if (!$isTermsConditionsPage && !$isWesalLandingPage)
+        @if (!$isTermsConditionsPage && !$isWesalLandingPage && !$isWesalSupportPage)
             @include('frontend.inc.header')
         @endif
 
         @yield('content')
 
         {{-- The terms-conditions route is a standalone legal document: no global header or footer. --}}
-        @if (Route::currentRouteName() != 'all.messages' && !$isTermsConditionsPage && !$isWesalLandingPage)
+        @if (Route::currentRouteName() != 'all.messages' && !$isTermsConditionsPage && !$isWesalLandingPage && !$isWesalSupportPage)
             @include('frontend.inc.footer')
         @endif
 

@@ -54,13 +54,12 @@
         backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
     }
     .ws-header-inner { min-height: 78px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
-    .ws-wordmark { color: var(--ws-primary); text-decoration: none !important; font-size: 27px; line-height: 1; font-weight: 900; letter-spacing: -.8px; white-space: nowrap; }
-    .ws-wordmark span { display: block; color: var(--ws-muted); font-size: 10px; font-weight: 700; letter-spacing: 1.6px; margin-top: 8px; }
+    .ws-home-logo-link { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; text-decoration: none !important; line-height: 0; }
+    .ws-home-logo { display: block; width: 72px; height: 72px; max-width: 100%; object-fit: contain; object-position: center; }
     .ws-nav { display: flex; align-items: center; gap: clamp(16px, 2.5vw, 32px); }
     .ws-nav a { color: var(--ws-ink); font-size: 13px; font-weight: 800; text-decoration: none !important; transition: color .2s ease; }
     .ws-nav a:hover { color: var(--ws-coral); }
     .ws-header-actions { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
-    .ws-login-link { color: var(--ws-primary); font-weight: 800; font-size: 13px; text-decoration: none !important; padding: 10px 12px; }
     .ws-header-cta, .ws-button-primary {
         display: inline-flex; align-items: center; justify-content: center; gap: 9px;
         border: 0; border-radius: 999px; padding: 12px 21px;
@@ -199,7 +198,8 @@
 
     .ws-footer { background: #103E4A; color: rgba(255,255,255,.78); padding: 29px 0; }
     .ws-footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
-    .ws-footer-brand { color: #fff; font-size: 20px; font-weight: 900; }
+    .ws-footer-brand { display: inline-flex; align-items: center; justify-content: center; width: 76px; height: 76px; text-decoration: none !important; line-height: 0; }
+    .ws-footer-brand img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center; }
     .ws-footer-copy { font-size: 11px; font-weight: 600; margin-top: 5px; }
     .ws-footer-links { display: flex; flex-wrap: wrap; gap: 18px; }
     .ws-footer-links a { color: rgba(255,255,255,.85); text-decoration: none; font-size: 11px; font-weight: 800; }
@@ -241,7 +241,7 @@
         .ws-mobile-header-controls { gap: 6px; }
         .ws-mobile-header-controls .wesal-language-switcher button { padding: 4px 6px; font-size: 9px; min-height: 29px; }
         .ws-mobile-toggle { width: 40px; height: 40px; font-size: 21px; }
-        .ws-wordmark { font-size: 24px; }
+        .ws-home-logo { width: 60px; height: 60px; }
         .ws-hero h1 { font-size: clamp(34px,10vw,45px); letter-spacing: -1px; }
         .ws-hero-copy { font-size: 14px; line-height: 1.95; }
         .ws-hero-actions { display: grid; grid-template-columns: 1fr; }
@@ -273,7 +273,7 @@
     }
     @media (max-width: 380px) {
         .ws-header-inner { gap: 8px; }
-        .ws-wordmark span { display: none; }
+        .ws-home-logo { width: 54px; height: 54px; }
         .ws-mobile-header-controls { gap: 4px; }
         .ws-mobile-header-controls .wesal-language-switcher button { padding-inline: 5px; }
     }
@@ -294,7 +294,9 @@
     <header class="ws-header">
         <div class="ws-container">
             <div class="ws-header-inner">
-                <a class="ws-wordmark" href="#top" aria-label="{{ $isEnglish ? 'Wesal home' : 'وصال - الرئيسية' }}">{{ $isEnglish ? 'Wesal' : 'وصال' }}<span>{{ $isEnglish ? 'A serious marriage platform for Arabs worldwide' : 'منصة زواج جاد للعرب حول العالم' }}</span></a>
+                <a class="ws-home-logo-link" href="#top" aria-label="{{ $isEnglish ? 'Wesal home' : 'وصال - الرئيسية' }}">
+                    <img class="ws-home-logo" src="{{ static_asset('assets/img/wesal-legal-logo.png') }}" alt="{{ $isEnglish ? 'Wesal logo' : 'شعار وصال' }}" width="72" height="72" fetchpriority="high" decoding="async">
+                </a>
                 <nav class="ws-nav" aria-label="{{ $isEnglish ? 'Main navigation' : 'التنقل الرئيسي' }}">
                     <a href="#about">{{ $isEnglish ? 'About Wesal' : 'عن وصال' }}</a>
                     <a href="#featured">{{ $isEnglish ? 'Featured members' : 'الأعضاء المميزون' }}</a>
@@ -304,10 +306,6 @@
                 </nav>
                 <div class="ws-header-actions">
                     @include('frontend.inc.language_switcher')
-                    @guest
-                        <a class="ws-login-link" href="{{ route('login') }}">{{ $isEnglish ? 'Log in' : 'تسجيل الدخول' }}</a>
-                        <a class="ws-header-cta" href="{{ route('register') }}">{{ $isEnglish ? 'Create account' : 'إنشاء حساب' }} <i class="las {{ $isEnglish ? 'la-arrow-right' : 'la-arrow-left' }}"></i></a>
-                    @endguest
                 </div>
                 <div class="ws-mobile-header-controls">
                     @include('frontend.inc.language_switcher')
@@ -320,10 +318,6 @@
                 <a href="#women">{{ $isEnglish ? 'Women' : 'العضوات' }}</a>
                 <a href="#men">{{ $isEnglish ? 'Men' : 'الأعضاء' }}</a>
                 <a href="#how-it-works">{{ $isEnglish ? 'How it works' : 'كيف يعمل' }}</a>
-                @guest
-                    <a href="{{ route('login') }}">{{ $isEnglish ? 'Log in' : 'تسجيل الدخول' }}</a>
-                    <a href="{{ route('register') }}">{{ $isEnglish ? 'Create an account' : 'إنشاء حساب جديد' }}</a>
-                @endguest
             </nav>
         </div>
     </header>
@@ -458,7 +452,7 @@
                     <div class="ws-kicker" style="color:#F2B5A0">{{ $isEnglish ? "Get started with Wesal" : "ابدأ مع وصال" }}</div>
                     <h2>{{ $isEnglish ? "Take your first step toward serious marriage" : "ابدأ خطوتك نحو زواج جاد" }}</h2>
                     @if ($hasAnyAppLink)
-                        <p>اختر المتجر المناسب لجهازك، و{{ $isEnglish ? "Create your profile" : "أنشئ ملفك" }} وتعرّف إلى العرب والسوريين الباحثين عن الزواج الجاد حول العالم. طلب التواصل يتم من داخل التطبيق.</p>
+                        <p>{{ $isEnglish ? 'Choose the store that suits your device, create your profile and connect with Arabs and Syrians seeking serious marriage worldwide. Contact requests are handled inside the app.' : 'اختر المتجر المناسب لجهازك، وأنشئ ملفك وتعرّف إلى العرب والسوريين الباحثين عن الزواج الجاد حول العالم. يتم طلب التواصل من داخل التطبيق.' }}</p>
                     @else
                         <p>{{ $isEnglish ? "We are preparing the official download links. Store buttons will become active here once the app is published and its links are added to the website settings." : "نعمل على تجهيز روابط التحميل الرسمية. سنفعّل أزرار المتاجر هنا فور نشر التطبيق وإضافة روابطه من إعدادات الموقع." }}</p>
                     @endif
@@ -481,7 +475,12 @@
 
     <footer class="ws-footer">
         <div class="ws-container ws-footer-inner">
-            <div><div class="ws-footer-brand">{{ $isEnglish ? 'Wesal' : 'وصال' }}</div><div class="ws-footer-copy">{{ $isEnglish ? 'A serious marriage platform for Arabs and Syrians worldwide.' : 'منصة زواج جاد للعرب والسوريين حول العالم.' }} © {{ date('Y') }} {{ $isEnglish ? 'Wesal. All rights reserved.' : 'وصال. جميع الحقوق محفوظة.' }}</div></div>
+            <div>
+                <a class="ws-footer-brand" href="#top" aria-label="{{ $isEnglish ? 'Wesal home' : 'وصال - الرئيسية' }}">
+                    <img src="{{ static_asset('assets/img/wesal-legal-logo.png') }}" alt="{{ $isEnglish ? 'Wesal logo' : 'شعار وصال' }}" width="76" height="76" loading="lazy" decoding="async">
+                </a>
+                <div class="ws-footer-copy">{{ $isEnglish ? 'A serious marriage platform for Arabs and Syrians worldwide.' : 'منصة زواج جاد للعرب والسوريين حول العالم.' }} © {{ date('Y') }} {{ $isEnglish ? 'Wesal. All rights reserved.' : 'وصال. جميع الحقوق محفوظة.' }}</div>
+            </div>
             <div class="ws-footer-links">
                 <a href="{{ route('legal.privacy-policy') }}">{{ $isEnglish ? "Privacy Policy" : "سياسة الخصوصية" }}</a>
                 <a href="{{ route('legal.terms-conditions') }}">{{ $isEnglish ? "General Terms of Use" : "شروط الاستخدام العامة" }}</a>

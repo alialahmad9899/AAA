@@ -38,7 +38,7 @@ class RegisterController extends Controller
 
     public function showRegistrationForm()
     {
-        return view('frontend.user_registration');
+        abort(404);
     }
 
     protected function validator(array $data)
@@ -152,125 +152,9 @@ class RegisterController extends Controller
 
     public function register(Request $request)
     {
-        // 🛑 التعديل هنا: إرجاع الخطأ كـ JSON ليتوافق مع الـ AJAX ولتجنب خطأ 500
-        if (filter_var($request->email, FILTER_VALIDATE_EMAIL)) {
-            if (User::where('email', $request->email)->first() != null) {
-                if ($request->ajax()) {
-                    return response()->json(['errors' => ['email' => [translate('البريد الإلكتروني موجود مسبقاً.')]]], 422);
-                }
-                flash(translate('البريد الإلكتروني موجود مسبقاً.'))->error();
-                return back()->withInput();
-            }
-        } elseif ($request->has('phone') && $request->phone != null) {
-            if(User::where('phone', '+' . $request->country_code . $request->phone)->first() != null) {
-                if ($request->ajax()) {
-                    return response()->json(['errors' => ['phone' => [translate('رقم الهاتف موجود مسبقاً.')]]], 422);
-                }
-                 flash(translate('رقم الهاتف موجود مسبقاً.'))->error();
-                 return back()->withInput();
-            }
-        }
-
-        $this->validator($request->all())->validate();
-
-        $registrationVerification = null;
-        if ((string) get_setting('registration_verification') === '1') {
-            $verificationQuery = RegistrationVerificationCode::where('is_verified', 1)
-                ->where('expires_at', '>', now());
-
-            if (filter_var($request->email, FILTER_VALIDATE_EMAIL)) {
-                $verificationQuery->where('email', strtolower(trim((string) $request->email)));
-            } elseif ($request->filled('phone')) {
-                $countryCode = preg_replace('/\D+/', '', (string) $request->input('country_code', ''));
-                $phoneDigits = preg_replace('/\D+/', '', (string) $request->phone);
-                $verifiedPhone = '+' . $countryCode . $phoneDigits;
-                $verificationQuery->where('phone', $verifiedPhone);
-            } else {
-                $verificationQuery->whereRaw('1 = 0');
-            }
-
-            $registrationVerification = $verificationQuery->latest('id')->first();
-            if (!$registrationVerification) {
-                $message = translate('Please verify your email address or phone number before registering.');
-                if ($request->ajax() || $request->wantsJson()) {
-                    return response()->json([
-                        'errors' => ['verification_code' => [$message]],
-                    ], 422);
-                }
-
-                flash($message)->error();
-                return back()->withInput();
-            }
-        }
-
-        $user = $this->create($request->all());
-
-        // A verified registration code is single-use and is removed only after
-        // the account has been created successfully.
-        if ($registrationVerification) {
-            $registrationVerification->delete();
-        }
-
-        $this->guard()->login($user, true);
-
-        try {
-            $notify_type = 'member_registration';
-            $id = time() . rand(10, 99); 
-            $notify_by = $user->id;
-            $info_id = $user->id;
-            $message = translate('عضو جديد انضم للمنصة: ') . $user->first_name . ' ' . $user->last_name;
-            $route = route('members.index', $user->membership);
-
-            if (get_setting('firebase_push_notification') == 1) {
-                $fcmTokens = User::where('user_type', 'admin')->whereNotNull('fcm_token')->pluck('fcm_token')->toArray();
-                Larafirebase::withTitle($notify_type)->withBody($message)->sendMessage($fcmTokens);
-            }
-            Notification::send(User::where('user_type', 'admin')->first(), new DbStoreNotification($notify_type, $id, $notify_by, $info_id, $message, $route));
-        } catch (\Exception $e) {
-            \Log::error("Notification Error: " . $e->getMessage());
-        }
-
-        if (env('MAIL_USERNAME') != null && (get_email_template('account_opening_email_to_admin', 'status') == 1)) {
-            $admin = User::where('user_type', 'admin')->first();
-            EmailUtility::account_opening_email_to_admin($user, $admin);
-        }
-
-        if($user->email != null){
-            if((get_setting('email_verification') != 1 && !addon_activation('otp_system')) || get_setting('registration_verification') === '1'){
-                $user->email_verified_at = date('Y-m-d H:i:s');
-                $user->save();
-            }
-            else {
-                try { event(new Registered($user)); } catch (\Throwable $e) {}
-            }
-        }
-
-        if($user->phone != null){
-            if(get_setting(('email_verification') != 1 && !addon_activation('otp_system')) || get_setting('registration_verification') === '1'){
-                $user->email_verified_at = date('Y-m-d H:i:s');
-                $user->save();
-            }
-            else{
-                try {
-                    if (addon_activation('otp_system')){
-                        if(get_setting('registration_verification') != '1' ){
-                            $otpController = new OTPVerificationController;
-                            $otpController->send_code($user);
-                        }
-                    }
-                } catch (\Throwable $e) {}
-            }
-        }
-
-        // 🛑 التوجيه للصفحة الرئيسية عبر الـ AJAX
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'redirect_url' => url('/') 
-            ]);
-        }
-
-        return $this->registered($request, $user) ?: redirect($this->redirectPath());
+        // Public website registration is disabled. Mobile API registration
+        // is implemented by its separate API controller and routes.
+        abort(404);
     }
 
     protected function registered(Request $request, $user)

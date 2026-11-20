@@ -20,12 +20,61 @@ class BilingualWebsiteContractTest extends TestCase
 
         $this->assertStringContainsString("getPreferredLanguage(['ar', 'en'])", $middleware);
         $this->assertStringContainsString("['ar', 'en']", $middleware);
-        $this->assertStringContainsString("session()->get('locale'", $middleware);
-        $this->assertStringContainsString('session()->put(\'locale\', $locale)', $middleware);
+        $this->assertStringContainsString("->session()->get('website_locale'", $middleware);
+        $this->assertStringContainsString('$request->cookie(\'wesal_website_locale\'', $middleware);
+        $this->assertStringContainsString("->session()->get('locale'", $middleware);
+        $this->assertStringContainsString('$request->session()->put(\'website_locale\', $locale)', $middleware);
+        $this->assertStringContainsString('$request->session()->put(\'locale\', $locale)', $middleware);
         $this->assertStringContainsString('App::setLocale($locale)', $middleware);
         $this->assertStringContainsString("Content-Language", $middleware);
         $this->assertStringContainsString("admin/*", $middleware);
         $this->assertStringContainsString("update/*", $middleware);
+    }
+
+    public function test_manual_language_selection_is_saved_in_a_dedicated_cookie_and_session(): void
+    {
+        $controller = $this->source('app/Http/Controllers/LanguageController.php');
+        $middleware = $this->source('app/Http/Middleware/SetWebsiteLocale.php');
+
+        $this->assertStringContainsString('$request->session()->put(\'website_locale\', $locale)', $controller);
+        $this->assertStringContainsString('$request->session()->put(\'locale\', $locale)', $controller);
+        $this->assertStringContainsString('->session()->save()', $controller);
+        $this->assertStringContainsString("cookie(", $controller);
+        $this->assertStringContainsString("'wesal_website_locale'", $controller);
+        $this->assertGreaterThan(
+            strpos($controller, "cookie("),
+            strpos($controller, "'wesal_website_locale'")
+        );
+        $this->assertStringContainsString('$request->cookie(\'wesal_website_locale\'', $middleware);
+        $this->assertStringContainsString("'private, no-cache, must-revalidate'", $middleware);
+        $this->assertStringContainsString("'Vary', 'Cookie'", $middleware);
+    }
+
+    public function test_support_page_is_standalone_and_uses_the_transparent_wesal_logo(): void
+    {
+        $layout = $this->source('resources/views/frontend/layouts/app.blade.php');
+        $contact = $this->source('resources/views/frontend/contact_us.blade.php');
+
+        $this->assertStringContainsString('$isWesalSupportPage = Route::currentRouteName() === \'contact_us\'', $layout);
+        $this->assertStringContainsString('!$isWesalSupportPage', $layout);
+        $this->assertStringContainsString("frontend.inc.header", $layout);
+        $this->assertStringContainsString("frontend.inc.footer", $layout);
+        $this->assertStringContainsString("frontend.inc.language_switcher", $contact);
+        $this->assertStringContainsString("assets/img/wesal-legal-logo.png", $contact);
+        $this->assertStringContainsString("We are here", $contact);
+        $this->assertStringContainsString("Send a message to the Wesal team", $contact);
+    }
+
+    public function test_homepage_uses_the_transparent_wesal_logo_at_top_and_bottom(): void
+    {
+        $home = $this->source('resources/views/frontend/index.blade.php');
+        $logoAsset = dirname(__DIR__, 2) . '/public/assets/img/wesal-legal-logo.png';
+
+        $this->assertFileExists($logoAsset, 'The transparent Wesal logo asset must be present.');
+        $this->assertSame(2, substr_count($home, "static_asset('assets/img/wesal-legal-logo.png')"));
+        $this->assertStringNotContainsString('ws-wordmark', $home);
+        $this->assertStringContainsString('ws-home-logo-link', $home);
+        $this->assertStringContainsString('ws-footer-brand', $home);
     }
 
     public function test_language_switcher_accepts_only_arabic_and_english_and_returns_locally(): void
@@ -37,7 +86,9 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString("Rule::in(['ar', 'en'])", $controller);
         $this->assertStringContainsString("'redirect_to' => ['nullable', 'string', 'max:2048']", $controller);
         $this->assertStringContainsString('strpos($path, \'//\') === 0', $controller);
+        $this->assertStringContainsString("Route::get('/language'", $routes);
         $this->assertStringContainsString("Route::post('/language'", $routes);
+        $this->assertStringContainsString('method="GET"', $switcher);
         $this->assertStringContainsString("middleware('throttle:30,1')", $routes);
         $this->assertStringContainsString("value=\"ar\"", $switcher);
         $this->assertStringContainsString("value=\"en\"", $switcher);
@@ -101,6 +152,8 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString("'وصال | منصة زواج جاد للعرب والسوريين حول العالم'", $home);
         $this->assertStringContainsString("'Wesal | A serious marriage platform for Arabs and Syrians worldwide'", $home);
         $this->assertStringContainsString("'Wesal. All rights reserved.'", $home);
+        $this->assertStringContainsString('Choose the store that suits your device', $home);
+        $this->assertStringNotContainsString('اختر المتجر المناسب لجهازك، و{{ $isEnglish', $home);
     }
 
     public function test_privacy_policy_is_complete_in_both_languages_and_has_no_editorial_placeholders(): void
@@ -180,6 +233,60 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString("app()->getLocale() === 'en'", $request);
         $this->assertStringContainsString('Please enter a valid email address.', $request);
         $this->assertStringContainsString('يرجى إدخال بريد إلكتروني صحيح.', $request);
+    }
+
+    public function test_public_website_login_and_registration_are_disabled(): void
+    {
+        $routes = $this->source('routes/web.php');
+        $adminRoutes = $this->source('routes/admin.php');
+        $apiRoutes = $this->source('routes/api.php');
+        $home = $this->source('resources/views/frontend/index.blade.php');
+        $login = $this->source('app/Http/Controllers/Auth/LoginController.php');
+        $register = $this->source('app/Http/Controllers/Auth/RegisterController.php');
+
+        $this->assertSame(1, substr_count($routes, 'Auth::routes('));
+        $this->assertStringContainsString("Auth::routes(['verify' => true, 'register' => false, 'reset' => false])", $routes);
+        $this->assertStringContainsString("Route::match(['GET', 'POST'], '/login'", $routes);
+        $this->assertStringContainsString("->name('login')", $routes);
+        $this->assertStringContainsString("Route::match(['GET', 'POST'], '/register'", $routes);
+        $this->assertStringContainsString("->name('register')", $routes);
+        $this->assertStringContainsString("'/users/login'", $routes);
+        $this->assertStringContainsString("'/registration/verification-code-send'", $routes);
+        $this->assertStringContainsString("'/registration/verification-code-confirmation'", $routes);
+        $this->assertStringNotContainsString("route('login')", $home);
+        $this->assertStringNotContainsString("route('register')", $home);
+        $this->assertStringNotContainsString('تسجيل الدخول', $home);
+        $this->assertStringNotContainsString('إنشاء حساب', $home);
+        $this->assertStringContainsString("request()->get('query') !== 'mobile_app'", $login);
+        $this->assertStringContainsString("session('login_from') !== 'mobile_app'", $login);
+        $this->assertStringContainsString('public function showLoginForm()', $login);
+        $this->assertStringContainsString('abort(404);', $login);
+        $this->assertStringContainsString('public function showRegistrationForm()', $register);
+        $this->assertStringContainsString('abort(404);', $register);
+        $this->assertStringContainsString('Public website registration is disabled', $register);
+        $this->assertStringContainsString("Route::get('/admin/login'", $adminRoutes);
+        $this->assertStringContainsString("Route::post('/signup'", $apiRoutes);
+        $this->assertStringContainsString("Route::post('/signin'", $apiRoutes);
+        $this->assertStringContainsString("Route::post('/auth/google'", $apiRoutes);
+    }
+
+    public function test_english_legal_documents_are_real_english_only_view_files(): void
+    {
+        foreach ([
+            'resources/views/frontend/legal/en/privacy_policy.blade.php',
+            'resources/views/frontend/legal/en/terms_conditions.blade.php',
+        ] as $path) {
+            $english = $this->source($path);
+            $this->assertNotSame('', trim($english), "{$path} must not be empty.");
+            $this->assertDoesNotMatchRegularExpression('/[\\x{0600}-\\x{06FF}]/u', $english);
+        }
+
+        $home = $this->source('resources/views/frontend/index.blade.php');
+        $contact = $this->source('resources/views/frontend/contact_us.blade.php');
+        $this->assertStringContainsString("app()->getLocale() === 'en'", $home);
+        $this->assertStringContainsString("app()->getLocale() === 'en'", $contact);
+        $this->assertStringContainsString('Wesal | A serious marriage platform', $home);
+        $this->assertStringContainsString('Help & Support', $contact);
     }
 
     public function test_optional_tracking_is_blocked_until_consent_and_can_be_changed_later(): void

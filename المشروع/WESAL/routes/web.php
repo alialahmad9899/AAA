@@ -60,8 +60,6 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Auth::routes();
-
 Route::controller(HomeController::class)->group(function () {
     //Home Page
     Route::get('/', 'index')->name('index');
@@ -75,13 +73,13 @@ Route::controller(HomeController::class)->group(function () {
     Route::post('/fcm-token', 'updateToken')->name('fcmToken');
 
     Route::get('/email_change/callback', 'email_change_callback')->name('email_change.callback');
-    Route::post('/password/reset/email/submit', 'reset_password_with_code')->name('password.update.code');
-    Route::get('/users/login', 'login')->name('user.login');
+    Route::post('/password/reset/email/submit', static function () { abort(404); })->name('password.update.code');
+    Route::get('/users/login', static function () { abort(404); })->name('user.login');
     Route::get('/happy-stories', 'happy_stories')->name('happy_stories');
     Route::get('/story_details/{id}', 'story_details')->name('story_details');
     Route::get('/users/blocked', 'user_account_blocked')->name('user.blocked');
-    Route::post('/registration/verification-code-send', 'sendRegVerificationCode')->middleware('throttle:registration-code-send')->name('verification_code_send');
-    Route::post('/registration/verification-code-confirmation', 'regVerifyCodeConfirmation')->middleware('throttle:registration-code-check')->name('verify_code_confirmation');
+    Route::post('/registration/verification-code-send', static function () { abort(404); })->middleware('throttle:registration-code-send')->name('verification_code_send');
+    Route::post('/registration/verification-code-confirmation', static function () { abort(404); })->middleware('throttle:registration-code-check')->name('verify_code_confirmation');
 });
 
 // Uploader
@@ -98,7 +96,14 @@ Route::controller(AizUploadController::class)->group(function () {
     Route::get('/aiz-uploader/download/{id}', 'attachment_download')->name('download_attachment');
 });
 
-Auth::routes(['verify' => true]);
+Auth::routes(['verify' => true, 'register' => false, 'reset' => false]);
+
+// Wesal public website no longer accepts account registration or password login.
+// Keep the named URLs as explicit 404s so stale links and bookmarks cannot open the forms.
+Route::match(['GET', 'POST'], '/login', static function () { abort(404); })->name('login');
+Route::match(['GET', 'POST'], '/register', static function () { abort(404); })->name('register');
+Route::match(['GET', 'POST'], '/password/reset', static function () { abort(404); })->name('password.request');
+
 Route::controller(LoginController::class)->group(function () {
     Route::get('/logout', 'logout')->name('logout');
     Route::get('/social-login/redirect/{provider}', 'redirectToProvider')->name('social.login');
@@ -110,7 +115,9 @@ Route::controller(VerificationController::class)->group(function () {
     Route::get('/verification-confirmation/{code}', 'verification_confirmation')->name('email.verification.confirmation');
 });
 
-Route::post('/language', [LanguageController::class, 'changeLanguage'])->middleware('throttle:30,1')->name('language.change');
+// A GET language preference endpoint makes switching reliable on public pages and survives stale CSRF forms.
+Route::get('/language', [LanguageController::class, 'changeLanguage'])->middleware('throttle:30,1')->name('language.change');
+Route::post('/language', [LanguageController::class, 'changeLanguage'])->middleware('throttle:30,1')->name('language.change.post');
 Route::get('/packages', [PackageController::class, 'select_package'])->name('packages');
 
 //Blog
