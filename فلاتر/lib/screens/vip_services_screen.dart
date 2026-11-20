@@ -322,7 +322,7 @@ class _VipServicesScreenState extends State<VipServicesScreen> {
         textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
         child: Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+          insetPadding: const EdgeInsets.all(8),
           child: Container(
             padding: const EdgeInsets.all(22),
             decoration: BoxDecoration(
