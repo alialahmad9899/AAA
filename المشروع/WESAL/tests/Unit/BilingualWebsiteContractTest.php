@@ -329,8 +329,8 @@ class BilingualWebsiteContractTest extends TestCase
     {
         $middleware = $this->source('app/Http/Middleware/SetWebsiteLocale.php');
         $queryLocalePosition = strpos($middleware, "\$request->query('wesal_locale'");
-        $queryBranchPosition = strpos($middleware, "if (in_array($queryLocale, ['ar', 'en'], true))");
-        $cookieBranchPosition = strpos($middleware, "} elseif (in_array($cookieLocale, ['ar', 'en'], true))");
+        $queryBranchPosition = strpos($middleware, "if (in_array(\$queryLocale, ['ar', 'en'], true))");
+        $cookieBranchPosition = strpos($middleware, "} elseif (in_array(\$cookieLocale, ['ar', 'en'], true))");
 
         $this->assertNotFalse($queryLocalePosition, 'The middleware must read the one-time locale override.');
         $this->assertNotFalse($queryBranchPosition, 'The explicit locale override branch must exist.');
