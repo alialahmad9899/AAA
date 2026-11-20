@@ -211,13 +211,13 @@
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-right dropdown-menu-lg py-0 border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
                                     <div class="p-3 bg-light border-bottom">
-                                        <h6 class="mb-0 fw-700">{{ translate('Notifications') }}</h6>
+                                        <h6 class="mb-0 fw-700">{{ $isEnglish ? 'Notifications' : translate('Notifications') }}</h6>
                                     </div>
                                     <ul class="list-group list-group-raw c-scrollbar-light" style="overflow-y:auto;max-height:300px;">
                                         @include('frontend.inc.notification')
                                     </ul>
                                     <div class="border-top">
-                                        <a href="{{ route('frontend.notifications') }}" class="btn text-reset btn-block fw-600 bg-light">{{ translate('View All Notifications') }}</a>
+                                        <a href="{{ route('frontend.notifications') }}" class="btn text-reset btn-block fw-600 bg-light">{{ $isEnglish ? 'View all notifications' : translate('View All Notifications') }}</a>
                                     </div>
                                 </div>
                             </li>
@@ -236,7 +236,7 @@
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-right dropdown-menu-lg py-0 border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
                                     <div class="p-3 bg-light border-bottom">
-                                        <h6 class="mb-0 fw-700">{{ translate('Messages') }}</h6>
+                                        <h6 class="mb-0 fw-700">{{ $isEnglish ? 'Messages' : translate('Messages') }}</h6>
                                     </div>
                                     <div class="c-scrollbar-light" style="overflow-y:auto;max-height:300px;">
                                         @forelse ($unseen_chat_threads as $key => $chat_thread_id)
@@ -252,17 +252,17 @@
                                         @empty
                                             <div class="text-center py-4">
                                                 <i class="las la-frown la-4x mb-2 opacity-40"></i>
-                                                <h4 class="h6">{{ translate('No New Messages') }}</h4>
+                                                <h4 class="h6">{{ $isEnglish ? 'No new messages' : translate('No New Messages') }}</h4>
                                             </div>
                                         @endforelse
                                     </div>
                                     <div class="border-top">
-                                        <a href="{{ route('all.messages') }}" class="btn text-reset btn-block fw-600 bg-light">{{ translate('View All Messages') }}</a>
+                                        <a href="{{ route('all.messages') }}" class="btn text-reset btn-block fw-600 bg-light">{{ $isEnglish ? 'View all messages' : translate('View All Messages') }}</a>
                                     </div>
                                 </div>
                             </li>
                             <li class="list-inline-item ml-2">
-                                <a href="{{ route('logout') }}" class="btn btn-sm bg-primary-grad text-white fw-600 py-1 px-3 round-btn shadow-sm">{{translate('Logout')}}</a>
+                                <a href="{{ route('logout') }}" class="btn btn-sm bg-primary-grad text-white fw-600 py-1 px-3 round-btn shadow-sm">{{ $isEnglish ? 'Log out' : translate('Logout') }}</a>
                             </li>
                         @endif
                     </ul>
@@ -302,7 +302,7 @@
                         @else
                             <button class="btn btn-mobile-explicit rounded-pill" onclick="toggleMobileMenu()">
                                 <i class="las la-bars fs-18"></i>
-                                <span>القائمة السريعة</span>
+                                <span>{{ $isEnglish ? "Quick menu" : "القائمة السريعة" }}</span>
                             </button>
                         @endif
                     </div>
@@ -316,17 +316,17 @@
                         <li class="d-inline-block d-lg-flex pb-1 {{ areActiveRoutes(['member.listing'],'active') }}">
                             <a class="nav-link premium-nav-link text-uppercase fw-700 fs-15 d-flex align-items-center py-4"
                                href="{{ route('member.listing') }}">
-                                <span class="text-dark mb-n1">{{ translate('Active Members') }}</span>
+                                <span class="text-dark mb-n1">{{ $isEnglish ? 'Active members' : translate('Active Members') }}</span>
                             </a>
                         </li>
                         <li class="d-inline-block d-lg-flex pb-1 {{ areActiveRoutes(['packages'],'active') }}">
                             <a class="nav-link premium-nav-link text-uppercase fw-700 fs-15 d-flex align-items-center py-4" href="{{ route('packages') }}">
-                                <span class="text-dark mb-n1">{{ translate('Premium Plans') }}</span>
+                                <span class="text-dark mb-n1">{{ $isEnglish ? 'Premium plans' : translate('Premium Plans') }}</span>
                             </a>
                         </li>
                         <li class="d-inline-block d-lg-flex pb-1 {{ areActiveRoutes(['contact_us'],'active') }}">
                             <a class="nav-link premium-nav-link text-uppercase fw-700 fs-15 d-flex align-items-center py-4" href="{{ route('contact_us') }}">
-                                <span class="text-dark mb-n1">{{ translate('Contact Us') }}</span>
+                                <span class="text-dark mb-n1">{{ $isEnglish ? 'Support' : translate('Contact Us') }}</span>
                             </a>
                         </li>
                     </ul>
@@ -343,17 +343,17 @@
                     <ul class="list-inline d-flex align-items-center mb-0">
                         <li class="list-inline-item">
                             <a href="{{ route('dashboard') }}" class="text-reset premium-nav-link d-inline-block px-4 py-3 fw-600 {{ areActiveRoutes(['dashboard'],'text-primary-grad') }}">
-                                <i class="las la-tachometer-alt mr-1"></i><span>{{ translate('Dashboard') }}</span>
+                                <i class="las la-tachometer-alt mr-1"></i><span>{{ $isEnglish ? 'Dashboard' : translate('Dashboard') }}</span>
                             </a>
                         </li>
                         <li class="list-inline-item">
                             <a href="{{ route('profile_settings') }}" class="text-reset premium-nav-link d-inline-block px-4 py-3 fw-600 {{ areActiveRoutes(['profile_settings'],'text-primary-grad') }}">
-                                <i class="las la-user mr-1"></i><span>{{ translate('My Profile') }}</span>
+                                <i class="las la-user mr-1"></i><span>{{ $isEnglish ? 'My Profile' : translate('My Profile') }}</span>
                             </a>
                         </li>
                         <li class="list-inline-item">
                             <a href="{{ route('all.messages') }}" class="text-reset premium-nav-link d-inline-block px-4 py-3 fw-600 {{ areActiveRoutes(['all.messages'],'text-primary-grad') }}">
-                                <i class="las la-envelope mr-1"></i><span>{{ translate('Messaging') }}</span>
+                                <i class="las la-envelope mr-1"></i><span>{{ $isEnglish ? 'Messages' : translate('Messaging') }}</span>
                             </a>
                         </li>
                     </ul>
