@@ -8,7 +8,7 @@ void main() {
     test('dialogs use a small, consistent inset on all four sides', () {
       expect(
         AppTheme.light.dialogTheme.insetPadding,
-        const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        const EdgeInsets.all(8),
       );
       expect(AppTheme.light.dialogTheme.backgroundColor, AppColors.cardColor);
       expect(
