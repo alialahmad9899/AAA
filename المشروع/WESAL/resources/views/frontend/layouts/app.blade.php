@@ -474,27 +474,34 @@
             (function () {
                 var key = 'wesal_optional_tracking_consent_v1';
                 var banner = document.getElementById('wesal-optional-consent');
-                var choice = null;
-                try { choice = window.localStorage.getItem(key); } catch (error) {}
-                if (choice === 'accepted') {
-                    if (window.wesalOptionalTracking) window.wesalOptionalTracking();
-                    return;
-                }
-                if (choice === 'rejected' || !banner) return;
-                banner.hidden = false;
+                var accept = document.getElementById('wesal-consent-accept');
+                var reject = document.getElementById('wesal-consent-reject');
 
                 function saveChoice(value) {
                     try { window.localStorage.setItem(key, value); } catch (error) {}
-                    banner.hidden = true;
+                    if (banner) banner.hidden = true;
                     if (value === 'accepted' && window.wesalOptionalTracking) {
                         window.wesalOptionalTracking();
                     }
                 }
 
-                var accept = document.getElementById('wesal-consent-accept');
-                var reject = document.getElementById('wesal-consent-reject');
                 if (accept) accept.addEventListener('click', function () { saveChoice('accepted'); });
                 if (reject) reject.addEventListener('click', function () { saveChoice('rejected'); });
+
+                window.wesalOpenCookiePreferences = function () {
+                    if (banner) banner.hidden = false;
+                };
+
+                var choice = null;
+                try { choice = window.localStorage.getItem(key); } catch (error) {}
+                if (choice === 'accepted') {
+                    if (banner) banner.hidden = true;
+                    if (window.wesalOptionalTracking) window.wesalOptionalTracking();
+                } else if (choice === 'rejected') {
+                    if (banner) banner.hidden = true;
+                } else if (banner) {
+                    banner.hidden = false;
+                }
             })();
         </script>
     @endif
