@@ -30,7 +30,7 @@
     .aiz-footer a:hover {
         color: #D4AF37 !important; /* ذهبي عند التمرير */
         text-decoration: none;
-        padding-right: 5px; /* حركة خفيفة لليسار عند التمرير (باعتبار الموقع RTL) */
+        padding-inline-start: 5px; /* Direction-aware hover spacing */
     }
 
     .footer-widget-title {
