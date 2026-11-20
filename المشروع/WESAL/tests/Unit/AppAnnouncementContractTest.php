@@ -95,7 +95,7 @@ class AppAnnouncementContractTest extends TestCase
         $this->assertStringContainsString("user_type === 'admin'", $controller);
         $this->assertStringContainsString("'required_if:target_type,age'", $controller);
         $this->assertStringContainsString("'target_gender' => ['nullable', 'required_if:target_type,age', 'in:all,male,female']", $controller);
-        $this->assertStringContainsString("'target_gender' => $validated['target_type'] === 'age'", $controller);
+        $this->assertStringContainsString("'target_gender' => \$validated['target_type'] === 'age'", $controller);
         $this->assertStringContainsString("'required_if:button_enabled,1'", $controller);
         $this->assertStringContainsString("['http', 'https']", $controller);
         $this->assertStringContainsString('button_enabled', $view);
