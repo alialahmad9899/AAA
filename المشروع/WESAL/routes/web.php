@@ -110,7 +110,9 @@ Route::controller(VerificationController::class)->group(function () {
     Route::get('/verification-confirmation/{code}', 'verification_confirmation')->name('email.verification.confirmation');
 });
 
-Route::post('/language', [LanguageController::class, 'changeLanguage'])->middleware('throttle:30,1')->name('language.change');
+// A GET language preference endpoint makes switching reliable on public pages and survives stale CSRF forms.
+Route::get('/language', [LanguageController::class, 'changeLanguage'])->middleware('throttle:30,1')->name('language.change');
+Route::post('/language', [LanguageController::class, 'changeLanguage'])->middleware('throttle:30,1')->name('language.change.post');
 Route::get('/packages', [PackageController::class, 'select_package'])->name('packages');
 
 //Blog
