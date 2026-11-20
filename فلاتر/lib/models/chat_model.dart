@@ -255,10 +255,16 @@ class ChatThreadModel {
         json['time']?.toString() ??
         '';
 
-    final rawLastSeen = json['last_seen'] ??
-        json['last_active_at'] ??
-        json['last_active'] ??
-        json['active_at'];
+    final rawLastSeen = [
+      json['last_seen'],
+      json['last_seen_at'],
+      json['last_active_at'],
+      json['last_active'],
+      json['active_at'],
+    ].firstWhere(
+      (value) => value != null && value.toString().trim().isNotEmpty,
+      orElse: () => '',
+    );
 
     // 🟢 استخراج اسم الباقة بشكل حذر وموسع
     final String packageName = _extractPackageName(json);
