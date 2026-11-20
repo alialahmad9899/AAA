@@ -22,7 +22,15 @@
         'اشتراك ثلاثة أشهر' => '3-month plan',
         'عضو مميز' => 'Featured member',
     ];
-    $displayPackageName = $isEnglish ? ($packageNameMap[$activePackageName] ?? $activePackageName) : $activePackageName;
+    $translatedPackageName = $isEnglish && $activePackageName !== ''
+        ? translate($activePackageName, 'en')
+        : $activePackageName;
+    if ($isEnglish && preg_match('/[\x{0600}-\x{06FF}]/u', (string) $translatedPackageName)) {
+        $translatedPackageName = 'Premium plan';
+    }
+    $displayPackageName = $isEnglish
+        ? ($packageNameMap[$activePackageName] ?? $translatedPackageName)
+        : $activePackageName;
     $displayName = $displayName !== '' ? $displayName : ($isEnglish ? 'Wesal member' : 'عضو وصال');
 @endphp
 
