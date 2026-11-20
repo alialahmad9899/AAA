@@ -911,6 +911,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       debugPrint('[Chat History] Could not load older messages: $error');
       if (mounted) setState(() => _isLoadingMore = false);
     } finally {
+      if (mounted && _isLoadingMore) {
+        setState(() => _isLoadingMore = false);
+      }
       if (mounted && _pendingMessageRefresh && !_isFetchingMessages) {
         _pendingMessageRefresh = false;
         unawaited(_loadMessages(silent: true, preserveHistory: true));
