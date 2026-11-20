@@ -476,6 +476,9 @@
             <div class="ws-footer-links">
                 <a href="{{ route('legal.privacy-policy') }}">{{ $isEnglish ? "Privacy Policy" : "سياسة الخصوصية" }}</a>
                 <a href="{{ route('legal.terms-conditions') }}">{{ $isEnglish ? "General Terms of Use" : "شروط الاستخدام العامة" }}</a>
+                @if (get_setting('google_analytics_activation') == 1 || get_setting('facebook_pixel_activation') == 1)
+                    <a href="#" onclick="event.preventDefault(); if (window.wesalOpenCookiePreferences) window.wesalOpenCookiePreferences();">{{ $isEnglish ? 'Cookie preferences' : 'إعدادات ملفات الارتباط' }}</a>
+                @endif
                 <a href="{{ route('contact_us') }}">{{ $isEnglish ? "Support" : "تواصل معنا" }}</a>
                 <a href="#top">{{ $isEnglish ? "Back to top" : "العودة للأعلى" }}</a>
             </div>
