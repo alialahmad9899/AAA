@@ -50,6 +50,21 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString("'Vary', 'Cookie'", $middleware);
     }
 
+    public function test_support_page_is_standalone_and_uses_the_transparent_wesal_logo(): void
+    {
+        $layout = $this->source('resources/views/frontend/layouts/app.blade.php');
+        $contact = $this->source('resources/views/frontend/contact_us.blade.php');
+
+        $this->assertStringContainsString("$isWesalSupportPage = Route::currentRouteName() === 'contact_us'", $layout);
+        $this->assertStringContainsString("!$isWesalSupportPage", $layout);
+        $this->assertStringContainsString("frontend.inc.header", $layout);
+        $this->assertStringContainsString("frontend.inc.footer", $layout);
+        $this->assertStringContainsString("frontend.inc.language_switcher", $contact);
+        $this->assertStringContainsString("assets/img/wesal-legal-logo.png", $contact);
+        $this->assertStringContainsString("We are here", $contact);
+        $this->assertStringContainsString("Send a message to the Wesal team", $contact);
+    }
+
     public function test_homepage_uses_the_transparent_wesal_logo_at_top_and_bottom(): void
     {
         $home = $this->source('resources/views/frontend/index.blade.php');
@@ -71,7 +86,9 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString("Rule::in(['ar', 'en'])", $controller);
         $this->assertStringContainsString("'redirect_to' => ['nullable', 'string', 'max:2048']", $controller);
         $this->assertStringContainsString('strpos($path, \'//\') === 0', $controller);
+        $this->assertStringContainsString("Route::get('/language'", $routes);
         $this->assertStringContainsString("Route::post('/language'", $routes);
+        $this->assertStringContainsString("method="GET"", $switcher);
         $this->assertStringContainsString("middleware('throttle:30,1')", $routes);
         $this->assertStringContainsString("value=\"ar\"", $switcher);
         $this->assertStringContainsString("value=\"en\"", $switcher);
