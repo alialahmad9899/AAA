@@ -235,6 +235,54 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString('يرجى إدخال بريد إلكتروني صحيح.', $request);
     }
 
+    public function test_public_website_login_and_registration_are_disabled(): void
+    {
+        $routes = $this->source('routes/web.php');
+        $home = $this->source('resources/views/frontend/index.blade.php');
+        $login = $this->source('app/Http/Controllers/Auth/LoginController.php');
+        $register = $this->source('app/Http/Controllers/Auth/RegisterController.php');
+
+        $this->assertSame(1, substr_count($routes, 'Auth::routes('));
+        $this->assertStringContainsString("Auth::routes(['verify' => true, 'register' => false, 'reset' => false])", $routes);
+        $this->assertStringContainsString("Route::match(['GET', 'POST'], '/login'", $routes);
+        $this->assertStringContainsString("->name('login')", $routes);
+        $this->assertStringContainsString("Route::match(['GET', 'POST'], '/register'", $routes);
+        $this->assertStringContainsString("->name('register')", $routes);
+        $this->assertStringContainsString("'/users/login'", $routes);
+        $this->assertStringContainsString("'/registration/verification-code-send'", $routes);
+        $this->assertStringContainsString("'/registration/verification-code-confirmation'", $routes);
+        $this->assertStringNotContainsString("route('login')", $home);
+        $this->assertStringNotContainsString("route('register')", $home);
+        $this->assertStringNotContainsString('تسجيل الدخول', $home);
+        $this->assertStringNotContainsString('إنشاء حساب', $home);
+        $this->assertStringContainsString("request()->get('query') !== 'mobile_app'", $login);
+        $this->assertStringContainsString("session('login_from') !== 'mobile_app'", $login);
+        $this->assertStringContainsString('public function showLoginForm()', $login);
+        $this->assertStringContainsString('abort(404);', $login);
+        $this->assertStringContainsString('public function showRegistrationForm()', $register);
+        $this->assertStringContainsString('abort(404);', $register);
+        $this->assertStringContainsString('Public website registration is disabled', $register);
+    }
+
+    public function test_english_legal_documents_are_real_english_only_view_files(): void
+    {
+        foreach ([
+            'resources/views/frontend/legal/en/privacy_policy.blade.php',
+            'resources/views/frontend/legal/en/terms_conditions.blade.php',
+        ] as $path) {
+            $english = $this->source($path);
+            $this->assertNotSame('', trim($english), "{$path} must not be empty.");
+            $this->assertDoesNotMatchRegularExpression('/[\\x{0600}-\\x{06FF}]/u', $english);
+        }
+
+        $home = $this->source('resources/views/frontend/index.blade.php');
+        $contact = $this->source('resources/views/frontend/contact_us.blade.php');
+        $this->assertStringContainsString("app()->getLocale() === 'en'", $home);
+        $this->assertStringContainsString("app()->getLocale() === 'en'", $contact);
+        $this->assertStringContainsString('Wesal | A serious marriage platform', $home);
+        $this->assertStringContainsString('Help & Support', $contact);
+    }
+
     public function test_optional_tracking_is_blocked_until_consent_and_can_be_changed_later(): void
     {
         $layout = $this->source('resources/views/frontend/layouts/app.blade.php');
