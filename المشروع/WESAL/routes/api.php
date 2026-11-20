@@ -122,6 +122,9 @@ Route::group(['namespace' => 'Api', 'middleware' => ['app_language']], function 
         });
 
         Route::group(['prefix' => 'member'], function () {
+            // Only authenticated, active mobile members can fetch their targeted popup.
+            Route::get('/app-announcement', 'AppAnnouncementController@show')->name('api.member.app-announcement');
+
             // Profile
             Route::get('/public-profile/{id}', 'ProfileController@public_profile');
             Route::get('/profile-settings', 'ProfileController@profile_settings');
