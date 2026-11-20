@@ -1,10 +1,17 @@
 @php
-    $websiteLocale = app()->getLocale() === 'ar' ? 'ar' : 'en';
+    $websiteLocale = strtolower((string) ($websiteLocale ?? request()->attributes->get(
+        'wesal_website_locale',
+        request()->query('wesal_locale', session('website_locale', app()->getLocale()))
+    )));
+    if (!in_array($websiteLocale, ['ar', 'en'], true)) {
+        $websiteLocale = 'ar';
+    }
+    app()->setLocale($websiteLocale);
     $websiteIsArabic = $websiteLocale === 'ar';
 @endphp
 
 <!DOCTYPE html>
-<html lang="{{ $websiteLocale }}" dir="{{ $websiteIsArabic ? 'rtl' : 'ltr' }}" class="{{ Route::currentRouteName() == 'all.messages' ? 'h-100' : '' }}">
+<html lang="{{ $websiteLocale }}" dir="{{ $websiteIsArabic ? 'rtl' : 'ltr' }}" data-wesal-locale="{{ $websiteLocale }}" class="{{ $websiteIsArabic ? 'website-locale-ar' : 'website-locale-en' }} {{ Route::currentRouteName() == 'all.messages' ? 'h-100' : '' }}">
 
 <head>
 
@@ -298,7 +305,7 @@
     $isWesalSupportPage = Route::currentRouteName() === 'contact_us';
 @endphp
 
-<body class="{{ $websiteIsArabic ? 'text-right' : 'text-left' }} {{ Route::currentRouteName() == 'all.messages' ? 'h-100' : '' }} {{ $isTermsConditionsPage ? 'wesal-terms-document-body' : '' }} {{ $isWesalLandingPage ? 'wesal-landing-body' : '' }} {{ $isWesalSupportPage ? 'wesal-support-page-body' : '' }}">
+<body lang="{{ $websiteLocale }}" dir="{{ $websiteIsArabic ? 'rtl' : 'ltr' }}" class="{{ $websiteIsArabic ? 'text-right' : 'text-left' }} {{ Route::currentRouteName() == 'all.messages' ? 'h-100' : '' }} {{ $isTermsConditionsPage ? 'wesal-terms-document-body' : '' }} {{ $isWesalLandingPage ? 'wesal-landing-body' : '' }} {{ $isWesalSupportPage ? 'wesal-support-page-body' : '' }}">
 
     {{-- 🛑 تجريد الغلاف من الـ Flexbox والهوامش إذا كنا في صفحة المحادثة 🛑 --}}
     <div
