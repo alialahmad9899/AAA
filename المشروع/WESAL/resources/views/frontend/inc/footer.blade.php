@@ -21,7 +21,7 @@
         background: linear-gradient(135deg, #0F172A 0%, #1e293b 100%) !important; /* كحلي ملكي متدرج */
         color: #e2e8f0 !important;
         border-top: 3px solid #D4AF37 !important; /* خط علوي ذهبي */
-        font-family: 'Cairo', sans-serif;
+        font-family: {{ $isEnglish ? "'Inter', Arial, sans-serif" : "'Cairo', sans-serif" }};
     }
 
     .aiz-footer a {
