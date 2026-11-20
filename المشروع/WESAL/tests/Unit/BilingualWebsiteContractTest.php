@@ -283,8 +283,8 @@ class BilingualWebsiteContractTest extends TestCase
 
         $home = $this->source('resources/views/frontend/index.blade.php');
         $contact = $this->source('resources/views/frontend/contact_us.blade.php');
-        $this->assertStringContainsString("app()->getLocale() === 'en'", $home);
-        $this->assertStringContainsString("app()->getLocale() === 'en'", $contact);
+        $this->assertStringContainsString('$isEnglish = $websiteLocale === \'en\';', $home);
+        $this->assertStringContainsString('$isEnglish = $websiteLocale === \'en\';', $contact);
         $this->assertStringContainsString('Wesal | A serious marriage platform', $home);
         $this->assertStringContainsString('Help & Support', $contact);
     }
@@ -346,6 +346,53 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString("\$queryParameters['wesal_locale'] = \$locale;", $controller);
         $this->assertStringContainsString('http_build_query($queryParameters)', $controller);
         $this->assertStringContainsString('Only redirect to a local path.', $controller);
+    }
+
+
+    public function test_explicit_locale_is_shared_as_one_request_attribute_and_cookie_is_attached_after_next(): void
+    {
+        $middleware = $this->source('app/Http/Middleware/SetWebsiteLocale.php');
+
+        $this->assertStringContainsString("\$request->attributes->set('wesal_website_locale', \$locale)", $middleware);
+        $this->assertStringContainsString("if (in_array(\$queryLocale, ['ar', 'en'], true))", $middleware);
+        $this->assertStringContainsString("\$response->headers->setCookie(cookie(", $middleware);
+        $this->assertStringNotContainsString('Cookie::queue(', $middleware);
+        $this->assertStringContainsString("'private, no-store, no-cache, must-revalidate, max-age=0'", $middleware);
+        $this->assertStringContainsString("'Content-Language'", $middleware);
+    }
+
+    public function test_homepage_uses_the_resolved_request_locale_instead_of_re_reading_global_locale(): void
+    {
+        $controller = $this->source('app/Http/Controllers/HomeController.php');
+        $home = $this->source('resources/views/frontend/index.blade.php');
+        $layout = $this->source('resources/views/frontend/layouts/app.blade.php');
+        $card = $this->source('resources/views/frontend/inc/marketing_member_card.blade.php');
+
+        $this->assertStringContainsString("'wesal_website_locale'", $controller);
+        $this->assertStringContainsString("'websiteLocale'", $controller);
+        $this->assertStringContainsString('$isEnglish = $websiteLocale === \'en\';', $home);
+        $this->assertStringContainsString('data-wesal-locale="{{ $websiteLocale }}"', $layout);
+        $this->assertStringContainsString('dir="{{ $websiteIsArabic ? \'rtl\' : \'ltr\' }}"', $layout);
+        $this->assertStringContainsString('<h3 class="ws-member-name" dir="auto">', $card);
+    }
+
+    public function test_arabic_landing_text_cards_and_member_names_have_explicit_rtl_layout_rules(): void
+    {
+        $home = $this->source('resources/views/frontend/index.blade.php');
+
+        foreach ([
+            '.ws-landing-ar {',
+            'direction: rtl !important;',
+            '.ws-landing-ar .ws-header-inner',
+            '.ws-landing-ar .ws-hero-grid',
+            '.ws-landing-ar .ws-members-grid',
+            '.ws-landing-ar .ws-member-card',
+            '.ws-landing-ar .ws-member-name',
+            'text-align: right;',
+            'unicode-bidi: plaintext;',
+        ] as $rule) {
+            $this->assertStringContainsString($rule, $home);
+        }
     }
 
 }
