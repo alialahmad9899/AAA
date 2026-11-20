@@ -96,7 +96,7 @@ class LegalDocumentPagesContractTest extends TestCase
             '100 USD',
             '25 USD',
             '§ 306 BGB',
-            'خلال 6 أسابيع',
+            'قبل 6 أسابيع',
             'wesalsyrien@gmail.com',
         ] as $requiredText) {
             $this->assertStringContainsString($requiredText, $terms);
