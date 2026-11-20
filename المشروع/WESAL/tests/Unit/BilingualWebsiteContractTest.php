@@ -55,8 +55,8 @@ class BilingualWebsiteContractTest extends TestCase
         $layout = $this->source('resources/views/frontend/layouts/app.blade.php');
         $contact = $this->source('resources/views/frontend/contact_us.blade.php');
 
-        $this->assertStringContainsString("$isWesalSupportPage = Route::currentRouteName() === 'contact_us'", $layout);
-        $this->assertStringContainsString("!$isWesalSupportPage", $layout);
+        $this->assertStringContainsString('$isWesalSupportPage = Route::currentRouteName() === \'contact_us\'', $layout);
+        $this->assertStringContainsString('!$isWesalSupportPage', $layout);
         $this->assertStringContainsString("frontend.inc.header", $layout);
         $this->assertStringContainsString("frontend.inc.footer", $layout);
         $this->assertStringContainsString("frontend.inc.language_switcher", $contact);
@@ -88,7 +88,7 @@ class BilingualWebsiteContractTest extends TestCase
         $this->assertStringContainsString('strpos($path, \'//\') === 0', $controller);
         $this->assertStringContainsString("Route::get('/language'", $routes);
         $this->assertStringContainsString("Route::post('/language'", $routes);
-        $this->assertStringContainsString("method="GET"", $switcher);
+        $this->assertStringContainsString('method="GET"', $switcher);
         $this->assertStringContainsString("middleware('throttle:30,1')", $routes);
         $this->assertStringContainsString("value=\"ar\"", $switcher);
         $this->assertStringContainsString("value=\"en\"", $switcher);
