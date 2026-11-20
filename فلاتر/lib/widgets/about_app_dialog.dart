@@ -8,6 +8,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../constants/colors.dart';
+import '../utils/legal_document_links.dart';
 import 'package:wesal_app/widgets/bottom_system_inset.dart';
 
 class AboutAppDialog extends StatelessWidget {
@@ -262,6 +263,8 @@ class AboutAppDialog extends StatelessWidget {
                               ? 'تمنحك ميزات إضافية مثل البحث المتقدم، أولوية الظهور، وتواصل مفتوح لزيادة فرص التوافق المثالي.'
                               : 'Grants you extra features like advanced search, priority visibility, and open communication to increase perfect match chances.',
                         ),
+                        const SizedBox(height: 8),
+                        _buildLegalDocumentsSection(context, isAr),
                       ],
                     ),
                   ),
@@ -316,6 +319,145 @@ class AboutAppDialog extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLegalDocumentsSection(BuildContext context, bool isAr) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.sectionBackground,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.lineColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.policy_outlined,
+                color: AppColors.primaryTeal,
+                size: 21,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                isAr ? 'الوثائق والسياسات' : 'Legal Documents',
+                style: const TextStyle(
+                  color: AppColors.textDark,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Cairo',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Text(
+            isAr
+                ? 'اطّلع على سياسة الخصوصية وشروط استخدام منصة وصال.'
+                : 'Read the Wesal Privacy Policy and Terms of Use.',
+            style: const TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 11.5,
+              height: 1.45,
+              fontFamily: 'Cairo',
+            ),
+          ),
+          const SizedBox(height: 12),
+          _buildLegalDocumentTile(
+            title: isAr ? 'سياسة الخصوصية' : 'Privacy Policy',
+            subtitle: isAr
+                ? 'كيفية التعامل مع بياناتك ومعلوماتك'
+                : 'How your data and information are handled',
+            icon: Icons.shield_outlined,
+            onTap: () => LegalDocumentLinks.openPrivacyPolicy(
+              context,
+              isArabic: isAr,
+            ),
+          ),
+          const SizedBox(height: 9),
+          _buildLegalDocumentTile(
+            title: isAr ? 'شروط الاستخدام' : 'Terms of Use',
+            subtitle: isAr
+                ? 'القواعد والضوابط المنظمة لاستخدام وصال'
+                : 'Rules governing the use of Wesal',
+            icon: Icons.description_outlined,
+            onTap: () => LegalDocumentLinks.openTermsOfUse(
+              context,
+              isArabic: isAr,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegalDocumentTile({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: AppColors.cardColor,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.lineColor),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryTeal.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: Icon(icon, color: AppColors.primaryTeal, size: 20),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: AppColors.primaryTeal,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Cairo',
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 10.5,
+                        fontFamily: 'Cairo',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.open_in_new_rounded,
+                color: AppColors.textMuted,
+                size: 17,
+              ),
+            ],
           ),
         ),
       ),
