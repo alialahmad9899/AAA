@@ -37,6 +37,9 @@ class ChatThreadResource extends JsonResource
 
             $lastSeenValue = Cache::get('wesal:last-seen:' . $targetUser->id);
             if (empty($lastSeenValue)) {
+                $lastSeenValue = $targetUser->getAttribute('last_seen_at');
+            }
+            if (empty($lastSeenValue)) {
                 $lastSeenValue = $targetUser->getAttribute('last_seen');
             }
             $lastSeenAt = !empty($lastSeenValue)
