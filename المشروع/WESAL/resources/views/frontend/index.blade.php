@@ -1,13 +1,22 @@
 @extends('frontend.layouts.app')
 
-@section('meta_title', 'وصال | منصة زواج جاد للعرب والسوريين حول العالم')
-@section('meta_description', 'وصال منصة عربية للزواج الجاد تجمع السوريين والعرب داخل بلدانهم وفي دول الاغتراب حول العالم، بهدف التعارف الهادف والزواج وتكوين أسرة مع مراعاة الخصوصية والتوافق.')
+@php
+    $isEnglish = app()->getLocale() === 'en';
+@endphp
+
+@section('meta_title')
+    {{ $isEnglish ? 'Wesal | A serious marriage platform for Arabs and Syrians worldwide' : 'وصال | منصة {{ $isEnglish ? "A serious path to marriage for Arabs and Syrians worldwide" : "زواج جاد {{ $isEnglish ? "For Arabs and Syrians worldwide" : "للعرب والسوريين حول العالم" }}" }}' }}
+@endsection
+@section('meta_description')
+    {{ $isEnglish ? 'Wesal is an Arabic marriage platform connecting Syrians and Arabs in their home countries and around the world for meaningful introductions, marriage and family life, with privacy and compatibility in mind.' : 'وصال منصة عربية للزواج الجاد تجمع السوريين والعرب داخل بلدانهم وفي دول الاغتراب حول العالم، بهدف التعارف الهادف والزواج وتكوين أسرة مع مراعاة الخصوصية والتوافق.' }}
+@endsection
 
 @section('content')
 @php
     $hasAndroidLink = !empty($playStoreUrl);
     $hasIosLink = !empty($appStoreUrl);
     $hasAnyAppLink = !empty($appDownloadUrl);
+    $isEnglish = app()->getLocale() === 'en';
 @endphp
 
 <style>
@@ -29,11 +38,11 @@
     body.wesal-landing-body .aiz-main-wrapper {
         background: var(--ws-cream) !important;
         color: var(--ws-ink) !important;
-        font-family: 'Cairo', sans-serif !important;
+        font-family: {{ $isEnglish ? "'Inter', Arial, sans-serif" : "'Cairo', sans-serif" }} !important;
     }
     body.wesal-landing-body { overflow-x: hidden; }
     .ws-landing, .ws-landing * { box-sizing: border-box; }
-    .ws-landing { direction: rtl; color: var(--ws-ink); overflow: hidden; }
+    .ws-landing { direction: inherit; color: var(--ws-ink); overflow: hidden; }
     .ws-container { width: min(1180px, calc(100% - 44px)); margin-inline: auto; }
     .ws-section { padding: clamp(58px, 7vw, 92px) 0; }
     .ws-section-soft { background: #F6F4EF; }
@@ -63,6 +72,20 @@
     .ws-mobile-toggle { display: none; border: 1px solid var(--ws-line); color: var(--ws-primary); background: white; border-radius: 13px; width: 44px; height: 44px; font-size: 23px; }
     .ws-mobile-menu { display: none; padding: 6px 0 18px; }
     .ws-mobile-menu a { display: block; padding: 12px 4px; border-top: 1px solid var(--ws-line); color: var(--ws-ink); font-weight: 800; text-decoration: none; }
+
+    .ws-landing .wesal-language-switcher {
+        display: inline-flex; align-items: center; gap: 3px; padding: 3px;
+        border: 1px solid rgba(15,76,92,.16); border-radius: 999px;
+        background: rgba(255,255,255,.96); direction: ltr; white-space: nowrap;
+    }
+    .ws-landing .wesal-language-switcher button {
+        min-height: 31px; padding: 5px 10px; border: 0; border-radius: 999px;
+        background: transparent; color: var(--ws-primary); font-family: inherit;
+        font-size: 11px; font-weight: 800; cursor: pointer;
+    }
+    .ws-landing .wesal-language-switcher button.is-active { background: var(--ws-primary); color: #fff; }
+    .ws-mobile-menu .wesal-language-switcher { margin-top: 12px; }
+
 
     .ws-hero { position: relative; padding: clamp(54px, 8vw, 110px) 0 74px; isolation: isolate; }
     .ws-hero::before { content: ''; position: absolute; z-index: -1; width: 630px; height: 630px; border-radius: 50%; background: radial-gradient(circle, rgba(242,181,160,.25), rgba(242,181,160,0) 68%); top: -270px; left: -210px; }
@@ -247,37 +270,38 @@
     }
 </style>
 
-<div class="ws-landing" id="top">
+<div class="ws-landing {{ $isEnglish ? 'ws-landing-en' : 'ws-landing-ar' }}" id="top" dir="{{ $isEnglish ? 'ltr' : 'rtl' }}">
     <header class="ws-header">
         <div class="ws-container">
             <div class="ws-header-inner">
-                {{-- اسم نصي مؤقت فقط؛ لا نضع شعاراً قبل استلام شعار وصال الرسمي. --}}
-                <a class="ws-wordmark" href="#top" aria-label="وصال - الرئيسية">وصال<span>منصة زواج جاد للعرب حول العالم</span></a>
-                <nav class="ws-nav" aria-label="التنقل الرئيسي">
-                    <a href="#about">عن وصال</a>
-                    <a href="#featured">الأعضاء المميزون</a>
-                    <a href="#women">العضوات</a>
-                    <a href="#men">الأعضاء</a>
-                    <a href="#how-it-works">كيف يعمل</a>
+                <a class="ws-wordmark" href="#top" aria-label="{{ $isEnglish ? 'Wesal home' : 'وصال - الرئيسية' }}">{{ $isEnglish ? 'Wesal' : 'وصال' }}<span>{{ $isEnglish ? 'A serious marriage platform for Arabs worldwide' : 'منصة زواج جاد للعرب حول العالم' }}</span></a>
+                <nav class="ws-nav" aria-label="{{ $isEnglish ? 'Main navigation' : 'التنقل الرئيسي' }}">
+                    <a href="#about">{{ $isEnglish ? 'About Wesal' : '{{ $isEnglish ? "About Wesal" : "عن وصال" }}' }}</a>
+                    <a href="#featured">{{ $isEnglish ? 'Featured members' : '{{ $isEnglish ? "Featured members" : "الأعضاء المميزون" }}' }}</a>
+                    <a href="#women">{{ $isEnglish ? 'Women' : 'العضوات' }}</a>
+                    <a href="#men">{{ $isEnglish ? 'Men' : 'الأعضاء' }}</a>
+                    <a href="#how-it-works">{{ $isEnglish ? 'How it works' : 'كيف يعمل' }}</a>
                 </nav>
                 <div class="ws-header-actions">
+                    @include('frontend.inc.language_switcher')
                     @guest
-                        <a class="ws-login-link" href="{{ route('login') }}">تسجيل الدخول</a>
-                        <a class="ws-header-cta" href="{{ route('register') }}">إنشاء حساب <i class="las la-arrow-left"></i></a>
+                        <a class="ws-login-link" href="{{ route('login') }}">{{ $isEnglish ? 'Log in' : 'تسجيل الدخول' }}</a>
+                        <a class="ws-header-cta" href="{{ route('register') }}">{{ $isEnglish ? 'Create account' : 'إنشاء حساب' }} <i class="las {{ $isEnglish ? 'la-arrow-right' : 'la-arrow-left' }}"></i></a>
                     @endguest
                 </div>
-                <button class="ws-mobile-toggle" type="button" id="wsMobileToggle" aria-label="فتح القائمة" aria-expanded="false" aria-controls="wsMobileMenu"><i class="las la-bars"></i></button>
+                <button class="ws-mobile-toggle" type="button" id="wsMobileToggle" aria-label="{{ $isEnglish ? 'Open menu' : 'فتح القائمة' }}" aria-expanded="false" aria-controls="wsMobileMenu"><i class="las la-bars"></i></button>
             </div>
-            <nav class="ws-mobile-menu" id="wsMobileMenu" aria-label="قائمة الهاتف">
-                <a href="#about">عن وصال</a>
-                <a href="#featured">الأعضاء المميزون</a>
-                <a href="#women">العضوات</a>
-                <a href="#men">الأعضاء</a>
-                <a href="#how-it-works">كيف يعمل</a>
+            <nav class="ws-mobile-menu" id="wsMobileMenu" aria-label="{{ $isEnglish ? 'Mobile navigation' : 'قائمة الهاتف' }}">
+                <a href="#about">{{ $isEnglish ? 'About Wesal' : '{{ $isEnglish ? "About Wesal" : "عن وصال" }}' }}</a>
+                <a href="#featured">{{ $isEnglish ? 'Featured members' : '{{ $isEnglish ? "Featured members" : "الأعضاء المميزون" }}' }}</a>
+                <a href="#women">{{ $isEnglish ? 'Women' : 'العضوات' }}</a>
+                <a href="#men">{{ $isEnglish ? 'Men' : 'الأعضاء' }}</a>
+                <a href="#how-it-works">{{ $isEnglish ? 'How it works' : 'كيف يعمل' }}</a>
                 @guest
-                    <a href="{{ route('login') }}">تسجيل الدخول</a>
-                    <a href="{{ route('register') }}">إنشاء حساب جديد</a>
+                    <a href="{{ route('login') }}">{{ $isEnglish ? 'Log in' : 'تسجيل الدخول' }}</a>
+                    <a href="{{ route('register') }}">{{ $isEnglish ? 'Create an account' : 'إنشاء حساب جديد' }}</a>
                 @endguest
+                @include('frontend.inc.language_switcher')
             </nav>
         </div>
     </header>
@@ -286,57 +310,57 @@
         <section class="ws-hero" aria-labelledby="wsHeroTitle">
             <div class="ws-container ws-hero-grid">
                 <div class="ws-hero-content">
-                    <div class="ws-eyebrow"><i class="las la-heart"></i> زواج جاد للعرب والسوريين حول العالم</div>
-                    <h1 id="wsHeroTitle">حين تبحث عن شريك حياة، ابدأ من <em>توافق جاد</em></h1>
-                    <p class="ws-hero-copy">وصال منصة عربية مخصصة للتعارف الهادف بهدف الزواج وتكوين أسرة، تجمع السوريين والعرب داخل بلدانهم وفي مجتمعات الاغتراب حول العالم. تعرّف إلى ملفات شخصية واضحة، وحدد مواصفات شريك الحياة الذي تبحث عنه.</p>
+                    <div class="ws-eyebrow"><i class="las la-heart"></i> {{ $isEnglish ? "A serious path to marriage for Arabs and Syrians worldwide" : "زواج جاد {{ $isEnglish ? "For Arabs and Syrians worldwide" : "للعرب والسوريين حول العالم" }}" }}</div>
+                    <h1 id="wsHeroTitle">{{ $isEnglish ? "When you are looking for a life partner, start with" : "حين تبحث عن شريك حياة، ابدأ من" }} <em>{{ $isEnglish ? "meaningful compatibility" : "توافق جاد" }}</em></h1>
+                    <p class="ws-hero-copy">{{ $isEnglish ? "Wesal is an Arabic platform for meaningful introductions with the goal of marriage and building a family. It brings together Syrians and Arabs in their home countries and communities abroad. Explore clear member profiles and set the qualities you are looking for in a life partner." : "وصال منصة عربية مخصصة للتعارف الهادف بهدف الزواج وتكوين أسرة، تجمع السوريين والعرب داخل بلدانهم وفي مجتمعات الاغتراب حول العالم. تعرّف إلى ملفات شخصية واضحة، وحدد مواصفات شريك الحياة الذي تبحث عنه." }}</p>
                     <div class="ws-hero-actions">
-                        <a class="ws-button-primary" href="#download"><i class="las la-mobile-alt"></i> تعرّف على التطبيق</a>
-                        <a class="ws-button-outline" href="#featured"><i class="las la-users"></i> اكتشف الأعضاء</a>
+                        <a class="ws-button-primary" href="#download"><i class="las la-mobile-alt"></i> {{ $isEnglish ? "Explore the app" : "تعرّف على التطبيق" }}</a>
+                        <a class="ws-button-outline" href="#featured"><i class="las la-users"></i> {{ $isEnglish ? "Discover members" : "اكتشف الأعضاء" }}</a>
                     </div>
-                    <div class="ws-hero-note"><i class="las la-shield-alt"></i> الصور المعروضة تخضع لإعدادات الخصوصية والموافقة المعتمدة في وصال.</div>
+                    <div class="ws-hero-note"><i class="las la-shield-alt"></i> {{ $isEnglish ? "Photos shown on Wesal are subject to the platform’s privacy settings and approval rules." : "الصور المعروضة تخضع لإعدادات الخصوصية والموافقة المعتمدة في وصال." }}</div>
                 </div>
 
                 <div class="ws-hero-art" aria-hidden="true">
                     <div class="ws-art-orbit"></div>
-                    <div class="ws-float-card ws-float-one"><i class="las la-heart"></i><span>نية واضحة نحو الزواج</span></div>
-                    <div class="ws-float-card ws-float-two"><i class="las la-user-check"></i><span>عرب وسوريون حول العالم</span></div>
+                    <div class="ws-float-card ws-float-one"><i class="las la-heart"></i><span>{{ $isEnglish ? "A clear intention to marry" : "نية واضحة نحو الزواج" }}</span></div>
+                    <div class="ws-float-card ws-float-two"><i class="las la-user-check"></i><span>{{ $isEnglish ? "Arabs and Syrians worldwide" : "عرب وسوريون حول العالم" }}</span></div>
                     <span class="ws-hero-spark ws-spark-one">✦</span><span class="ws-hero-spark ws-spark-two">✧</span>
                     <div class="ws-phone">
                         <div class="ws-phone-notch"></div>
                         <div class="ws-phone-top"><span>وصال</span><span class="ws-phone-status"><i></i><i></i><i></i></span></div>
-                        <div class="ws-phone-heading">ابحث عن شريك الحياة المناسب</div>
-                        <div class="ws-phone-caption">توافق واحترام وخصوصية</div>
+                        <div class="ws-phone-heading">{{ $isEnglish ? "Find a compatible life partner" : "ابحث عن شريك الحياة المناسب" }}</div>
+                        <div class="ws-phone-caption">{{ $isEnglish ? "Compatibility, respect and privacy" : "توافق واحترام وخصوصية" }}</div>
                         <div class="ws-phone-profile"><div class="ws-phone-avatar"><i class="las la-user"></i></div><div class="ws-phone-lines"><b></b><span></span></div></div>
                         <div class="ws-phone-profile"><div class="ws-phone-avatar coral"><i class="las la-user"></i></div><div class="ws-phone-lines"><b></b><span></span></div></div>
                         <div class="ws-phone-profile"><div class="ws-phone-avatar"><i class="las la-user"></i></div><div class="ws-phone-lines"><b></b><span></span></div></div>
-                        <div class="ws-phone-pill"><i class="las la-heart ml-1"></i> ابدأ رحلة زواج جاد</div>
+                        <div class="ws-phone-pill"><i class="las la-heart ml-1"></i> {{ $isEnglish ? "Start your journey toward marriage" : "ابدأ رحلة زواج جاد" }}</div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section class="ws-proof-strip" aria-label="مميزات وصال">
+        <section class="ws-proof-strip" aria-label="{{ $isEnglish ? "Why Wesal" : "مميزات وصال" }}">
             <div class="ws-container ws-proof-grid">
-                <div class="ws-proof-item"><i class="las la-user-friends"></i><span>للعرب والسوريين حول العالم</span></div>
-                <div class="ws-proof-item"><i class="las la-sliders-h"></i><span>توافق وفق معايير واضحة</span></div>
-                <div class="ws-proof-item"><i class="las la-comments"></i><span>تواصل محترم داخل التطبيق</span></div>
+                <div class="ws-proof-item"><i class="las la-user-friends"></i><span>{{ $isEnglish ? "For Arabs and Syrians worldwide" : "للعرب والسوريين حول العالم" }}</span></div>
+                <div class="ws-proof-item"><i class="las la-sliders-h"></i><span>{{ $isEnglish ? "Compatibility based on clear criteria" : "توافق وفق معايير واضحة" }}</span></div>
+                <div class="ws-proof-item"><i class="las la-comments"></i><span>{{ $isEnglish ? "Respectful in-app communication" : "تواصل محترم داخل التطبيق" }}</span></div>
             </div>
         </section>
 
         <section class="ws-section" id="about">
             <div class="ws-container">
                 <div class="ws-section-heading">
-                    <div class="ws-kicker">عن وصال</div>
-                    <h2>منصة للزواج الجاد لا للمواعدة العابرة</h2>
-                    <p>وصال مساحة عربية تجمع السوريين والعرب المقيمين في بلدانهم أو في الخارج، وتساعد الباحثين عن الزواج على التعارف الهادف وبناء أسرة على أساس من التوافق والاحترام.</p>
+                    <div class="ws-kicker">{{ $isEnglish ? "About Wesal" : "عن وصال" }}</div>
+                    <h2>{{ $isEnglish ? "A platform for serious marriage, not casual dating" : "منصة للزواج الجاد لا للمواعدة العابرة" }}</h2>
+                    <p>{{ $isEnglish ? "Wesal is an Arabic space that brings together Syrians and Arabs at home and abroad, helping people seeking marriage connect with purpose and build a family on compatibility and respect." : "وصال مساحة عربية تجمع السوريين والعرب المقيمين في بلدانهم أو في الخارج، وتساعد الباحثين عن الزواج على التعارف الهادف وبناء أسرة على أساس من التوافق والاحترام." }}</p>
                 </div>
                 <div class="ws-benefits-grid">
-                    <article class="ws-benefit"><div class="ws-benefit-icon"><i class="las la-id-card"></i></div><h3>زواج جاد لا مواعدة</h3><p>وصال مخصص للتعارف الجاد بهدف الزواج وتكوين أسرة، وليس للعلاقات العابرة أو التسلية.</p></article>
-                    <article class="ws-benefit"><div class="ws-benefit-icon"><i class="las la-globe"></i></div><h3>مجتمع عربي حول العالم</h3><p>يجمع السوريين والعرب داخل بلدانهم وفي دول الاغتراب، لتبقى فرص التعارف الجاد ممكنة رغم المسافات.</p></article>
-                    <article class="ws-benefit"><div class="ws-benefit-icon"><i class="las la-sliders-h"></i></div><h3>توافق وفق معايير تهمك</h3><p>استكشف التفضيلات بحسب بلد الإقامة والعمر والتعليم والمهنة والحالة الاجتماعية.</p></article>
-                    <article class="ws-benefit"><div class="ws-benefit-icon"><i class="las la-shield-alt"></i></div><h3>خصوصيتك بيدك</h3><p>تحكم بالصور والمعلومات التي تظهر في ملفك؛ ولا تُعرض بيانات الهاتف أو البريد علناً دون موافقتك، مع خيارات الحظر والإبلاغ.</p></article>
-                    <article class="ws-benefit"><div class="ws-benefit-icon"><i class="las la-comments"></i></div><h3>تواصل محترم داخل التطبيق</h3><p>إبداء الاهتمام وطلب التواصل ومتابعة الردود تتم داخل التطبيق بعد الاهتمام المتبادل، مع خيارات توثيق الحساب عبر الهاتف أو البريد الإلكتروني.</p></article>
-                    <article class="ws-benefit"><div class="ws-benefit-icon"><i class="las la-gem"></i></div><h3>خيارات بحث وعضوية إضافية</h3><p>توفر العضوية المميزة مزايا إضافية مثل البحث المتقدم وأولوية الظهور وفق الباقة المتاحة.</p></article>
+                    <article class="ws-benefit"><div class="ws-benefit-icon"><i class="las la-id-card"></i></div><h3>{{ $isEnglish ? "Serious marriage, not dating" : "زواج جاد لا مواعدة" }}</h3><p>{{ $isEnglish ? "Wesal is designed for serious introductions with the aim of marriage and starting a family, not casual relationships or entertainment." : "وصال مخصص للتعارف الجاد بهدف الزواج وتكوين أسرة، وليس للعلاقات العابرة أو التسلية." }}</p></article>
+                    <article class="ws-benefit"><div class="ws-benefit-icon"><i class="las la-globe"></i></div><h3>{{ $isEnglish ? "An Arab community worldwide" : "مجتمع عربي حول العالم" }}</h3><p>{{ $isEnglish ? "It connects Syrians and Arabs in their home countries and abroad, making meaningful introductions possible across distances." : "يجمع السوريين والعرب داخل بلدانهم وفي دول الاغتراب، لتبقى فرص التعارف الجاد ممكنة رغم المسافات." }}</p></article>
+                    <article class="ws-benefit"><div class="ws-benefit-icon"><i class="las la-sliders-h"></i></div><h3>{{ $isEnglish ? "Compatibility on your terms" : "توافق وفق معايير تهمك" }}</h3><p>{{ $isEnglish ? "Explore preferences by country of residence, age, education, profession and marital status." : "استكشف التفضيلات بحسب بلد الإقامة والعمر والتعليم والمهنة والحالة الاجتماعية." }}</p></article>
+                    <article class="ws-benefit"><div class="ws-benefit-icon"><i class="las la-shield-alt"></i></div><h3>{{ $isEnglish ? "Your privacy, your choice" : "خصوصيتك بيدك" }}</h3><p>{{ $isEnglish ? "Choose which photos and details appear on your profile. Your phone number and email are not displayed publicly without your consent. Blocking and reporting tools are also available." : "تحكم بالصور والمعلومات التي تظهر في ملفك؛ ولا تُعرض بيانات الهاتف أو البريد علناً دون موافقتك، مع خيارات الحظر والإبلاغ." }}</p></article>
+                    <article class="ws-benefit"><div class="ws-benefit-icon"><i class="las la-comments"></i></div><h3>{{ $isEnglish ? "Respectful in-app communication" : "تواصل محترم داخل التطبيق" }}</h3><p>{{ $isEnglish ? "Show interest, request contact and follow replies inside the app after mutual interest. Account verification options are available by phone or email." : "إبداء الاهتمام وطلب التواصل ومتابعة الردود تتم داخل التطبيق بعد الاهتمام المتبادل، مع خيارات توثيق الحساب عبر الهاتف أو البريد الإلكتروني." }}</p></article>
+                    <article class="ws-benefit"><div class="ws-benefit-icon"><i class="las la-gem"></i></div><h3>{{ $isEnglish ? "More search and membership options" : "خيارات بحث وعضوية إضافية" }}</h3><p>{{ $isEnglish ? "Premium membership offers additional features such as advanced search and profile visibility priority, depending on the selected plan." : "توفر العضوية المميزة مزايا إضافية مثل البحث المتقدم وأولوية الظهور وفق الباقة المتاحة." }}</p></article>
                 </div>
             </div>
         </section>
@@ -344,8 +368,8 @@
         <section class="ws-section ws-members-section" id="featured">
             <div class="ws-container">
                 <div class="ws-members-head">
-                    <div><div class="ws-kicker">اختيارات وصال</div><h2>الأعضاء المميزون</h2><p>أحدث الأعضاء الذين لديهم باقة مدفوعة مفعّلة وصلاحية سارية، مع إظهار اسم الباقة المعتمد في وصال.</p></div>
-                    <span class="ws-members-count">آخر 10 أعضاء مميزين</span>
+                    <div><div class="ws-kicker">{{ $isEnglish ? "Wesal picks" : "اختيارات وصال" }}</div><h2>{{ $isEnglish ? "Featured members" : "الأعضاء المميزون" }}</h2><p>{{ $isEnglish ? "The latest members with an active paid plan and valid membership, showing the plan name recorded in Wesal." : "أحدث الأعضاء الذين لديهم باقة مدفوعة مفعّلة وصلاحية سارية، مع إظهار اسم الباقة المعتمد في وصال." }}</p></div>
+                    <span class="ws-members-count">{{ $isEnglish ? "The 10 latest featured members" : "آخر 10 أعضاء مميزين" }}</span>
                 </div>
                 @if ($featuredMembers->isNotEmpty())
                     <div class="ws-members-grid">
@@ -354,7 +378,7 @@
                         @endforeach
                     </div>
                 @else
-                    <div class="ws-empty-state"><i class="las la-gem"></i>لا توجد حالياً ملفات تستوفي شروط العضوية المدفوعة السارية للعرض في هذا القسم.</div>
+                    <div class="ws-empty-state"><i class="las la-gem"></i>{{ $isEnglish ? "There are currently no profiles that meet the active paid-membership requirements for this section." : "لا توجد حالياً ملفات تستوفي شروط العضوية المدفوعة السارية للعرض في هذا القسم." }}</div>
                 @endif
             </div>
         </section>
@@ -362,8 +386,8 @@
         <section class="ws-section ws-members-section ws-alt" id="women">
             <div class="ws-container">
                 <div class="ws-members-head">
-                    <div><div class="ws-kicker">أحدث الملفات النسائية</div><h2>عضوات وصال</h2><p>أحدث العضوات اللواتي تم اعتماد ملفاتهن للظهور في وصال، مع احترام إعدادات الخصوصية.</p></div>
-                    <span class="ws-members-count">آخر 10 عضوات سجّلن لدينا</span>
+                    <div><div class="ws-kicker">{{ $isEnglish ? "Recently added women’s profiles" : "أحدث الملفات النسائية" }}</div><h2>{{ $isEnglish ? "Women on Wesal" : "عضوات وصال" }}</h2><p>{{ $isEnglish ? "The latest women whose profiles have been approved for display on Wesal, subject to their privacy settings." : "أحدث العضوات اللواتي تم اعتماد ملفاتهن للظهور في وصال، مع احترام إعدادات الخصوصية." }}</p></div>
+                    <span class="ws-members-count">{{ $isEnglish ? "The 10 latest women who joined" : "آخر 10 عضوات سجّلن لدينا" }}</span>
                 </div>
                 @if ($femaleMembers->isNotEmpty())
                     <div class="ws-members-grid">
@@ -372,7 +396,7 @@
                         @endforeach
                     </div>
                 @else
-                    <div class="ws-empty-state"><i class="las la-user-friends"></i>ستظهر بطاقات العضوات هنا عند توفر ملفات منشورة.</div>
+                    <div class="ws-empty-state"><i class="las la-user-friends"></i>{{ $isEnglish ? "Approved women’s profiles will appear here when available." : "ستظهر بطاقات العضوات هنا عند توفر ملفات منشورة." }}</div>
                 @endif
             </div>
         </section>
@@ -380,8 +404,8 @@
         <section class="ws-section ws-members-section" id="men">
             <div class="ws-container">
                 <div class="ws-members-head">
-                    <div><div class="ws-kicker">أحدث الملفات الرجالية</div><h2>أعضاء وصال</h2><p>أحدث الأعضاء الذين تم اعتماد ملفاتهم للظهور في وصال، مع احترام إعدادات الخصوصية.</p></div>
-                    <span class="ws-members-count">آخر 10 أعضاء سجّلوا لدينا</span>
+                    <div><div class="ws-kicker">{{ $isEnglish ? "Recently added men’s profiles" : "أحدث الملفات الرجالية" }}</div><h2>{{ $isEnglish ? "Men on Wesal" : "أعضاء وصال" }}</h2><p>{{ $isEnglish ? "The latest men whose profiles have been approved for display on Wesal, subject to their privacy settings." : "أحدث الأعضاء الذين تم اعتماد ملفاتهم للظهور في وصال، مع احترام إعدادات الخصوصية." }}</p></div>
+                    <span class="ws-members-count">{{ $isEnglish ? "The 10 latest men who joined" : "آخر 10 أعضاء سجّلوا لدينا" }}</span>
                 </div>
                 @if ($maleMembers->isNotEmpty())
                     <div class="ws-members-grid">
@@ -390,18 +414,18 @@
                         @endforeach
                     </div>
                 @else
-                    <div class="ws-empty-state"><i class="las la-user-friends"></i>ستظهر بطاقات الأعضاء هنا عند توفر ملفات منشورة.</div>
+                    <div class="ws-empty-state"><i class="las la-user-friends"></i>{{ $isEnglish ? "Approved men’s profiles will appear here when available." : "ستظهر بطاقات الأعضاء هنا عند توفر ملفات منشورة." }}</div>
                 @endif
             </div>
         </section>
 
         <section class="ws-section ws-section-soft" id="how-it-works">
             <div class="ws-container">
-                <div class="ws-section-heading"><div class="ws-kicker">خطوات نحو شريك الحياة</div><h2>كيف تبدأ رحلتك في وصال؟</h2><p>ابدأ بملف يعكس معلوماتك وتطلعاتك، ثم استكشف التوافق واطلب التواصل باحترام من داخل التطبيق.</p></div>
+                <div class="ws-section-heading"><div class="ws-kicker">{{ $isEnglish ? "Steps toward a life partner" : "خطوات نحو شريك الحياة" }}</div><h2>{{ $isEnglish ? "How do you begin your journey on Wesal?" : "كيف تبدأ رحلتك في وصال؟" }}</h2><p>{{ $isEnglish ? "Start with a profile that reflects who you are and what you are looking for. Then explore compatibility and request contact respectfully through the app." : "ابدأ بملف يعكس معلوماتك وتطلعاتك، ثم {{ $isEnglish ? "Explore compatibility" : "استكشف التوافق" }} واطلب التواصل باحترام من داخل التطبيق." }}</p></div>
                 <div class="ws-steps-grid">
-                    <article class="ws-step"><span class="ws-step-num">01</span><i class="las la-user-edit"></i><h3>أنشئ ملفك</h3><p>أضف معلوماتك الأساسية وما تفضله في شريك الحياة.</p></article>
-                    <article class="ws-step"><span class="ws-step-num">02</span><i class="las la-search"></i><h3>استكشف التوافق</h3><p>استخدم معايير البحث والتفضيلات لاكتشاف الملفات الأقرب لما تبحث عنه.</p></article>
-                    <article class="ws-step"><span class="ws-step-num">03</span><i class="las la-comments"></i><h3>ابدأ التواصل</h3><p>بعد الاهتمام المتبادل، أرسل طلب التواصل وتابع الردود داخل التطبيق.</p></article>
+                    <article class="ws-step"><span class="ws-step-num">01</span><i class="las la-user-edit"></i><h3>{{ $isEnglish ? "Create your profile" : "أنشئ ملفك" }}</h3><p>{{ $isEnglish ? "Add your basic details and what you are looking for in a life partner." : "أضف معلوماتك الأساسية وما تفضله في شريك الحياة." }}</p></article>
+                    <article class="ws-step"><span class="ws-step-num">02</span><i class="las la-search"></i><h3>{{ $isEnglish ? "Explore compatibility" : "استكشف التوافق" }}</h3><p>{{ $isEnglish ? "Use search filters and preferences to discover profiles that best match what you are looking for." : "استخدم معايير البحث والتفضيلات لاكتشاف الملفات الأقرب لما تبحث عنه." }}</p></article>
+                    <article class="ws-step"><span class="ws-step-num">03</span><i class="las la-comments"></i><h3>{{ $isEnglish ? "Start communicating" : "ابدأ التواصل" }}</h3><p>{{ $isEnglish ? "After mutual interest, send a contact request and follow the replies inside the app." : "بعد الاهتمام المتبادل، أرسل طلب التواصل وتابع الردود داخل التطبيق." }}</p></article>
                 </div>
             </div>
         </section>
@@ -409,24 +433,24 @@
         <section class="ws-section ws-download" id="download">
             <div class="ws-container ws-download-inner">
                 <div>
-                    <div class="ws-kicker" style="color:#F2B5A0">ابدأ مع وصال</div>
-                    <h2>ابدأ خطوتك نحو زواج جاد</h2>
+                    <div class="ws-kicker" style="color:#F2B5A0">{{ $isEnglish ? "Get started with Wesal" : "ابدأ مع وصال" }}</div>
+                    <h2>{{ $isEnglish ? "Take your first step toward serious marriage" : "ابدأ خطوتك نحو زواج جاد" }}</h2>
                     @if ($hasAnyAppLink)
-                        <p>اختر المتجر المناسب لجهازك، وأنشئ ملفك وتعرّف إلى العرب والسوريين الباحثين عن الزواج الجاد حول العالم. طلب التواصل يتم من داخل التطبيق.</p>
+                        <p>اختر المتجر المناسب لجهازك، و{{ $isEnglish ? "Create your profile" : "أنشئ ملفك" }} وتعرّف إلى العرب والسوريين الباحثين عن الزواج الجاد حول العالم. طلب التواصل يتم من داخل التطبيق.</p>
                     @else
-                        <p>نعمل على تجهيز روابط التحميل الرسمية. سنفعّل أزرار المتاجر هنا فور نشر التطبيق وإضافة روابطه من إعدادات الموقع.</p>
+                        <p>{{ $isEnglish ? "We are preparing the official download links. Store buttons will become active here once the app is published and its links are added to the website settings." : "نعمل على تجهيز روابط التحميل الرسمية. سنفعّل أزرار المتاجر هنا فور نشر التطبيق وإضافة روابطه من إعدادات الموقع." }}</p>
                     @endif
                 </div>
                 <div class="ws-store-buttons">
                     @if ($hasAndroidLink)
-                        <a class="ws-store-button" href="{{ $playStoreUrl }}" target="_blank" rel="noopener noreferrer"><i class="lab la-google-play"></i><span><small>حمّل التطبيق من</small>Google Play</span></a>
+                        <a class="ws-store-button" href="{{ $playStoreUrl }}" target="_blank" rel="noopener noreferrer"><i class="lab la-google-play"></i><span><small>{{ $isEnglish ? "Download on" : "حمّل التطبيق من" }}</small>Google Play</span></a>
                     @else
-                        <span class="ws-store-button is-soon"><i class="lab la-google-play"></i><span><small>قريباً</small>Google Play</span></span>
+                        <span class="ws-store-button is-soon"><i class="lab la-google-play"></i><span><small>{{ $isEnglish ? "Coming soon" : "قريباً" }}</small>Google Play</span></span>
                     @endif
                     @if ($hasIosLink)
-                        <a class="ws-store-button" href="{{ $appStoreUrl }}" target="_blank" rel="noopener noreferrer"><i class="lab la-apple"></i><span><small>حمّل التطبيق من</small>App Store</span></a>
+                        <a class="ws-store-button" href="{{ $appStoreUrl }}" target="_blank" rel="noopener noreferrer"><i class="lab la-apple"></i><span><small>{{ $isEnglish ? "Download on" : "حمّل التطبيق من" }}</small>App Store</span></a>
                     @else
-                        <span class="ws-store-button is-soon"><i class="lab la-apple"></i><span><small>لاحقاً</small>App Store</span></span>
+                        <span class="ws-store-button is-soon"><i class="lab la-apple"></i><span><small>{{ $isEnglish ? "Coming soon" : "لاحقاً" }}</small>App Store</span></span>
                     @endif
                 </div>
             </div>
@@ -435,12 +459,12 @@
 
     <footer class="ws-footer">
         <div class="ws-container ws-footer-inner">
-            <div><div class="ws-footer-brand">وصال</div><div class="ws-footer-copy">منصة زواج جاد للعرب والسوريين حول العالم. © {{ date('Y') }} وصال. جميع الحقوق محفوظة.</div></div>
+            <div><div class="ws-footer-brand">وصال</div><div class="ws-footer-copy">منصة {{ $isEnglish ? "A serious path to marriage for Arabs and Syrians worldwide" : "زواج جاد {{ $isEnglish ? "For Arabs and Syrians worldwide" : "للعرب والسوريين حول العالم" }}" }}. © {{ date('Y') }} وصال. {{ $isEnglish ? "All rights reserved." : "جميع الحقوق محفوظة." }}</div></div>
             <div class="ws-footer-links">
-                <a href="{{ route('legal.privacy-policy') }}">سياسة الخصوصية</a>
-                <a href="{{ route('legal.terms-conditions') }}">شروط الاستخدام العامة</a>
-                <a href="{{ route('contact_us') }}">تواصل معنا</a>
-                <a href="#top">العودة للأعلى</a>
+                <a href="{{ route('legal.privacy-policy') }}">{{ $isEnglish ? "Privacy Policy" : "سياسة الخصوصية" }}</a>
+                <a href="{{ route('legal.terms-conditions') }}">{{ $isEnglish ? "General Terms of Use" : "شروط الاستخدام العامة" }}</a>
+                <a href="{{ route('contact_us') }}">{{ $isEnglish ? "Support" : "تواصل معنا" }}</a>
+                <a href="#top">{{ $isEnglish ? "Back to top" : "العودة للأعلى" }}</a>
             </div>
         </div>
     </footer>
@@ -464,7 +488,7 @@ function wsOpenAppDownload(event, link) {
         return false;
     }
 
-    // قبل نشر التطبيق تبقى الوجهة هي قسم روابط التحميل مع توضيح أنه قريباً.
+    // قبل نشر التطبيق تبقى الوجهة هي قسم روابط التحميل مع توضيح أنه {{ $isEnglish ? "Coming soon" : "قريباً" }}.
     return true;
 }
 
