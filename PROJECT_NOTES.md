@@ -2171,6 +2171,6 @@ ALTER TABLE `users`
 ### التحقق والتسليم
 - Commit الكود الذي خضع لفحوص Flutter: 999aed92ba4dab7bbd583d81dab727bdaeffe2a9 على فرع الإصلاح، وPR #19 إلى main.
 - GitHub Actions validation run 44710210880: dart analyze --fatal-infos نجح مع No issues found!، ونجحت اختبارات Flutter وعددها 154 tests passed، كما نجح PHP syntax وتجهيز حزمة الملفات.
-- أحدث تشغيل مرتبط برأس الفرع 999aed92ba4dab7bbd583d81dab727bdaeffe2a9: run 44710210880 للتحقق وrun 44710210748 لبناء Android وفحص عقد الإشعارات. عقد الإشعارات وPHP syntax ناجحان؛ خطوة flutter build apk --debug كانت لا تزال قيد التنفيذ عند تسجيل هذه الملاحظة، ولا تُسجل نجاحاً حتى تنتهي.
+- أحدث تشغيل مرتبط برأس الفرع 999aed92ba4dab7bbd583d81dab727bdaeffe2a9: run 44710210880 للتحقق وrun 44710210748 لبناء Android وفحص عقد الإشعارات. عقد الإشعارات وPHP syntax ناجحان، كما انتهى flutter build apk --debug بنجاح على الرأس نفسه. روابط التشغيل: https://github.com/alialahmad9899/AAA/actions/runs/44710210880 وhttps://github.com/alialahmad9899/AAA/actions/runs/44710210748.
 - أرشيف الملفات التشغيلية: 11 ملفاً فقط بالمسارات الأصلية، دون PROJECT_NOTES.md أو ملفات قديمة. تم فحص ZIP الداخلي بـ unzip -t دون أخطاء. SHA256: e723e8ea26286ee747150279e029a135265a716335a138e32423b9e05661d045.
 - لم يتم بعد دمج PR #19 أو النشر على Hostinger، ولم يُجرَ اختبار بصري على جهاز حقيقي أو اختبار نقر إشعار حي من Firebase؛ تظل هذه التحققات الواقعية منفصلة عن CI.
