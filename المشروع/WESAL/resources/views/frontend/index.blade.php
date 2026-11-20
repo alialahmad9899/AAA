@@ -5,7 +5,7 @@
 @endphp
 
 @section('meta_title')
-    {{ $isEnglish ? 'Wesal | A serious marriage platform for Arabs and Syrians worldwide' : 'وصال | منصة {{ $isEnglish ? "A serious path to marriage for Arabs and Syrians worldwide" : "زواج جاد {{ $isEnglish ? "For Arabs and Syrians worldwide" : "للعرب والسوريين حول العالم" }}" }}' }}
+    {{ $isEnglish ? 'Wesal | A serious marriage platform for Arabs and Syrians worldwide' : 'وصال | منصة زواج جاد للعرب والسوريين حول العالم' }}
 @endsection
 @section('meta_description')
     {{ $isEnglish ? 'Wesal is an Arabic marriage platform connecting Syrians and Arabs in their home countries and around the world for meaningful introductions, marriage and family life, with privacy and compatibility in mind.' : 'وصال منصة عربية للزواج الجاد تجمع السوريين والعرب داخل بلدانهم وفي دول الاغتراب حول العالم، بهدف التعارف الهادف والزواج وتكوين أسرة مع مراعاة الخصوصية والتوافق.' }}
@@ -296,8 +296,8 @@
             <div class="ws-header-inner">
                 <a class="ws-wordmark" href="#top" aria-label="{{ $isEnglish ? 'Wesal home' : 'وصال - الرئيسية' }}">{{ $isEnglish ? 'Wesal' : 'وصال' }}<span>{{ $isEnglish ? 'A serious marriage platform for Arabs worldwide' : 'منصة زواج جاد للعرب حول العالم' }}</span></a>
                 <nav class="ws-nav" aria-label="{{ $isEnglish ? 'Main navigation' : 'التنقل الرئيسي' }}">
-                    <a href="#about">{{ $isEnglish ? 'About Wesal' : '{{ $isEnglish ? "About Wesal" : "عن وصال" }}' }}</a>
-                    <a href="#featured">{{ $isEnglish ? 'Featured members' : '{{ $isEnglish ? "Featured members" : "الأعضاء المميزون" }}' }}</a>
+                    <a href="#about">{{ $isEnglish ? 'About Wesal' : 'عن وصال' }}</a>
+                    <a href="#featured">{{ $isEnglish ? 'Featured members' : 'الأعضاء المميزون' }}</a>
                     <a href="#women">{{ $isEnglish ? 'Women' : 'العضوات' }}</a>
                     <a href="#men">{{ $isEnglish ? 'Men' : 'الأعضاء' }}</a>
                     <a href="#how-it-works">{{ $isEnglish ? 'How it works' : 'كيف يعمل' }}</a>
@@ -315,8 +315,8 @@
                 </div>
             </div>
             <nav class="ws-mobile-menu" id="wsMobileMenu" aria-label="{{ $isEnglish ? 'Mobile navigation' : 'قائمة الهاتف' }}">
-                <a href="#about">{{ $isEnglish ? 'About Wesal' : '{{ $isEnglish ? "About Wesal" : "عن وصال" }}' }}</a>
-                <a href="#featured">{{ $isEnglish ? 'Featured members' : '{{ $isEnglish ? "Featured members" : "الأعضاء المميزون" }}' }}</a>
+                <a href="#about">{{ $isEnglish ? 'About Wesal' : 'عن وصال' }}</a>
+                <a href="#featured">{{ $isEnglish ? 'Featured members' : 'الأعضاء المميزون' }}</a>
                 <a href="#women">{{ $isEnglish ? 'Women' : 'العضوات' }}</a>
                 <a href="#men">{{ $isEnglish ? 'Men' : 'الأعضاء' }}</a>
                 <a href="#how-it-works">{{ $isEnglish ? 'How it works' : 'كيف يعمل' }}</a>
@@ -332,7 +332,7 @@
         <section class="ws-hero" aria-labelledby="wsHeroTitle">
             <div class="ws-container ws-hero-grid">
                 <div class="ws-hero-content">
-                    <div class="ws-eyebrow"><i class="las la-heart"></i> {{ $isEnglish ? "A serious path to marriage for Arabs and Syrians worldwide" : "زواج جاد {{ $isEnglish ? "For Arabs and Syrians worldwide" : "للعرب والسوريين حول العالم" }}" }}</div>
+                    <div class="ws-eyebrow"><i class="las la-heart"></i> {{ $isEnglish ? "A serious path to marriage for Arabs and Syrians worldwide" : "زواج جاد للعرب والسوريين حول العالم" }}</div>
                     <h1 id="wsHeroTitle">{{ $isEnglish ? "When you are looking for a life partner, start with" : "حين تبحث عن شريك حياة، ابدأ من" }} <em>{{ $isEnglish ? "meaningful compatibility" : "توافق جاد" }}</em></h1>
                     <p class="ws-hero-copy">{{ $isEnglish ? "Wesal is an Arabic platform for meaningful introductions with the goal of marriage and building a family. It brings together Syrians and Arabs in their home countries and communities abroad. Explore clear member profiles and set the qualities you are looking for in a life partner." : "وصال منصة عربية مخصصة للتعارف الهادف بهدف الزواج وتكوين أسرة، تجمع السوريين والعرب داخل بلدانهم وفي مجتمعات الاغتراب حول العالم. تعرّف إلى ملفات شخصية واضحة، وحدد مواصفات شريك الحياة الذي تبحث عنه." }}</p>
                     <div class="ws-hero-actions">
@@ -443,7 +443,7 @@
 
         <section class="ws-section ws-section-soft" id="how-it-works">
             <div class="ws-container">
-                <div class="ws-section-heading"><div class="ws-kicker">{{ $isEnglish ? "Steps toward a life partner" : "خطوات نحو شريك الحياة" }}</div><h2>{{ $isEnglish ? "How do you begin your journey on Wesal?" : "كيف تبدأ رحلتك في وصال؟" }}</h2><p>{{ $isEnglish ? "Start with a profile that reflects who you are and what you are looking for. Then explore compatibility and request contact respectfully through the app." : "ابدأ بملف يعكس معلوماتك وتطلعاتك، ثم {{ $isEnglish ? "Explore compatibility" : "استكشف التوافق" }} واطلب التواصل باحترام من داخل التطبيق." }}</p></div>
+                <div class="ws-section-heading"><div class="ws-kicker">{{ $isEnglish ? "Steps toward a life partner" : "خطوات نحو شريك الحياة" }}</div><h2>{{ $isEnglish ? "How do you begin your journey on Wesal?" : "كيف تبدأ رحلتك في وصال؟" }}</h2><p>{{ $isEnglish ? "Start with a profile that reflects who you are and what you are looking for. Then explore compatibility and request contact respectfully through the app." : "ابدأ بملف يعكس معلوماتك وتطلعاتك، ثم استكشف التوافق واطلب التواصل باحترام من داخل التطبيق." }}</p></div>
                 <div class="ws-steps-grid">
                     <article class="ws-step"><span class="ws-step-num">01</span><i class="las la-user-edit"></i><h3>{{ $isEnglish ? "Create your profile" : "أنشئ ملفك" }}</h3><p>{{ $isEnglish ? "Add your basic details and what you are looking for in a life partner." : "أضف معلوماتك الأساسية وما تفضله في شريك الحياة." }}</p></article>
                     <article class="ws-step"><span class="ws-step-num">02</span><i class="las la-search"></i><h3>{{ $isEnglish ? "Explore compatibility" : "استكشف التوافق" }}</h3><p>{{ $isEnglish ? "Use search filters and preferences to discover profiles that best match what you are looking for." : "استخدم معايير البحث والتفضيلات لاكتشاف الملفات الأقرب لما تبحث عنه." }}</p></article>
@@ -481,7 +481,7 @@
 
     <footer class="ws-footer">
         <div class="ws-container ws-footer-inner">
-            <div><div class="ws-footer-brand">وصال</div><div class="ws-footer-copy">منصة {{ $isEnglish ? "A serious path to marriage for Arabs and Syrians worldwide" : "زواج جاد {{ $isEnglish ? "For Arabs and Syrians worldwide" : "للعرب والسوريين حول العالم" }}" }}. © {{ date('Y') }} وصال. {{ $isEnglish ? "All rights reserved." : "جميع الحقوق محفوظة." }}</div></div>
+            <div><div class="ws-footer-brand">{{ $isEnglish ? 'Wesal' : 'وصال' }}</div><div class="ws-footer-copy">{{ $isEnglish ? 'A serious marriage platform for Arabs and Syrians worldwide.' : 'منصة زواج جاد للعرب والسوريين حول العالم.' }} © {{ date('Y') }} {{ $isEnglish ? 'Wesal. All rights reserved.' : 'وصال. جميع الحقوق محفوظة.' }}</div></div>
             <div class="ws-footer-links">
                 <a href="{{ route('legal.privacy-policy') }}">{{ $isEnglish ? "Privacy Policy" : "سياسة الخصوصية" }}</a>
                 <a href="{{ route('legal.terms-conditions') }}">{{ $isEnglish ? "General Terms of Use" : "شروط الاستخدام العامة" }}</a>
