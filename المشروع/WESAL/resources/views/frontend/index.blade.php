@@ -437,7 +437,8 @@
         <div class="ws-container ws-footer-inner">
             <div><div class="ws-footer-brand">وصال</div><div class="ws-footer-copy">منصة زواج جاد للعرب والسوريين حول العالم. © {{ date('Y') }} وصال. جميع الحقوق محفوظة.</div></div>
             <div class="ws-footer-links">
-                <a href="{{ route('custom-pages.show_custom_page', ['slug' => 'terms-conditions']) }}">سياسة الخصوصية والشروط والأحكام</a>
+                <a href="{{ route('legal.privacy-policy') }}">سياسة الخصوصية</a>
+                <a href="{{ route('legal.terms-conditions') }}">شروط الاستخدام العامة</a>
                 <a href="{{ route('contact_us') }}">تواصل معنا</a>
                 <a href="#top">العودة للأعلى</a>
             </div>
