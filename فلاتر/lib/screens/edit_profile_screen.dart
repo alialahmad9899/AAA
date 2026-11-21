@@ -1047,7 +1047,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
       if (!mounted) return;
       final targetContext =
           _missingProfileNavigationKeys[field.targetKey]?.currentContext;
-      if (targetContext != null) {
+      if (targetContext != null && targetContext.mounted) {
         await Scrollable.ensureVisible(
           targetContext,
           alignment: 0.14,
