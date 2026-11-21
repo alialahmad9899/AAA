@@ -53,7 +53,7 @@ class MemberChatProfileProtectionContractTest extends TestCase
         $this->assertStringContainsString("'status' => 'chat_blocked'", $controller);
 
         $blockStart = strpos($mobile, 'Future<void> _executeBlock() async {');
-        $reportStart = strpos($mobile, 'Future<void> _executeReport(String reason)', $blockStart);
+        $reportStart = strpos($mobile, 'Future<void> _executeReport(', $blockStart);
         $this->assertNotFalse($blockStart);
         $this->assertNotFalse($reportStart);
         $blockMethod = substr($mobile, $blockStart, $reportStart - $blockStart);
