@@ -1624,7 +1624,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                                   fontFamily: 'Cairo')),
                           onTap: () {
                             Navigator.pop(context);
-                            _confirmDeleteChat();
+                            _showDeleteChatConfirmationDialog();
                           },
                         ),
                       ),
@@ -1918,6 +1918,37 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       );
     }
   }
+
+  void _showDeleteChatConfirmationDialog() {
+    _dismissKeyboard();
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => Directionality(
+        textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
+        child: AlertDialog(
+          title: Text(_isArabic ? 'تأكيد حذف المحادثة' : 'Delete conversation?'),
+          content: Text(_isArabic
+              ? 'هل أنت متأكد من حذف سجل المحادثة من التطبيق والسيرفر؟ لا يمكن التراجع عن هذا الإجراء.'
+              : 'Are you sure you want to delete this conversation from the app and server? This cannot be undone.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(_isArabic ? 'إلغاء' : 'Cancel'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                _confirmDeleteChat();
+              },
+              child: Text(_isArabic ? 'حذف المحادثة' : 'Delete chat'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
 
   Future<void> _confirmDeleteChat() async {
     _dismissKeyboard();

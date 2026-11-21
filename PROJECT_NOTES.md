@@ -2565,3 +2565,10 @@ ALTER TABLE `users`
 - At the time of this note, the Android debug APK/native-resource build step was still reported as `in_progress`; do not interpret this run as a completed Android build.
 - Generated repair archive from CI artifact `14724250570`: 13 files only, original repository paths preserved, no `PROJECT_NOTES.md` and no previous-session repair files. SHA-256 of the extracted repair ZIP: `517f86fcd4a9f7750c0c5dac3bbf254a8b3508f3e2fc8dab6b17e90d1d4ee562`.
 - No public-site deployment, hosting deployment, or production APK release was performed.
+
+
+## 2026-11-22 — Chat delete confirmation (#53)
+- Chat-detail delete action now opens an explicit localized confirmation dialog before invoking the existing server/local deletion flow.
+- Cancel closes the dialog without deletion; confirm calls the existing delete handler.
+- This is a targeted UI safety change only. No report evidence retention, block history, membership-number normalization, or TWA deep-link migration has been changed or claimed complete in this commit.
+- Validation pending CI; no deployment performed.
