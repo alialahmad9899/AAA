@@ -50,6 +50,34 @@
                             @endcan
                         </td>
                     </tr>
+                    @if(is_array($report->chat_evidence) && count($report->chat_evidence) > 0)
+                        <tr class="bg-light">
+                            <td colspan="5">
+                                <details>
+                                    <summary class="text-primary" style="cursor:pointer;">
+                                        {{ translate('Chat evidence') }} — {{ count($report->chat_evidence) }} {{ translate('messages') }}
+                                    </summary>
+                                    <div class="mt-3">
+                                        @foreach($report->chat_evidence as $evidenceMessage)
+                                            <div class="border rounded p-3 mb-2 bg-white">
+                                                <div class="d-flex justify-content-between flex-wrap mb-2">
+                                                    <strong>{{ $evidenceMessage['sender_name'] ?? translate('Member') }}</strong>
+                                                    <small class="text-muted">{{ $evidenceMessage['created_at'] ?? '' }}</small>
+                                                </div>
+                                                <div style="white-space:pre-wrap; overflow-wrap:anywhere;">{{ $evidenceMessage['message'] ?? '' }}</div>
+                                                @if(!empty($evidenceMessage['attachment_ids']))
+                                                    <small class="text-muted d-block mt-2">
+                                                        {{ translate('Attachment IDs') }}:
+                                                        {{ implode(', ', $evidenceMessage['attachment_ids']) }}
+                                                    </small>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </details>
+                            </td>
+                        </tr>
+                    @endif
                 @endforeach
             </tbody>
         </table>
