@@ -191,9 +191,9 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
       final nestedLanguageData = languageMap?['data'];
       final rawLanguages =
           languageMap?['languages'] ?? nestedLanguageData?['languages'];
-      _languages = rawLanguages is List
-          ? rawLanguages.whereType<Map>().toList()
-          : <dynamic>[];
+      _languages = Step4PartnerExpectations.normalizePartnerLanguages(
+        rawLanguages is List ? rawLanguages : const <dynamic>[],
+      );
 
       if (expectations != null) {
         _generalWasLoaded = expectations.containsKey('general');
@@ -505,15 +505,12 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
       if (!mounted) return;
       final bool success = result['success'] == true;
       final bool isAr = widget.currentLanguage == 'ar';
-      final String message = result['message'] != null
-          ? result['message'].toString()
-          : (success
-              ? (isAr
-                  ? 'تم حفظ توقعات الشريك بنجاح ✨'
-                  : 'Partner expectations saved successfully ✨')
-              : (isAr
-                  ? 'حدث خطأ أثناء حفظ التوقعات'
-                  : 'Failed to save expectations'));
+      final String messageAr = success
+          ? 'تم حفظ توقعات الشريك بنجاح ✨'
+          : 'تعذر حفظ توقعات الشريك. يرجى المحاولة مجدداً.';
+      final String messageEn = success
+          ? 'Partner expectations saved successfully ✨'
+          : 'Could not save partner expectations. Please try again.';
 
       if (success) {
         _generalWasLoaded = true;
@@ -529,8 +526,8 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
         context: context,
         type: success ? NotificationType.success : NotificationType.error,
         isArabic: isAr,
-        messageAr: message,
-        messageEn: message,
+        messageAr: messageAr,
+        messageEn: messageEn,
       );
     } catch (e) {
       if (mounted) {
@@ -957,7 +954,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
         (l) => l['id'].toString() == _selectedLanguageId,
         orElse: () => <String, dynamic>{},
       );
-      if (match.isNotEmpty) languageName = match['name']?.toString();
+      if (match.isNotEmpty) languageName = Step4PartnerExpectations.languageLabel(match);
     }
 
     String? countryName;
@@ -1306,9 +1303,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                                                             'id': l['id']
                                                                 .toString(),
                                                             'name':
-                                                                (l['name'] ??
-                                                                        '')
-                                                                    .toString()
+                                                                Step4PartnerExpectations.languageLabel(l)
                                                           })
                                                       .toList();
                                                   _showCustomBottomSheet(

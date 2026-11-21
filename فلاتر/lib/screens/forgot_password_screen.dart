@@ -28,47 +28,53 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _confirm = TextEditingController();
   bool _codeRequested = false, _loading = false, _completed = false;
   bool _showPassword = false, _showConfirm = false;
+  String? _statusMessage;
+  bool _statusIsSuccess = false;
   bool get _ar => widget.currentLanguage == 'ar';
-
-  void _message(String message, bool success) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        content: Text(message, textAlign: _ar ? TextAlign.right : TextAlign.left),
-        backgroundColor: success ? AppColors.success : AppColors.error,
-      ));
-  }
 
   Future<void> _request() async {
     if (_loading || !_formKey.currentState!.validate()) return;
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _statusMessage = _ar ? 'جارٍ إرسال طلب الاستعادة...' : 'Sending reset request...';
+      _statusIsSuccess = false;
+    });
     try {
       final email = _email.text.trim().toLowerCase();
       final result = widget.onRequestCode != null
           ? await widget.onRequestCode!(email)
           : await ApiService.requestPasswordReset(email);
       if (!mounted) return;
-      setState(() => _loading = false);
-      if (result['success'] == true || result['result'] == true) {
-        setState(() => _codeRequested = true);
-        _message(
-          _ar ? 'إذا كان البريد مسجلاً فسيصلك رمز الاستعادة. تحقق من الرسائل غير المرغوب فيها أيضاً.' : 'If the email is registered, a reset code was sent. Check your spam folder too.',
-          true,
-        );
-      } else {
-        _message(result['message']?.toString() ?? (_ar ? 'تعذر إرسال الرمز.' : 'Could not send the code.'), false);
-      }
+      final success = result['success'] == true || result['result'] == true;
+      setState(() {
+        _loading = false;
+        if (success) _codeRequested = true;
+        _statusIsSuccess = success;
+        _statusMessage = success
+            ? (_ar
+                ? 'إذا كان البريد مسجلاً فسيصلك رمز الاستعادة. تحقق من الرسائل غير المرغوب فيها أيضاً.'
+                : 'If the email is registered, a reset code was sent. Check your spam folder too.')
+            : (_ar ? 'تعذر إرسال رمز الاستعادة. تحقق من البريد وحاول مجدداً.' : 'Could not send the reset code. Check the email and try again.');
+      });
     } catch (_) {
       if (!mounted) return;
-      setState(() => _loading = false);
-      _message(_ar ? 'تعذر الاتصال. تحقق من الإنترنت.' : 'Connection failed. Check your internet.', false);
+      setState(() {
+        _loading = false;
+        _statusIsSuccess = false;
+        _statusMessage = _ar
+            ? 'تعذر الاتصال. تحقق من الإنترنت وحاول مجدداً.'
+            : 'Connection failed. Check your internet and try again.';
+      });
     }
   }
 
   Future<void> _reset() async {
     if (_loading || !_formKey.currentState!.validate()) return;
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _statusMessage = _ar ? 'جارٍ التحقق وتحديث كلمة المرور...' : 'Verifying and updating your password...';
+      _statusIsSuccess = false;
+    });
     try {
       final email = _email.text.trim().toLowerCase();
       final result = widget.onResetPassword != null
@@ -80,16 +86,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               passwordConfirmation: _confirm.text,
             );
       if (!mounted) return;
-      setState(() => _loading = false);
-      if (result['success'] == true || result['result'] == true) {
-        setState(() => _completed = true);
-      } else {
-        _message(result['message']?.toString() ?? (_ar ? 'الرمز غير صحيح أو منتهي الصلاحية.' : 'The code is invalid or expired.'), false);
-      }
+      final success = result['success'] == true || result['result'] == true;
+      setState(() {
+        _loading = false;
+        _completed = success;
+        _statusIsSuccess = success;
+        _statusMessage = success
+            ? (_ar ? 'تم تحديث كلمة المرور بنجاح.' : 'Your password was updated successfully.')
+            : (_ar ? 'الرمز غير صحيح أو منتهي الصلاحية. تحقق منه وحاول مجدداً.' : 'The code is invalid or expired. Check it and try again.');
+      });
     } catch (_) {
       if (!mounted) return;
-      setState(() => _loading = false);
-      _message(_ar ? 'تعذر الاتصال بالسيرفر.' : 'Could not reach the server.', false);
+      setState(() {
+        _loading = false;
+        _statusIsSuccess = false;
+        _statusMessage = _ar ? 'تعذر الاتصال بالسيرفر. حاول مجدداً.' : 'Could not reach the server. Please try again.';
+      });
     }
   }
 
@@ -153,6 +165,36 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       textAlign: TextAlign.center,
                       style: const TextStyle(fontSize: 13, height: 1.7, color: AppColors.textMuted, fontFamily: 'Cairo'),
                     ),
+                    if (_statusMessage != null) ...[
+                      const SizedBox(height: 14),
+                      Container(
+                        key: const Key('password-reset-status'),
+                        padding: const EdgeInsets.all(13),
+                        decoration: BoxDecoration(
+                          color: (_statusIsSuccess ? AppColors.success : AppColors.error).withValues(alpha: 0.09),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: (_statusIsSuccess ? AppColors.success : AppColors.error).withValues(alpha: 0.28),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              _statusIsSuccess ? Icons.check_circle_rounded : Icons.info_outline_rounded,
+                              color: _statusIsSuccess ? AppColors.success : AppColors.error,
+                            ),
+                            const SizedBox(width: 9),
+                            Expanded(
+                              child: Text(
+                                _statusMessage!,
+                                textAlign: _ar ? TextAlign.right : TextAlign.left,
+                                style: const TextStyle(color: AppColors.textDark, fontFamily: 'Cairo', fontSize: 12.5, height: 1.5),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 24),
                     if (_completed) ...[
                       const Icon(Icons.check_circle_rounded, size: 54, color: AppColors.success),
@@ -230,14 +272,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           foregroundColor: Colors.white,
                         ),
                         child: _loading
-                          ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white))
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white)),
+                                const SizedBox(width: 10),
+                                Text(_codeRequested ? (_ar ? 'جارٍ التحديث...' : 'Updating...') : (_ar ? 'جارٍ الإرسال...' : 'Sending...')),
+                              ],
+                            )
                           : Text(_codeRequested ? (_ar ? 'تأكيد وتغيير كلمة المرور' : 'Confirm and reset password') : (_ar ? 'إرسال رمز التحقق إلى البريد' : 'Send code to email')),
                       ),
                       if (_codeRequested) ...[
                         TextButton(onPressed: _loading ? null : _request, child: Text(_ar ? 'إعادة إرسال الرمز' : 'Resend code')),
                         TextButton(
                           onPressed: _loading ? null : () => setState(() {
-                            _codeRequested = false; _code.clear(); _password.clear(); _confirm.clear();
+                            _codeRequested = false; _code.clear(); _password.clear(); _confirm.clear(); _statusMessage = null;
                           }),
                           child: Text(_ar ? 'تغيير البريد الإلكتروني' : 'Change email address'),
                         ),

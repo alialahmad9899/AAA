@@ -202,8 +202,8 @@ class CityController extends Controller
                 }
             }
 
-            // الاسم العربي النهائي لإرجاعه في حقل name_ar
-            $finalAr = !empty($extractedArName) ? $extractedArName : $localizedName;
+            // Do not label an English/German fallback as an Arabic translation.
+            $finalAr = !empty($extractedArName) ? $extractedArName : null;
 
             return [
                 'id'       => $city->id,

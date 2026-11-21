@@ -504,9 +504,11 @@ class _EditProfileScreenState extends State<EditProfileScreen>
           .trim();
       String nameEn =
           (cityData['name'] ?? cityData['city_name'] ?? '').toString().trim();
-      return isAr
-          ? (nameAr.isNotEmpty ? nameAr : nameEn)
-          : (nameEn.isNotEmpty ? nameEn : nameAr);
+      return ProfilePickerTranslations.translateCity(
+        nameEn.isNotEmpty ? nameEn : nameAr,
+        isAr,
+        arabicName: nameAr,
+      );
     }
     return cityData.toString().trim();
   }
@@ -831,18 +833,21 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     return 'https://flagcdn.com/w80/un.png';
   }
 
-  void _showNotification(String message, bool isSuccess) {
+  void _showNotification(String _, bool isSuccess) {
     if (!mounted) return;
-    final bool isArabic =
-        Directionality.maybeOf(context) != TextDirection.ltr;
+    final bool isArabic = _isArabic;
     AppSnackBar.show(
       context: context,
       type: isSuccess ? NotificationType.success : NotificationType.error,
       isArabic: isArabic,
       titleAr: isSuccess ? 'تم حفظ التعديلات' : 'تعذّر حفظ بعض التعديلات',
       titleEn: isSuccess ? 'Changes saved' : 'Some changes could not be saved',
-      messageAr: message,
-      messageEn: message,
+      messageAr: isSuccess
+          ? 'تمت عملية الحفظ بنجاح ✨'
+          : 'تعذر حفظ بيانات الملف الشخصي. يرجى المحاولة مجدداً.',
+      messageEn: isSuccess
+          ? 'Your profile changes were saved successfully ✨'
+          : 'Could not save your profile information. Please try again.',
       detailsAr: isSuccess
           ? 'أصبحت بيانات الملف الشخصي محدثة.'
           : 'راجع البيانات واتصال الإنترنت ثم حاول مجدداً.',
@@ -2358,13 +2363,12 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                                     _showCountryPickerBottomSheet(_isArabic,
                                         isBirthCountry: false),
                                 onSelectState: () {
-                                  final items = _residencyStates
-                                      .map((st) => {
-                                            'id': (st as Map)['id'].toString(),
-                                            'name': _getLocalizedCityName(
-                                                st, _isArabic)
-                                          })
-                                      .toList();
+                                  final items = _residencyStates.map((raw) {
+                                    final state = Map<String, dynamic>.from(raw as Map);
+                                    final sourceName = (state['name'] ?? '').toString();
+                                    final displayName = _getLocalizedCityName(state, _isArabic);
+                                    return <String, dynamic>{'id': state['id'].toString(), 'name': displayName, 'name_ar': displayName, 'name_en': sourceName};
+                                  }).toList();
                                   _showCustomBottomSheetPicker(
                                       title: _isArabic
                                           ? 'المحافظة 🏛️'
@@ -2380,13 +2384,12 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                                       });
                                 },
                                 onSelectCity: () {
-                                  final items = _residencyCities
-                                      .map((ct) => {
-                                            'id': (ct as Map)['id'].toString(),
-                                            'name': _getLocalizedCityName(
-                                                ct, _isArabic)
-                                          })
-                                      .toList();
+                                  final items = _residencyCities.map((raw) {
+                                    final city = Map<String, dynamic>.from(raw as Map);
+                                    final sourceName = (city['name'] ?? city['city_name'] ?? '').toString();
+                                    final displayName = _getLocalizedCityName(city, _isArabic);
+                                    return <String, dynamic>{'id': city['id'].toString(), 'name': displayName, 'name_ar': displayName, 'name_en': sourceName};
+                                  }).toList();
                                   _showCustomBottomSheetPicker(
                                       title:
                                           _isArabic ? 'المدينة 🏙' : 'City 🏙️',

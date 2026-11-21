@@ -1049,7 +1049,7 @@ class AccountTabState extends State<AccountTab> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const UKFlagWidget(),
+                            const Icon(Icons.translate_rounded, color: AppColors.primaryTeal, size: 18),
                             const SizedBox(width: 8),
                             Text(
                               'English',
@@ -1093,7 +1093,7 @@ class AccountTabState extends State<AccountTab> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const SyrianFlagWidget(),
+                            const Icon(Icons.translate_rounded, color: AppColors.primaryTeal, size: 18),
                             const SizedBox(width: 8),
                             Text(
                               'العربية',
@@ -2340,14 +2340,38 @@ class _SubscriptionsModalContentState
             const SizedBox(height: 10),
             Text(
               widget.isArabic
-                  ? 'يمكنكِ المراسلة واستخدام الميزات المتاحة لكِ مجاناً. يسعدنا وجودكِ في وصال.'
-                  : 'You can message and enjoy the available features for free. We are glad to have you on Wesal.',
+                  ? 'يمكنكِ المراسلة واستخدام ميزات العضوية الأساسية المتاحة لكِ مجاناً. يسعدنا وجودكِ في وصال.'
+                  : 'You can message and use the core membership features available to you at no charge. We are glad to have you on Wesal.',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 12.5,
                 fontFamily: 'Cairo',
                 height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              widget.isArabic ? 'لماذا العضوية مجانية للنساء؟' : 'Why is membership free for women?',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Cairo',
+              ),
+            ),
+            const SizedBox(height: 7),
+            Text(
+              widget.isArabic
+                  ? 'نؤمن أن مشاركة النساء أساسية لبناء مجتمع متوازن، لذلك نوفّر العضوية الأساسية دون رسوم. أما الخدمات الإضافية الاختيارية فتظل خاضعة لشروطها الموضّحة داخل التطبيق.'
+                  : 'We believe women’s participation is essential to a balanced community, so core membership is free. Optional extra services remain subject to the terms shown in the app.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.90),
+                fontSize: 12,
+                fontFamily: 'Cairo',
+                height: 1.55,
               ),
             ),
           ],

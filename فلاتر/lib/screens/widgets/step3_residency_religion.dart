@@ -9,6 +9,7 @@ import '../../widgets/app_snackbar.dart';
 import 'package:wesal_app/widgets/bottom_system_inset.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/api_service.dart';
+import '../edit_profile/widgets/profile_pickers.dart';
 
 class Step3ResidencyReligion extends StatefulWidget {
   final GlobalKey<FormState> formKey;
@@ -266,6 +267,13 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
     return (item['name_en'] ?? item['name'] ?? '').toString();
   }
 
+  String _getLocalizedCityName(Map item) {
+    final source = (item['name'] ?? item['city_name'] ?? item['name_en'] ?? '')
+        .toString().trim();
+    final arabic = (item['name_ar'] ?? item['name_arabic'] ?? '').toString().trim();
+    return ProfilePickerTranslations.translateCity(source, _isAr, arabicName: arabic);
+  }
+
   String _getCountryNameById(String? id) {
     if (id == null || _countries.isEmpty) {
       return _isAr ? 'حدد البلد *' : 'Select Country *';
@@ -417,65 +425,20 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
     );
   }
 
-  void _showItemPicker(String title, List<Map<String, String>> items,
-      ValueChanged<String> onSelected) {
-    showModalBottomSheet(
+  void _showItemPicker(
+    String title,
+    List<Map<String, String>> items,
+    ValueChanged<String> onSelected, {
+    String? currentValue,
+  }) {
+    ProfilePickers.showGenericPicker(
       context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: AppColors.cardColor,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (context) => Directionality(
-        textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
-        child: Container(
-          padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + WesalBottomInsets.of(context)),
-          height: MediaQuery.of(context).size.height * 0.55,
-          child: Column(
-            children: [
-              Text(title,
-                  style: const TextStyle(
-                      color: AppColors.textDark,
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Cairo')),
-              const SizedBox(height: 12),
-              Expanded(
-                child: items.isEmpty
-                    ? Center(
-                        child: Text(
-                          _isAr
-                              ? 'لا توجد بيانات متاحة'
-                              : 'No options available',
-                          style: const TextStyle(
-                              color: AppColors.textMuted, fontFamily: 'Cairo'),
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: items.length,
-                        itemBuilder: (context, index) {
-                          final item = items[index];
-                          return ListTile(
-                            title: Text(
-                              item['name']!,
-                              textAlign: _isAr ? TextAlign.right : TextAlign.left,
-                              textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
-                              style: const TextStyle(
-                                    color: AppColors.textDark,
-                                    fontFamily: 'Cairo',
-                                    fontWeight: FontWeight.bold)),
-                            onTap: () {
-                              onSelected(item['id']!);
-                              Navigator.pop(context);
-                            },
-                          );
-                        },
-                      ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      title: title,
+      items: items.map((item) => Map<String, dynamic>.from(item)).toList(),
+      currentValue: currentValue,
+      onSelected: onSelected,
+      isAr: _isAr,
+      enableSearch: items.length > 5,
     );
   }
 
@@ -712,13 +675,14 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                         );
                         return;
                       }
-                      final items = _states
-                          .whereType<Map>()
-                          .map((s) => {
-                                'id': (s['id'] ?? '').toString(),
-                                'name': _getLocalizedName(s)
-                              })
-                          .toList();
+                      final items = _states.whereType<Map>().map((state) {
+                        final sourceName = (state['name'] ?? '').toString().trim();
+                        final displayName = _getLocalizedName(state);
+                        return <String, String>{
+                          'id': (state['id'] ?? '').toString(), 'name': displayName,
+                          'name_ar': displayName, 'name_en': sourceName,
+                        };
+                      }).toList();
                       _showItemPicker(
                         _isAr ? 'اختر المحافظة' : 'Select State',
                         items,
@@ -727,6 +691,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                           widget.onCityChanged(null);
                           _loadCitiesForState(stId);
                         },
+                        currentValue: widget.stateId,
                       );
                     },
                   ),
@@ -757,17 +722,19 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                         );
                         return;
                       }
-                      final items = _cities
-                          .whereType<Map>()
-                          .map((c) => {
-                                'id': (c['id'] ?? '').toString(),
-                                'name': _getLocalizedName(c)
-                              })
-                          .toList();
+                      final items = _cities.whereType<Map>().map((city) {
+                        final sourceName = (city['name'] ?? city['city_name'] ?? '').toString().trim();
+                        final displayName = _getLocalizedCityName(city);
+                        return <String, String>{
+                          'id': (city['id'] ?? '').toString(), 'name': displayName,
+                          'name_ar': displayName, 'name_en': sourceName,
+                        };
+                      }).toList();
                       _showItemPicker(
                         _isAr ? 'اختر المدينة' : 'Select City',
                         items,
                         widget.onCityChanged,
+                        currentValue: widget.cityId,
                       );
                     },
                   ),

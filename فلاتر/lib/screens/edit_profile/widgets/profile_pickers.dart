@@ -80,6 +80,33 @@ class ProfilePickerTranslations {
     'sometimes': {'ar': 'أحياناً', 'en': 'Sometimes'},
   };
 
+  static const Map<String, String> _germanCityArabicNames = {
+    'leipzig': 'لايبزيغ', 'berlin': 'برلين', 'munich': 'ميونخ', 'münchen': 'ميونخ',
+    'frankfurt': 'فرانكفورت', 'frankfurt am main': 'فرانكفورت', 'hamburg': 'هامبورغ',
+    'cologne': 'كولونيا', 'köln': 'كولونيا', 'düsseldorf': 'دوسلدورف',
+    'stuttgart': 'شتوتغارت', 'dresden': 'دريسدن', 'nuremberg': 'نورنبيرغ',
+    'nürnberg': 'نورنبيرغ', 'hanover': 'هانوفر', 'hannover': 'هانوفر',
+    'bremen': 'بريمن', 'dortmund': 'دورتموند', 'essen': 'إيسن', 'bonn': 'بون',
+    'mainz': 'ماينتس', 'freiburg': 'فرايبورغ', 'aachen': 'آخن',
+    'heidelberg': 'هايدلبرغ', 'mannheim': 'مانهايم', 'wuppertal': 'فوبرتال',
+  };
+
+  static bool _containsArabic(String value) => value.runes.any(
+        (codePoint) => codePoint >= 0x0600 && codePoint <= 0x06FF,
+      );
+
+  /// Prefer an actual Arabic translation or a curated German-city name.
+  /// Unknown city names remain unchanged rather than being guessed.
+  static String translateCity(String? sourceName, bool isAr, {String? arabicName}) {
+    final source = (sourceName ?? '').trim();
+    final verifiedArabic = (arabicName ?? '').trim();
+    if (_containsArabic(verifiedArabic)) {
+      return isAr ? verifiedArabic : (source.isNotEmpty ? source : verifiedArabic);
+    }
+    if (!isAr || source.isEmpty) return source;
+    return _germanCityArabicNames[source.toLowerCase()] ?? source;
+  }
+
   /// ترجمة النص أو المفتاح تلقائياً بحسب لغة التطبيق الحالية
   static String translate(String? keyOrValue, bool isAr) {
     if (keyOrValue == null || keyOrValue.trim().isEmpty) return '';
@@ -296,16 +323,21 @@ class _GenericPickerBottomSheetContentState
                     _debouncer.run(() {
                       final q = query.toLowerCase().trim();
                       final results = widget.items.where((item) {
-                        final String nameAr =
-                            _getItemName({...item, 'isAr': true}).toLowerCase();
-                        final String nameEn =
-                            _getItemName({...item, 'isAr': false})
-                                .toLowerCase();
-                        final String idStr =
-                            (item['id'] ?? '').toString().toLowerCase();
-                        return nameAr.contains(q) ||
-                            nameEn.contains(q) ||
-                            idStr.contains(q);
+                        final String nameAr = (item['name_ar'] ??
+                                item['title_ar'] ?? item['name'] ?? '')
+                            .toString()
+                            .toLowerCase();
+                        final String nameEn = (item['name_en'] ??
+                                item['title_en'] ?? item['search_name'] ??
+                                item['source_name'] ?? item['name'] ?? '')
+                            .toString()
+                            .toLowerCase();
+                        final String sourceName = (item['search_name'] ?? item['source_name'] ?? '')
+                            .toString()
+                            .toLowerCase();
+                        final String idStr = (item['id'] ?? '').toString().toLowerCase();
+                        return nameAr.contains(q) || nameEn.contains(q) ||
+                            sourceName.contains(q) || idStr.contains(q);
                       }).toList();
                       if (mounted) setState(() => _filteredItems = results);
                     });

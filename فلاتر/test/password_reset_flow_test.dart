@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -43,6 +45,36 @@ void main() {
       expect(submittedCode, '123456');
       expect(submittedPassword, 'NewPass123');
       expect(find.byKey(const Key('password-reset-back-to-login')), findsOneWidget);
+    });
+
+    testWidgets('shows visible progress and persistent success while requesting a code', (tester) async {
+      final completer = Completer<Map<String, dynamic>>();
+      await tester.pumpWidget(MaterialApp(home: ForgotPasswordScreen(
+        onRequestCode: (_) => completer.future,
+      )));
+      await tester.enterText(find.byKey(const Key('password-reset-email')), 'user@example.com');
+      await tester.ensureVisible(find.byKey(const Key('password-reset-send-code')));
+      await tester.tap(find.byKey(const Key('password-reset-send-code')));
+      await tester.pump();
+      expect(find.text('جارٍ إرسال طلب الاستعادة...'), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      completer.complete({'success': true});
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('password-reset-status')), findsOneWidget);
+      expect(find.textContaining('إذا كان البريد مسجلاً'), findsOneWidget);
+      expect(find.byKey(const Key('password-reset-code')), findsOneWidget);
+    });
+
+    testWidgets('keeps a visible localized error when requesting a code fails', (tester) async {
+      await tester.pumpWidget(MaterialApp(home: ForgotPasswordScreen(
+        onRequestCode: (_) async => {'success': false},
+      )));
+      await tester.enterText(find.byKey(const Key('password-reset-email')), 'user@example.com');
+      await tester.ensureVisible(find.byKey(const Key('password-reset-send-code')));
+      await tester.tap(find.byKey(const Key('password-reset-send-code')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('password-reset-status')), findsOneWidget);
+      expect(find.text('تعذر إرسال رمز الاستعادة. تحقق من البريد وحاول مجدداً.'), findsOneWidget);
     });
 
     testWidgets('rejects an invalid email without calling the API', (tester) async {

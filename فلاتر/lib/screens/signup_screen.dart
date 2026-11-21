@@ -168,7 +168,7 @@ class _SignupScreenState extends State<SignupScreen> {
               .toList()
           : <Map<String, dynamic>>[];
       setState(() {
-        _partnerLanguages = loadedLanguages;
+        _partnerLanguages = Step4PartnerExpectations.normalizePartnerLanguages(loadedLanguages);
         _partnerReligions = dropdowns?['religions'] is List ? dropdowns!['religions'] : [];
         _partnerCountries = dropdowns?['countries'] is List ? dropdowns!['countries'] :
             (dropdowns?['country'] is List ? dropdowns!['country'] : []);

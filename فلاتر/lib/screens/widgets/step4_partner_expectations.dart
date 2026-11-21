@@ -150,15 +150,39 @@ class Step4PartnerExpectations extends StatelessWidget {
     'اليونانية': 'اليونانية / Greek',
   };
 
-  String _languageLabel(Map language) {
-    final rawName = (language['name'] ??
-            language['name_en'] ??
-            language['name_ar'] ??
-            '')
-        .toString()
-        .trim();
+  static String languageLabel(Map language) {
+    final rawName = (language['name'] ?? language['name_en'] ?? language['name_ar'] ?? '')
+        .toString().trim();
     if (rawName.isEmpty) return '';
     return _bilingualLanguageLabels[rawName.toLowerCase()] ?? rawName;
+  }
+
+  static List<Map<String, dynamic>> normalizePartnerLanguages(Iterable<dynamic> source) {
+    final byId = <String, Map<String, dynamic>>{};
+    for (final item in source) {
+      if (item is! Map) continue;
+      final language = Map<String, dynamic>.from(item);
+      final id = (language['id'] ?? '').toString().trim();
+      final names = [language['name'], language['name_en'], language['name_ar']]
+          .whereType<Object>().map((value) => value.toString().trim())
+          .where((value) => value.isNotEmpty).toList();
+      if (id.isEmpty || names.isEmpty) continue;
+      final joined = names.join(' ').toLowerCase();
+      if (joined.contains('österreich') || joined == 'austrian' || joined == 'austria') continue;
+      byId.putIfAbsent(id, () => language);
+    }
+    final result = byId.values.toList();
+    bool isArabic(Map<String, dynamic> value) {
+      final name = [value['name'], value['name_en'], value['name_ar']]
+          .whereType<Object>().map((entry) => entry.toString().toLowerCase()).join(' ');
+      return name.contains('arabic') || name.contains('العربية');
+    }
+    result.sort((a, b) {
+      final aArabic = isArabic(a), bArabic = isArabic(b);
+      if (aArabic != bArabic) return aArabic ? -1 : 1;
+      return languageLabel(a).toLowerCase().compareTo(languageLabel(b).toLowerCase());
+    });
+    return result;
   }
 
   bool get _isAr => lang == 'ar';
@@ -369,9 +393,9 @@ class Step4PartnerExpectations extends StatelessWidget {
     final safeAgeRange = _clampRange(ageRange, 18, 100);
     final safeHeightRange = _clampRange(heightRange, 140, 210);
     final safeWeightRange = _clampRange(weightRange, 40, 140);
-    final languageItems = languages.whereType<Map>().map((language) {
+    final languageItems = normalizePartnerLanguages(languages).map((language) {
       final id = (language['id'] ?? '').toString().trim();
-      final label = _languageLabel(language);
+      final label = languageLabel(language);
       if (id.isEmpty || label.isEmpty) return null;
       return DropdownMenuItem<String>(
         value: id,
