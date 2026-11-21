@@ -36,7 +36,7 @@ dependencies:
   image_picker: ^1.1.2
 
   # مكتبة اقتصاص الصور وتحديد الأبعاد
-  image_cropper: ^8.1.0
+  image_cropper: ^10.0.0+1
 
   # مكتبة التخزين المؤقت للصور وعرضها بسلاسة من السيرفر
   cached_network_image: ^3.3.1
