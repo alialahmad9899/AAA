@@ -5,6 +5,7 @@
 //        وإمكانية مشاركة رابط بطاقة العضو عبر Deep Linking.
 // ============================================================================
 
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../constants/colors.dart';
@@ -15,6 +16,7 @@ import '../models/chat_model.dart';
 import '../models/member_profile_model.dart';
 import '../services/api_service.dart';
 import '../services/profile_cache_service.dart';
+import '../utils/member_profile_link.dart';
 import '../widgets/app_snackbar.dart';
 import '../widgets/app_action_bottom_sheet.dart';
 import '../widgets/bottom_system_inset.dart';
@@ -42,6 +44,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
   MemberProfileModel? _profile;
   bool _isLoading = true;
   bool _hasError = false;
+  String? _profileErrorMessage;
   bool _isInterestSent = false;
 
   bool _isSendingInterest = false;
@@ -63,8 +66,9 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
     if (_profile == null) return;
 
     final String memberName = _profile!.basicInfo.fullName;
-    final String profileUrl =
-        'https://www.wesalsyria.com/profile?id=${widget.userId}';
+    final String profileUrl = Platform.isAndroid
+        ? MemberProfileLink.androidIntentUrl(widget.userId)
+        : MemberProfileLink.webUrl(widget.userId);
 
     final String shareMessage = _isArabic
         ? 'شاهد ملف العضو ($memberName) على تطبيق وصال :\n$profileUrl'
@@ -78,6 +82,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
     setState(() {
       _isLoading = true;
       _hasError = false;
+      _profileErrorMessage = null;
       _currentUserPermissionsReady = false;
     });
 
@@ -94,6 +99,9 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
       if (data == null) {
         setState(() {
           _hasError = true;
+          _profileErrorMessage = _isArabic
+              ? 'تعذر الاتصال بالخادم أو تحميل الملف الشخصي. تحقق من الاتصال ثم أعد المحاولة.'
+              : 'Could not connect to the server or load the profile. Check your connection and retry.';
           _isLoading = false;
         });
         return;
@@ -133,6 +141,13 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
       if (mounted) {
         setState(() {
           _hasError = _profile == null;
+          _profileErrorMessage = error is PublicProfileNotFoundException
+              ? (_isArabic
+                  ? 'العضو غير موجود. تحقق من رقم العضوية أو رابط الملف الشخصي.'
+                  : 'Member not found. Check the membership number or profile link.')
+              : (_isArabic
+                  ? 'تعذر تحميل الملف الشخصي حالياً. تحقق من الاتصال ثم أعد المحاولة.'
+                  : 'Could not load the profile right now. Check your connection and retry.');
           _isLoading = false;
         });
       }
@@ -782,9 +797,10 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              _isArabic
-                                  ? 'تعذر تحميل بيانات العضو'
-                                  : 'Failed to load member profile',
+                              _profileErrorMessage ??
+                                  (_isArabic
+                                      ? 'تعذر تحميل بيانات العضو'
+                                      : 'Failed to load member profile'),
                               style: const TextStyle(
                                   color: AppColors.textDark,
                                   fontSize: 16,
