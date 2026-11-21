@@ -312,7 +312,7 @@ class _SignupScreenState extends State<SignupScreen> {
       if (!mounted) return;
       var photoIsValid = photoExists;
       if (photoExists) {
-        final photoSize = await profilePhoto.length();
+        final photoSize = await profilePhoto!.length();
         if (!mounted) return;
         photoIsValid = photoSize > 0 && photoSize <= 10 * 1024 * 1024;
         if (!photoIsValid) {
