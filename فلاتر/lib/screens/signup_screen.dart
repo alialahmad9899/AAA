@@ -54,6 +54,7 @@ class _SignupScreenState extends State<SignupScreen> {
   int _currentStep = 0;
   bool _isLoading = false;
   bool _showValidationErrors = false;
+  String? _profilePhotoValidationMessage;
   bool _isAccountCreated = false;
   bool _isSignupRequestInFlight = false;
 
@@ -291,7 +292,7 @@ class _SignupScreenState extends State<SignupScreen> {
   /// 🔄 معالجة الانتقال والتثبت من صحة البيانات في كل خطوة
   Future<void> _handleNextStep() async {
     FocusScope.of(context).unfocus();
-    final bool isAr = widget.currentLanguage == 'ar';
+    final bool isAr = widget.currentLanguage.trim().toLowerCase().startsWith('ar');
 
     // ------------------------------------------------------------------------
     // 🟢 الخطوة الأولى: إنشاء الحساب ورفع الصورة الشخصية
@@ -316,17 +317,20 @@ class _SignupScreenState extends State<SignupScreen> {
         if (!mounted) return;
         photoIsValid = photoSize > 0 && photoSize <= 10 * 1024 * 1024;
         if (!photoIsValid) {
-          _showNotification(
-            isAr
-                ? 'يجب أن يكون حجم الصورة أكبر من صفر وألا يتجاوز 10 ميغابايت'
-                : 'The profile photo must be larger than zero and no more than 10 MB',
-            NotificationType.warning,
-          );
+          setState(() {
+            _profilePhoto = null;
+            _profilePhotoValidationMessage = isAr
+                ? 'حجم الصورة يجب أن يكون أكبر من صفر وألا يتجاوز 10 ميغابايت. اختر صورة أخرى.'
+                : 'Choose another photo larger than zero and no more than 10 MB.';
+          });
         }
       }
 
       if (!formIsValid || !selectionsAreValid || !photoIsValid) return;
-      setState(() => _showValidationErrors = false);
+      setState(() {
+        _showValidationErrors = false;
+        _profilePhotoValidationMessage = null;
+      });
 
       if (!_isAccountCreated) {
         // Prevent multiple multipart signup requests when the user taps
@@ -779,7 +783,7 @@ class _SignupScreenState extends State<SignupScreen> {
     AppSnackBar.show(
       context: context,
       type: type,
-      isArabic: widget.currentLanguage == 'ar',
+      isArabic: widget.currentLanguage.trim().toLowerCase().startsWith('ar'),
       messageAr: message,
       messageEn: message,
     );
@@ -787,7 +791,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
   /// نافذة منبثقة زجاجية فور إتمام الحساب بنجاح
   void _showSuccessDialog() {
-    final bool isAr = widget.currentLanguage == 'ar';
+    final bool isAr = widget.currentLanguage.trim().toLowerCase().startsWith('ar');
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -898,7 +902,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isAr = widget.currentLanguage == 'ar';
+    final bool isAr = widget.currentLanguage.trim().toLowerCase().startsWith('ar');
     const darkBgColor = AppColors.backgroundColor;
 
     final double bottomInset = MediaQuery.of(context).padding.bottom;
@@ -933,7 +937,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(12, 2, 12, 2),
                     child: Container(
-                      padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
+                      padding: const EdgeInsets.fromLTRB(10, 2, 10, 6),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
                           colors: [
@@ -958,15 +962,19 @@ class _SignupScreenState extends State<SignupScreen> {
                         children: [
                           Row(
                             textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
-                             children: [
+                            children: [
                               Material(
                                 color: Colors.white.withValues(alpha: 0.13),
                                 shape: const CircleBorder(),
                                 child: IconButton(
                                   tooltip: isAr ? 'العودة' : 'Back',
                                   onPressed: _goToPreviousPage,
+                                  visualDensity: VisualDensity.compact,
+                                  constraints: const BoxConstraints.tightFor(width: 40, height: 40),
+                                  padding: const EdgeInsets.all(8),
                                   icon: Icon(
                                     Icons.arrow_back_rounded,
+                                    textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
                                     color: Colors.white,
                                     size: 20,
                                   ),
@@ -999,11 +1007,11 @@ class _SignupScreenState extends State<SignupScreen> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 4),
                           const Center(
                             child: WesalLogo(
-                              width: 124,
-                              height: 68,
+                              width: 104,
+                              height: 54,
                               fit: BoxFit.contain,
                               excludeSemantics: true,
                             ),
@@ -1014,7 +1022,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 18,
+                              fontSize: 16,
                               fontWeight: FontWeight.w900,
                               fontFamily: 'Cairo',
                               height: 1.35,
@@ -1028,12 +1036,12 @@ class _SignupScreenState extends State<SignupScreen> {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.86),
-                              fontSize: 11.5,
-                              height: 1.4,
+                              fontSize: 10.5,
+                              height: 1.25,
                               fontFamily: 'Cairo',
                             ),
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 6),
                           Row(
                             children: List.generate(4, (index) {
                               final bool completed = index < _currentStep;
@@ -1044,8 +1052,8 @@ class _SignupScreenState extends State<SignupScreen> {
                                     AnimatedContainer(
                                       duration:
                                           const Duration(milliseconds: 250),
-                                      width: active ? 30 : 24,
-                                      height: active ? 30 : 24,
+                                      width: active ? 26 : 20,
+                                      height: active ? 26 : 20,
                                       decoration: BoxDecoration(
                                         color: completed || active
                                             ? AppColors.accentLight
@@ -1071,7 +1079,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                                   color: active
                                                       ? AppColors.primaryTeal
                                                       : Colors.white,
-                                                  fontSize: 12,
+                                                  fontSize: 10.5,
                                                   fontWeight: FontWeight.w900,
                                                   fontFamily: 'Cairo',
                                                 ),
@@ -1083,7 +1091,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                         child: Container(
                                           height: 2,
                                           margin: const EdgeInsets.symmetric(
-                                              horizontal: 5),
+                                              horizontal: 3),
                                           decoration: BoxDecoration(
                                             color: index < _currentStep
                                                 ? AppColors.accentLight
@@ -1130,8 +1138,10 @@ class _SignupScreenState extends State<SignupScreen> {
                           onBehalfChanged: (v) => setState(() => _onBehalf = v),
                           onTermsChanged: (v) =>
                               setState(() => _agreedToTerms = v),
-                          onPhotoChanged: (f) =>
-                              setState(() => _profilePhoto = f),
+                          onPhotoChanged: (f) => setState(() {
+                            _profilePhoto = f;
+                            _profilePhotoValidationMessage = null;
+                          }),
                         ),
                         Step2PersonalDetails(
                           formKey: _step2Key,
@@ -1298,6 +1308,23 @@ class _SignupScreenState extends State<SignupScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        if (_showValidationErrors || _profilePhotoValidationMessage != null)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 6),
+                            child: Text(
+                              _profilePhotoValidationMessage ??
+                                  (isAr
+                                      ? 'أكمل الحقول المحددة بالأحمر، ثم اضغط متابعة.'
+                                      : 'Complete the fields outlined in red, then continue.'),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.redAccent,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Cairo',
+                              ),
+                            ),
+                          ),
                         Text(
                           isAr
                               ? 'الخطوة ${_currentStep + 1} من 4 • بياناتك محفوظة أثناء التنقل'

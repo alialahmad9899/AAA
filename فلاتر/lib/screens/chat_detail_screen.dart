@@ -15,6 +15,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/chat_model.dart';
+import '../utils/message_text_direction.dart';
 import '../models/member_profile_model.dart';
 import '../services/api_service.dart';
 import '../services/chat_local_store.dart';
@@ -74,7 +75,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   bool _hasSentMessage = false;
   bool _canPopNow = false;
 
-  bool get _isArabic => widget.currentLanguage == 'ar';
+  bool get _isArabic => widget.currentLanguage.trim().toLowerCase().startsWith('ar');
 
   bool get _partnerHasReplied => ChatMessageModel.hasPartnerReplied(
         _messages,
@@ -302,14 +303,17 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     });
   }
 
-  // A reversed chat list starts at the newest message (minScrollExtent).
-  // Wait for its first layout before enabling older-history pagination; no
-  // initial jump is needed, so the transcript is never painted from the top.
+  // A reversed chat list places the newest message at minScrollExtent.
+  // Position there explicitly after the first real layout (cached or remote)
+  // before enabling older-history pagination.
   void _markChatListReady() {
     if (_isChatListReady) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _isChatListReady) return;
       _isChatListReady = true;
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.position.minScrollExtent);
+      }
     });
   }
 
@@ -1579,8 +1583,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                           ),
                           subtitle: Text(
                             _isArabic
-                                ? 'إيقاف تنبيهات هذه المحادثة فقط مع استمرار استقبال الرسائل'
-                                : 'Silence alerts for this conversation only',
+                                ? (_isChatMuted
+                                    ? 'ستعود تنبيهات هذه المحادثة للعمل مع استمرار استقبال الرسائل'
+                                    : 'إيقاف تنبيهات هذه المحادثة فقط مع استمرار استقبال الرسائل')
+                                : (_isChatMuted
+                                    ? 'Turn alerts for this conversation back on.'
+                                    : 'Silence alerts for this conversation only.'),
                             style: const TextStyle(
                               color: AppColors.textMuted,
                               fontSize: 12,
@@ -2777,8 +2785,11 @@ class _SenderMessageBubble extends StatelessWidget {
                     if (shouldShowText)
                       Padding(
                         padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
-                        child: Text(cleanText,
-                            style: const TextStyle(
+                        child: Text(
+                          cleanText,
+                          textDirection: MessageTextDirection.of(cleanText),
+                          textAlign: TextAlign.start,
+                          style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 14.5,
                                 fontFamily: 'Cairo',
@@ -2893,8 +2904,11 @@ class _ReceiverMessageBubble extends StatelessWidget {
                     if (shouldShowText)
                       Padding(
                         padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
-                        child: Text(cleanText,
-                            style: const TextStyle(
+                        child: Text(
+                          cleanText,
+                          textDirection: MessageTextDirection.of(cleanText),
+                          textAlign: TextAlign.start,
+                          style: const TextStyle(
                                 color: AppColors.textDark,
                                 fontSize: 14.5,
                                 fontFamily: 'Cairo',

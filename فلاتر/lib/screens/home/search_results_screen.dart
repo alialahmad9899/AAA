@@ -10,7 +10,6 @@ import '../../constants/colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/api_service.dart';
 import '../../models/member_model.dart';
-import '../../utils/marital_status_localizer.dart';
 import '../../widgets/package_badge_widget.dart';
 import '../member_profile_screen.dart';
 
@@ -50,7 +49,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
   String? _errorMessage;
   int _searchFetchCounter = 0;
 
-  bool get _isAr => widget.currentLanguage == 'ar';
+  bool get _isAr => widget.currentLanguage.trim().toLowerCase().startsWith('ar');
 
   @override
   void initState() {
@@ -59,10 +58,8 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
   }
 
   /// 🟢 ترجمة ديناميكية للحالة الاجتماعية عند تحويل اللغة للإنجليزي
-  String _translateMaritalStatus(String rawStatus) {
-    if (rawStatus.trim().isEmpty || _isAr) return rawStatus;
-    return MaritalStatusLocalizer.toEnglish(rawStatus) ?? rawStatus;
-  }
+  String _translateMaritalStatus(MemberModel member) =>
+      member.getLocalizedMaritalStatus(isArabic: _isAr);
 
   /// 🟢 ترجمة ديناميكية للديانة المحددة عند تحويل اللغة للإنجليزي
   String _translateReligion(String rawReligion) {
@@ -225,7 +222,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
   /// بطاقة عضو واضحة ومتناسقة مع شاشة البحث.
   Widget _buildMemberCard(MemberModel member) {
     final String maritalStatusText =
-        _translateMaritalStatus(member.maritalStatus);
+        _translateMaritalStatus(member);
     final String religionText = _translateReligion(member.religion);
     final String residenceText = _translateResidence(member.residence);
     final String occupationText = _translateOccupation(member.occupation);

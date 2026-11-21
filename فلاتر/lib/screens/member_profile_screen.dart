@@ -48,12 +48,13 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
   bool _isInterestSent = false;
 
   bool _isSendingInterest = false;
+  bool _isBlockingMember = false;
   bool _currentUserIsSubscribedOrFemale = false;
   bool _currentUserPermissionsReady = false;
 
   bool _isModalActive = false;
 
-  bool get _isArabic => widget.currentLanguage == 'ar';
+  bool get _isArabic => widget.currentLanguage.trim().toLowerCase().startsWith('ar');
 
   @override
   void initState() {
@@ -78,6 +79,92 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
         : 'Check out ($memberName)\'s profile on Wesal App:\n$profileUrl';
 
     Share.share(shareMessage, subject: memberName);
+  }
+
+  Future<void> _showBlockConfirmationDialog() async {
+    if (!mounted || _isBlockingMember) return;
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => Directionality(
+        textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
+        child: AlertDialog(
+          backgroundColor: AppColors.cardColor,
+          title: Text(
+            _isArabic ? 'حظر هذا العضو؟' : 'Block this member?',
+            style: const TextStyle(
+              color: AppColors.textDark,
+              fontFamily: 'Cairo',
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Text(
+            _isArabic
+                ? 'لن يتمكن هذا العضو من مراسلتك، وسيبقى سجل المحادثة محفوظاً.'
+                : 'This member will no longer be able to message you. Existing chat history will be preserved.',
+            style: const TextStyle(
+              color: AppColors.textMuted,
+              fontFamily: 'Cairo',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(_isArabic ? 'إلغاء' : 'Cancel'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(_isArabic ? 'تأكيد الحظر' : 'Block member'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (confirmed == true && mounted) await _executeProfileBlock();
+  }
+
+  Future<void> _executeProfileBlock() async {
+    if (_isBlockingMember) return;
+    setState(() => _isBlockingMember = true);
+    try {
+      final result = await ApiService.addToIgnoreList(
+        _profile?.userId ?? widget.userId,
+      );
+      if (!mounted) return;
+      setState(() => _isBlockingMember = false);
+      if (result['success'] == true) {
+        AppSnackBar.show(
+          context: context,
+          type: NotificationType.warning,
+          isArabic: _isArabic,
+          messageAr: 'تم حظر العضو مع الاحتفاظ بسجل المحادثة',
+          messageEn: 'Member blocked; conversation history preserved',
+        );
+        Navigator.pop(context, true);
+      } else {
+        AppSnackBar.show(
+          context: context,
+          type: NotificationType.error,
+          isArabic: _isArabic,
+          messageAr: 'تعذر تنفيذ الحظر حالياً، يرجى المحاولة لاحقاً',
+          messageEn: 'Failed to block this member. Please try again.',
+        );
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isBlockingMember = false);
+      AppSnackBar.show(
+        context: context,
+        type: NotificationType.error,
+        isArabic: _isArabic,
+        messageAr: 'تعذر تنفيذ الحظر حالياً، يرجى المحاولة لاحقاً',
+        messageEn: 'Failed to block this member. Please try again.',
+      );
+    }
   }
 
   Future<void> _fetchProfileData() async {
@@ -1014,6 +1101,37 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
                   icon: const Icon(Icons.share_rounded,
                       color: AppColors.primaryTeal, size: 20),
                   onPressed: _shareProfileLink,
+                ),
+              ),
+            ),
+          ),
+        ),
+        // زر الحظر من الملف الشخصي نفسه.
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                color: Colors.black.withValues(alpha: 0.3),
+                child: IconButton(
+                  tooltip: _isArabic ? 'حظر العضو' : 'Block member',
+                  onPressed: _isBlockingMember ? null : _showBlockConfirmationDialog,
+                  icon: _isBlockingMember
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(
+                          Icons.block_rounded,
+                          color: Colors.redAccent,
+                          size: 20,
+                        ),
                 ),
               ),
             ),

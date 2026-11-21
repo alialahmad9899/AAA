@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import '../models/chat_model.dart';
 import '../constants/colors.dart';
+import '../utils/message_text_direction.dart';
 
 /// ويدجت مستقلة لرسائل المُرسِل (الطرف الأول)
 class SenderMessageBubble extends StatelessWidget {
@@ -52,6 +53,8 @@ class SenderMessageBubble extends StatelessWidget {
             // نص الرسالة الرئيسية
             Text(
               message.message,
+              textDirection: MessageTextDirection.of(message.message),
+              textAlign: TextAlign.start,
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 15,

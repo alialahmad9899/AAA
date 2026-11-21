@@ -71,7 +71,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
   late Animation<double> _heartOpacityAnimation;
   bool _showHeartOverlay = false;
 
-  bool get _isAr => widget.currentLanguage == 'ar';
+  bool get _isAr => widget.currentLanguage.trim().toLowerCase().startsWith('ar');
 
   @override
   void initState() {
@@ -1020,8 +1020,8 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
         children: [
           _buildActionItem(
             icon: _isAr
-                ? Icons.arrow_back_ios_new_rounded
-                : Icons.arrow_forward_ios_rounded,
+                ? Icons.chevron_left_rounded
+                : Icons.chevron_right_rounded,
             iconDirection: TextDirection.ltr,
             label: widget.txt('next'),
             backgroundColor: AppColors.sectionBackground,

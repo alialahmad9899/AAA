@@ -39,7 +39,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
   bool _isLoading = true;
   bool _isSaving = false;
 
-  bool get _isArabic => widget.currentLanguage == 'ar';
+  bool get _isArabic => widget.currentLanguage.trim().toLowerCase().startsWith('ar');
   bool get _requiresChildrenCount => const {'2', '3', '4'}.contains(_selectedMaritalStatusId);
 
   final _firstNameCtrl = TextEditingController();
@@ -1042,20 +1042,22 @@ class _EditProfileScreenState extends State<EditProfileScreen>
       await Future<void>.delayed(const Duration(milliseconds: 360));
     }
 
-    if (!mounted) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    for (var attempt = 0; attempt < 5; attempt++) {
+      await WidgetsBinding.instance.endOfFrame;
       if (!mounted) return;
       final targetContext =
           _missingProfileNavigationKeys[field.targetKey]?.currentContext;
-      if (targetContext == null) return;
-
-      Scrollable.ensureVisible(
-        targetContext,
-        alignment: 0.14,
-        duration: const Duration(milliseconds: 380),
-        curve: Curves.easeInOutCubic,
-      );
-    });
+      if (targetContext != null) {
+        await Scrollable.ensureVisible(
+          targetContext,
+          alignment: 0.14,
+          duration: const Duration(milliseconds: 380),
+          curve: Curves.easeInOutCubic,
+        );
+        return;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+    }
   }
 
   void _goToFirstMissingProfileField() {
@@ -2000,10 +2002,15 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                           _isArabic ? TextDirection.rtl : TextDirection.ltr,
                       children: [
                         IconButton(
-                          icon: const Icon(
-                              Icons.arrow_back_rounded,
-                              color: AppColors.textDark,
-                              size: 20),
+                          tooltip: _isArabic ? 'العودة' : 'Back',
+                          visualDensity: VisualDensity.compact,
+                          constraints: const BoxConstraints.tightFor(width: 40, height: 40),
+                          icon: Icon(
+                            Icons.arrow_back_rounded,
+                            textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
+                            color: AppColors.textDark,
+                            size: 20,
+                          ),
                           onPressed: () => Navigator.pop(context, true),
                         ),
                         Expanded(
@@ -2086,7 +2093,9 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              _isArabic ? 'الحقول الناقصة:' : 'Missing fields:',
+                              _isArabic
+                                  ? 'الحقول الناقصة (${missingProfileFields.length}):'
+                                  : 'Missing fields (${missingProfileFields.length}):',
                               style: const TextStyle(
                                 color: AppColors.textMuted,
                                 fontSize: 11.5,
@@ -2120,7 +2129,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                                       _isArabic ? field.labelAr : field.labelEn,
                                       style: const TextStyle(
                                         color: AppColors.textDark,
-                                        fontSize: 10.5,
+                                        fontSize: 11.5,
                                         fontWeight: FontWeight.w600,
                                         fontFamily: 'Cairo',
                                       ),
@@ -2129,17 +2138,28 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                                 );
                               }).toList(),
                             ),
-                            Align(
-                              alignment: AlignmentDirectional.centerEnd,
-                              child: TextButton.icon(
+                            const SizedBox(height: 10),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
                                 onPressed: _goToFirstMissingProfileField,
-                                icon: const Icon(Icons.edit_rounded, size: 16),
+                                icon: const Icon(Icons.edit_rounded, size: 18),
                                 label: Text(
-                                  _isArabic ? 'كمّل ملفك' : 'Complete profile',
+                                  _isArabic ? 'كمّل ملفك الآن' : 'Complete your profile',
                                   style: const TextStyle(
                                     fontFamily: 'Cairo',
                                     fontWeight: FontWeight.bold,
+                                    fontSize: 13,
                                   ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primaryTeal,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 11),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  elevation: 0,
                                 ),
                               ),
                             ),

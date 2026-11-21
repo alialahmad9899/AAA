@@ -249,7 +249,7 @@ class AccountTabState extends State<AccountTab> {
   bool _isLoadingUser = true;
   MemberProfileModel? _userProfile;
 
-  bool get _isAr => widget.currentLanguage == 'ar';
+  bool get _isAr => widget.currentLanguage.trim().toLowerCase().startsWith('ar');
 
   @override
   void initState() {
@@ -331,6 +331,7 @@ class AccountTabState extends State<AccountTab> {
   Future<void> _confirmLogout() async {
     final bool? confirmed = await showDialog<bool>(
       context: context,
+      barrierDismissible: false,
       builder: (dialogContext) => Directionality(
         textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
         child: AlertDialog(

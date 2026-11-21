@@ -21,4 +21,7 @@
         <item name="android:windowBackground">?android:colorBackground</item>
     </style>
 
+    <!-- uCrop uses a dedicated edge-to-edge compatible AppCompat activity theme. -->
+    <style name="Ucrop.CropTheme" parent="Theme.AppCompat.Light.NoActionBar" />
+
 </resources>
