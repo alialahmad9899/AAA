@@ -279,7 +279,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         threadId: _activeThreadId,
         appIsActive: true,
       ));
-      unawaited(ApiService.syncChatMuteSettings());
+      unawaited(ApiService.syncChatMuteSettings(partnerUserId: widget.thread.userId));
       _loadMessages(silent: true, preserveHistory: true);
       _startMessageRefreshTimer();
     } else {
@@ -457,6 +457,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       partnerUserId: widget.thread.userId,
       muted: nextMuted,
     );
+    if (synced && _currentUserId > 0) {
+      await ChatLocalStore.markMuteSynced(
+        _currentUserId,
+        widget.thread.userId,
+      );
+    }
     if (!mounted) return;
     AppSnackBar.show(
       context: context,
@@ -838,6 +844,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         _hasMessageLoadError = false;
         _messageLoadError = '';
       });
+
+      if (res.containsKey('muted_by_me') && _currentUserId > 0) {
+        await ChatLocalStore.setMutedFromServer(
+          _currentUserId,
+          widget.thread.userId,
+          res['muted_by_me'] == true,
+        );
+        if (!mounted) return;
+      }
 
       if (!_isChatListReady) {
         _markChatListReady();

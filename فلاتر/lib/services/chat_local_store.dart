@@ -17,7 +17,7 @@ class ChatLocalStore {
     final path = '$databasePath/wesal_chat_cache.db';
     _database = await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE chat_threads (
@@ -55,6 +55,7 @@ class ChatLocalStore {
             account_id INTEGER NOT NULL,
             partner_user_id INTEGER NOT NULL,
             muted INTEGER NOT NULL,
+            sync_pending INTEGER NOT NULL DEFAULT 0,
             updated_at INTEGER NOT NULL,
             PRIMARY KEY (account_id, partner_user_id)
           )
@@ -76,6 +77,7 @@ class ChatLocalStore {
               account_id INTEGER NOT NULL,
               partner_user_id INTEGER NOT NULL,
               muted INTEGER NOT NULL,
+              sync_pending INTEGER NOT NULL DEFAULT 0,
               updated_at INTEGER NOT NULL,
               PRIMARY KEY (account_id, partner_user_id)
             )
@@ -114,6 +116,7 @@ class ChatLocalStore {
                   'account_id': accountId,
                   'partner_user_id': partnerId,
                   'muted': 1,
+                  'sync_pending': 1,
                   'updated_at': now,
                 },
                 conflictAlgorithm: ConflictAlgorithm.replace,
@@ -122,6 +125,17 @@ class ChatLocalStore {
               // A malformed legacy cache row must not prevent the database upgrade.
             }
           }
+        }
+
+        if (oldVersion >= 2 && oldVersion < 3) {
+          await db.execute(
+            'ALTER TABLE chat_mute_preferences ADD COLUMN sync_pending INTEGER NOT NULL DEFAULT 0',
+          );
+          // Existing v2 local values may not yet exist on the server.
+          await db.update(
+            'chat_mute_preferences',
+            {'sync_pending': 1},
+          );
         }
       },
     );
@@ -333,8 +347,9 @@ class ChatLocalStore {
   static Future<void> setMuted(
     int accountId,
     int partnerUserId,
-    bool muted,
-  ) async {
+    bool muted, {
+    bool needsSync = true,
+  }) async {
     if (accountId <= 0 || partnerUserId <= 0) return;
     final db = await _db;
     await db.insert(
@@ -343,9 +358,80 @@ class ChatLocalStore {
         'account_id': accountId,
         'partner_user_id': partnerUserId,
         'muted': muted ? 1 : 0,
+        'sync_pending': needsSync ? 1 : 0,
         'updated_at': DateTime.now().millisecondsSinceEpoch,
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// Apply server state without overwriting an offline choice that still
+  /// needs to be uploaded.
+  static Future<void> setMutedFromServer(
+    int accountId,
+    int partnerUserId,
+    bool muted,
+  ) async {
+    if (accountId <= 0 || partnerUserId <= 0) return;
+    final db = await _db;
+    await db.transaction((txn) async {
+      final pending = await txn.query(
+        'chat_mute_preferences',
+        columns: ['sync_pending'],
+        where: 'account_id = ? AND partner_user_id = ?',
+        whereArgs: [accountId, partnerUserId],
+        limit: 1,
+      );
+      if (pending.isNotEmpty && pending.first['sync_pending'] == 1) {
+        return;
+      }
+      await txn.insert(
+        'chat_mute_preferences',
+        {
+          'account_id': accountId,
+          'partner_user_id': partnerUserId,
+          'muted': muted ? 1 : 0,
+          'sync_pending': 0,
+          'updated_at': DateTime.now().millisecondsSinceEpoch,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    });
+  }
+
+  static Future<Map<int, bool>> getPendingMuteSettings(
+    int accountId, {
+    int? partnerUserId,
+  }) async {
+    if (accountId <= 0) return {};
+    final whereArgs = <Object?>[accountId];
+    var where = 'account_id = ? AND sync_pending = 1';
+    if (partnerUserId != null) {
+      where += ' AND partner_user_id = ?';
+      whereArgs.add(partnerUserId);
+    }
+    final rows = await (await _db).query(
+      'chat_mute_preferences',
+      columns: ['partner_user_id', 'muted'],
+      where: where,
+      whereArgs: whereArgs,
+    );
+    return {
+      for (final row in rows)
+        row['partner_user_id'] as int: row['muted'] == 1,
+    };
+  }
+
+  static Future<void> markMuteSynced(
+    int accountId,
+    int partnerUserId,
+  ) async {
+    if (accountId <= 0 || partnerUserId <= 0) return;
+    await (await _db).update(
+      'chat_mute_preferences',
+      {'sync_pending': 0},
+      where: 'account_id = ? AND partner_user_id = ?',
+      whereArgs: [accountId, partnerUserId],
     );
   }
 

@@ -27,17 +27,25 @@ void main() {
     expect(localStore, contains('chat_mute_preferences'));
     expect(localStore, contains('partner_user_id'));
     expect(localStore, contains('final legacyMutes = await db.rawQuery'));
-    expect(localStore, contains('version: 2'));
+    expect(localStore, contains('version: 3'));
+    expect(localStore, contains('sync_pending'));
+    expect(localStore, contains('getPendingMuteSettings'));
+    expect(localStore, contains('markMuteSynced'));
+    expect(localStore, contains('setMutedFromServer'));
   });
 
   test('API sync and chat screen mute use the partner identity, not the thread ID', () {
     expect(apiService, contains("'partner_user_id': partnerUserId"));
-    expect(apiService, contains('setChatMuted(partnerUserId: entry.key'));
+    expect(apiService, contains('partnerUserId: entry.key'));
+    expect(apiService, contains('getPendingMuteSettings'));
+    expect(apiService, contains('markMuteSynced'));
     expect(apiService, contains('syncChatMuteSettings({int? partnerUserId})'));
     expect(chatScreen, contains('syncChatMuteSettings(partnerUserId: widget.thread.userId)'));
     expect(chatScreen, contains('ChatLocalStore.isMuted(\n          _currentUserId,\n          widget.thread.userId'));
     expect(chatScreen, contains('ChatLocalStore.setMuted(\n        _currentUserId,\n        widget.thread.userId'));
     expect(chatScreen, contains('partnerUserId: widget.thread.userId'));
+    expect(chatScreen, contains('setMutedFromServer'));
+    expect(chatScreen, contains('ChatLocalStore.markMuteSynced'));
     expect(chatScreen, contains("_isChatMuted = res['muted_by_me'] == true"));
   });
 

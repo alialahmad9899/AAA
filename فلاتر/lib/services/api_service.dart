@@ -3766,23 +3766,21 @@ class ApiService {
       final prefs = await SharedPreferences.getInstance();
       final accountId = prefs.getInt('user_id') ?? 0;
       if (accountId <= 0) return;
-      final settings = await ChatLocalStore.getMuteSettings(accountId);
+      final pendingSettings = await ChatLocalStore.getPendingMuteSettings(
+        accountId,
+        partnerUserId: partnerUserId,
+      );
 
-      if (partnerUserId != null) {
-        // No local row means the server is authoritative; do not send a
-        // default false and accidentally unmute an existing server preference.
-        final localMuted = settings[partnerUserId];
-        if (localMuted != null) {
-          await setChatMuted(
-            partnerUserId: partnerUserId,
-            muted: localMuted,
-          );
+      // Only send local changes that have not yet reached the server. This
+      // prevents an old device cache from overwriting a newer server choice.
+      for (final entry in pendingSettings.entries) {
+        final synced = await setChatMuted(
+          partnerUserId: entry.key,
+          muted: entry.value,
+        );
+        if (synced) {
+          await ChatLocalStore.markMuteSynced(accountId, entry.key);
         }
-        return;
-      }
-
-      for (final entry in settings.entries) {
-        await setChatMuted(partnerUserId: entry.key, muted: entry.value);
       }
     } catch (error) {
       if (kDebugMode) debugPrint('⚠️ [Chat Mute Sync] $error');
