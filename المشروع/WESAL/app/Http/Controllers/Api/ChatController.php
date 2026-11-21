@@ -9,6 +9,7 @@ use App\Http\Resources\Chat\ChatViewResource;
 use App\Http\Resources\ChatThreadResource;
 use App\Models\Chat;
 use App\Models\ChatThread;
+use App\Models\IgnoredUser;
 use App\Services\ChatService;
 use App\Utility\MemberUtility; // فحص سياسات المحادثة والاشتراك
 use App\Utility\SubscriptionUtility;
@@ -18,6 +19,23 @@ use Throwable;
 
 class ChatController extends Controller
 {
+    /**
+     * A block is mutual for messaging, while chat history remains readable.
+     */
+    private function hasBlockedParticipant(int $firstUserId, int $secondUserId): bool
+    {
+        return IgnoredUser::query()
+            ->where(function ($query) use ($firstUserId, $secondUserId) {
+                $query->where('ignored_by', $firstUserId)
+                    ->where('user_id', $secondUserId);
+            })
+            ->orWhere(function ($query) use ($firstUserId, $secondUserId) {
+                $query->where('ignored_by', $secondUserId)
+                    ->where('user_id', $firstUserId);
+            })
+            ->exists();
+    }
+
     // ==========================================
     // خوارزمية كشف أرقام الهواتف الذكية (لواجهة الـ API)
     // ==========================================
@@ -238,6 +256,14 @@ class ChatController extends Controller
                         ?? $request->input('user_id') 
                         ?? $request->input('partner_id');
 
+            if ($receiver_id && $this->hasBlockedParticipant($sender_id, (int) $receiver_id)) {
+                return response()->json([
+                    'result' => false,
+                    'status' => 'chat_blocked',
+                    'message' => 'لا يمكن إرسال رسائل بين الحسابين بسبب تفعيل الحظر.'
+                ], 403);
+            }
+
             $chat_thread_id = $request->input('chat_thread_id');
 
             // 3. إنشاء/جلب المحادثة عبر منطق موحّد يطبق صلاحية الباقة
@@ -314,6 +340,14 @@ class ChatController extends Controller
             $expectedReceiver = (int) ($ownedThread->sender_user_id == $sender_id
                 ? $ownedThread->receiver_user_id
                 : $ownedThread->sender_user_id);
+
+            if ($this->hasBlockedParticipant($sender_id, $expectedReceiver)) {
+                return response()->json([
+                    'result' => false,
+                    'status' => 'chat_blocked',
+                    'message' => 'لا يمكن إرسال رسائل بين الحسابين بسبب تفعيل الحظر.'
+                ], 403);
+            }
 
             $threadEntitlement = SubscriptionUtility::getOrCreateChatThread($sender_id, $expectedReceiver);
             if ($threadEntitlement['status'] === 'subscription_expired') {
