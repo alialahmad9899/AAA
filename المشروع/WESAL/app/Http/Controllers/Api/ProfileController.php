@@ -1299,7 +1299,7 @@ class ProfileController extends Controller
     {
         // Load the profile aggregates used below in one predictable query.
         // The public endpoint must not assume every account has every relation.
-        $user = User::with([
+        $profileQuery = User::with([
             'member',
             'education',
             'career',
@@ -1311,7 +1311,15 @@ class ProfileController extends Controller
             'lifestyles',
             'astrologies',
             'partner_expectations',
-        ])->where('id', $id)->first();
+        ]);
+
+        // Resolve exact membership codes as well as internal numeric IDs.
+        // Do not infer IDs by stripping or rewriting digits from the code.
+        $user = (clone $profileQuery)->where('id', $id)->first();
+        if (!$user && is_scalar($id) && preg_match('/^\d+$/', (string) $id)) {
+            $user = $profileQuery->where('code', (string) $id)->first();
+        }
+
         $auth_user = auth()->user();
 
         if (!$auth_user) {
