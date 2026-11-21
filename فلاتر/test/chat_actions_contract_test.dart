@@ -4,9 +4,11 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   late String source;
+  late String chatsTabSource;
 
   setUpAll(() {
     source = File('lib/screens/chat_detail_screen.dart').readAsStringSync();
+    chatsTabSource = File('lib/screens/home/chats_tab.dart').readAsStringSync();
   });
 
   test('manual chat deletion stays behind the explicit confirmation dialog', () {
@@ -17,6 +19,13 @@ void main() {
       RegExp(r'ApiService\.deleteChatThread\(').allMatches(source).length,
       1,
     );
+  });
+
+  test('chat-list swipe and long-press deletion require confirmation', () {
+    expect(chatsTabSource, contains('confirmDismiss:'));
+    expect(chatsTabSource, contains('_showDeleteConfirmationDialog(chat)'));
+    expect(chatsTabSource, contains('if (confirm == true)'));
+    expect(chatsTabSource, contains('_executeChatDeletion(chat)'));
   });
 
   test('blocking preserves the remote and local conversation history', () {
