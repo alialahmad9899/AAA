@@ -345,7 +345,8 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
                 isAr ? 'بلد المنشأ والولادة 🌍' : 'Place of Birth 🌍',
                 Icons.public_rounded),
             InkWell(
-              key: navigationKeys['birth_country'],              onTap: onSelectBirthCountry,
+              key: navigationKeys['birth_country'],
+              onTap: onSelectBirthCountry,
               borderRadius: BorderRadius.circular(16),
               child: Container(
                 padding:
@@ -385,7 +386,8 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
                 isAr ? 'مقر الإقامة والوضع الحالي 🏠' : 'Current Residence 🏠',
                 Icons.home_work_rounded),
             InkWell(
-              key: navigationKeys['residence_country'],              onTap: onSelectResidencyCountry,
+              key: navigationKeys['residence_country'],
+              onTap: onSelectResidencyCountry,
               borderRadius: BorderRadius.circular(16),
               child: Container(
                 padding:
