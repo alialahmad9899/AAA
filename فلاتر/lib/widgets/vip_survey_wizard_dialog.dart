@@ -31,6 +31,7 @@ class VipSurveyWizardDialog extends StatefulWidget {
 class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
   int _currentStep = 0;
   bool _isLoading = false;
+  bool _showPartnerExpectationsError = false;
 
   // متحكمات الحقول الشخصية المطلوبة
   final _aboutMeController = TextEditingController();
@@ -55,6 +56,45 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
     _financialStatus = widget.isArabic ? 'مستقر' : 'Stable';
   }
 
+  bool _validatePartnerExpectations() {
+    final isMissing = _partnerExpectationsController.text.trim().isEmpty;
+    setState(() => _showPartnerExpectationsError = isMissing);
+    if (isMissing) {
+      AppSnackBar.show(
+        context: context,
+        type: NotificationType.warning,
+        isArabic: widget.isArabic,
+        messageAr: 'يرجى إدخال مواصفات شريك الحياة قبل المتابعة',
+        messageEn: 'Please enter partner specifications before continuing',
+      );
+      return false;
+    }
+    return true;
+  }
+
+  void _goToStep(int targetStep) {
+    if (_isLoading || targetStep < 0 || targetStep > 2 ||
+        targetStep == _currentStep) {
+      return;
+    }
+    if (targetStep > _currentStep) {
+      if (targetStep != _currentStep + 1) return;
+      if (_currentStep == 1 && !_validatePartnerExpectations()) return;
+    }
+    setState(() => _currentStep = targetStep);
+  }
+
+  void _goToNextStep() {
+    if (_isLoading) return;
+    if (_currentStep < 2) {
+      if (_currentStep == 1 && !_validatePartnerExpectations()) return;
+      setState(() => _currentStep++);
+      return;
+    }
+    _submitSurvey();
+  }
+
+
   @override
   void dispose() {
     _aboutMeController.dispose();
@@ -73,14 +113,19 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
 
     final ageParsed = int.tryParse(_ageController.text.trim());
 
-    // 1️⃣ التحقق من تعبئة جميع الحقول
+    // The partner step remains mandatory even after navigating back from confirmation.
+    if (!_validatePartnerExpectations()) {
+      setState(() => _currentStep = 1);
+      return;
+    }
+
+    // 1️⃣ التحقق من تعبئة جميع الحقول الشخصية
     if (_aboutMeController.text.trim().isEmpty ||
         _originCountryCityController.text.trim().isEmpty ||
         _residenceCountryCityController.text.trim().isEmpty ||
         _ageController.text.trim().isEmpty ||
         _nationalityController.text.trim().isEmpty ||
-        _occupationController.text.trim().isEmpty ||
-        _partnerExpectationsController.text.trim().isEmpty) {
+        _occupationController.text.trim().isEmpty) {
       AppSnackBar.show(
         context: context,
         type: NotificationType.warning,
@@ -184,7 +229,13 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
   }
 
   /// 🎨 تصميم التنسيق الخاص بحقول الإدخال المحسّن للرؤية العالية
-  InputDecoration _inputDecoration(String labelText, {String? hintText}) {
+  InputDecoration _inputDecoration(
+    String labelText, {
+    String? hintText,
+    bool hasError = false,
+  }) {
+    final borderColor = hasError ? Colors.redAccent : AppColors.lineColor;
+    final borderWidth = hasError ? 1.5 : 1.0;
     return InputDecoration(
       labelText: labelText,
       labelStyle: const TextStyle(
@@ -204,15 +255,18 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
       fillColor: AppColors.sectionBackground,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: AppColors.lineColor),
+        borderSide: BorderSide(color: borderColor, width: borderWidth),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: AppColors.lineColor),
+        borderSide: BorderSide(color: borderColor, width: borderWidth),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: AppColors.primaryTeal, width: 1.5),
+        borderSide: BorderSide(
+          color: hasError ? Colors.redAccent : AppColors.primaryTeal,
+          width: 1.5,
+        ),
       ),
     );
   }
@@ -237,9 +291,7 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
           final isCurrent = index == _currentStep;
           return Expanded(
             child: GestureDetector(
-              onTap: _isLoading
-                  ? null
-                  : () => setState(() => _currentStep = index),
+              onTap: _isLoading ? null : () => _goToStep(index),
               child: Row(
                 children: [
                   Container(
@@ -404,15 +456,7 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: _isLoading
-                            ? null
-                            : () {
-                                if (_currentStep < 2) {
-                                  setState(() => _currentStep++);
-                                } else {
-                                  _submitSurvey();
-                                }
-                              },
+                        onPressed: _isLoading ? null : _goToNextStep,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primaryTeal,
                           padding: const EdgeInsets.symmetric(vertical: 13),
@@ -443,6 +487,9 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
                                   setState(() => _currentStep--);
                                 },
                           style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.textDark,
+                            disabledForegroundColor: AppColors.textMuted,
+                            backgroundColor: AppColors.sectionBackground,
                             side: const BorderSide(color: AppColors.lineColor),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12)),
@@ -607,6 +654,11 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
             enabled: !_isLoading,
             maxLines: 5,
             style: const TextStyle(color: AppColors.textDark, fontFamily: 'Cairo'),
+            onChanged: (value) {
+              if (_showPartnerExpectationsError && value.trim().isNotEmpty) {
+                setState(() => _showPartnerExpectationsError = false);
+              }
+            },
             decoration: _inputDecoration(
               widget.isArabic
                   ? 'مواصفات شريك الحياة المطلوبة (العمر، الإقامة، الصفات...) *'
@@ -614,6 +666,7 @@ class _VipSurveyWizardDialogState extends State<VipSurveyWizardDialog> {
               hintText: widget.isArabic
                   ? 'مثال: أنثى خلوقة ومحجبة، العمر من 22 إلى 28، الإقامة في..، الاهتمام بـ...'
                   : 'Example: Polite veiled female, age 22 to 28, residing in...',
+              hasError: _showPartnerExpectationsError,
             ),
           ),
         ],

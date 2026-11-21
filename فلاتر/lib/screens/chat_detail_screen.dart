@@ -76,6 +76,21 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
 
   bool get _isArabic => widget.currentLanguage == 'ar';
 
+  bool get _partnerHasReplied => ChatMessageModel.hasPartnerReplied(
+        _messages,
+        partnerUserId: widget.thread.userId,
+      );
+
+  void _showImageReplyRequiredMessage() {
+    AppSnackBar.show(
+      context: context,
+      type: NotificationType.warning,
+      isArabic: _isArabic,
+      messageAr: 'يمكنك إرفاق الصور بعد أن يرسل الطرف الآخر أول رد في المحادثة.',
+      messageEn: 'You can share photos after the other person sends their first reply.',
+    );
+  }
+
   final List<String> _emojis = [
     '❤️',
     '🌹',
@@ -941,6 +956,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   }
 
   Future<void> _pickImage(ImageSource source) async {
+    if (!_partnerHasReplied) {
+      _showImageReplyRequiredMessage();
+      return;
+    }
     try {
       _dismissKeyboard();
       final XFile? pickedFile = await _picker.pickImage(
@@ -1081,6 +1100,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   Future<void> _sendMessage({File? imageFile, String? customText}) async {
     final text = customText ?? _messageController.text.trim();
     if ((text.isEmpty && imageFile == null) || _isSending) return;
+    if (imageFile != null && !_partnerHasReplied) {
+      _showImageReplyRequiredMessage();
+      return;
+    }
 
     if (customText == null) _messageController.clear();
 
@@ -1180,6 +1203,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
             status == 'package_required' ||
             status == 'forbidden') {
           _showSubscriptionDialog(serverErrorMessage);
+        } else if (status == 'image_requires_partner_reply') {
+          _showImageReplyRequiredMessage();
         } else if (status == 'limit_reached_wait_reply') {
           _showWaitReplyDialog(serverErrorMessage);
         } else {
@@ -2368,10 +2393,16 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
             constraints: const BoxConstraints.tightFor(width: 40, height: 48),
             padding: EdgeInsets.zero,
             visualDensity: VisualDensity.compact,
-            tooltip: _isArabic ? 'إرفاق صورة' : 'Attach image',
-            icon: const Icon(
+            tooltip: _partnerHasReplied
+                ? (_isArabic ? 'إرفاق صورة' : 'Attach image')
+                : (_isArabic
+                    ? 'تتاح الصور بعد أول رد من الطرف الآخر'
+                    : 'Available after the other person replies'),
+            icon: Icon(
               Icons.add_a_photo_rounded,
-              color: AppColors.primaryTeal,
+              color: _partnerHasReplied
+                  ? AppColors.primaryTeal
+                  : AppColors.textMuted,
               size: 21,
             ),
             onPressed: () => _pickImage(ImageSource.gallery),

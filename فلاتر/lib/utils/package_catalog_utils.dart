@@ -13,6 +13,16 @@ class PackageCatalogUtils {
     return text == '1' || text == 'true' || text == 'yes';
   }
 
+  /// Returns a grammatically correct Arabic label for a package duration.
+  static String arabicValidityDaysLabel(int days) {
+    final count = days < 0 ? 0 : days;
+    if (count == 0) return '0 يوم';
+    if (count == 1) return 'يوم واحد';
+    if (count == 2) return 'يومين';
+    if (count >= 3 && count <= 10) return '$count أيام';
+    return '$count يوماً';
+  }
+
   static List<Map<String, dynamic>> sortPackages(Iterable<dynamic> source) {
     final packages = source
         .whereType<Map>()

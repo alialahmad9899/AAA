@@ -95,7 +95,52 @@ void main() {
     expect(merged.last.message, 'sending');
   });
 
-  test('ChatMessageModel parses an API-confirmed message attachment resource', () {
+  test('ChatMessageModel parses an API-confirmed message attachment resource', () {  test('chat photo sharing unlocks only after a persisted partner reply', () {
+    ChatMessageModel message({
+      required int id,
+      required int senderId,
+      required bool isMe,
+    }) =>
+        ChatMessageModel(
+          id: id,
+          senderId: senderId,
+          message: 'message',
+          time: '2026-11-21T00:00:00Z',
+          isMe: isMe,
+          isSeen: false,
+        );
+
+    expect(
+      ChatMessageModel.hasPartnerReplied(
+        [message(id: 1, senderId: 42, isMe: true)],
+        partnerUserId: 18,
+      ),
+      isFalse,
+    );
+    expect(
+      ChatMessageModel.hasPartnerReplied(
+        [message(id: -1, senderId: 18, isMe: false)],
+        partnerUserId: 18,
+      ),
+      isFalse,
+    );
+    expect(
+      ChatMessageModel.hasPartnerReplied(
+        [message(id: 2, senderId: 18, isMe: false)],
+        partnerUserId: 18,
+      ),
+      isTrue,
+    );
+    expect(
+      ChatMessageModel.hasPartnerReplied(
+        [message(id: 3, senderId: 99, isMe: false)],
+        partnerUserId: 18,
+      ),
+      isFalse,
+    );
+  });
+
+
     final message = ChatMessageModel.fromJson({
       'id': 24,
       'sender_user_id': 42,

@@ -325,6 +325,18 @@ class ChatMessageModel {
   ) =>
       chronological.reversed.toList(growable: false);
 
+  /// A real, server-confirmed message from the other participant unlocks photos.
+  static bool hasPartnerReplied(
+    Iterable<ChatMessageModel> messages, {
+    required int partnerUserId,
+  }) {
+    if (partnerUserId <= 0) return false;
+    return messages.any((message) =>
+        message.id > 0 &&
+        message.senderId == partnerUserId &&
+        !message.isMe);
+  }
+
   /// Merge server updates into the locally loaded history without dropping
   /// older pages. Negative IDs are reserved for optimistic messages and remain
   /// at the end until the server confirms them with a real message ID.

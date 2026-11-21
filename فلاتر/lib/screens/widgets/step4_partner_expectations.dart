@@ -189,6 +189,25 @@ class Step4PartnerExpectations extends StatelessWidget {
 
   bool get _isAr => lang == 'ar';
 
+  /// Assign sequential numbers only to optional questions that are visible.
+  static Map<String, int> questionNumbers({
+    required bool hasReligion,
+    required bool hasCountry,
+    required bool hasGovernorate,
+  }) {
+    var next = 9;
+    final numbers = <String, int>{};
+    if (hasReligion) numbers['religion'] = next++;
+    if (hasCountry) numbers['country'] = next++;
+    if (hasGovernorate) numbers['governorate'] = next++;
+    numbers['career'] = next++;
+    numbers['children'] = next++;
+    numbers['smoking'] = next++;
+    numbers['drinking'] = next;
+    return numbers;
+  }
+
+
   Widget _validationOutline({required bool hasError, required Widget child}) {
     return Container(
       padding: const EdgeInsets.all(5),
@@ -434,6 +453,11 @@ class Step4PartnerExpectations extends StatelessWidget {
     final religionItems = makeItems(religions);
     final countryItems = makeItems(countries);
     final stateItems = makeItems(states);
+    final questionNumbers = Step4PartnerExpectations.questionNumbers(
+      hasReligion: religionItems.isNotEmpty,
+      hasCountry: countryItems.isNotEmpty,
+      hasGovernorate: stateItems.isNotEmpty,
+    );
 
     return Directionality(
       textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
@@ -894,7 +918,9 @@ class Step4PartnerExpectations extends StatelessWidget {
                 const SizedBox(height: 18),
 
                                 if (religionItems.isNotEmpty) ...[
-                  _buildSectionTitle(_isAr ? '9. هل تفضّل ديانة معيّنة للشريك؟' : 'Preferred Partner Religion'),
+                  _buildSectionTitle(_isAr
+                      ? '${questionNumbers['religion']}. هل تفضّل ديانة معيّنة للشريك؟'
+                      : '${questionNumbers['religion']}. Preferred Partner Religion'),
                   DropdownButtonFormField<String>(
                     key: ValueKey('partner-religion-$preferredReligionId'),
                     initialValue: religionItems.any((e) => e.value == preferredReligionId) ? preferredReligionId : null,
@@ -906,7 +932,9 @@ class Step4PartnerExpectations extends StatelessWidget {
                   const SizedBox(height: 16),
                 ],
                 if (countryItems.isNotEmpty) ...[
-                  _buildSectionTitle(_isAr ? '10. في أي بلد تفضّل أن يقيم شريك حياتك؟' : 'Preferred Partner Country'),
+                  _buildSectionTitle(_isAr
+                      ? '${questionNumbers['country']}. في أي بلد تفضّل أن يقيم شريك حياتك؟'
+                      : '${questionNumbers['country']}. Preferred Partner Country'),
                   DropdownButtonFormField<String>(
                     key: ValueKey('partner-country-$preferredCountryId'),
                     initialValue: countryItems.any((e) => e.value == preferredCountryId) ? preferredCountryId : null,
@@ -918,7 +946,9 @@ class Step4PartnerExpectations extends StatelessWidget {
                   const SizedBox(height: 16),
                 ],
                 if (stateItems.isNotEmpty) ...[
-                  _buildSectionTitle(_isAr ? '11. هل تفضّل محافظة معيّنة؟' : 'Preferred Partner Governorate'),
+                  _buildSectionTitle(_isAr
+                      ? '${questionNumbers['governorate']}. هل تفضّل محافظة معيّنة؟'
+                      : '${questionNumbers['governorate']}. Preferred Partner Governorate'),
                   DropdownButtonFormField<String>(
                     key: ValueKey('partner-state-$preferredStateId'),
                     initialValue: stateItems.any((e) => e.value == preferredStateId) ? preferredStateId : null,
@@ -929,10 +959,10 @@ class Step4PartnerExpectations extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                 ],
-// 9. مهنة الشريك
+// Preferred career
                 _buildSectionTitle(_isAr
-                    ? '12. ما المجال المهني الذي تفضّله في شريك حياتك؟ 💼'
-                    : '12. Preferred Career 💼'),
+                    ? '${questionNumbers['career']}. ما المجال المهني الذي تفضّله في شريك حياتك؟ 💼'
+                    : '${questionNumbers['career']}. Preferred Career 💼'),
                 TextFormField(
                   controller: professionController,
                   style: const TextStyle(
@@ -950,10 +980,10 @@ class Step4PartnerExpectations extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
-                // 7. قبول وجود أطفال
+                // Children acceptance preference
                 _buildSectionTitle(_isAr
-                    ? '13. هل يناسبك شريك لديه أطفال من زواج سابق؟ 👶 *'
-                    : '13. Accept Children? 👶 *'),
+                    ? '${questionNumbers['children']}. هل يناسبك شريك لديه أطفال من زواج سابق؟ 👶 *'
+                    : '${questionNumbers['children']}. Accept Children? 👶 *'),
                 _validationOutline(
                   hasError: showValidationErrors && childrenAcceptable.isEmpty,
                   child: Wrap(
@@ -980,9 +1010,11 @@ class Step4PartnerExpectations extends StatelessWidget {
                 ),
                 const SizedBox(height: 18),
 
-                // 8. موقف التدخين
+                // Smoking preference
                 _buildSectionTitle(
-                    _isAr ? '14. ما موقفك من التدخين لدى الشريك؟ 🚬 *' : '14. Accept Smoking? 🚬 *'),
+                    _isAr
+                        ? '${questionNumbers['smoking']}. ما موقفك من التدخين لدى الشريك؟ 🚬 *'
+                        : '${questionNumbers['smoking']}. Accept Smoking? 🚬 *'),
                 _validationOutline(
                   hasError: showValidationErrors && smokingAcceptable.isEmpty,
                   child: Wrap(
@@ -1009,10 +1041,10 @@ class Step4PartnerExpectations extends StatelessWidget {
                 ),
                 const SizedBox(height: 18),
 
-                // 9. موقف الكحول / المشروبات
+                // Alcohol preference
                 _buildSectionTitle(_isAr
-                    ? '15. ما موقفك من تناول الكحول لدى الشريك؟ 🍷 *'
-                    : '15. Accept Alcohol? 🍷 *'),
+                    ? '${questionNumbers['drinking']}. ما موقفك من تناول الكحول لدى الشريك؟ 🍷 *'
+                    : '${questionNumbers['drinking']}. Accept Alcohol? 🍷 *'),
                 _validationOutline(
                   hasError: showValidationErrors && drinkingAcceptable.isEmpty,
                   child: Wrap(

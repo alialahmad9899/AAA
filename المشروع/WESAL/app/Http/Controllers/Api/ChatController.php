@@ -339,13 +339,23 @@ class ChatController extends Controller
                 ], 403);
             }
 
+            // A photo is unlocked only after a real message from the other
+            // participant. Enforce this for every account type before upload.
+            $has_receiver_replied = Chat::where('chat_thread_id', $chat_thread_id)
+                ->where('sender_user_id', '!=', $sender_id)
+                ->exists();
+
+            if ($request->hasFile('attachment') && !$has_receiver_replied) {
+                return response()->json([
+                    'result' => false,
+                    'status' => 'image_requires_partner_reply',
+                    'message' => 'يمكنك إرفاق الصور بعد أن يرسل الطرف الآخر أول رد في المحادثة.'
+                ], 403);
+            }
+
             // 🟢 4. الفحص الثاني (شرط الـ 3 رسائل للشباب قبل رد الأنثى):
             if (!MemberUtility::is_female($sender_id)) {
-                $has_receiver_replied = Chat::where('chat_thread_id', $chat_thread_id)
-                    ->where('sender_user_id', '!=', $sender_id)
-                    ->exists();
-
-                // إذا لم تقم الأنثى بالرد بعد في هذه المحادثة
+                // إذا لم يقم الطرف الآخر بالرد بعد في هذه المحادثة
                 if (!$has_receiver_replied) {
                     $sent_count = Chat::where('chat_thread_id', $chat_thread_id)
                         ->where('sender_user_id', $sender_id)

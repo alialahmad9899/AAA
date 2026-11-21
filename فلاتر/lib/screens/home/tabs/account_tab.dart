@@ -2688,6 +2688,9 @@ class _SubscriptionsModalContentState
             final int validity = (pkg['validity'] is int)
                 ? pkg['validity']
                 : (int.tryParse(pkg['validity']?.toString() ?? '30') ?? 30);
+            final String validityLabel = widget.isArabic
+                ? PackageCatalogUtils.arabicValidityDaysLabel(validity)
+                : '$validity days';
 
             final bool isSelected = _selectedPackageId == id;
             final String badgeStyle =
@@ -2818,11 +2821,11 @@ class _SubscriptionsModalContentState
                               Text(
                                 durationLabel.isNotEmpty
                                     ? (widget.isArabic
-                                        ? '$durationLabel · الصلاحية الفعلية $validity يوم'
-                                        : '$durationLabel · Actual validity: $validity days')
+                                        ? '$durationLabel · الصلاحية الفعلية $validityLabel'
+                                        : '$durationLabel · Actual validity: $validityLabel')
                                     : (widget.isArabic
-                                        ? 'صلاحية $validity يوم من تاريخ التفعيل'
-                                        : 'Valid for $validity days'),
+                                        ? 'صلاحية $validityLabel من تاريخ التفعيل'
+                                        : 'Valid for $validityLabel'),
                                 style: const TextStyle(
                                     color: AppColors.textMuted,
                                     fontSize: 11,
