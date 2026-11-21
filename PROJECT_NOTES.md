@@ -2506,3 +2506,36 @@ ALTER TABLE `users`
 ### حدود التحقق
 - نجاح بناء APK في CI لم يكن مؤكداً عند تدوين هذه الملاحظة؛ لا تُعامل نتيجة التحليل والاختبارات على أنها اختبار Native Build مكتمل.
 - لا يوجد اختبار بصري على جهاز Android 15 فعلي ضمن هذه الدفعة، ولا تم نشر أي إصدار إلى المستخدمين أو إلى بيئة الإنتاج.
+
+
+## 2026-11-21 — استكمال إصلاح تجربة التسجيل والملف الشخصي والبحث وقص الصور
+
+### نطاق العمل والسبب الجذري
+- العمل على تطبيق Flutter ومسار API المطلوب للموبايل فقط؛ لم تُعدّل واجهة الموقع العام.
+- في البحث، كان التطبيق يثق بـ `name_en` حتى عندما تحمل القيمة اسماً عربياً احتياطياً. تم تمرير هذه القيمة عبر `MaritalStatusLocalizer` قبل عرضها، وتوسيع تطبيع المسافات حول الشرطة المائلة وإكمال أسماء الحالات الاجتماعية المزدوجة.
+- أضيفت مطابقة مقابلة للحالات الاجتماعية المزدوجة في `ProfileDropdownController::translateAttribute()` عند طلب اللغة الإنجليزية.
+- في التسجيل، كان التحقق من الصورة الإلزامية يعيد التنفيذ قبل استدعاء `Form.validate()`. أعيد ترتيب التحقق ليتم تقييم الحقول والاختيارات والصورة في محاولة واحدة، مع حماية mounted وإبقاء حد الصورة 10 MB.
+- تم تقليص رأس التسجيل والشعار والمسافات ومؤشرات الخطوات.
+- كانت عناصر اكتمال الملف تظهر وتفتح التبويب فقط. أضيفت مفاتيح تنقل للعناصر العشرة المستخدمة في حساب النسبة، وأصبح الضغط على «كمّل ملفك» أو على اسم عنصر ناقص يفتح التبويب المناسب ثم يمرر إلى عنصر التحكم نفسه.
+- أضيفت إعدادات مظهر شريط الحالة وشريط التنقل في نافذتي قص الصور لكل من التسجيل وتعديل الملف لتناسب شريط uCrop الداكن وواجهة Android edge-to-edge.
+- تأكدنا أن حوار تأكيد تسجيل الخروج واتجاه زر الرجوع الموحد بحسب اللغة وسهم «التالي» إلى اليسار بالعربية موجودة مسبقاً في `main`؛ لم نكرر تعديلها.
+
+### الملفات المعدّلة في الدفعة (11 ملفاً)
+- `.github/workflows/wesal-integration-validation.yml`
+- `المشروع/WESAL/app/Http/Controllers/Api/ProfileDropdownController.php`
+- `فلاتر/lib/screens/edit_profile_screen.dart`
+- `فلاتر/lib/screens/signup_screen.dart`
+- `فلاتر/lib/screens/edit_profile/widgets/step1_basic_physical_tab.dart`
+- `فلاتر/lib/screens/edit_profile/widgets/step2_residency_spiritual_tab.dart`
+- `فلاتر/lib/screens/edit_profile/widgets/step3_lifestyle_hobbies_tab.dart`
+- `فلاتر/lib/screens/home/tabs/search_tab.dart`
+- `فلاتر/lib/screens/widgets/step1_basic_info.dart`
+- `فلاتر/lib/utils/marital_status_localizer.dart`
+- `فلاتر/test/marital_status_localizer_test.dart`
+
+### Git وCI والحزمة
+- Commits المصدر المتتابعة: `b079d6796da5519cc9ba56480db732240255f131`, `dc2c103b561781f9d837cdcc87bcbc9361bbc1ad`, `f0956e672713a88abcb2f18ec56f0b546b070dff`, `8a41e1991fe4ef0f15f216f18771e77fdabbc609`.
+- GitHub Actions run `44901120881`: نجح `dart analyze --fatal-infos` ونجحت خطوة اختبارات Flutter، وفحص PHP وحزمة الجلسة؛ عند تدوين هذه الملاحظة كانت خطوة بناء Android Debug APK لا تزال `in_progress` ولم أسجلها نجاحاً.
+- GitHub Actions run `44901120947`: نجح اختبار عقد توجيه الإشعارات؛ خطوة بناء APK مستقلة كانت لا تزال `in_progress`.
+- الحزمة `WESAL_REGISTRATION_PROFILE_UX_FIXES.zip`: 11 ملفاً فقط بالمسارات الأصلية، دون `PROJECT_NOTES.md`. اجتازت `unzip -t`، وتطابقت Git blob SHA لجميع ملفاتها مع `main` عند `8a41e1991fe4ef0f15f216f18771e77fdabbc609`. SHA256: `d2e00e9042ca24338974e3586e75c09895479c22d881253f8ac0baa88b9c7c9d`.
+- لا يوجد اختبار بصري على جهاز Android 15 فعلي في هذه الجلسة، ولم يتم نشر تعديل Laravel إلى Hostinger أو إصدار التطبيق إلى المستخدمين. لا يُعد نجاح CI إثباتاً لعمل البيئة الحية.
