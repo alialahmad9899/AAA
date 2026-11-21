@@ -12,7 +12,7 @@ void main() {
       expect(packages.map((item) => item['id']).toList(), [2, 4, 8]);
     });
 
-    test('uses package id as fallback when order is missing', () {    test('formats Arabic package validity with correct day grammar', () {
+    test('formats Arabic package validity with correct day grammar', () {
       expect(PackageCatalogUtils.arabicValidityDaysLabel(1), 'يوم واحد');
       expect(PackageCatalogUtils.arabicValidityDaysLabel(2), 'يومين');
       expect(PackageCatalogUtils.arabicValidityDaysLabel(7), '7 أيام');
@@ -20,7 +20,7 @@ void main() {
       expect(PackageCatalogUtils.arabicValidityDaysLabel(0), '0 يوم');
     });
 
-
+    test('uses package id as fallback when order is missing', () {
       final packages = PackageCatalogUtils.sortPackages([
         {'id': 7},
         {'id': 3},

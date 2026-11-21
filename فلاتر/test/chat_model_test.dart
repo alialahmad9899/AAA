@@ -95,7 +95,7 @@ void main() {
     expect(merged.last.message, 'sending');
   });
 
-  test('ChatMessageModel parses an API-confirmed message attachment resource', () {  test('chat photo sharing unlocks only after a persisted partner reply', () {
+  test('chat photo sharing unlocks only after a persisted partner reply', () {
     ChatMessageModel message({
       required int id,
       required int senderId,
@@ -140,7 +140,7 @@ void main() {
     );
   });
 
-
+  test('ChatMessageModel parses an API-confirmed message attachment resource', () {
     final message = ChatMessageModel.fromJson({
       'id': 24,
       'sender_user_id': 42,
