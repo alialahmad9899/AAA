@@ -47,10 +47,10 @@ void main() {
     expect(signup, contains('height: 54,'));
     expect(signup, contains('_profilePhotoValidationMessage'));
     expect(signup, contains('Complete the fields outlined in red, then continue.'));
-    expect(signupBasicInfo, contains('_validationOutline('));
-    expect(signupPersonalDetails, contains('_validationOutline('));
-    expect(signupResidency, contains('_validationOutline('));
-    expect(signupExpectations, contains('_validationOutline('));
+    expect(signupBasicInfo, contains('showValidationErrors'));
+    expect(signupPersonalDetails, contains('showValidationErrors'));
+    expect(signupResidency, contains('showError: widget.showValidationErrors'));
+    expect(signupExpectations, contains('showValidationErrors'));
   });
 
   test('signup and edit-profile back buttons share RTL-aware placement and glyph direction', () {
