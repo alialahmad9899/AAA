@@ -1342,6 +1342,10 @@ class ProfileController extends Controller
             ], 404);
         }
 
+        // Return the real database ID for all profile actions after opening by
+        // a public membership code.
+        $data['user_id'] = (int) $user->id;
+
         $languageResources = $this->member_language_resources($targetMember);
         $member_known_languages = $languageResources['known_languages'];
         $member_mother_tongue = $languageResources['mother_tongue'];
@@ -1380,7 +1384,7 @@ class ProfileController extends Controller
                 && $profile_pic_privacy == 'only_me'
                 && ($photo_view_request == null || (int) $photo_view_request->status === 0);
 
-            $data['present_address'] = Address::where('user_id', $id)->where('type', 'present')->first() ? new AddressResource(Address::where('user_id', $id)->where('type', 'present')->first()) : null;
+            $data['present_address'] = Address::where('user_id', $user->id)->where('type', 'present')->first() ? new AddressResource(Address::where('user_id', $user->id)->where('type', 'present')->first()) : null;
             // Contact information is private and is available only through the authenticated owner profile.
             $data['education'] = $user->education ? EducationResource::collection($user->education) : null;
             $data['career'] = $user->career ? CareerResource::collection($user->career) : null;
@@ -1399,7 +1403,7 @@ class ProfileController extends Controller
                 $data['lifestyles'] = null;
             }
             $data['astrologies'] = $user->astrologies ? new AstronomicInformation($user->astrologies) : null;
-            $data['permanent_address'] = Address::where('user_id', $id)->where('type', 'permanent')->first() ? new AddressResource(Address::where('user_id', $id)->where('type', 'permanent')->first()) : null;
+            $data['permanent_address'] = Address::where('user_id', $user->id)->where('type', 'permanent')->first() ? new AddressResource(Address::where('user_id', $user->id)->where('type', 'permanent')->first()) : null;
             $data['partner_expectation'] = $user->partner_expectations ? new PartnerExpectationResource($user->partner_expectations) : null;
 
             $gallery_images = GalleryImage::where('user_id', $user->id)->get();

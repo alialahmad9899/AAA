@@ -14,6 +14,7 @@ import 'screens/brand_intro_screen.dart';
 import 'screens/main_home_screen.dart';
 import 'screens/my_interests_screen.dart';
 import 'screens/member_profile_screen.dart';
+import 'utils/member_profile_link.dart';
 
 // 🟢 خدمة الإشعارات المركزية مع مفتاح الملاحة العام
 import 'services/notification_service.dart';
@@ -70,31 +71,16 @@ void _setupDeepLinks() async {
 void _handleDeepLinkUri(Uri uri) {
   debugPrint('🔗 [Deep Link Received]: $uri');
 
-  // التحقق من أن الرابط يستهدف صفحة العضو: https://wesal.app/profile?id=123
-  final bool isProfileLink = uri.pathSegments.any(
-        (segment) => segment.toLowerCase() == 'profile') ||
-      (uri.scheme.toLowerCase() == 'wesal' &&
-          uri.host.toLowerCase() == 'profile');
+  final int? memberReference = MemberProfileLink.parseProfileUri(uri);
+  if (memberReference == null) return;
 
-  if (isProfileLink) {
-    final String? idParam = uri.queryParameters['id'] ??
-        uri.queryParameters['member_id'] ??
-        uri.queryParameters['member_code'] ??
-        uri.queryParameters['code'];
-    if (idParam != null) {
-      final int? userId = int.tryParse(idParam);
-      if (userId != null && userId > 0) {
-        // تأجيل التوجيه لحظات حتى يكتمل بناء الهيكل البرمجي الملاحة
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          FCMService.navigatorKey.currentState?.push(
-            MaterialPageRoute(
-              builder: (context) => MemberProfileScreen(userId: userId),
-            ),
-          );
-        });
-      }
-    }
-  }
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    FCMService.navigatorKey.currentState?.push(
+      MaterialPageRoute(
+        builder: (context) => MemberProfileScreen(userId: memberReference),
+      ),
+    );
+  });
 }
 
 /// الكلاس الرئيسي للتطبيق المسؤول عن ضبط الثيم العام والمسار الابتدائي

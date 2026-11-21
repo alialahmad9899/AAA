@@ -66,9 +66,12 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
     if (_profile == null) return;
 
     final String memberName = _profile!.basicInfo.fullName;
+    final String memberReference = _profile!.basicInfo.code.trim().isNotEmpty
+        ? _profile!.basicInfo.code.trim()
+        : widget.userId.toString();
     final String profileUrl = Platform.isAndroid
-        ? MemberProfileLink.androidIntentUrl(widget.userId)
-        : MemberProfileLink.webUrl(widget.userId);
+        ? MemberProfileLink.androidIntentUrl(memberReference)
+        : MemberProfileLink.webUrl(memberReference);
 
     final String shareMessage = _isArabic
         ? 'شاهد ملف العضو ($memberName) على تطبيق وصال :\n$profileUrl'
@@ -220,7 +223,9 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
     });
 
     try {
-      final result = await ApiService.expressInterest(widget.userId);
+      final result = await ApiService.expressInterest(
+        _profile?.userId ?? widget.userId,
+      );
 
       if (!mounted) return;
 
@@ -624,7 +629,10 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
 
   Future<void> _submitReport(String reason) async {
     try {
-      final result = await ApiService.reportMember(widget.userId, reason);
+      final result = await ApiService.reportMember(
+        _profile?.userId ?? widget.userId,
+        reason,
+      );
 
       if (!mounted) return;
 

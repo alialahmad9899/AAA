@@ -20,6 +20,9 @@ class MemberChatProfileProtectionContractTest extends TestCase
 
         $this->assertStringContainsString("(clone \$profileQuery)->where('id', \$id)->first()", $controller);
         $this->assertStringContainsString("\$profileQuery->where('code', (string) \$id)->first()", $controller);
+
+        $this->assertStringContainsString("\$data['user_id'] = (int) \$user->id;", $controller);
+        $this->assertStringContainsString("Address::where('user_id', \$user->id)", $controller);
     }
 
     public function test_chat_reports_store_verified_server_side_evidence_for_admin_review(): void
