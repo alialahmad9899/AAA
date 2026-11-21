@@ -1785,8 +1785,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                     const SizedBox(height: 8),
                     Text(
                         _isArabic
-                            ? 'سيتم حظر العضو وحذف المحادثة فوراً ولن تظهر في قائمتك مجدداً.'
-                            : 'Member will be blocked and chat removed permanently.',
+                            ? 'سيتم منع تبادل الرسائل مع هذا العضو مع الاحتفاظ بسجل المحادثة والرسائل.'
+                            : 'Messaging will be blocked while the conversation history is preserved.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                             color: AppColors.textMuted,
@@ -1845,8 +1845,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       if (!mounted) return;
 
       if (result['success'] == true) {
-        await ApiService.deleteChatThread(_activeThreadId);
-        await ChatLocalStore.deleteThread(_currentUserId, _activeThreadId);
         if (!mounted) return;
         Navigator.pop(context, true);
 
@@ -1854,8 +1852,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           context: context,
           type: NotificationType.warning,
           isArabic: _isArabic,
-          messageAr: 'تم حظر المستخدم وحذف المحادثة بنجاح',
-          messageEn: 'User blocked and chat deleted successfully',
+          messageAr: 'تم حظر العضو مع الاحتفاظ بسجل المحادثة',
+          messageEn: 'Member blocked; conversation history preserved',
         );
       } else {
         AppSnackBar.show(
@@ -1881,22 +1879,21 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   Future<void> _executeReport(String reason) async {
     _dismissKeyboard();
     try {
-      final result =
-          await ApiService.reportMember(widget.thread.userId, reason);
+      final result = await ApiService.reportMember(
+        widget.thread.userId,
+        reason,
+        chatThreadId: _activeThreadId,
+      );
       if (!mounted) return;
 
       if (result['success'] == true) {
-        await ApiService.deleteChatThread(_activeThreadId);
-        await ChatLocalStore.deleteThread(_currentUserId, _activeThreadId);
         if (!mounted) return;
-        Navigator.pop(context, true);
-
         AppSnackBar.show(
           context: context,
           type: NotificationType.success,
           isArabic: _isArabic,
-          messageAr: 'تم إرسال البلاغ وحذف المحادثة بنجاح',
-          messageEn: 'Report submitted and chat deleted successfully',
+          messageAr: 'تم إرسال البلاغ مع حفظ آخر خمس رسائل للأدمن',
+          messageEn: 'Report submitted with the latest five messages saved for review',
         );
       } else {
         AppSnackBar.show(
