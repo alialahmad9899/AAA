@@ -195,6 +195,11 @@ jobs:
       - name: Run Flutter regression tests including chat timestamps and models
         working-directory: فلاتر
         run: flutter test
+      - name: Set up JDK 17 for Android Gradle
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
       - name: Build Android debug APK and validate native resources
         working-directory: فلاتر
         run: flutter build apk --debug
