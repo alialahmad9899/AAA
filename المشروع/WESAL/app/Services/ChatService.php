@@ -68,10 +68,23 @@ class ChatService
                 0
             );
             // Mute is stored against the partner, not the thread ID.
-            $isMuted = ChatMute::query()
-                ->where('muted_by', $receiverId)
-                ->where('muted_user_id', $senderUserId)
-                ->exists();
+            try {
+                $isMuted = ChatMute::query()
+                    ->where('muted_by', $receiverId)
+                    ->where('muted_user_id', $senderUserId)
+                    ->exists();
+            } catch (\Throwable $exception) {
+                // Keep message delivery operational until the migration exists.
+                \Log::warning('Chat mute table is unavailable; using legacy cache fallback.', [
+                    'muted_by' => $receiverId,
+                    'muted_user_id' => $senderUserId,
+                    'message' => $exception->getMessage(),
+                ]);
+                $isMuted = (bool) Cache::get(
+                    'wesal:chat-muted:' . $receiverId . ':' . $thread->id,
+                    false
+                );
+            }
 
             // Blocking either direction suppresses chat push notifications.
             $isBlocked = IgnoredUser::query()

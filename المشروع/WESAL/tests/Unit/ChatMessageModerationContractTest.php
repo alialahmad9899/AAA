@@ -47,7 +47,9 @@ CODE, $controller);
 CODE, $controller);
         $this->assertStringContainsString("'reported_message_id'", $controller);
         $this->assertStringContainsString("'is_reported_item' => true", $controller);
-        $this->assertStringContainsString("'attachment_refs' => $attachmentEvidence['attachment_refs']", $controller);
+        $this->assertStringContainsString(<<<'CODE'
+'attachment_refs' => $attachmentEvidence['attachment_refs']
+CODE, $controller);
     }
 
     public function test_selected_message_reports_append_evidence_without_trusting_client_content(): void
@@ -56,7 +58,9 @@ CODE, $controller);
 
         $this->assertStringContainsString('$reportedUser->chat_evidence = array_values([', $controller);
         $this->assertStringContainsString('$reportedMessage->attachment', $controller);
-        $this->assertStringContainsString("'attachment_refs' => $attachmentEvidence['attachment_refs']", $controller);
+        $this->assertStringContainsString(<<<'CODE'
+'attachment_refs' => $attachmentEvidence['attachment_refs']
+CODE, $controller);
         $this->assertStringNotContainsString(<<<'CODE'
 $request->input('message')
 CODE, $controller);

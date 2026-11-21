@@ -16,6 +16,7 @@ use App\Utility\MemberUtility; // فحص سياسات المحادثة والا�
 use App\Utility\SubscriptionUtility;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use Throwable;
 
 class ChatController extends Controller
@@ -142,9 +143,10 @@ class ChatController extends Controller
                     'chats' => [],
                     'messages' => []
                 ],
-                'muted_by_me' => ChatMute::where('muted_by', $auth_id)
-                    ->where('muted_user_id', (int) $id)
-                    ->exists(),
+                'muted_by_me' => $this->isChatMutedByMember(
+                    (int) $auth_id,
+                    (int) $id
+                ),
                 'chat_rules' => [
                     'is_unlocked' => $is_female,
                     'sent_messages_count' => 0,
@@ -187,9 +189,11 @@ class ChatController extends Controller
         $partnerUserId = (int) ($chat_thread->sender_user_id == $auth_id
             ? $chat_thread->receiver_user_id
             : $chat_thread->sender_user_id);
-        $mutedByMe = ChatMute::where('muted_by', $auth_id)
-            ->where('muted_user_id', $partnerUserId)
-            ->exists();
+        $mutedByMe = $this->isChatMutedByMember(
+            (int) $auth_id,
+            $partnerUserId,
+            (int) $chat_thread->id
+        );
 
         return (new ChatResource($chat_thread))->additional([
             'result' => true,
@@ -452,6 +456,32 @@ class ChatController extends Controller
                 'result' => false,
                 'message' => 'حدث خطأ في السيرفر: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Read the durable mute preference. The cache fallback keeps old releases
+     * working until the chat_mutes migration has been applied on the server.
+     */
+    private function isChatMutedByMember(
+        int $mutedBy,
+        int $partnerUserId,
+        ?int $threadId = null
+    ): bool {
+        try {
+            return ChatMute::where('muted_by', $mutedBy)
+                ->where('muted_user_id', $partnerUserId)
+                ->exists();
+        } catch (Throwable $exception) {
+            Log::warning('Chat mute table is unavailable; using legacy cache fallback.', [
+                'muted_by' => $mutedBy,
+                'muted_user_id' => $partnerUserId,
+                'message' => $exception->getMessage(),
+            ]);
+
+            return $threadId !== null
+                ? (bool) Cache::get('wesal:chat-muted:' . $mutedBy . ':' . $threadId, false)
+                : false;
         }
     }
 

@@ -3761,12 +3761,26 @@ class ApiService {
     }
   }
 
-  static Future<void> syncChatMuteSettings() async {
+  static Future<void> syncChatMuteSettings({int? partnerUserId}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final accountId = prefs.getInt('user_id') ?? 0;
       if (accountId <= 0) return;
       final settings = await ChatLocalStore.getMuteSettings(accountId);
+
+      if (partnerUserId != null) {
+        // No local row means the server is authoritative; do not send a
+        // default false and accidentally unmute an existing server preference.
+        final localMuted = settings[partnerUserId];
+        if (localMuted != null) {
+          await setChatMuted(
+            partnerUserId: partnerUserId,
+            muted: localMuted,
+          );
+        }
+        return;
+      }
+
       for (final entry in settings.entries) {
         await setChatMuted(partnerUserId: entry.key, muted: entry.value);
       }
@@ -3938,7 +3952,7 @@ class ApiService {
       final bool success = isSuccessfulResult(response);
       return {
         'success': success,
-        'message': response['message']?.toString() ??
+        'message': response?['message']?.toString() ??
             (success ? 'Message deleted' : 'Could not delete message'),
       };
     } catch (error) {

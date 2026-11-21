@@ -33,6 +33,8 @@ void main() {
   test('API sync and chat screen mute use the partner identity, not the thread ID', () {
     expect(apiService, contains("'partner_user_id': partnerUserId"));
     expect(apiService, contains('setChatMuted(partnerUserId: entry.key'));
+    expect(apiService, contains('syncChatMuteSettings({int? partnerUserId})'));
+    expect(chatScreen, contains('syncChatMuteSettings(partnerUserId: widget.thread.userId)'));
     expect(chatScreen, contains('ChatLocalStore.isMuted(\n          _currentUserId,\n          widget.thread.userId'));
     expect(chatScreen, contains('ChatLocalStore.setMuted(\n        _currentUserId,\n        widget.thread.userId'));
     expect(chatScreen, contains('partnerUserId: widget.thread.userId'));
@@ -45,7 +47,7 @@ void main() {
     expect(notificationController, contains(r"'muted_user_id' => $partnerUserId"));
     expect(chatService, contains('ChatMute::query()'));
     expect(chatService, contains('IgnoredUser::query()'));
-    expect(chatService, contains('|| $isMuted || $isBlocked'));
+    expect(chatService, contains(r'|| $isMuted || $isBlocked'));
     expect(chatController, contains("'muted_by_me'"));
   });
 

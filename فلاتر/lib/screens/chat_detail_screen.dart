@@ -243,7 +243,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         threadId: _activeThreadId,
         appIsActive: true,
       ));
-    await ApiService.syncChatMuteSettings();
+    await ApiService.syncChatMuteSettings(partnerUserId: widget.thread.userId);
     if (!mounted) return;
     _startMessageRefreshTimer();
     await _loadMessages(
@@ -905,6 +905,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       final hiddenMessageIds = _currentUserId > 0
           ? await ChatLocalStore.getHiddenMessageIds(_currentUserId, requestThreadId)
           : <int>{};
+      if (!mounted || requestThreadId != _activeThreadId) return;
       final oldMessages = result['messages'] is List
           ? (result['messages'] as List)
               .whereType<ChatMessageModel>()
