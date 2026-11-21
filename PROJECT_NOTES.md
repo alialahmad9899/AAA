@@ -2557,3 +2557,11 @@ ALTER TABLE `users`
 - تم تصحيح بنية اختبار PHP الخاص بشرط أول رد، وأصبح PHP lint واختبارات Laravel يمران في CI على commit السابق لهذا الترتيب الأخير.
 - أظهرت مجموعة Flutter أن اختباريّ نموذج المحادثة وصياغة مدة الباقة كانا مدرجين داخل دوال اختبار سابقة؛ أُعيد إنشاء الملفين انطلاقاً من نسختهما الأصلية ووضع الاختبارين على مستوى المجموعة، مع إبقاء الاختبارات الموجودة دون نقل أو حذف.
 - اختبار واجهة استبيان VIP مرّ في المحاولة السابقة، وتحليل Dart مرّ أيضاً. إعادة تشغيل مجموعة Flutter كاملة وبناء Android مطلوبة لتثبيت النتيجة النهائية للنسخة الحالية.
+
+### Final CI status for the 2026-11-21 VIP/chat/registration repair
+- Source commit with the complete Flutter/PHP repair and corrected test placement: `36f41e482dc22c52323cfc506faf2cd5532f7e4b`.
+- Follow-up documentation commit: `318b865ef296bf0310ca0ce0132ab6955087f8fc`.
+- CI run `44946611477`: backend PHP validation completed successfully; Flutter dependency resolution and Dart analysis succeeded; the full Flutter regression-test step completed successfully; the session ZIP packaging step succeeded.
+- At the time of this note, the Android debug APK/native-resource build step was still reported as `in_progress`; do not interpret this run as a completed Android build.
+- Generated repair archive from CI artifact `14724250570`: 13 files only, original repository paths preserved, no `PROJECT_NOTES.md` and no previous-session repair files. SHA-256 of the extracted repair ZIP: `517f86fcd4a9f7750c0c5dac3bbf254a8b3508f3e2fc8dab6b17e90d1d4ee562`.
+- No public-site deployment, hosting deployment, or production APK release was performed.
