@@ -45,6 +45,19 @@ class _EditProfileScreenState extends State<EditProfileScreen>
   final _firstNameCtrl = TextEditingController();
   final _lastNameCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
+
+  final Map<String, GlobalKey> _missingProfileNavigationKeys = {
+    'first_name': GlobalKey(debugLabel: 'missing-profile-first-name'),
+    'last_name': GlobalKey(debugLabel: 'missing-profile-last-name'),
+    'height': GlobalKey(debugLabel: 'missing-profile-height'),
+    'weight': GlobalKey(debugLabel: 'missing-profile-weight'),
+    'birth_country': GlobalKey(debugLabel: 'missing-profile-birth-country'),
+    'residence_country': GlobalKey(debugLabel: 'missing-profile-residence-country'),
+    'religion': GlobalKey(debugLabel: 'missing-profile-religion'),
+    'introduction': GlobalKey(debugLabel: 'missing-profile-introduction'),
+    'hobby': GlobalKey(debugLabel: 'missing-profile-hobby'),
+    'sun_sign': GlobalKey(debugLabel: 'missing-profile-sun-sign'),
+  };
   final _dobCtrl = TextEditingController();
   final _childrenCtrl = TextEditingController();
   final _introCtrl = TextEditingController();
@@ -971,44 +984,44 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     final missing = <_MissingProfileField>[];
     if (_firstNameCtrl.text.trim().isEmpty) {
       missing.add(const _MissingProfileField(
-        labelAr: 'الاسم الأول', labelEn: 'First name', tabIndex: 0));
+        labelAr: 'الاسم الأول', labelEn: 'First name', tabIndex: 0, targetKey: 'first_name'));
     }
     if (_lastNameCtrl.text.trim().isEmpty) {
       missing.add(const _MissingProfileField(
-        labelAr: 'الكنية', labelEn: 'Last name', tabIndex: 0));
+        labelAr: 'الكنية', labelEn: 'Last name', tabIndex: 0, targetKey: 'last_name'));
     }
     if (_selectedHeight == null || _selectedHeight!.isEmpty) {
       missing.add(const _MissingProfileField(
-        labelAr: 'الطول', labelEn: 'Height', tabIndex: 0));
+        labelAr: 'الطول', labelEn: 'Height', tabIndex: 0, targetKey: 'height'));
     }
     if (_selectedWeight == null || _selectedWeight!.isEmpty) {
       missing.add(const _MissingProfileField(
-        labelAr: 'الوزن', labelEn: 'Weight', tabIndex: 0));
+        labelAr: 'الوزن', labelEn: 'Weight', tabIndex: 0, targetKey: 'weight'));
     }
     if (_selectedBirthCountryId == null || _selectedBirthCountryId!.isEmpty) {
       missing.add(const _MissingProfileField(
-        labelAr: 'بلد الميلاد', labelEn: 'Birth country', tabIndex: 1));
+        labelAr: 'بلد الميلاد', labelEn: 'Birth country', tabIndex: 1, targetKey: 'birth_country'));
     }
     if (_selectedResidencyCountryId == null ||
         _selectedResidencyCountryId!.isEmpty) {
       missing.add(const _MissingProfileField(
-        labelAr: 'بلد الإقامة', labelEn: 'Residence country', tabIndex: 1));
+        labelAr: 'بلد الإقامة', labelEn: 'Residence country', tabIndex: 1, targetKey: 'residence_country'));
     }
     if (_selectedReligionId == null || _selectedReligionId!.isEmpty) {
       missing.add(const _MissingProfileField(
-        labelAr: 'الديانة', labelEn: 'Religion', tabIndex: 1));
+        labelAr: 'الديانة', labelEn: 'Religion', tabIndex: 1, targetKey: 'religion'));
     }
     if (_introCtrl.text.trim().isEmpty) {
       missing.add(const _MissingProfileField(
-        labelAr: 'نبذة عنك', labelEn: 'About you', tabIndex: 0));
+        labelAr: 'نبذة عنك', labelEn: 'About you', tabIndex: 0, targetKey: 'introduction'));
     }
     if (_selectedHobby == null || _selectedHobby!.isEmpty) {
       missing.add(const _MissingProfileField(
-        labelAr: 'الهواية', labelEn: 'Hobby', tabIndex: 2));
+        labelAr: 'الهواية', labelEn: 'Hobby', tabIndex: 2, targetKey: 'hobby'));
     }
     if (_selectedSunSign == null || _selectedSunSign!.isEmpty) {
       missing.add(const _MissingProfileField(
-        labelAr: 'البرج', labelEn: 'Zodiac sign', tabIndex: 2));
+        labelAr: 'البرج', labelEn: 'Zodiac sign', tabIndex: 2, targetKey: 'sun_sign'));
     }
     return missing;
   }
@@ -1017,8 +1030,30 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     return (1 - (_missingProfileFields().length / 10)).clamp(0.0, 1.0).toDouble();
   }
 
-  void _openMissingProfileField(_MissingProfileField field) {
-    if (mounted) _tabController.animateTo(field.tabIndex);
+  Future<void> _openMissingProfileField(_MissingProfileField field) async {
+    if (!mounted) return;
+
+    if (_tabController.index != field.tabIndex) {
+      _tabController.animateTo(
+        field.tabIndex,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeInOut,
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 360));
+    }
+
+    if (!mounted) return;
+    await WidgetsBinding.instance.endOfFrame;
+    final targetContext =
+        _missingProfileNavigationKeys[field.targetKey]?.currentContext;
+    if (targetContext == null) return;
+
+    await Scrollable.ensureVisible(
+      targetContext,
+      alignment: 0.14,
+      duration: const Duration(milliseconds: 380),
+      curve: Curves.easeInOutCubic,
+    );
   }
 
   void _goToFirstMissingProfileField() {
@@ -1614,6 +1649,9 @@ class _EditProfileScreenState extends State<EditProfileScreen>
             toolbarTitle:
                 _isArabic ? 'اقتصاص الصورة الشخصية' : 'Crop Profile Photo',
             toolbarColor: AppColors.primaryTeal,
+            // Keep system-bar icons legible over the dark crop toolbar.
+            statusBarLight: false,
+            navBarLight: false,
             toolbarWidgetColor: Colors.white,
             activeControlsWidgetColor: AppColors.primaryTeal,
             initAspectRatio: CropAspectRatioPreset.original,
@@ -2269,6 +2307,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                             children: [
                               Step1BasicPhysicalTab(
                                 isAr: _isArabic,
+                                navigationKeys: _missingProfileNavigationKeys,
                                 firstNameCtrl: _firstNameCtrl,
                                 lastNameCtrl: _lastNameCtrl,
                                 phoneCtrl: _phoneCtrl,
@@ -2476,6 +2515,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                               ),
                               Step2ResidencySpiritualTab(
                                 isAr: _isArabic,
+                                navigationKeys: _missingProfileNavigationKeys,
                                 selectedBirthCountryId: _selectedBirthCountryId,
                                 selectedResidencyCountryId:
                                     _selectedResidencyCountryId,
@@ -2598,6 +2638,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                               ),
                               Step3LifestyleHobbiesTab(
                                 isAr: _isArabic,
+                                navigationKeys: _missingProfileNavigationKeys,
                                 selectedSunSign: _selectedSunSign,
                                 selectedLivingWith: _selectedLivingWith,
                                 selectedSmoke: _selectedSmoke,
@@ -2716,11 +2757,13 @@ class _MissingProfileField {
   final String labelAr;
   final String labelEn;
   final int tabIndex;
+  final String targetKey;
 
   const _MissingProfileField({
     required this.labelAr,
     required this.labelEn,
     required this.tabIndex,
+    required this.targetKey,
   });
 }
 

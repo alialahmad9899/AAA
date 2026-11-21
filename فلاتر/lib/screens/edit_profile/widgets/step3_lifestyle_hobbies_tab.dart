@@ -50,6 +50,8 @@ class Step3LifestyleHobbiesTab extends StatelessWidget {
   final ValueChanged<String> onSelectAffection;
   final ValueChanged<String> onSelectHumor;
 
+  final Map<String, GlobalKey> navigationKeys;
+
   const Step3LifestyleHobbiesTab({
     super.key,
     required this.isAr,
@@ -90,6 +92,7 @@ class Step3LifestyleHobbiesTab extends StatelessWidget {
     required this.onSelectDressStyle,
     required this.onSelectAffection,
     required this.onSelectHumor,
+    required this.navigationKeys,
   });
 
   /// 🟢 خوارزمية ذكية لمطابقة القيمة المختارة مع زر الاختيار بصرف النظر عن لغة العرض
@@ -238,12 +241,15 @@ class Step3LifestyleHobbiesTab extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildChoiceChips(
-              title: isAr ? 'البرج الشمسي ♈' : 'Zodiac Sign ♈',
+            KeyedSubtree(
+              key: navigationKeys['sun_sign'],
+              child: _buildChoiceChips(
+                title: isAr ? 'البرج الشمسي ♈' : 'Zodiac Sign ♈',
               icon: Icons.bedtime_rounded,
               options: sunSignsKeys,
-              selectedValue: selectedSunSign,
-              onSelected: onSelectSunSign,
+                selectedValue: selectedSunSign,
+                onSelected: onSelectSunSign,
+              ),
             ),
             _buildChoiceChips(
               title: isAr ? 'مع من تتشارك سكنك حالياً؟ 🏡' : 'Living With 🏡',
@@ -276,12 +282,15 @@ class Step3LifestyleHobbiesTab extends StatelessWidget {
                 value == (isAr ? 'لا' : 'No') ? 'no' : 'yes',
               ),
             ),
-            _buildChoiceChips(
-              title: isAr ? 'كيف تحب قضاء وقت فراغك؟ 🎨' : 'Hobbies 🎨',
+            KeyedSubtree(
+              key: navigationKeys['hobby'],
+              child: _buildChoiceChips(
+                title: isAr ? 'كيف تحب قضاء وقت فراغك؟ 🎨' : 'Hobbies 🎨',
               icon: Icons.favorite_rounded,
               options: hobbiesOptions,
-              selectedValue: selectedHobby,
-              onSelected: onSelectHobby,
+                selectedValue: selectedHobby,
+                onSelected: onSelectHobby,
+              ),
             ),
             _buildChoiceChips(
               title: isAr ? 'ما هو مجال اهتماماتك وشغفك؟ 💡' : 'Interests 💡',

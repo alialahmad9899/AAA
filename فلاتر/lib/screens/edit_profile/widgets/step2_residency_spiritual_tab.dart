@@ -34,6 +34,8 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
   final String Function(dynamic data, bool isAr) getLocalizedCityName;
   final String Function(dynamic country) getCountryFlagUrl;
 
+  final Map<String, GlobalKey> navigationKeys;
+
   const Step2ResidencySpiritualTab({
     super.key,
     required this.isAr,
@@ -59,6 +61,7 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
     required this.onImmigrationStatusChanged,
     required this.getLocalizedCityName,
     required this.getCountryFlagUrl,
+    required this.navigationKeys,
   });
 
   Widget _buildSectionHeader(String title, IconData icon) {
@@ -343,6 +346,7 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
                 isAr ? 'بلد المنشأ والولادة 🌍' : 'Place of Birth 🌍',
                 Icons.public_rounded),
             InkWell(
+              key: navigationKeys['birth_country'],
               onTap: onSelectBirthCountry,
               borderRadius: BorderRadius.circular(16),
               child: Container(
@@ -383,6 +387,7 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
                 isAr ? 'مقر الإقامة والوضع الحالي 🏠' : 'Current Residence 🏠',
                 Icons.home_work_rounded),
             InkWell(
+              key: navigationKeys['residence_country'],
               onTap: onSelectResidencyCountry,
               borderRadius: BorderRadius.circular(16),
               child: Container(
@@ -519,11 +524,14 @@ class Step2ResidencySpiritualTab extends StatelessWidget {
             _buildSectionHeader(
                 isAr ? 'الخلفية الدينية والاجتماعية ✨' : 'Spiritual & Social ✨',
                 Icons.auto_awesome_rounded),
-            _buildSheetPickerTile(
-              label: isAr ? 'الديانة *' : 'Religion *',
-              displayValue: currentReligionName,
-              icon: Icons.stars_rounded,
-              onTap: onSelectReligion,
+            KeyedSubtree(
+              key: navigationKeys['religion'],
+              child: _buildSheetPickerTile(
+                label: isAr ? 'الديانة *' : 'Religion *',
+                displayValue: currentReligionName,
+                icon: Icons.stars_rounded,
+                onTap: onSelectReligion,
+              ),
             ),
             const SizedBox(height: 16),
             if (familyValues.isNotEmpty)

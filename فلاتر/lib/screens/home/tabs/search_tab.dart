@@ -497,7 +497,11 @@ class _SearchTabState extends State<SearchTab> {
     final englishName = (item['name_en'] ?? item['label_en'] ?? '')
         .toString()
         .trim();
-    if (englishName.isNotEmpty) return englishName;
+    if (englishName.isNotEmpty) {
+      // Some older API rows expose the Arabic fallback under name_en.
+      // Translate known marital labels even when the field name is misleading.
+      return MaritalStatusLocalizer.toEnglish(englishName) ?? englishName;
+    }
 
     final rawName = (item['name'] ??
             item['name_ar'] ??

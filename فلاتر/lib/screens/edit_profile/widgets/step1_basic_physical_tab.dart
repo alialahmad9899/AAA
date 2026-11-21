@@ -38,6 +38,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
   final Map<String, Color> eyeColorMap;
   final Map<String, Color> hairColorMap;
   final Map<String, Color> complexionMap;
+  final Map<String, GlobalKey> navigationKeys;
 
   final VoidCallback onPickImage;
   final VoidCallback onSelectDateOfBirth;
@@ -79,6 +80,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
     required this.eyeColorMap,
     required this.hairColorMap,
     required this.complexionMap,
+    required this.navigationKeys,
     required this.onPickImage,
     required this.onSelectDateOfBirth,
     required this.onSelectMaritalStatus,
@@ -351,6 +353,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                 isAr ? 'البيانات الأساسية والنبذة' : 'Basic Details',
                 Icons.badge_rounded),
             TextFormField(
+                key: navigationKeys['first_name'],
                 controller: firstNameCtrl,
                 style: const TextStyle(
                     color: AppColors.textDark, fontSize: 15, fontFamily: 'Cairo'),
@@ -358,6 +361,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                     Icons.person_rounded)),
             const SizedBox(height: 14),
             TextFormField(
+                key: navigationKeys['last_name'],
                 controller: lastNameCtrl,
                 style: const TextStyle(
                     color: AppColors.textDark, fontSize: 15, fontFamily: 'Cairo'),
@@ -513,6 +517,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
             const SizedBox(height: 14),
 
             TextFormField(
+                key: navigationKeys['introduction'],
                 controller: introCtrl,
                 maxLines: 3,
                 style: const TextStyle(
@@ -564,6 +569,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
                 Icons.accessibility_new_rounded),
 
             Container(
+              key: navigationKeys['height'],
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
                 color: AppColors.sectionBackground,
@@ -637,6 +643,7 @@ class Step1BasicPhysicalTab extends StatelessWidget {
             const SizedBox(height: 14),
 
             Container(
+              key: navigationKeys['weight'],
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
                 color: AppColors.sectionBackground,

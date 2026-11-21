@@ -14,6 +14,14 @@ void main() {
       expect(MaritalStatusLocalizer.toEnglish('أرمل / ة'), 'Widowed');
     });
 
+    test('normalizes combined labels with inconsistent slash spacing', () {
+      expect(MaritalStatusLocalizer.toEnglish('أعزب / عزباء 💍'), 'Single');
+      expect(MaritalStatusLocalizer.toEnglish('أعزب/ عزباء'), 'Single');
+      expect(MaritalStatusLocalizer.toEnglish('متزوج / متزوجة'), 'Married');
+      expect(MaritalStatusLocalizer.toEnglish('مطلق/ مطلقة'), 'Divorced');
+      expect(MaritalStatusLocalizer.toEnglish('أرمل / أرملة'), 'Widowed');
+    });
+
     test('keeps already-English values and ignores unknown labels safely', () {
       expect(MaritalStatusLocalizer.toEnglish('Single'), 'Single');
       expect(MaritalStatusLocalizer.toEnglish(''), isNull);

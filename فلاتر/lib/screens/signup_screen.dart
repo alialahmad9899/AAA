@@ -297,25 +297,35 @@ class _SignupScreenState extends State<SignupScreen> {
     // 🟢 الخطوة الأولى: إنشاء الحساب ورفع الصورة الشخصية
     // ------------------------------------------------------------------------
     if (_currentStep == 0) {
+      // Validate every field first so all missing controls are highlighted in
+      // the same pass, including the required profile-photo frame.
       setState(() => _showValidationErrors = true);
-      final profilePhoto = _profilePhoto;
-      if (profilePhoto == null || !await profilePhoto.exists()) return;
-      final photoSize = await profilePhoto.length();
-      if (photoSize <= 0 || photoSize > 10 * 1024 * 1024) {
-        _showNotification(
-          isAr
-              ? 'يجب أن يكون حجم الصورة أكبر من صفر وألا يتجاوز 10 ميغابايت'
-              : 'The profile photo must be larger than zero and no more than 10 MB',
-          NotificationType.warning,
-        );
-        return;
-      }
       final bool formIsValid = _step1Key.currentState!.validate();
       final bool selectionsAreValid = _gender.isNotEmpty &&
           _onBehalf.isNotEmpty &&
           _dobController.text.trim().isNotEmpty &&
           _agreedToTerms;
-      if (!formIsValid || !selectionsAreValid) return;
+
+      final profilePhoto = _profilePhoto;
+      final bool photoExists =
+          profilePhoto != null && await profilePhoto.exists();
+      if (!mounted) return;
+      var photoIsValid = photoExists;
+      if (photoExists) {
+        final photoSize = await profilePhoto.length();
+        if (!mounted) return;
+        photoIsValid = photoSize > 0 && photoSize <= 10 * 1024 * 1024;
+        if (!photoIsValid) {
+          _showNotification(
+            isAr
+                ? 'يجب أن يكون حجم الصورة أكبر من صفر وألا يتجاوز 10 ميغابايت'
+                : 'The profile photo must be larger than zero and no more than 10 MB',
+            NotificationType.warning,
+          );
+        }
+      }
+
+      if (!formIsValid || !selectionsAreValid || !photoIsValid) return;
       setState(() => _showValidationErrors = false);
 
       if (!_isAccountCreated) {
@@ -921,9 +931,9 @@ class _SignupScreenState extends State<SignupScreen> {
               child: Column(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 6, 12, 4),
+                    padding: const EdgeInsets.fromLTRB(12, 2, 12, 2),
                     child: Container(
-                      padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+                      padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
                           colors: [
@@ -989,28 +999,28 @@ class _SignupScreenState extends State<SignupScreen> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 8),
                           const Center(
                             child: WesalLogo(
-                              width: 150,
-                              height: 82,
+                              width: 124,
+                              height: 68,
                               fit: BoxFit.contain,
                               excludeSemantics: true,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 4),
                           Text(
                             isAr ? 'لنبدأ رحلتك مع وصال' : 'Let’s begin with Wesal',
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 20,
+                              fontSize: 18,
                               fontWeight: FontWeight.w900,
                               fontFamily: 'Cairo',
                               height: 1.35,
                             ),
                           ),
-                          const SizedBox(height: 3),
+                          const SizedBox(height: 1),
                           Text(
                             isAr
                                 ? 'أكمل بياناتك بهدوء، وكل خطوة تقرّبنا من ملف متكامل يعكسك.'
@@ -1018,12 +1028,12 @@ class _SignupScreenState extends State<SignupScreen> {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.86),
-                              fontSize: 12,
-                              height: 1.6,
+                              fontSize: 11.5,
+                              height: 1.4,
                               fontFamily: 'Cairo',
                             ),
                           ),
-                          const SizedBox(height: 18),
+                          const SizedBox(height: 10),
                           Row(
                             children: List.generate(4, (index) {
                               final bool completed = index < _currentStep;
@@ -1034,8 +1044,8 @@ class _SignupScreenState extends State<SignupScreen> {
                                     AnimatedContainer(
                                       duration:
                                           const Duration(milliseconds: 250),
-                                      width: active ? 34 : 28,
-                                      height: active ? 34 : 28,
+                                      width: active ? 30 : 24,
+                                      height: active ? 30 : 24,
                                       decoration: BoxDecoration(
                                         color: completed || active
                                             ? AppColors.accentLight

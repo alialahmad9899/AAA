@@ -183,6 +183,9 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
               toolbarTitle:
                   _isAr ? 'اقتصاص الصورة الشخصية' : 'Crop Profile Photo',
               toolbarColor: AppColors.primaryTeal,
+              // Keep system-bar icons legible over the dark crop toolbar.
+              statusBarLight: false,
+              navBarLight: false,
               toolbarWidgetColor: Colors.white,
               activeControlsWidgetColor: AppColors.accentWarm,
               initAspectRatio: CropAspectRatioPreset.original,

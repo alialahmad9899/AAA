@@ -9,8 +9,7 @@ class MaritalStatusLocalizer {
     final normalized = raw
         .replaceAll(RegExp(r'[💍💔✨]'), '')
         .replaceAll(RegExp(r'\s+'), ' ')
-        .replaceAll(' / ', '/')
-        .replaceAll('/ ', '/')
+        .replaceAll(RegExp(r'\s*/\s*'), '/')
         .trim()
         .toLowerCase();
 
@@ -21,6 +20,7 @@ class MaritalStatusLocalizer {
       'أعزب/عزباء': 'Single',
       'single': 'Single',
       'متزوج': 'Married',
+      'متزوج/متزوجة': 'Married',
       'متزوجة': 'Married',
       'متزوج/ة': 'Married',
       'married': 'Married',
@@ -28,12 +28,15 @@ class MaritalStatusLocalizer {
       'مطلقة': 'Divorced',
       'مطلق/ة': 'Divorced',
       'divorced': 'Divorced',
+      'مطلق/مطلقة': 'Divorced',
       'أرمل': 'Widowed',
       'ارمل': 'Widowed',
       'أرملة': 'Widowed',
       'ارملة': 'Widowed',
       'أرمل/ة': 'Widowed',
       'widowed': 'Widowed',
+      'أرمل/أرملة': 'Widowed',
+      'ارمل/ارملة': 'Widowed',
     };
 
     final exact = translations[normalized];

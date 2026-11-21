@@ -123,6 +123,21 @@ class ProfileDropdownController extends Controller
 
         $trimmedName = trim($name);
 
+        // Normalize the separator because older marital-status rows store
+        // combined gender labels with inconsistent spaces around "/".
+        $normalizedMaritalName = preg_replace('/\s*\/\s*/u', '/', $trimmedName);
+        $maritalStatusToEnglish = [
+            'أعزب/عزباء' => 'Single',
+            'اعزب/عزباء' => 'Single',
+            'متزوج/متزوجة' => 'Married',
+            'مطلق/مطلقة' => 'Divorced',
+            'أرمل/أرملة' => 'Widowed',
+            'ارمل/ارملة' => 'Widowed',
+        ];
+        if ($lang === 'en' && isset($maritalStatusToEnglish[$normalizedMaritalName])) {
+            return $maritalStatusToEnglish[$normalizedMaritalName];
+        }
+
         // قاموس الترجمة المباشر (عربي -> إنجليزي)
         $arToEn = [
             // الأبراج الفلكية (Zodiac Signs)
