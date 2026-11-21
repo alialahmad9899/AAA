@@ -9,6 +9,7 @@ use App\Http\Resources\Chat\ChatViewResource;
 use App\Http\Resources\ChatThreadResource;
 use App\Models\Chat;
 use App\Models\ChatThread;
+use App\Models\ChatMute;
 use App\Models\IgnoredUser;
 use App\Services\ChatService;
 use App\Utility\MemberUtility; // فحص سياسات المحادثة والاشتراك
@@ -141,6 +142,9 @@ class ChatController extends Controller
                     'chats' => [],
                     'messages' => []
                 ],
+                'muted_by_me' => ChatMute::where('muted_by', $auth_id)
+                    ->where('muted_user_id', (int) $id)
+                    ->exists(),
                 'chat_rules' => [
                     'is_unlocked' => $is_female,
                     'sent_messages_count' => 0,
@@ -180,9 +184,17 @@ class ChatController extends Controller
                 : 'حفاظاً على عدم الإزعاج، يمكنك إرسال حتى ' . $remaining_messages . ' رسائل متبقية. بمجرد رد الطرف الآخر تفتح المحادثة بلا حدود.'
         ];
 
+        $partnerUserId = (int) ($chat_thread->sender_user_id == $auth_id
+            ? $chat_thread->receiver_user_id
+            : $chat_thread->sender_user_id);
+        $mutedByMe = ChatMute::where('muted_by', $auth_id)
+            ->where('muted_user_id', $partnerUserId)
+            ->exists();
+
         return (new ChatResource($chat_thread))->additional([
             'result' => true,
-            'chat_rules' => $rules_info
+            'chat_rules' => $rules_info,
+            'muted_by_me' => $mutedByMe,
         ]);
     }
 
@@ -441,6 +453,53 @@ class ChatController extends Controller
                 'message' => 'حدث خطأ في السيرفر: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Delete a message authored by the authenticated participant.
+     * Incoming messages can only be hidden locally by the receiver.
+     */
+    public function chat_message_delete(Request $request)
+    {
+        $validated = $request->validate([
+            'chat_thread_id' => 'required|integer|min:1',
+            'message_id' => 'required|integer|min:1',
+        ]);
+
+        $userId = (int) auth()->id();
+        $thread = ChatThread::whereKey((int) $validated['chat_thread_id'])
+            ->where(function ($query) use ($userId) {
+                $query->where('sender_user_id', $userId)
+                    ->orWhere('receiver_user_id', $userId);
+            })
+            ->first();
+
+        if (!$thread) {
+            return response()->json([
+                'result' => false,
+                'message' => 'المحادثة غير موجودة أو غير مصرح بها.',
+            ], 404);
+        }
+
+        $message = Chat::whereKey((int) $validated['message_id'])
+            ->where('chat_thread_id', $thread->id)
+            ->where('sender_user_id', $userId)
+            ->first();
+
+        if (!$message) {
+            return response()->json([
+                'result' => false,
+                'message' => 'لا يمكن حذف رسالة لا تملكها.',
+            ], 403);
+        }
+
+        $message->delete();
+
+        return response()->json([
+            'result' => true,
+            'message' => 'تم حذف الرسالة من المحادثة.',
+            'message_id' => (int) $message->id,
+        ]);
     }
 
     public function chat_delete(Request $request)

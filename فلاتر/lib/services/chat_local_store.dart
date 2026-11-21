@@ -17,7 +17,7 @@ class ChatLocalStore {
     final path = '$databasePath/wesal_chat_cache.db';
     _database = await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE chat_threads (
@@ -50,6 +50,79 @@ class ChatLocalStore {
             PRIMARY KEY (account_id, thread_id)
           )
         ''');
+        await db.execute('''
+          CREATE TABLE chat_mute_preferences (
+            account_id INTEGER NOT NULL,
+            partner_user_id INTEGER NOT NULL,
+            muted INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL,
+            PRIMARY KEY (account_id, partner_user_id)
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE chat_hidden_messages (
+            account_id INTEGER NOT NULL,
+            thread_id INTEGER NOT NULL,
+            message_id INTEGER NOT NULL,
+            hidden_at INTEGER NOT NULL,
+            PRIMARY KEY (account_id, thread_id, message_id)
+          )
+        ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute('''
+            CREATE TABLE chat_mute_preferences (
+              account_id INTEGER NOT NULL,
+              partner_user_id INTEGER NOT NULL,
+              muted INTEGER NOT NULL,
+              updated_at INTEGER NOT NULL,
+              PRIMARY KEY (account_id, partner_user_id)
+            )
+          ''');
+          await db.execute('''
+            CREATE TABLE chat_hidden_messages (
+              account_id INTEGER NOT NULL,
+              thread_id INTEGER NOT NULL,
+              message_id INTEGER NOT NULL,
+              hidden_at INTEGER NOT NULL,
+              PRIMARY KEY (account_id, thread_id, message_id)
+            )
+          ''');
+          final legacyMutes = await db.rawQuery('''
+            SELECT preferences.account_id, preferences.muted, threads.payload
+            FROM chat_thread_preferences AS preferences
+            INNER JOIN chat_threads AS threads
+              ON threads.account_id = preferences.account_id
+             AND threads.thread_id = preferences.thread_id
+            WHERE preferences.muted = 1
+          ''');
+          final now = DateTime.now().millisecondsSinceEpoch;
+          for (final row in legacyMutes) {
+            try {
+              final payload = jsonDecode(row['payload'] as String);
+              if (payload is! Map) continue;
+              final rawPartnerId = payload['user_id'] ?? payload['member_id'];
+              final partnerId = rawPartnerId is int
+                  ? rawPartnerId
+                  : int.tryParse(rawPartnerId?.toString() ?? '') ?? 0;
+              final accountId = row['account_id'] as int? ?? 0;
+              if (accountId <= 0 || partnerId <= 0) continue;
+              await db.insert(
+                'chat_mute_preferences',
+                {
+                  'account_id': accountId,
+                  'partner_user_id': partnerId,
+                  'muted': 1,
+                  'updated_at': now,
+                },
+                conflictAlgorithm: ConflictAlgorithm.replace,
+              );
+            } catch (_) {
+              // A malformed legacy cache row must not prevent the database upgrade.
+            }
+          }
+        }
       },
     );
     return _database!;
@@ -169,7 +242,11 @@ class ChatLocalStore {
       orderBy: 'message_id ASC',
       limit: limit,
     );
-    return _decodeMessages(rows, currentUserId ?? accountId);
+    return _withoutHiddenMessages(
+      accountId,
+      threadId,
+      _decodeMessages(rows, currentUserId ?? accountId),
+    );
   }
 
   static Future<Map<String, dynamic>> getOlderMessages(
@@ -190,12 +267,13 @@ class ChatLocalStore {
       orderBy: 'message_id DESC',
       limit: limit + 1,
     );
+    final decodedMessages = _decodeMessages(
+      rows.take(limit).toList().reversed.toList(),
+      accountId,
+      partnerUserId: partnerUserId,
+    );
     return {
-      'messages': _decodeMessages(
-        rows.take(limit).toList().reversed.toList(),
-        accountId,
-        partnerUserId: partnerUserId,
-      ),
+      'messages': await _withoutHiddenMessages(accountId, threadId, decodedMessages),
       'has_more': rows.length > limit,
     };
   }
@@ -242,46 +320,42 @@ class ChatLocalStore {
       orderBy: 'message_id DESC',
       limit: limit,
     );
-    return _decodeMessages(
-      rows.reversed.toList(),
-      currentUserId > 0 ? currentUserId : accountId,
+    return _withoutHiddenMessages(
+      accountId,
+      threadId,
+      _decodeMessages(
+        rows.reversed.toList(),
+        currentUserId > 0 ? currentUserId : accountId,
+      ),
     );
   }
 
   static Future<void> setMuted(
     int accountId,
-    int threadId,
+    int partnerUserId,
     bool muted,
   ) async {
-    if (accountId <= 0 || threadId <= 0) return;
+    if (accountId <= 0 || partnerUserId <= 0) return;
     final db = await _db;
-    final updated = await db.update(
-      'chat_thread_preferences',
-      {'muted': muted ? 1 : 0},
-      where: 'account_id = ? AND thread_id = ?',
-      whereArgs: [accountId, threadId],
+    await db.insert(
+      'chat_mute_preferences',
+      {
+        'account_id': accountId,
+        'partner_user_id': partnerUserId,
+        'muted': muted ? 1 : 0,
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
     );
-    if (updated == 0) {
-      await db.insert(
-        'chat_thread_preferences',
-        {
-          'account_id': accountId,
-          'thread_id': threadId,
-          'muted': muted ? 1 : 0,
-          'scroll_offset': 0.0,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-    }
   }
 
-  static Future<bool> isMuted(int accountId, int threadId) async {
-    if (accountId <= 0 || threadId <= 0) return false;
+  static Future<bool> isMuted(int accountId, int partnerUserId) async {
+    if (accountId <= 0 || partnerUserId <= 0) return false;
     final rows = await (await _db).query(
-      'chat_thread_preferences',
+      'chat_mute_preferences',
       columns: ['muted'],
-      where: 'account_id = ? AND thread_id = ?',
-      whereArgs: [accountId, threadId],
+      where: 'account_id = ? AND partner_user_id = ?',
+      whereArgs: [accountId, partnerUserId],
       limit: 1,
     );
     return rows.isNotEmpty && rows.first['muted'] == 1;
@@ -290,15 +364,63 @@ class ChatLocalStore {
   static Future<Map<int, bool>> getMuteSettings(int accountId) async {
     if (accountId <= 0) return {};
     final rows = await (await _db).query(
-      'chat_thread_preferences',
-      columns: ['thread_id', 'muted'],
+      'chat_mute_preferences',
+      columns: ['partner_user_id', 'muted'],
       where: 'account_id = ?',
       whereArgs: [accountId],
     );
     return {
       for (final row in rows)
-        row['thread_id'] as int: row['muted'] == 1,
+        row['partner_user_id'] as int: row['muted'] == 1,
     };
+  }
+
+  static Future<void> hideMessage(
+    int accountId,
+    int threadId,
+    int messageId,
+  ) async {
+    if (accountId <= 0 || threadId <= 0 || messageId <= 0) return;
+    final db = await _db;
+    await db.insert(
+      'chat_hidden_messages',
+      {
+        'account_id': accountId,
+        'thread_id': threadId,
+        'message_id': messageId,
+        'hidden_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+    await db.delete(
+      'chat_messages',
+      where: 'account_id = ? AND thread_id = ? AND message_id = ?',
+      whereArgs: [accountId, threadId, messageId],
+    );
+  }
+
+  static Future<Set<int>> getHiddenMessageIds(
+    int accountId,
+    int threadId,
+  ) async {
+    if (accountId <= 0 || threadId <= 0) return <int>{};
+    final rows = await (await _db).query(
+      'chat_hidden_messages',
+      columns: ['message_id'],
+      where: 'account_id = ? AND thread_id = ?',
+      whereArgs: [accountId, threadId],
+    );
+    return rows.map((row) => row['message_id'] as int).toSet();
+  }
+
+  static Future<List<ChatMessageModel>> _withoutHiddenMessages(
+    int accountId,
+    int threadId,
+    List<ChatMessageModel> messages,
+  ) async {
+    final hiddenIds = await getHiddenMessageIds(accountId, threadId);
+    if (hiddenIds.isEmpty) return messages;
+    return messages.where((message) => !hiddenIds.contains(message.id)).toList();
   }
 
   static Future<void> saveScrollOffset(
@@ -364,6 +486,11 @@ class ChatLocalStore {
         where: 'account_id = ? AND thread_id = ?',
         whereArgs: [accountId, threadId],
       );
+      await txn.delete(
+        'chat_hidden_messages',
+        where: 'account_id = ? AND thread_id = ?',
+        whereArgs: [accountId, threadId],
+      );
     });
   }
 
@@ -376,6 +503,10 @@ class ChatLocalStore {
       await txn.delete('chat_messages',
           where: 'account_id = ?', whereArgs: [accountId]);
       await txn.delete('chat_thread_preferences',
+          where: 'account_id = ?', whereArgs: [accountId]);
+      await txn.delete('chat_mute_preferences',
+          where: 'account_id = ?', whereArgs: [accountId]);
+      await txn.delete('chat_hidden_messages',
           where: 'account_id = ?', whereArgs: [accountId]);
     });
   }

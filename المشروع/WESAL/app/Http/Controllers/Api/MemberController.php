@@ -10,6 +10,7 @@ use App\Models\Address;
 use App\Models\IgnoredUser;
 use App\Models\ReportedUser;
 use App\Models\ChatThread;
+use App\Models\Chat;
 use Illuminate\Http\Request;
 use App\Models\PhysicalAttribute;
 use App\Models\SpiritualBackground;
@@ -408,33 +409,81 @@ class MemberController extends Controller
         return $this->failure_message('Something went wrong');
     }
 
+    /**
+     * Normalize attachment evidence from the stored message, retaining both
+     * numeric upload IDs and stored paths/URLs for admin review.
+     */
+    private function normalizeChatEvidenceAttachments($rawAttachments): array
+    {
+        if (is_string($rawAttachments) && trim($rawAttachments) !== '') {
+            $decoded = json_decode($rawAttachments, true);
+            $rawAttachments = is_array($decoded)
+                ? $decoded
+                : explode(',', $rawAttachments);
+        } elseif ($rawAttachments === null || $rawAttachments === '') {
+            $rawAttachments = [];
+        } elseif (!is_array($rawAttachments)) {
+            $rawAttachments = [$rawAttachments];
+        }
+
+        $references = [];
+        $ids = [];
+        foreach ($rawAttachments as $item) {
+            if (is_array($item)) {
+                $item = $item['attachment'] ?? $item['url'] ??
+                    $item['file_name_url'] ?? $item['file_name'] ?? null;
+            }
+            if (!is_scalar($item) || is_bool($item)) {
+                continue;
+            }
+
+            $reference = trim((string) $item);
+            if ($reference === '') {
+                continue;
+            }
+            $references[] = mb_substr($reference, 0, 1500);
+            if (is_numeric($reference)) {
+                $ids[] = (int) $reference;
+            }
+        }
+
+        return [
+            'attachment_ids' => array_values(array_unique($ids)),
+            'attachment_refs' => array_values(array_unique($references)),
+        ];
+    }
+
     public function report_member(Request $request)
     {
-        $targetUserId = $request->user_id ?? $request->id;
+        $targetUserId = (int) ($request->user_id ?? $request->id ?? 0);
         $reporterId = (int) auth()->id();
+        $messageId = (int) $request->input('reported_message_id', 0);
+        $reason = (string) ($request->reason ?? $request->report_reason ?? 'بدون سبب محدد');
 
-        if (!$targetUserId || !User::find($targetUserId)) {
+        if ($targetUserId <= 0 || $targetUserId === $reporterId || !User::find($targetUserId)) {
             return response()->json([
-                'result'  => false,
+                'result' => false,
                 'message' => 'عضو غير صالح للإبلاغ عنه.'
-            ], 200);
+            ], 422);
         }
 
         $reportedUser = ReportedUser::where('user_id', $targetUserId)
             ->where('reported_by', $reporterId)
             ->first();
 
-        if ($reportedUser) {
+        // A member may have one account-level report, plus additional reports
+        // for distinct messages/images. Never discard already stored evidence.
+        if ($reportedUser && $messageId <= 0) {
             return response()->json([
-                'result'  => false,
+                'result' => false,
                 'message' => 'لقد سبق وأن بلغت على هذا الشخص من قبل.'
             ], 200);
         }
 
-        // Capture evidence only from a thread actually shared by reporter and
-        // target. Never trust client-supplied message text or sender identity.
         $chatEvidence = null;
         $chatThreadId = (int) $request->input('chat_thread_id', 0);
+        $reportedItem = null;
+
         if ($chatThreadId > 0) {
             $thread = ChatThread::query()
                 ->whereKey($chatThreadId)
@@ -464,27 +513,9 @@ class MemberController extends Controller
                 ->reverse()
                 ->values()
                 ->map(function ($chat) use ($reporterId) {
-                    $attachmentIds = [];
-                    $rawAttachments = $chat->attachment ?? null;
-                    if (is_array($rawAttachments)) {
-                        $attachmentIds = $rawAttachments;
-                    } elseif (is_numeric($rawAttachments)) {
-                        $attachmentIds = [(int) $rawAttachments];
-                    } elseif (is_string($rawAttachments) && trim($rawAttachments) !== '') {
-                        $decodedAttachments = json_decode($rawAttachments, true);
-                        if (is_array($decodedAttachments)) {
-                            $attachmentIds = $decodedAttachments;
-                        } elseif (is_numeric($rawAttachments)) {
-                            $attachmentIds = [(int) $rawAttachments];
-                        } else {
-                            $attachmentIds = explode(',', $rawAttachments);
-                        }
-                    }
-
-                    $attachmentIds = array_values(array_map(
-                        'intval',
-                        array_filter($attachmentIds, 'is_numeric')
-                    ));
+                    $attachmentEvidence = $this->normalizeChatEvidenceAttachments(
+                        $chat->attachment ?? null
+                    );
 
                     return [
                         'message_id' => (int) $chat->id,
@@ -496,18 +527,94 @@ class MemberController extends Controller
                         'is_reporter' => (int) $chat->sender_user_id === $reporterId,
                         'message' => mb_substr((string) ($chat->message ?? ''), 0, 5000),
                         'created_at' => optional($chat->created_at)->toIso8601String(),
-                        'attachment_ids' => $attachmentIds,
+                        'attachment_ids' => $attachmentEvidence['attachment_ids'],
+                        'attachment_refs' => $attachmentEvidence['attachment_refs'],
                     ];
                 })
                 ->all();
+
+            if ($messageId > 0) {
+                // The server selects evidence by ID and verifies that the
+                // reported member actually sent this item in this thread.
+                $reportedMessage = Chat::query()
+                    ->with('sender')
+                    ->whereKey($messageId)
+                    ->where('chat_thread_id', $thread->id)
+                    ->where('sender_user_id', $targetUserId)
+                    ->first();
+
+                if (!$reportedMessage) {
+                    return response()->json([
+                        'result' => false,
+                        'message' => 'تعذر التحقق من الرسالة المحددة للبلاغ.'
+                    ], 403);
+                }
+
+                $attachmentEvidence = $this->normalizeChatEvidenceAttachments(
+                    $reportedMessage->attachment ?? null
+                );
+
+                $reportedItem = [
+                    'is_reported_item' => true,
+                    'message_id' => (int) $reportedMessage->id,
+                    'sender_user_id' => (int) $reportedMessage->sender_user_id,
+                    'sender_name' => trim(
+                        (string) optional($reportedMessage->sender)->first_name . ' ' .
+                        (string) optional($reportedMessage->sender)->last_name
+                    ),
+                    'message' => mb_substr((string) ($reportedMessage->message ?? ''), 0, 5000),
+                    'created_at' => optional($reportedMessage->created_at)->toIso8601String(),
+                    'content_type' => count($attachmentIds) > 0 ? 'image' : 'message',
+                    'attachment_ids' => $attachmentEvidence['attachment_ids'],
+                    'attachment_refs' => $attachmentEvidence['attachment_refs'],
+                    'reason' => mb_substr($reason, 0, 500),
+                    'reported_at' => now()->toIso8601String(),
+                ];
+            }
+        } elseif ($messageId > 0) {
+            return response()->json([
+                'result' => false,
+                'message' => 'يجب ربط بلاغ الرسالة بالمحادثة الصحيحة.'
+            ], 422);
         }
 
-        $report = ReportedUser::create([
-            'user_id' => $targetUserId,
-            'reported_by' => $reporterId,
-            'reason' => $request->reason ?? $request->report_reason ?? 'بدون سبب محدد',
-            'chat_evidence' => $chatEvidence,
-        ]);
+        if ($reportedUser) {
+            $existingEvidence = $reportedUser->chat_evidence;
+            if (!is_array($existingEvidence)) {
+                $existingEvidence = [];
+            }
+
+            if ($reportedItem) {
+                foreach ($existingEvidence as $item) {
+                    if (is_array($item) &&
+                        (int) ($item['message_id'] ?? 0) === $messageId &&
+                        ($item['is_reported_item'] ?? false) === true) {
+                        return response()->json([
+                            'result' => true,
+                            'message' => 'تم تسجيل بلاغ هذه الرسالة مسبقاً.'
+                        ], 200);
+                    }
+                }
+                $reportedUser->chat_evidence = array_values([
+                    ...$existingEvidence,
+                    $reportedItem,
+                ]);
+                $reportedUser->save();
+            }
+
+            $report = $reportedUser;
+        } else {
+            if ($reportedItem && is_array($chatEvidence)) {
+                $chatEvidence[] = $reportedItem;
+            }
+
+            $report = ReportedUser::create([
+                'user_id' => $targetUserId,
+                'reported_by' => $reporterId,
+                'reason' => $reason,
+                'chat_evidence' => $chatEvidence,
+            ]);
+        }
 
         // Notifications must not undo or hide a successfully stored report.
         try {
@@ -516,7 +623,9 @@ class MemberController extends Controller
             foreach ($admins as $admin) {
                 \App\Utility\NotificationUtility::set_notification(
                     'member_report',
-                    'تم استلام بلاغ جديد عن أحد الأعضاء.',
+                    $reportedItem
+                        ? 'تم استلام بلاغ جديد عن رسالة أو صورة داخل محادثة.'
+                        : 'تم استلام بلاغ جديد عن أحد الأعضاء.',
                     route('reported_members', $targetUserId),
                     $reporter->id,
                     $admin->id,
@@ -532,9 +641,11 @@ class MemberController extends Controller
 
         return response()->json([
             'result' => true,
-            'message' => $chatThreadId > 0
-                ? 'تم إرسال البلاغ وحفظ آخر رسائل المحادثة لمراجعة الإدارة.'
-                : 'تم إرسال بلاغك بنجاح وسيتولى الفريق مراجعته.'
+            'message' => $reportedItem
+                ? 'تم إرسال البلاغ وحفظ الرسالة أو الصورة المحددة لمراجعة الإدارة.'
+                : ($chatThreadId > 0
+                    ? 'تم إرسال البلاغ وحفظ آخر رسائل المحادثة لمراجعة الإدارة.'
+                    : 'تم إرسال بلاغك بنجاح وسيتولى الفريق مراجعته.')
         ], 200);
     }
 

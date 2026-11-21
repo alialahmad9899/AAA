@@ -9,6 +9,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' as services;
 import '../constants/colors.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -19,6 +20,7 @@ import '../utils/message_text_direction.dart';
 import '../models/member_profile_model.dart';
 import '../services/api_service.dart';
 import '../services/chat_local_store.dart';
+import '../services/chat_screen_protection.dart';
 import '../utils/chat_time_utils.dart';
 import '../utils/chat_activity_state.dart';
 import '../widgets/app_snackbar.dart';
@@ -54,6 +56,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   bool _partnerIsOnline = false;
   String _partnerLastSeen = '';
   bool _isChatMuted = false;
+  final Set<int> _revealedIncomingImageIds = <int>{};
   bool _showMessageSearch = false;
   bool _isSearchingSavedMessages = false;
   List<ChatMessageModel> _messageSearchResults = [];
@@ -165,6 +168,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
 
     _isLoading = true;
 
+    unawaited(ChatScreenProtection.setEnabled(true));
     unawaited(_initializeChatExperience());
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -185,6 +189,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   @override
   void dispose() {
     _messageRefreshTimer?.cancel();
+    unawaited(ChatScreenProtection.setEnabled(false));
     if (ChatActivityState.activeThreadId.value == _activeThreadId) {
       ChatActivityState.activeThreadId.value = null;
     }
@@ -216,7 +221,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         );
         final muted = await ChatLocalStore.isMuted(
           _currentUserId,
-          _activeThreadId,
+          widget.thread.userId,
         );
         if (!mounted) return;
         setState(() {
@@ -238,7 +243,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         threadId: _activeThreadId,
         appIsActive: true,
       ));
-    unawaited(ApiService.syncChatMuteSettings());
+    await ApiService.syncChatMuteSettings();
+    if (!mounted) return;
     _startMessageRefreshTimer();
     await _loadMessages(
       silent: _messages.isNotEmpty,
@@ -441,14 +447,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     if (_currentUserId > 0) {
       await ChatLocalStore.setMuted(
         _currentUserId,
-        _activeThreadId,
+        widget.thread.userId,
         nextMuted,
       );
     }
     if (mounted) setState(() => _isChatMuted = nextMuted);
 
     final synced = await ApiService.setChatMuted(
-      threadId: _activeThreadId,
+      partnerUserId: widget.thread.userId,
       muted: nextMuted,
     );
     if (!mounted) return;
@@ -786,8 +792,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         return;
       }
 
+      final hiddenMessageIds = _currentUserId > 0
+          ? await ChatLocalStore.getHiddenMessageIds(_currentUserId, requestedThreadId)
+          : <int>{};
+      if (!mounted || requestedThreadId != _activeThreadId) return;
       final List<ChatMessageModel> messages = res['messages'] is List
-          ? (res['messages'] as List).whereType<ChatMessageModel>().toList()
+          ? (res['messages'] as List)
+              .whereType<ChatMessageModel>()
+              .where((message) => !hiddenMessageIds.contains(message.id))
+              .toList()
           : <ChatMessageModel>[];
       final ChatRulesModel? rules = res['chat_rules'];
       // Keep locally loaded older pages and optimistic messages through every
@@ -815,6 +828,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           _partnerLastSeen = incomingLastSeen;
         }
         _chatRules = rules;
+        if (res.containsKey('muted_by_me')) {
+          _isChatMuted = res['muted_by_me'] == true;
+        }
         _hasMoreOldMessages = preserveHistory
             ? (_hasMoreOldMessages || res['has_more_old_messages'] == true)
             : res['has_more_old_messages'] == true;
@@ -886,8 +902,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       );
       if (!mounted || requestThreadId != _activeThreadId) return;
 
+      final hiddenMessageIds = _currentUserId > 0
+          ? await ChatLocalStore.getHiddenMessageIds(_currentUserId, requestThreadId)
+          : <int>{};
       final oldMessages = result['messages'] is List
-          ? (result['messages'] as List).whereType<ChatMessageModel>().toList()
+          ? (result['messages'] as List)
+              .whereType<ChatMessageModel>()
+              .where((message) => !hiddenMessageIds.contains(message.id))
+              .toList()
           : <ChatMessageModel>[];
       setState(() {
         _isLoadingMore = false;
@@ -1647,7 +1669,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     );
   }
 
-  void _showReportReasonsDialog() {
+  void _showReportReasonsDialog({ChatMessageModel? reportedMessage}) {
     _dismissKeyboard();
 
     showModalBottomSheet(
@@ -1725,7 +1747,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                                   color: AppColors.textMuted),
                               onTap: () {
                                 Navigator.pop(context);
-                                _executeReport(reason);
+                                _executeReport(reason, reportedMessage: reportedMessage);
                               },
                             ),
                           ),
@@ -1884,13 +1906,20 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     }
   }
 
-  Future<void> _executeReport(String reason) async {
+  Future<void> _executeReport(
+    String reason, {
+    ChatMessageModel? reportedMessage,
+  }) async {
     _dismissKeyboard();
     try {
       final result = await ApiService.reportMember(
         widget.thread.userId,
         reason,
         chatThreadId: _activeThreadId,
+        messageId: reportedMessage?.id,
+        contentType: reportedMessage == null
+            ? null
+            : ((reportedMessage.attachmentUrl?.isNotEmpty ?? false) ? 'image' : 'message'),
       );
       if (!mounted) return;
 
@@ -1922,6 +1951,205 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         messageEn: 'Failed to submit report',
       );
     }
+  }
+
+  void _showMessageActions(ChatMessageModel message) {
+    _dismissKeyboard();
+    services.HapticFeedback.selectionClick();
+
+    final cleanText = message.message.trim();
+    final canCopy = cleanText.isNotEmpty && !_isDefaultPlaceholderText(cleanText);
+    final canDeleteForEveryone = message.isMe && message.id > 0;
+
+    showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => Directionality(
+        textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+          decoration: const BoxDecoration(
+            color: AppColors.cardColor,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 38,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.textLight,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                _isArabic ? 'خيارات الرسالة' : 'Message options',
+                style: const TextStyle(
+                  color: AppColors.textDark,
+                  fontFamily: 'Cairo',
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              if (canCopy)
+                ListTile(
+                  leading: const Icon(Icons.copy_rounded, color: AppColors.primaryTeal),
+                  title: Text(_isArabic ? 'نسخ النص' : 'Copy text'),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _copyMessageText(cleanText);
+                  },
+                ),
+              ListTile(
+                leading: Icon(
+                  canDeleteForEveryone ? Icons.delete_forever_rounded : Icons.visibility_off_rounded,
+                  color: AppColors.error,
+                ),
+                title: Text(
+                  canDeleteForEveryone
+                      ? (_isArabic ? 'حذف الرسالة لدى الطرفين' : 'Delete for everyone')
+                      : (_isArabic ? 'إخفاء الرسالة لدي' : 'Hide for me'),
+                ),
+                subtitle: Text(
+                  canDeleteForEveryone
+                      ? (_isArabic ? 'ستُحذف رسالتك من المحادثة لدى الطرفين' : 'Your sent message will be removed for both participants')
+                      : (_isArabic ? 'لن تتأثر نسخة الرسالة لدى المرسل' : 'The sender will keep their copy'),
+                  style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                ),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _confirmMessageRemoval(
+                    message,
+                    deleteForEveryone: canDeleteForEveryone,
+                  );
+                },
+              ),
+              if (!message.isMe)
+                ListTile(
+                  leading: const Icon(Icons.flag_rounded, color: AppColors.warning),
+                  title: Text(_isArabic ? 'الإبلاغ عن هذه الرسالة' : 'Report this message'),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _showReportReasonsDialog(reportedMessage: message);
+                  },
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _copyMessageText(String text) async {
+    try {
+      await services.Clipboard.setData(services.ClipboardData(text: text));
+      if (!mounted) return;
+      AppSnackBar.show(
+        context: context,
+        type: NotificationType.success,
+        isArabic: _isArabic,
+        messageAr: 'تم نسخ نص الرسالة',
+        messageEn: 'Message text copied',
+      );
+    } catch (_) {
+      if (!mounted) return;
+      AppSnackBar.show(
+        context: context,
+        type: NotificationType.error,
+        isArabic: _isArabic,
+        messageAr: 'تعذر نسخ الرسالة',
+        messageEn: 'Could not copy message',
+      );
+    }
+  }
+
+  Future<void> _confirmMessageRemoval(
+    ChatMessageModel message, {
+    required bool deleteForEveryone,
+  }) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => Directionality(
+        textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
+        child: AlertDialog(
+          title: Text(_isArabic ? 'تأكيد حذف الرسالة' : 'Confirm message removal'),
+          content: Text(
+            deleteForEveryone
+                ? (_isArabic
+                    ? 'سيتم حذف رسالتك من المحادثة لدى الطرفين.'
+                    : 'Your sent message will be deleted for both participants.')
+                : (_isArabic
+                    ? 'سيتم إخفاء هذه الرسالة من محادثتك فقط.'
+                    : 'This message will be hidden only in your chat.'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(_isArabic ? 'إلغاء' : 'Cancel'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(_isArabic ? 'تأكيد' : 'Confirm'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (confirmed == true && mounted) {
+      await _removeMessage(message, deleteForEveryone: deleteForEveryone);
+    }
+  }
+
+  Future<void> _removeMessage(
+    ChatMessageModel message, {
+    required bool deleteForEveryone,
+  }) async {
+    if (deleteForEveryone && message.id > 0) {
+      final result = await ApiService.deleteChatMessage(
+        threadId: _activeThreadId,
+        messageId: message.id,
+      );
+      if (!mounted) return;
+      if (result['success'] != true) {
+        AppSnackBar.show(
+          context: context,
+          type: NotificationType.error,
+          isArabic: _isArabic,
+          messageAr: 'تعذر حذف الرسالة من الطرفين',
+          messageEn: 'Could not delete the message for both participants',
+        );
+        return;
+      }
+    }
+
+    if (message.id > 0 && _currentUserId > 0) {
+      await ChatLocalStore.hideMessage(
+        _currentUserId,
+        _activeThreadId,
+        message.id,
+      );
+    }
+    if (!mounted) return;
+    setState(() {
+      _messages.removeWhere((item) => item.id == message.id);
+      _messageSearchResults.removeWhere((item) => item.id == message.id);
+      _revealedIncomingImageIds.remove(message.id);
+    });
+    AppSnackBar.show(
+      context: context,
+      type: NotificationType.success,
+      isArabic: _isArabic,
+      messageAr: deleteForEveryone
+          ? 'تم حذف الرسالة من المحادثة'
+          : 'تم إخفاء الرسالة من محادثتك',
+      messageEn: deleteForEveryone
+          ? 'Message deleted from the conversation'
+          : 'Message hidden from your chat',
+    );
   }
 
   void _showDeleteChatConfirmationDialog() {
@@ -2057,6 +2285,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                 _buildHeader(),
                 _buildMessageSearchBar(),
                 _buildRulesBanner(),
+                if (Platform.isIOS) _buildIosScreenshotNotice(),
                 if (_isLoadingMore)
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 6),
@@ -2193,17 +2422,29 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                                 itemCount: visibleMessages.length,
                                 itemBuilder: (context, index) {
                                   final msg = visibleMessages[index];
-                                  return RepaintBoundary(
-                                    key: ValueKey(msg.id),
-                                    child: msg.isMe
-                                        ? _SenderMessageBubble(
-                                            message: msg,
-                                            isArabic: _isArabic,
-                                          )
-                                        : _ReceiverMessageBubble(
-                                            message: msg,
-                                            isArabic: _isArabic,
-                                          ),
+                                  return GestureDetector(
+                                    onLongPress: () => _showMessageActions(msg),
+                                    child: RepaintBoundary(
+                                      key: ValueKey(msg.id),
+                                      child: msg.isMe
+                                          ? _SenderMessageBubble(
+                                              message: msg,
+                                              isArabic: _isArabic,
+                                            )
+                                          : _ReceiverMessageBubble(
+                                              message: msg,
+                                              isArabic: _isArabic,
+                                              isImageRevealed:
+                                                  _revealedIncomingImageIds.contains(msg.id),
+                                              onRevealImage: () {
+                                                if (mounted) {
+                                                  setState(() => _revealedIncomingImageIds.add(msg.id));
+                                                }
+                                              },
+                                              onReportImage: () =>
+                                                  _showReportReasonsDialog(reportedMessage: msg),
+                                            ),
+                                    ),
                                   );
                                 },
                               ),
@@ -2215,6 +2456,37 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildIosScreenshotNotice() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline_rounded,
+              color: AppColors.warning, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              _isArabic
+                  ? 'على iPhone لا يتيح النظام للتطبيق منع لقطة الشاشة قبل التقاطها؛ الحماية الفعلية هنا متاحة على Android.'
+                  : 'iOS does not let apps prevent screenshots before capture; active screenshot blocking is available here on Android.',
+              style: const TextStyle(
+                color: AppColors.textDark,
+                fontSize: 10.5,
+                fontFamily: 'Cairo',
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -2832,10 +3104,16 @@ class _SenderMessageBubble extends StatelessWidget {
 class _ReceiverMessageBubble extends StatelessWidget {
   final ChatMessageModel message;
   final bool isArabic;
+  final bool isImageRevealed;
+  final VoidCallback? onRevealImage;
+  final VoidCallback? onReportImage;
 
   const _ReceiverMessageBubble({
     required this.message,
     this.isArabic = true,
+    this.isImageRevealed = false,
+    this.onRevealImage,
+    this.onReportImage,
   });
 
   @override
@@ -2852,6 +3130,39 @@ class _ReceiverMessageBubble extends StatelessWidget {
       bottomLeft: Radius.circular(4),
       bottomRight: Radius.circular(20),
     );
+
+    Widget buildImage() {
+      if (_isNetworkUrl(message.attachmentUrl)) {
+        return CachedNetworkImage(
+          imageUrl: message.attachmentUrl!,
+          width: double.infinity,
+          fit: BoxFit.cover,
+          memCacheWidth: 800,
+          placeholder: (context, url) =>
+              Container(height: 180, color: Colors.black26),
+          errorWidget: (context, url, error) => Container(
+            height: 120,
+            color: Colors.black26,
+            alignment: Alignment.center,
+            child: const Icon(Icons.broken_image_rounded,
+                color: Colors.white54, size: 30),
+          ),
+        );
+      }
+      return Image.file(
+        File(message.attachmentUrl!),
+        width: double.infinity,
+        fit: BoxFit.cover,
+        cacheWidth: 800,
+        errorBuilder: (context, error, stackTrace) => Container(
+          height: 120,
+          color: Colors.black26,
+          alignment: Alignment.center,
+          child: const Icon(Icons.broken_image_rounded,
+              color: Colors.white54, size: 30),
+        ),
+      );
+    }
 
     return Align(
       alignment: Alignment.centerLeft,
@@ -2876,31 +3187,61 @@ class _ReceiverMessageBubble extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (hasImage)
-                      _isNetworkUrl(message.attachmentUrl)
-                          ? CachedNetworkImage(
-                              imageUrl: message.attachmentUrl!,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                              memCacheWidth: 800,
-                              placeholder: (context, url) =>
-                                  Container(height: 180, color: Colors.black26),
-                              errorWidget: (context, url, error) =>
-                                  const SizedBox.shrink(),
-                            )
-                          : Image.file(
-                              File(message.attachmentUrl!),
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                              cacheWidth: 800,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Container(
-                                height: 120,
-                                color: Colors.black26,
-                                alignment: Alignment.center,
-                                child: const Icon(Icons.broken_image_rounded,
-                                    color: Colors.white54, size: 30),
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          if (isImageRevealed)
+                            buildImage()
+                          else
+                            ImageFiltered(
+                              imageFilter: ImageFilter.blur(
+                                sigmaX: 16,
+                                sigmaY: 16,
+                              ),
+                              child: buildImage(),
+                            ),
+                          if (!isImageRevealed) ...[
+                            Positioned.fill(
+                              child: Container(
+                                color: Colors.black.withValues(alpha: 0.20),
                               ),
                             ),
+                            FilledButton.icon(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppColors.primaryTeal,
+                                foregroundColor: Colors.white,
+                              ),
+                              onPressed: onRevealImage,
+                              icon: const Icon(Icons.visibility_rounded, size: 18),
+                              label: Text(
+                                isArabic ? 'اعرض الصورة' : 'Reveal image',
+                                style: const TextStyle(fontFamily: 'Cairo'),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    if (hasImage && onReportImage != null)
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: TextButton.icon(
+                          onPressed: onReportImage,
+                          icon: const Icon(
+                            Icons.flag_rounded,
+                            size: 16,
+                            color: AppColors.warning,
+                          ),
+                          label: Text(
+                            isArabic ? 'إبلاغ عن الصورة' : 'Report image',
+                            style: const TextStyle(
+                              color: AppColors.warning,
+                              fontFamily: 'Cairo',
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
                     if (shouldShowText)
                       Padding(
                         padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
@@ -2909,10 +3250,12 @@ class _ReceiverMessageBubble extends StatelessWidget {
                           textDirection: MessageTextDirection.of(cleanText),
                           textAlign: TextAlign.start,
                           style: const TextStyle(
-                                color: AppColors.textDark,
-                                fontSize: 14.5,
-                                fontFamily: 'Cairo',
-                                height: 1.35)),
+                            color: AppColors.textDark,
+                            fontSize: 14.5,
+                            fontFamily: 'Cairo',
+                            height: 1.35,
+                          ),
+                        ),
                       ),
                   ],
                 ),
@@ -2921,11 +3264,14 @@ class _ReceiverMessageBubble extends StatelessWidget {
             const SizedBox(height: 3),
             Padding(
               padding: const EdgeInsets.only(left: 4, right: 4),
-              child: Text(_formatMessageTime(message.time, isArabic),
-                  style: const TextStyle(
-                      color: AppColors.textMuted,
-                      fontSize: 10.5,
-                      fontFamily: 'Cairo')),
+              child: Text(
+                _formatMessageTime(message.time, isArabic),
+                style: const TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 10.5,
+                  fontFamily: 'Cairo',
+                ),
+              ),
             ),
           ],
         ),

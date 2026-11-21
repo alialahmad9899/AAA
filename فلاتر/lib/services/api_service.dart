@@ -3556,6 +3556,11 @@ class ApiService {
             rawPartnerOnline == 1 ||
             rawPartnerOnline == '1' ||
             rawPartnerOnline == 'true';
+        final rawMutedByMe = data['muted_by_me'];
+        final mutedByMe = rawMutedByMe == true ||
+            rawMutedByMe == 1 ||
+            rawMutedByMe == '1' ||
+            rawMutedByMe == 'true';
         return {
           'success': true,
           'status': 'success',
@@ -3563,6 +3568,7 @@ class ApiService {
           'has_more_old_messages': threadData['has_more_old_messages'] == true,
           'partner_is_online': partnerIsOnline,
           'partner_last_seen': threadData['partner_last_seen']?.toString() ?? '',
+          'muted_by_me': mutedByMe,
           'chat_rules': chatRules,
         };
       }
@@ -3739,12 +3745,13 @@ class ApiService {
   }
 
   static Future<bool> setChatMuted({
-    required int threadId,
+    required int partnerUserId,
     required bool muted,
   }) async {
+    if (partnerUserId <= 0) return false;
     try {
       final response = await post('/member/chat-mute', {
-        'chat_thread_id': threadId,
+        'partner_user_id': partnerUserId,
         'muted': muted,
       });
       return isSuccessfulResult(response);
@@ -3761,7 +3768,7 @@ class ApiService {
       if (accountId <= 0) return;
       final settings = await ChatLocalStore.getMuteSettings(accountId);
       for (final entry in settings.entries) {
-        await setChatMuted(threadId: entry.key, muted: entry.value);
+        await setChatMuted(partnerUserId: entry.key, muted: entry.value);
       }
     } catch (error) {
       if (kDebugMode) debugPrint('⚠️ [Chat Mute Sync] $error');
@@ -3913,6 +3920,30 @@ class ApiService {
     } catch (e) {
       if (kDebugMode) debugPrint('❌ [API ERROR toggleBlockUser]: $e');
       return false;
+    }
+  }
+
+  static Future<Map<String, dynamic>> deleteChatMessage({
+    required int threadId,
+    required int messageId,
+  }) async {
+    if (threadId <= 0 || messageId <= 0) {
+      return {'success': false, 'message': 'Invalid message identifier'};
+    }
+    try {
+      final response = await post('/member/chat-message-delete', {
+        'chat_thread_id': threadId,
+        'message_id': messageId,
+      });
+      final bool success = isSuccessfulResult(response);
+      return {
+        'success': success,
+        'message': response['message']?.toString() ??
+            (success ? 'Message deleted' : 'Could not delete message'),
+      };
+    } catch (error) {
+      if (kDebugMode) debugPrint('⚠️ [Chat Message Delete] $error');
+      return {'success': false, 'message': 'Could not delete message'};
     }
   }
 
@@ -4091,7 +4122,12 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> reportMember(
-      int userId, String reason, {int? chatThreadId}) async {
+    int userId,
+    String reason, {
+    int? chatThreadId,
+    int? messageId,
+    String? contentType,
+  }) async {
     try {
       final headers = await _getHeaders();
       final Uri url = Uri.parse('$baseUrl/member/report-member');
@@ -4110,6 +4146,10 @@ class ApiService {
               'report_reason': reason,
               if (chatThreadId != null && chatThreadId > 0)
                 'chat_thread_id': chatThreadId,
+              if (messageId != null && messageId > 0)
+                'reported_message_id': messageId,
+              if (contentType != null && contentType.trim().isNotEmpty)
+                'reported_content_type': contentType,
             }),
           )
           .timeout(_timeoutDuration);

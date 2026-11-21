@@ -64,8 +64,32 @@
                                                     <strong>{{ $evidenceMessage['sender_name'] ?? translate('Member') }}</strong>
                                                     <small class="text-muted">{{ $evidenceMessage['created_at'] ?? '' }}</small>
                                                 </div>
+
+                                                @if(!empty($evidenceMessage['is_reported_item']))
+                                                    <div class="mb-2">
+                                                        <span class="badge badge-danger">
+                                                            {{ translate('Specific reported') }}:
+                                                            {{ translate(($evidenceMessage['content_type'] ?? 'message') === 'image' ? 'Image' : 'Message') }}
+                                                        </span>
+                                                        @if(!empty($evidenceMessage['reason']))
+                                                            <small class="text-muted ml-2">{{ translate('Reason') }}: {{ $evidenceMessage['reason'] }}</small>
+                                                        @endif
+                                                    </div>
+                                                @endif
+
                                                 <div style="white-space:pre-wrap; overflow-wrap:anywhere;">{{ $evidenceMessage['message'] ?? '' }}</div>
+
                                                 @if(!empty($evidenceMessage['attachment_ids']))
+                                                    <div class="d-flex flex-wrap mt-3" style="gap:10px;">
+                                                        @foreach($evidenceMessage['attachment_ids'] as $attachmentId)
+                                                            @php($attachmentUrl = uploaded_asset($attachmentId))
+                                                            @if(!empty($attachmentUrl))
+                                                                <a href="{{ $attachmentUrl }}" target="_blank" rel="noopener noreferrer" class="d-inline-block border rounded p-1">
+                                                                    <img src="{{ $attachmentUrl }}" alt="{{ translate('Reported chat attachment') }}" loading="lazy" style="display:block;max-width:180px;max-height:180px;object-fit:contain;">
+                                                                </a>
+                                                            @endif
+                                                        @endforeach
+                                                    </div>
                                                     <small class="text-muted d-block mt-2">
                                                         {{ translate('Attachment IDs') }}:
                                                         {{ implode(', ', $evidenceMessage['attachment_ids']) }}

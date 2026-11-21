@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Chat;
 use App\Models\ChatThread;
+use App\Models\ChatMute;
+use App\Models\IgnoredUser;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -65,11 +67,25 @@ class ChatService
                 'wesal:active-chat:' . $receiverId,
                 0
             );
-            $isMuted = (bool) Cache::get(
-                'wesal:chat-muted:' . $receiverId . ':' . $thread->id,
-                false
-            );
-            if ($activeThreadId === (int) $thread->id || $isMuted) {
+            // Mute is stored against the partner, not the thread ID.
+            $isMuted = ChatMute::query()
+                ->where('muted_by', $receiverId)
+                ->where('muted_user_id', $senderUserId)
+                ->exists();
+
+            // Blocking either direction suppresses chat push notifications.
+            $isBlocked = IgnoredUser::query()
+                ->where(function ($query) use ($receiverId, $senderUserId) {
+                    $query->where('ignored_by', $receiverId)
+                        ->where('user_id', $senderUserId);
+                })
+                ->orWhere(function ($query) use ($receiverId, $senderUserId) {
+                    $query->where('ignored_by', $senderUserId)
+                        ->where('user_id', $receiverId);
+                })
+                ->exists();
+
+            if ($activeThreadId === (int) $thread->id || $isMuted || $isBlocked) {
                 return $chat;
             }
 

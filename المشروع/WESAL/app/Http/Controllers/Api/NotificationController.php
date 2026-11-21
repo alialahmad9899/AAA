@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\Notification;
 use App\Models\ChatThread;
+use App\Models\ChatMute;
 use Illuminate\Support\Facades\Cache;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -144,41 +145,89 @@ class NotificationController extends Controller
     }
 
     /**
-     * Persist the current member's mute preference for one owned conversation.
+     * Store mute by participant, not by a volatile chat thread ID.
+     * The preference survives block/unblock and conversation recreation.
      */
     public function set_chat_mute(Request $request)
     {
         $validated = $request->validate([
-            'chat_thread_id' => 'required|integer|min:1',
+            'chat_thread_id' => 'nullable|integer|min:1',
+            'partner_user_id' => 'nullable|integer|min:1',
             'muted' => 'required|boolean',
         ]);
-        $threadId = (int) $validated['chat_thread_id'];
+
         $userId = (int) auth()->id();
+        $threadId = (int) ($validated['chat_thread_id'] ?? 0);
+        $partnerUserId = (int) ($validated['partner_user_id'] ?? 0);
+        $thread = null;
 
-        $ownsThread = ChatThread::whereKey($threadId)
-            ->where(function ($query) use ($userId) {
-                $query->where('sender_user_id', $userId)
-                    ->orWhere('receiver_user_id', $userId);
-            })
-            ->exists();
+        if ($threadId > 0) {
+            $thread = ChatThread::whereKey($threadId)
+                ->where(function ($query) use ($userId) {
+                    $query->where('sender_user_id', $userId)
+                        ->orWhere('receiver_user_id', $userId);
+                })
+                ->first();
 
-        if (!$ownsThread) {
-            return response()->json([
-                'result' => false,
-                'message' => 'المحادثة غير موجودة أو غير مصرح بها.',
-            ], 404);
+            if (!$thread) {
+                return response()->json([
+                    'result' => false,
+                    'message' => 'المحادثة غير موجودة أو غير مصرح بها.',
+                ], 404);
+            }
+
+            $actualPartnerId = (int) ($thread->sender_user_id == $userId
+                ? $thread->receiver_user_id
+                : $thread->sender_user_id);
+            if ($partnerUserId > 0 && $partnerUserId !== $actualPartnerId) {
+                return response()->json([
+                    'result' => false,
+                    'message' => 'العضو المحدد لا يطابق طرف المحادثة.',
+                ], 403);
+            }
+            $partnerUserId = $actualPartnerId;
         }
 
-        $key = 'wesal:chat-muted:' . $userId . ':' . $threadId;
+        if ($partnerUserId <= 0 || $partnerUserId === $userId ||
+            !User::whereKey($partnerUserId)->exists()) {
+            return response()->json([
+                'result' => false,
+                'message' => 'العضو المحدد غير صالح.',
+            ], 422);
+        }
+
+        if (!$thread) {
+            $sharedThreadExists = ChatThread::where(function ($query) use ($userId, $partnerUserId) {
+                $query->where('sender_user_id', $userId)
+                    ->where('receiver_user_id', $partnerUserId);
+            })->orWhere(function ($query) use ($userId, $partnerUserId) {
+                $query->where('sender_user_id', $partnerUserId)
+                    ->where('receiver_user_id', $userId);
+            })->exists();
+
+            if (!$sharedThreadExists) {
+                return response()->json([
+                    'result' => false,
+                    'message' => 'لا توجد محادثة مشتركة مع هذا العضو.',
+                ], 404);
+            }
+        }
+
         if ($request->boolean('muted')) {
-            Cache::forever($key, true);
+            ChatMute::updateOrCreate([
+                'muted_by' => $userId,
+                'muted_user_id' => $partnerUserId,
+            ], []);
         } else {
-            Cache::forget($key);
+            ChatMute::where('muted_by', $userId)
+                ->where('muted_user_id', $partnerUserId)
+                ->delete();
         }
 
         return response()->json([
             'result' => true,
             'muted' => $request->boolean('muted'),
+            'partner_user_id' => $partnerUserId,
         ]);
     }
 
