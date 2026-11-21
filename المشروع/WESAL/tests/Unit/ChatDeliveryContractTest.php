@@ -63,7 +63,6 @@ SOURCE;
             "'status' => 'image_requires_partner_reply'",
             $controller
         );
-        $this->assertStringContainsString(
         $expectedOtherParticipantFilter = <<<'SOURCE'
 ->where('sender_user_id', '!=', $sender_id)
 SOURCE;
