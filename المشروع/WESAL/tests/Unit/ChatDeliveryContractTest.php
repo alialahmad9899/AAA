@@ -64,8 +64,9 @@ SOURCE;
             $controller
         );
         $this->assertStringContainsString(
-            "->where('sender_user_id', '!=', $sender_id)",
-            $controller
-        );
+        $expectedOtherParticipantFilter = <<<'SOURCE'
+->where('sender_user_id', '!=', $sender_id)
+SOURCE;
+        $this->assertStringContainsString($expectedOtherParticipantFilter, $controller);
     }
 }
