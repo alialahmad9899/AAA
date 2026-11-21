@@ -9,6 +9,10 @@ class ReportedUser extends Model
 {
   protected $guarded = [];
 
+  protected $casts = [
+      'chat_evidence' => 'array',
+  ];
+
   public function user()
   {
       return $this->belongsTo(User::class)->withTrashed();
