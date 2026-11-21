@@ -342,6 +342,13 @@ SupportTicketModel? _parseSupportTicketDetailsIsolate(String responseBody) {
 // كلاس ApiService الرئيسي
 // ============================================================================
 
+class PublicProfileNotFoundException implements Exception {
+  const PublicProfileNotFoundException();
+
+  @override
+  String toString() => 'Member profile not found';
+}
+
 class ApiService {
   static const String baseUrl = 'https://www.wesalsyria.com/api';
   static const _secureStorage = FlutterSecureStorage();
@@ -1428,6 +1435,10 @@ class ApiService {
       final response =
           await http.get(url, headers: headers).timeout(_timeoutDuration);
 
+      if (response.statusCode == 404) {
+        throw const PublicProfileNotFoundException();
+      }
+
       if (response.statusCode != 200) {
         if (kDebugMode) {
           debugPrint(
@@ -1467,6 +1478,14 @@ class ApiService {
           body['success'] == false;
 
       if (explicitlyFailed) {
+        final serverMessage = body['message']?.toString().toLowerCase() ?? '';
+        if (serverMessage.contains('not found') ||
+            serverMessage.contains('غير موجود') ||
+            serverMessage.contains('عضو غير صالح') ||
+            serverMessage.contains('profile is not available') ||
+            serverMessage.contains('غير متاح')) {
+          throw const PublicProfileNotFoundException();
+        }
         if (kDebugMode) {
           debugPrint(
             '[PublicProfile] API rejected user $userId: '
@@ -1505,6 +1524,8 @@ class ApiService {
         }
         return null;
       }
+    } on PublicProfileNotFoundException {
+      rethrow;
     } catch (error, stackTrace) {
       if (kDebugMode) {
         debugPrint('[API ERROR PublicProfile] user=$userId error=$error');
@@ -4070,7 +4091,7 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> reportMember(
-      int userId, String reason) async {
+      int userId, String reason, {int? chatThreadId}) async {
     try {
       final headers = await _getHeaders();
       final Uri url = Uri.parse('$baseUrl/member/report-member');
@@ -4087,6 +4108,8 @@ class ApiService {
               'id': userId,
               'reason': reason,
               'report_reason': reason,
+              if (chatThreadId != null && chatThreadId > 0)
+                'chat_thread_id': chatThreadId,
             }),
           )
           .timeout(_timeoutDuration);
