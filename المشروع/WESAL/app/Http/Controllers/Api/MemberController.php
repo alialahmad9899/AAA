@@ -9,6 +9,7 @@ use App\Models\Member;
 use App\Models\Address;
 use App\Models\IgnoredUser;
 use App\Models\ReportedUser;
+use App\Models\ChatThread;
 use Illuminate\Http\Request;
 use App\Models\PhysicalAttribute;
 use App\Models\SpiritualBackground;
@@ -410,6 +411,7 @@ class MemberController extends Controller
     public function report_member(Request $request)
     {
         $targetUserId = $request->user_id ?? $request->id;
+        $reporterId = (int) auth()->id();
 
         if (!$targetUserId || !User::find($targetUserId)) {
             return response()->json([
@@ -419,7 +421,7 @@ class MemberController extends Controller
         }
 
         $reportedUser = ReportedUser::where('user_id', $targetUserId)
-            ->where('reported_by', auth()->user()->id)
+            ->where('reported_by', $reporterId)
             ->first();
 
         if ($reportedUser) {
@@ -429,14 +431,85 @@ class MemberController extends Controller
             ], 200);
         }
 
+        // Capture evidence only from a thread actually shared by reporter and
+        // target. Never trust client-supplied message text or sender identity.
+        $chatEvidence = null;
+        $chatThreadId = (int) $request->input('chat_thread_id', 0);
+        if ($chatThreadId > 0) {
+            $thread = ChatThread::query()
+                ->whereKey($chatThreadId)
+                ->where(function ($query) use ($reporterId, $targetUserId) {
+                    $query->where(function ($participants) use ($reporterId, $targetUserId) {
+                        $participants->where('sender_user_id', $reporterId)
+                            ->where('receiver_user_id', $targetUserId);
+                    })->orWhere(function ($participants) use ($reporterId, $targetUserId) {
+                        $participants->where('sender_user_id', $targetUserId)
+                            ->where('receiver_user_id', $reporterId);
+                    });
+                })
+                ->first();
+
+            if (!$thread) {
+                return response()->json([
+                    'result' => false,
+                    'message' => 'تعذر التحقق من المحادثة المرتبطة بالبلاغ.'
+                ], 403);
+            }
+
+            $chatEvidence = $thread->chats()
+                ->with('sender')
+                ->latest('id')
+                ->limit(5)
+                ->get()
+                ->reverse()
+                ->values()
+                ->map(function ($chat) use ($reporterId) {
+                    $attachmentIds = [];
+                    $rawAttachments = $chat->attachment ?? null;
+                    if (is_array($rawAttachments)) {
+                        $attachmentIds = $rawAttachments;
+                    } elseif (is_numeric($rawAttachments)) {
+                        $attachmentIds = [(int) $rawAttachments];
+                    } elseif (is_string($rawAttachments) && trim($rawAttachments) !== '') {
+                        $decodedAttachments = json_decode($rawAttachments, true);
+                        if (is_array($decodedAttachments)) {
+                            $attachmentIds = $decodedAttachments;
+                        } elseif (is_numeric($rawAttachments)) {
+                            $attachmentIds = [(int) $rawAttachments];
+                        } else {
+                            $attachmentIds = explode(',', $rawAttachments);
+                        }
+                    }
+
+                    $attachmentIds = array_values(array_map(
+                        'intval',
+                        array_filter($attachmentIds, 'is_numeric')
+                    ));
+
+                    return [
+                        'message_id' => (int) $chat->id,
+                        'sender_user_id' => (int) $chat->sender_user_id,
+                        'sender_name' => trim(
+                            (string) optional($chat->sender)->first_name . ' ' .
+                            (string) optional($chat->sender)->last_name
+                        ),
+                        'is_reporter' => (int) $chat->sender_user_id === $reporterId,
+                        'message' => mb_substr((string) ($chat->message ?? ''), 0, 5000),
+                        'created_at' => optional($chat->created_at)->toIso8601String(),
+                        'attachment_ids' => $attachmentIds,
+                    ];
+                })
+                ->all();
+        }
+
         $report = ReportedUser::create([
-            'user_id'     => $targetUserId,
-            'reported_by' => auth()->user()->id,
-            'reason'      => $request->reason ?? $request->report_reason ?? 'بدون سبب محدد',
+            'user_id' => $targetUserId,
+            'reported_by' => $reporterId,
+            'reason' => $request->reason ?? $request->report_reason ?? 'بدون سبب محدد',
+            'chat_evidence' => $chatEvidence,
         ]);
 
-        // Send an administrative alert without allowing notification failures
-        // to roll back or hide the successfully stored report.
+        // Notifications must not undo or hide a successfully stored report.
         try {
             $reporter = auth()->user();
             $admins = User::where('user_type', 'admin')->get(['id']);
@@ -458,8 +531,10 @@ class MemberController extends Controller
         }
 
         return response()->json([
-            'result'  => true,
-            'message' => 'تم إرسال بلاغك بنجاح وسيتولى الفريق مراجعته.'
+            'result' => true,
+            'message' => $chatThreadId > 0
+                ? 'تم إرسال البلاغ وحفظ آخر رسائل المحادثة لمراجعة الإدارة.'
+                : 'تم إرسال بلاغك بنجاح وسيتولى الفريق مراجعته.'
         ], 200);
     }
 
