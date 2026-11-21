@@ -1043,17 +1043,19 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     }
 
     if (!mounted) return;
-    await WidgetsBinding.instance.endOfFrame;
-    final targetContext =
-        _missingProfileNavigationKeys[field.targetKey]?.currentContext;
-    if (targetContext == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final targetContext =
+          _missingProfileNavigationKeys[field.targetKey]?.currentContext;
+      if (targetContext == null) return;
 
-    await Scrollable.ensureVisible(
-      targetContext,
-      alignment: 0.14,
-      duration: const Duration(milliseconds: 380),
-      curve: Curves.easeInOutCubic,
-    );
+      Scrollable.ensureVisible(
+        targetContext,
+        alignment: 0.14,
+        duration: const Duration(milliseconds: 380),
+        curve: Curves.easeInOutCubic,
+      );
+    });
   }
 
   void _goToFirstMissingProfileField() {
