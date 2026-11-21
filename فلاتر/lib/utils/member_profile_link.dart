@@ -17,7 +17,7 @@ class MemberProfileLink {
   static String androidIntentUrl(Object memberReference) {
     final reference = memberReference.toString().trim();
     final fallback = Uri.encodeComponent(webUrl(reference));
-    return 'intent://profile?id=\${Uri.encodeQueryComponent(reference)}'
+    return 'intent://profile?id=${Uri.encodeQueryComponent(reference)}'
         '#Intent;scheme=wesal;package=$androidPackage;'
         'S.browser_fallback_url=$fallback;end';
   }
