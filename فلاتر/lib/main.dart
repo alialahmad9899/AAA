@@ -77,7 +77,10 @@ void _handleDeepLinkUri(Uri uri) {
           uri.host.toLowerCase() == 'profile');
 
   if (isProfileLink) {
-    final String? idParam = uri.queryParameters['id'];
+    final String? idParam = uri.queryParameters['id'] ??
+        uri.queryParameters['member_id'] ??
+        uri.queryParameters['member_code'] ??
+        uri.queryParameters['code'];
     if (idParam != null) {
       final int? userId = int.tryParse(idParam);
       if (userId != null && userId > 0) {
