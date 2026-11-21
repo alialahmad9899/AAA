@@ -967,20 +967,63 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     }
   }
 
+  List<_MissingProfileField> _missingProfileFields() {
+    final missing = <_MissingProfileField>[];
+    if (_firstNameCtrl.text.trim().isEmpty) {
+      missing.add(const _MissingProfileField(
+        labelAr: 'الاسم الأول', labelEn: 'First name', tabIndex: 0));
+    }
+    if (_lastNameCtrl.text.trim().isEmpty) {
+      missing.add(const _MissingProfileField(
+        labelAr: 'الكنية', labelEn: 'Last name', tabIndex: 0));
+    }
+    if (_selectedHeight == null || _selectedHeight!.isEmpty) {
+      missing.add(const _MissingProfileField(
+        labelAr: 'الطول', labelEn: 'Height', tabIndex: 0));
+    }
+    if (_selectedWeight == null || _selectedWeight!.isEmpty) {
+      missing.add(const _MissingProfileField(
+        labelAr: 'الوزن', labelEn: 'Weight', tabIndex: 0));
+    }
+    if (_selectedBirthCountryId == null || _selectedBirthCountryId!.isEmpty) {
+      missing.add(const _MissingProfileField(
+        labelAr: 'بلد الميلاد', labelEn: 'Birth country', tabIndex: 1));
+    }
+    if (_selectedResidencyCountryId == null ||
+        _selectedResidencyCountryId!.isEmpty) {
+      missing.add(const _MissingProfileField(
+        labelAr: 'بلد الإقامة', labelEn: 'Residence country', tabIndex: 1));
+    }
+    if (_selectedReligionId == null || _selectedReligionId!.isEmpty) {
+      missing.add(const _MissingProfileField(
+        labelAr: 'الديانة', labelEn: 'Religion', tabIndex: 1));
+    }
+    if (_introCtrl.text.trim().isEmpty) {
+      missing.add(const _MissingProfileField(
+        labelAr: 'نبذة عنك', labelEn: 'About you', tabIndex: 0));
+    }
+    if (_selectedHobby == null || _selectedHobby!.isEmpty) {
+      missing.add(const _MissingProfileField(
+        labelAr: 'الهواية', labelEn: 'Hobby', tabIndex: 2));
+    }
+    if (_selectedSunSign == null || _selectedSunSign!.isEmpty) {
+      missing.add(const _MissingProfileField(
+        labelAr: 'البرج', labelEn: 'Zodiac sign', tabIndex: 2));
+    }
+    return missing;
+  }
+
   double _calculateProfileCompletion() {
-    int total = 10;
-    int filled = 0;
-    if (_firstNameCtrl.text.isNotEmpty) filled++;
-    if (_lastNameCtrl.text.isNotEmpty) filled++;
-    if (_introCtrl.text.isNotEmpty) filled++;
-    if (_selectedBirthCountryId != null) filled++;
-    if (_selectedResidencyCountryId != null) filled++;
-    if (_selectedReligionId != null) filled++;
-    if (_selectedHeight != null) filled++;
-    if (_selectedWeight != null) filled++;
-    if (_selectedHobby != null) filled++;
-    if (_selectedSunSign != null) filled++;
-    return filled / total;
+    return (1 - (_missingProfileFields().length / 10)).clamp(0.0, 1.0).toDouble();
+  }
+
+  void _openMissingProfileField(_MissingProfileField field) {
+    if (mounted) _tabController.animateTo(field.tabIndex);
+  }
+
+  void _goToFirstMissingProfileField() {
+    final missing = _missingProfileFields();
+    if (missing.isNotEmpty) _openMissingProfileField(missing.first);
   }
 
   void _recordLoadedFields(String section, Map<String, dynamic>? data) {
@@ -1885,6 +1928,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
 
   @override
   Widget build(BuildContext context) {
+    final missingProfileFields = _missingProfileFields();
     final double completionRatio = _calculateProfileCompletion();
 
     return GestureDetector(
@@ -1912,12 +1956,12 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 10),
                     child: Row(
+                      textDirection:
+                          _isArabic ? TextDirection.rtl : TextDirection.ltr,
                       children: [
                         IconButton(
-                          icon: Icon(
-                              _isArabic
-                                  ? Icons.arrow_back_ios_new_rounded
-                                  : Icons.arrow_back_rounded,
+                          icon: const Icon(
+                              Icons.arrow_back_rounded,
                               color: AppColors.textDark,
                               size: 20),
                           onPressed: () => Navigator.pop(context, true),
@@ -1987,6 +2031,100 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                       ),
                     ),
                   ),
+                  if (missingProfileFields.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
+                        decoration: BoxDecoration(
+                          color: AppColors.cardColor,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.lineColor),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _isArabic ? 'الحقول الناقصة:' : 'Missing fields:',
+                              style: const TextStyle(
+                                color: AppColors.textMuted,
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Cairo',
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 6,
+                              children: missingProfileFields.map((field) {
+                                return InkWell(
+                                  onTap: () => _openMissingProfileField(field),
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 9,
+                                      vertical: 5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.sectionBackground,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: AppColors.accentWarm.withValues(
+                                          alpha: 0.55,
+                                        ),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      _isArabic ? field.labelAr : field.labelEn,
+                                      style: const TextStyle(
+                                        color: AppColors.textDark,
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w600,
+                                        fontFamily: 'Cairo',
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                            Align(
+                              alignment: AlignmentDirectional.centerEnd,
+                              child: TextButton.icon(
+                                onPressed: _goToFirstMissingProfileField,
+                                icon: const Icon(Icons.edit_rounded, size: 16),
+                                label: Text(
+                                  _isArabic ? 'كمّل ملفك' : 'Complete profile',
+                                  style: const TextStyle(
+                                    fontFamily: 'Cairo',
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(
+                          _isArabic
+                              ? 'ملفك مكتمل، أحسنت! ✨'
+                              : 'Your profile is complete. Great job! ✨',
+                          style: const TextStyle(
+                            color: AppColors.primaryTeal,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Cairo',
+                          ),
+                        ),
+                      ),
+                    ),
                   AnimatedBuilder(
                     animation: _tabController,
                     builder: (context, child) {
@@ -2572,6 +2710,18 @@ class _EditProfileScreenState extends State<EditProfileScreen>
       ),
     );
   }
+}
+
+class _MissingProfileField {
+  final String labelAr;
+  final String labelEn;
+  final int tabIndex;
+
+  const _MissingProfileField({
+    required this.labelAr,
+    required this.labelEn,
+    required this.tabIndex,
+  });
 }
 
 Map<String, dynamic> parseProfileData(Map<String, dynamic> jsonResponse) {

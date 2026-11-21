@@ -28,6 +28,7 @@ class Step2PersonalDetails extends StatelessWidget {
   final String? affection;
   final String? humor;
   final String lang;
+  final bool showValidationErrors;
 
   final ValueChanged<String?> onEducationChanged;
   final ValueChanged<double> onHeightChanged;
@@ -63,6 +64,7 @@ class Step2PersonalDetails extends StatelessWidget {
     required this.affection,
     required this.humor,
     this.lang = 'ar',
+    this.showValidationErrors = false,
     required this.onEducationChanged,
     required this.onHeightChanged,
     required this.onWeightChanged,
@@ -78,6 +80,21 @@ class Step2PersonalDetails extends StatelessWidget {
   });
 
   bool get _isAr => lang == 'ar';
+
+  Widget _validationOutline({required bool hasError, required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.all(5),
+      decoration: BoxDecoration(
+        color: hasError ? Colors.red.withValues(alpha: 0.035) : Colors.transparent,
+        border: Border.all(
+          color: hasError ? Colors.redAccent : Colors.transparent,
+          width: hasError ? 1.4 : 0,
+        ),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: child,
+    );
+  }
 
   static const List<Map<String, String>> _educationDegrees = [
     {'ar': 'إعدادية', 'en': 'Preparatory'},
@@ -310,10 +327,13 @@ class Step2PersonalDetails extends StatelessWidget {
                       ? '1. إلى أي مستوى تعليمي وصلت؟ *'
                       : '1. What is your education degree? *',
                 ),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _educationDegrees.map((item) {
+                _validationOutline(
+                  hasError: showValidationErrors &&
+                      (educationDegree == null || educationDegree!.trim().isEmpty),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _educationDegrees.map((item) {
                     final key = item['ar']!;
                     final label = _isAr ? item['ar']! : item['en']!;
                     final isSelected = educationDegree == key;
@@ -322,7 +342,8 @@ class Step2PersonalDetails extends StatelessWidget {
                       isSelected: isSelected,
                       onTap: () => onEducationChanged(key),
                     );
-                  }).toList(),
+                    }).toList(),
+                  ),
                 ),
                 const SizedBox(height: 14),
                 // 2. التخصص والمهنة                // 2. التخصص والمهنة
@@ -392,7 +413,16 @@ class Step2PersonalDetails extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: AppColors.sectionBackground,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.lineColor),
+                    border: Border.all(
+                      color: showValidationErrors &&
+                              (!heightWasSelected || !weightWasSelected)
+                          ? Colors.redAccent
+                          : AppColors.lineColor,
+                      width: showValidationErrors &&
+                              (!heightWasSelected || !weightWasSelected)
+                          ? 1.6
+                          : 1,
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -508,34 +538,40 @@ class Step2PersonalDetails extends StatelessWidget {
                 ),
 
                 _buildSubTitle(_isAr ? '• كيف تصف بنية جسمك؟ *' : '• Body Type *:'),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _bodyTypeOptions.entries.map((e) {
+                _validationOutline(
+                  hasError: showValidationErrors && bodyType.isEmpty,
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _bodyTypeOptions.entries.map((e) {
                     final label = _isAr ? e.value['ar']! : e.value['en']!;
                     return _buildCustomChip(
                       label: label,
                       isSelected: bodyType == e.key,
                       onTap: () => onBodyTypeChanged(e.key),
                     );
-                  }).toList(),
+                    }).toList(),
+                  ),
                 ),
                 const SizedBox(height: 12),
 
                 _buildSubTitle(_isAr
                     ? '• هل لديك وشم أو رسومات على الجسد؟ *'
                     : '• Body Art / Tattoo *:'),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _bodyArtOptions.entries.map((e) {
+                _validationOutline(
+                  hasError: showValidationErrors && bodyArt.isEmpty,
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _bodyArtOptions.entries.map((e) {
                     final label = _isAr ? e.value['ar']! : e.value['en']!;
                     return _buildCustomChip(
                       label: label,
                       isSelected: bodyArt == e.key,
                       onTap: () => onBodyArtChanged(e.key),
                     );
-                  }).toList(),
+                    }).toList(),
+                  ),
                 ),
                 const SizedBox(height: 18),
                 _buildQuestionTitle(_isAr ? '6. هل تتناول الكحول؟' : '6. Do you drink? 🥤'),
@@ -616,12 +652,14 @@ class Step2PersonalDetails extends StatelessWidget {
     String selectedValue,
     ValueChanged<String> onSelected,
   ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(icon, color: AppColors.accentWarm, size: 16),
+    return _validationOutline(
+      hasError: showValidationErrors && selectedValue.isEmpty,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: AppColors.accentWarm, size: 16),
             const SizedBox(width: 6),
             Text(
               title,
@@ -690,8 +728,9 @@ class Step2PersonalDetails extends StatelessWidget {
               ),
             );
           }).toList(),
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 }

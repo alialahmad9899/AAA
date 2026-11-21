@@ -34,6 +34,7 @@ class Step4PartnerExpectations extends StatelessWidget {
   final String smokingAcceptable;
   final String drinkingAcceptable;
   final String lang;
+  final bool showValidationErrors;
 
   final ValueChanged<RangeValues> onAgeRangeChanged;
   final ValueChanged<RangeValues> onHeightRangeChanged;
@@ -79,6 +80,7 @@ class Step4PartnerExpectations extends StatelessWidget {
     required this.smokingAcceptable,
     required this.drinkingAcceptable,
     this.lang = 'ar',
+    this.showValidationErrors = false,
     required this.onAgeRangeChanged,
     required this.onHeightRangeChanged,
     required this.onWeightRangeChanged,
@@ -186,6 +188,21 @@ class Step4PartnerExpectations extends StatelessWidget {
   }
 
   bool get _isAr => lang == 'ar';
+
+  Widget _validationOutline({required bool hasError, required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.all(5),
+      decoration: BoxDecoration(
+        color: hasError ? Colors.red.withValues(alpha: 0.035) : Colors.transparent,
+        border: Border.all(
+          color: hasError ? Colors.redAccent : Colors.transparent,
+          width: hasError ? 1.4 : 0,
+        ),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: child,
+    );
+  }
 
   static const List<Map<String, String>> _educationDegrees = [
     {'ar': 'إعدادية', 'en': 'Preparatory'},
@@ -583,7 +600,12 @@ class Step4PartnerExpectations extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: AppColors.sectionBackground,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.lineColor),
+                    border: Border.all(
+                      color: showValidationErrors && !heightRangeWasSelected
+                          ? Colors.redAccent
+                          : AppColors.lineColor,
+                      width: showValidationErrors && !heightRangeWasSelected ? 1.6 : 1,
+                    ),
                   ),
                   child: Column(
                     children: [
@@ -663,7 +685,12 @@ class Step4PartnerExpectations extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: AppColors.sectionBackground,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.lineColor),
+                    border: Border.all(
+                      color: showValidationErrors && !weightRangeWasSelected
+                          ? Colors.redAccent
+                          : AppColors.lineColor,
+                      width: showValidationErrors && !weightRangeWasSelected ? 1.6 : 1,
+                    ),
                   ),
                   child: Column(
                     children: [
@@ -736,10 +763,13 @@ class Step4PartnerExpectations extends StatelessWidget {
                 _buildSectionTitle(_isAr
                     ? '4. ما المستوى التعليمي الذي تفضّله؟ 🎓 *'
                     : '4. Education Level 🎓 *'),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _educationDegrees.map((item) {
+                _validationOutline(
+                  hasError: showValidationErrors &&
+                      (education == null || education!.isEmpty),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _educationDegrees.map((item) {
                     final key = item['ar']!;
                     final label = _isAr ? item['ar']! : item['en']!;
                     final isSelected = education == key;
@@ -748,7 +778,8 @@ class Step4PartnerExpectations extends StatelessWidget {
                       isSelected: isSelected,
                       onTap: () => onEducationChanged(key),
                     );
-                  }).toList(),
+                    }).toList(),
+                  ),
                 ),
                 const SizedBox(height: 18),
 
@@ -756,10 +787,13 @@ class Step4PartnerExpectations extends StatelessWidget {
                 _buildSectionTitle(_isAr
                     ? '5. هل لديك تفضيل للون البشرة؟ 🎨 *'
                     : '5. Preferred Complexion 🎨 *'),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _complexions.map((item) {
+                _validationOutline(
+                  hasError: showValidationErrors &&
+                      (complexion == null || complexion!.isEmpty),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _complexions.map((item) {
                     final key = item['ar']!;
                     final label = _isAr ? item['ar']! : item['en']!;
                     final isSelected = complexion == key;
@@ -769,7 +803,8 @@ class Step4PartnerExpectations extends StatelessWidget {
                       leading: key == 'لا يهم' ? null : _buildColorDot(key),
                       onTap: () => onComplexionChanged(key),
                     );
-                  }).toList(),
+                    }).toList(),
+                  ),
                 ),
                 const SizedBox(height: 18),
 
@@ -777,10 +812,12 @@ class Step4PartnerExpectations extends StatelessWidget {
                 _buildSectionTitle(_isAr
                     ? '6. أي لون للعينين تفضّل؟ 👁️ *'
                     : '6. Preferred Eye Color 👁️ *'),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _eyeColors.map((item) {
+                _validationOutline(
+                  hasError: showValidationErrors && (eyeColor == null || eyeColor!.isEmpty),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _eyeColors.map((item) {
                     final key = item['ar']!;
                     final label = _isAr ? item['ar']! : item['en']!;
                     return _buildCustomChip(
@@ -789,7 +826,8 @@ class Step4PartnerExpectations extends StatelessWidget {
                       leading: key == 'لا يهم' ? null : _buildColorDot(key),
                       onTap: () => onEyeColorChanged(key),
                     );
-                  }).toList(),
+                    }).toList(),
+                  ),
                 ),
                 const SizedBox(height: 18),
 
@@ -797,10 +835,12 @@ class Step4PartnerExpectations extends StatelessWidget {
                 _buildSectionTitle(_isAr
                     ? '7. وأي لون للشعر تفضّل؟ 💇 *'
                     : '7. Preferred Hair Color 💇 *'),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _hairColors.map((item) {
+                _validationOutline(
+                  hasError: showValidationErrors && (hairColor == null || hairColor!.isEmpty),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _hairColors.map((item) {
                     final key = item['ar']!;
                     final label = _isAr ? item['ar']! : item['en']!;
                     return _buildCustomChip(
@@ -809,7 +849,8 @@ class Step4PartnerExpectations extends StatelessWidget {
                       leading: key == 'لا يهم' ? null : _buildColorDot(key),
                       onTap: () => onHairColorChanged(key),
                     );
-                  }).toList(),
+                    }).toList(),
+                  ),
                 ),
                 const SizedBox(height: 18),
 
@@ -913,10 +954,12 @@ class Step4PartnerExpectations extends StatelessWidget {
                 _buildSectionTitle(_isAr
                     ? '13. هل يناسبك شريك لديه أطفال من زواج سابق؟ 👶 *'
                     : '13. Accept Children? 👶 *'),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
+                _validationOutline(
+                  hasError: showValidationErrors && childrenAcceptable.isEmpty,
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
                     _buildCustomChip(
                       label: _isAr ? 'لا يهم' : 'Does not matter',
                       isSelected: childrenAcceptable == 'does_not_matter',
@@ -932,17 +975,20 @@ class Step4PartnerExpectations extends StatelessWidget {
                       isSelected: childrenAcceptable == 'no',
                       onTap: () => onChildrenChanged('no'),
                     ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 18),
 
                 // 8. موقف التدخين
                 _buildSectionTitle(
                     _isAr ? '14. ما موقفك من التدخين لدى الشريك؟ 🚬 *' : '14. Accept Smoking? 🚬 *'),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
+                _validationOutline(
+                  hasError: showValidationErrors && smokingAcceptable.isEmpty,
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
                     _buildCustomChip(
                       label: _isAr ? 'لا يهم' : 'Does not matter',
                       isSelected: smokingAcceptable == 'does_not_matter',
@@ -958,7 +1004,8 @@ class Step4PartnerExpectations extends StatelessWidget {
                       isSelected: smokingAcceptable == 'yes',
                       onTap: () => onSmokingChanged('yes'),
                     ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 18),
 
@@ -966,10 +1013,12 @@ class Step4PartnerExpectations extends StatelessWidget {
                 _buildSectionTitle(_isAr
                     ? '15. ما موقفك من تناول الكحول لدى الشريك؟ 🍷 *'
                     : '15. Accept Alcohol? 🍷 *'),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
+                _validationOutline(
+                  hasError: showValidationErrors && drinkingAcceptable.isEmpty,
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
                     _buildCustomChip(
                       label: _isAr ? 'لا يهم' : 'Does not matter',
                       isSelected: drinkingAcceptable == 'does_not_matter',
@@ -985,7 +1034,8 @@ class Step4PartnerExpectations extends StatelessWidget {
                       isSelected: drinkingAcceptable == 'yes',
                       onTap: () => onDrinkingChanged('yes'),
                     ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),

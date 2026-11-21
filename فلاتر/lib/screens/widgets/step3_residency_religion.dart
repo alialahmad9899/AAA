@@ -21,6 +21,7 @@ class Step3ResidencyReligion extends StatefulWidget {
   final String? maritalStatusId;
   final TextEditingController childrenCountController;
   final String lang;
+  final bool showValidationErrors;
 
   final ValueChanged<String> onBirthCountryChanged;
   final ValueChanged<String> onResidenceCountryChanged;
@@ -40,6 +41,7 @@ class Step3ResidencyReligion extends StatefulWidget {
     required this.maritalStatusId,
     required this.childrenCountController,
     this.lang = 'ar',
+    this.showValidationErrors = false,
     required this.onBirthCountryChanged,
     required this.onResidenceCountryChanged,
     required this.onStateChanged,
@@ -507,6 +509,7 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
     required IconData icon,
     required VoidCallback onTap,
     bool isSelected = false,
+    bool showError = false,
   }) {
     return InkWell(
       onTap: onTap,
@@ -517,8 +520,10 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
           color: AppColors.sectionBackground,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? AppColors.accentWarm : AppColors.lineColor,
-            width: 1.2,
+            color: showError && !isSelected
+                ? Colors.redAccent
+                : (isSelected ? AppColors.accentWarm : AppColors.lineColor),
+            width: showError && !isSelected ? 1.6 : 1.2,
           ),
         ),
         child: Row(
@@ -610,6 +615,8 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                     value: _getCountryNameById(widget.birthCountryId),
                     icon: Icons.flag_rounded,
                     isSelected: widget.birthCountryId != null,
+                    showError: widget.showValidationErrors &&
+                        (widget.birthCountryId == null || widget.birthCountryId!.isEmpty),
                     onTap: () {
                       _showCountryPicker(
                         _isAr ? 'اختر بلد المنشأ' : 'Select Birth Country',
@@ -635,6 +642,8 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                     value: _getCountryNameById(widget.residenceCountryId),
                     icon: Icons.public_rounded,
                     isSelected: widget.residenceCountryId != null,
+                    showError: widget.showValidationErrors &&
+                        (widget.residenceCountryId == null || widget.residenceCountryId!.isEmpty),
                     onTap: () {
                       _showCountryPicker(
                         _isAr ? 'اختر بلد الإقامة' : 'Select Residence Country',
@@ -662,6 +671,8 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                     value: _getStateNameById(widget.stateId),
                     icon: Icons.location_city_rounded,
                     isSelected: widget.stateId != null,
+                    showError: widget.showValidationErrors &&
+                        (widget.stateId == null || widget.stateId!.isEmpty),
                     onTap: () {
                       if (widget.residenceCountryId == null) {
                         AppSnackBar.show(
@@ -709,6 +720,8 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                     value: _getCityNameById(widget.cityId),
                     icon: Icons.holiday_village_rounded,
                     isSelected: widget.cityId != null,
+                    showError: widget.showValidationErrors &&
+                        (widget.cityId == null || widget.cityId!.isEmpty),
                     onTap: () {
                       if (widget.stateId == null) {
                         AppSnackBar.show(
@@ -747,10 +760,28 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                       : '3. What is your marital status?',
                 ),
                 if (_maritalStatuses.isNotEmpty)
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: _maritalStatuses.whereType<Map>().map((ms) {
+                  Container(
+                    padding: const EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                      color: widget.showValidationErrors &&
+                              (widget.maritalStatusId == null ||
+                                  widget.maritalStatusId!.isEmpty)
+                          ? Colors.red.withValues(alpha: 0.035)
+                          : Colors.transparent,
+                      border: Border.all(
+                        color: widget.showValidationErrors &&
+                                (widget.maritalStatusId == null ||
+                                    widget.maritalStatusId!.isEmpty)
+                            ? Colors.redAccent
+                            : Colors.transparent,
+                        width: 1.4,
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _maritalStatuses.whereType<Map>().map((ms) {
                       final id = (ms['id'] ?? '').toString();
                       final name = _getLocalizedName(ms);
                       return _buildCustomChip(
@@ -760,7 +791,8 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                         isSelected: widget.maritalStatusId == id,
                         onTap: () => widget.onMaritalStatusChanged(id),
                       );
-                    }).toList(),
+                      }).toList(),
+                    ),
                   )
                 else
                   const CircularProgressIndicator(color: AppColors.accentWarm),
@@ -799,10 +831,28 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                       : '4. What is your religion?',
                 ),
                 if (_religions.isNotEmpty)
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: _religions.whereType<Map>().map((rel) {
+                  Container(
+                    padding: const EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                      color: widget.showValidationErrors &&
+                              (widget.religionId == null ||
+                                  widget.religionId!.isEmpty)
+                          ? Colors.red.withValues(alpha: 0.035)
+                          : Colors.transparent,
+                      border: Border.all(
+                        color: widget.showValidationErrors &&
+                                (widget.religionId == null ||
+                                    widget.religionId!.isEmpty)
+                            ? Colors.redAccent
+                            : Colors.transparent,
+                        width: 1.4,
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _religions.whereType<Map>().map((rel) {
                       final id = (rel['id'] ?? '').toString();
                       final name = _getLocalizedName(rel);
                       return _buildCustomChip(
@@ -812,7 +862,8 @@ class _Step3ResidencyReligionState extends State<Step3ResidencyReligion> {
                         isSelected: widget.religionId == id,
                         onTap: () => widget.onReligionChanged(id),
                       );
-                    }).toList(),
+                      }).toList(),
+                    ),
                   )
                 else
                   const CircularProgressIndicator(color: AppColors.accentWarm),

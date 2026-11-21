@@ -945,6 +945,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
     required VoidCallback? onTap,
     Color borderColor = AppColors.lineColor,
     bool prominent = false,
+    TextDirection? iconDirection,
   }) {
     final double size = prominent ? 62 : 56;
 
@@ -972,7 +973,11 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                     ),
                   ],
                 ),
-                child: Icon(icon, color: iconColor, size: prominent ? 25 : 22),
+                child: Directionality(
+                  textDirection: iconDirection ?? Directionality.of(context),
+                  child: Icon(icon,
+                      color: iconColor, size: prominent ? 25 : 22),
+                ),
               ),
             ),
           ),
@@ -1017,6 +1022,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
             icon: _isAr
                 ? Icons.arrow_back_ios_new_rounded
                 : Icons.arrow_forward_ios_rounded,
+            iconDirection: TextDirection.ltr,
             label: widget.txt('next'),
             backgroundColor: AppColors.sectionBackground,
             iconColor: AppColors.primaryTeal,

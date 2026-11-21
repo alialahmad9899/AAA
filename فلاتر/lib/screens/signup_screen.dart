@@ -53,6 +53,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final PageController _pageController = PageController();
   int _currentStep = 0;
   bool _isLoading = false;
+  bool _showValidationErrors = false;
   bool _isAccountCreated = false;
   bool _isSignupRequestInFlight = false;
 
@@ -296,16 +297,9 @@ class _SignupScreenState extends State<SignupScreen> {
     // 🟢 الخطوة الأولى: إنشاء الحساب ورفع الصورة الشخصية
     // ------------------------------------------------------------------------
     if (_currentStep == 0) {
+      setState(() => _showValidationErrors = true);
       final profilePhoto = _profilePhoto;
-      if (profilePhoto == null || !await profilePhoto.exists()) {
-        _showNotification(
-          isAr
-              ? 'يرجى اختيار صورة شخصية موجودة لإكمال إنشاء الحساب'
-              : 'Please select an existing profile photo',
-          NotificationType.warning,
-        );
-        return;
-      }
+      if (profilePhoto == null || !await profilePhoto.exists()) return;
       final photoSize = await profilePhoto.length();
       if (photoSize <= 0 || photoSize > 10 * 1024 * 1024) {
         _showNotification(
@@ -316,38 +310,13 @@ class _SignupScreenState extends State<SignupScreen> {
         );
         return;
       }
-
-      if (!_step1Key.currentState!.validate()) return;
-
-      if (_gender.isEmpty || _onBehalf.isEmpty) {
-        _showNotification(
-          isAr
-              ? 'يرجى تحديد الجنس ولمن يتم إنشاء الحساب'
-              : 'Please select gender and who this profile is for',
-          NotificationType.warning,
-        );
-        return;
-      }
-
-      if (_dobController.text.isEmpty) {
-        _showNotification(
-          isAr
-              ? 'يرجى تحديد تاريخ الميلاد بالكامل'
-              : 'Please select your date of birth',
-          NotificationType.warning,
-        );
-        return;
-      }
-
-      if (!_agreedToTerms) {
-        _showNotification(
-          isAr
-              ? 'يجب الموافقة على سياسة الخصوصية وشروط الاستخدام'
-              : 'You must accept the Privacy Policy and Terms of Use',
-          NotificationType.warning,
-        );
-        return;
-      }
+      final bool formIsValid = _step1Key.currentState!.validate();
+      final bool selectionsAreValid = _gender.isNotEmpty &&
+          _onBehalf.isNotEmpty &&
+          _dobController.text.trim().isNotEmpty &&
+          _agreedToTerms;
+      if (!formIsValid || !selectionsAreValid) return;
+      setState(() => _showValidationErrors = false);
 
       if (!_isAccountCreated) {
         // Prevent multiple multipart signup requests when the user taps
@@ -420,29 +389,15 @@ class _SignupScreenState extends State<SignupScreen> {
     // 🟡 الخطوة الثانية: التفاصيل الجسدية والتعليم والعمل
     // ------------------------------------------------------------------------
     else if (_currentStep == 1) {
-      if (!_step2Key.currentState!.validate()) return;
-      if (_educationDegree == null || _educationDegree!.trim().isEmpty) {
-        _showNotification(
-          isAr ? 'يرجى تحديد المستوى التعليمي' : 'Please select your education level',
-          NotificationType.warning,
-        );
-        return;
-      }
-      if (!_heightWasSelected ||
-          !_weightWasSelected ||
-          !_eyeColorWasSelected ||
-          !_hairColorWasSelected ||
-          !_complexionWasSelected ||
-          !_bodyTypeWasSelected ||
-          !_bodyArtWasSelected) {
-        _showNotification(
-          isAr
-              ? 'يرجى تحديد الطول والوزن ولون العينين والشعر والبشرة وبنية الجسد والوشم'
-              : 'Please select height, weight, eye color, hair color, complexion, body type, and body art',
-          NotificationType.warning,
-        );
-        return;
-      }
+      setState(() => _showValidationErrors = true);
+      final bool formIsValid = _step2Key.currentState!.validate();
+      final bool selectionsAreValid =
+          _educationDegree != null && _educationDegree!.trim().isNotEmpty &&
+          _heightWasSelected && _weightWasSelected &&
+          _eyeColorWasSelected && _hairColorWasSelected &&
+          _complexionWasSelected && _bodyTypeWasSelected && _bodyArtWasSelected;
+      if (!formIsValid || !selectionsAreValid) return;
+      setState(() => _showValidationErrors = false);
 
       setState(() => _isLoading = true);
       try {
@@ -614,53 +569,21 @@ class _SignupScreenState extends State<SignupScreen> {
     // 🔵 الخطوة الثالثة: بيانات الإقامة والدين
     // ------------------------------------------------------------------------
     else if (_currentStep == 2) {
-      if (_birthCountryId == null) {
-        _showNotification(
-          isAr ? 'يرجى تحديد بلد المنشأ' : 'Select Birth Country',
-          NotificationType.warning,
-        );
-        return;
-      }
-      if (_residenceCountryId == null) {
-        _showNotification(
-          isAr ? 'يرجى تحديد بلد الإقامة' : 'Select Residence Country',
-          NotificationType.warning,
-        );
-        return;
-      }
-      if (_stateId == null || _stateId!.isEmpty) {
-        _showNotification(
-          isAr ? 'يرجى تحديد المحافظة' : 'Select Governorate / State',
-          NotificationType.warning,
-        );
-        return;
-      }
-      if (_cityId == null || _cityId!.isEmpty) {
-        _showNotification(
-          isAr ? 'يرجى تحديد المدينة' : 'Select City',
-          NotificationType.warning,
-        );
-        return;
-      }
-      if (_maritalStatusId == null || _maritalStatusId!.isEmpty) {
-        _showNotification(
-          isAr ? 'يرجى تحديد الحالة الاجتماعية' : 'Select marital status',
-          NotificationType.warning,
-        );
-        return;
-      }
-      if (_religionId == null || _religionId!.isEmpty) {
-        _showNotification(
-          isAr ? 'يرجى تحديد الديانة' : 'Select religion',
-          NotificationType.warning,
-        );
-        return;
-      }
-
-      if (_requiresChildrenCount && _childrenCountController.text.trim().isEmpty) {
-        _showNotification(isAr ? 'يرجى إدخال عدد الأطفال (اكتب 0 إذا لم يكن لديك أطفال)' : 'Enter the number of children (use 0 if none)', NotificationType.warning);
-        return;
-      }
+      setState(() => _showValidationErrors = true);
+      final bool formIsValid = _step3Key.currentState!.validate();
+      final bool selectionsAreValid =
+          _birthCountryId != null && _birthCountryId!.isNotEmpty &&
+          _residenceCountryId != null && _residenceCountryId!.isNotEmpty &&
+          _stateId != null && _stateId!.isNotEmpty &&
+          _cityId != null && _cityId!.isNotEmpty &&
+          _maritalStatusId != null && _maritalStatusId!.isNotEmpty &&
+          _religionId != null && _religionId!.isNotEmpty;
+      final int? childCount =
+          int.tryParse(_childrenCountController.text.trim());
+      final bool childrenAreValid = !_requiresChildrenCount ||
+          (childCount != null && childCount >= 0);
+      if (!formIsValid || !selectionsAreValid || !childrenAreValid) return;
+      setState(() => _showValidationErrors = false);
 
       setState(() => _isLoading = true);
       try {
@@ -723,25 +646,18 @@ class _SignupScreenState extends State<SignupScreen> {
     // 🟣 الخطوة الرابعة: حفظ توقعات الشريك وإنهاء الحساب
     // ------------------------------------------------------------------------
     else if (_currentStep == 3) {
-      if (!_step4Key.currentState!.validate()) return;
-      if (!_partnerHeightWasSelected ||
-          !_partnerWeightWasSelected ||
-          _partnerEducation == null ||
-          _partnerComplexion == null ||
-          _partnerEyeColor == null ||
-          _partnerHairColor == null ||
-          _partnerLanguageId == null ||
-          _partnerChildrenAcceptable.isEmpty ||
-          _partnerSmokingAcceptable.isEmpty ||
-          _partnerDrinkingAcceptable.isEmpty) {
-        _showNotification(
-          isAr
-              ? 'يرجى اختيار جميع تفضيلات الشريك، بما فيها نطاقات الطول والوزن والألوان واللغة'
-              : 'Please complete all partner preferences, including height, weight, colors, and language',
-          NotificationType.warning,
-        );
-        return;
-      }
+      setState(() => _showValidationErrors = true);
+      final bool formIsValid = _step4Key.currentState!.validate();
+      final bool selectionsAreValid =
+          _partnerHeightWasSelected && _partnerWeightWasSelected &&
+          _partnerEducation != null && _partnerComplexion != null &&
+          _partnerEyeColor != null && _partnerHairColor != null &&
+          _partnerLanguageId != null &&
+          _partnerChildrenAcceptable.isNotEmpty &&
+          _partnerSmokingAcceptable.isNotEmpty &&
+          _partnerDrinkingAcceptable.isNotEmpty;
+      if (!formIsValid || !selectionsAreValid) return;
+      setState(() => _showValidationErrors = false);
 
       setState(() => _isLoading = true);
       try {
@@ -823,7 +739,10 @@ class _SignupScreenState extends State<SignupScreen> {
 
   void _goToNextPage() {
     if (_currentStep < 3) {
-      setState(() => _currentStep++);
+      setState(() {
+        _showValidationErrors = false;
+        _currentStep++;
+      });
       _pageController.animateToPage(
         _currentStep,
         duration: const Duration(milliseconds: 350),
@@ -1002,9 +921,9 @@ class _SignupScreenState extends State<SignupScreen> {
               child: Column(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+                    padding: const EdgeInsets.fromLTRB(12, 6, 12, 4),
                     child: Container(
-                      padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+                      padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
                           colors: [
@@ -1028,7 +947,8 @@ class _SignupScreenState extends State<SignupScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Row(
-                            children: [
+                            textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
+                             children: [
                               Material(
                                 color: Colors.white.withValues(alpha: 0.13),
                                 shape: const CircleBorder(),
@@ -1036,9 +956,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                   tooltip: isAr ? 'العودة' : 'Back',
                                   onPressed: _goToPreviousPage,
                                   icon: Icon(
-                                    isAr
-                                        ? Icons.arrow_forward_rounded
-                                        : Icons.arrow_back_rounded,
+                                    Icons.arrow_back_rounded,
                                     color: Colors.white,
                                     size: 20,
                                   ),
@@ -1074,25 +992,25 @@ class _SignupScreenState extends State<SignupScreen> {
                           const SizedBox(height: 12),
                           const Center(
                             child: WesalLogo(
-                              width: 190,
-                              height: 103,
+                              width: 150,
+                              height: 82,
                               fit: BoxFit.contain,
                               excludeSemantics: true,
                             ),
                           ),
-                          const SizedBox(height: 13),
+                          const SizedBox(height: 8),
                           Text(
                             isAr ? 'لنبدأ رحلتك مع وصال' : 'Let’s begin with Wesal',
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 23,
+                              fontSize: 20,
                               fontWeight: FontWeight.w900,
                               fontFamily: 'Cairo',
                               height: 1.35,
                             ),
                           ),
-                          const SizedBox(height: 5),
+                          const SizedBox(height: 3),
                           Text(
                             isAr
                                 ? 'أكمل بياناتك بهدوء، وكل خطوة تقرّبنا من ملف متكامل يعكسك.'
@@ -1186,6 +1104,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       children: [
                         Step1BasicInfo(
                           formKey: _step1Key,
+                          showValidationErrors: _showValidationErrors,
                           firstNameController: _firstNameController,
                           lastNameController: _lastNameController,
                           dobController: _dobController,
@@ -1206,6 +1125,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                         Step2PersonalDetails(
                           formKey: _step2Key,
+                          showValidationErrors: _showValidationErrors,
                           institutionController: _institutionController,
                           designationController: _designationController,
                           companyController: _companyController,
@@ -1261,6 +1181,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                         Step3ResidencyReligion(
                           formKey: _step3Key,
+                          showValidationErrors: _showValidationErrors,
                           birthCountryId: _birthCountryId,
                           residenceCountryId: _residenceCountryId,
                           stateId: _stateId,
@@ -1291,6 +1212,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                         Step4PartnerExpectations(
                           formKey: _step4Key,
+                          showValidationErrors: _showValidationErrors,
                           ageRange: _partnerAgeRange,
                           ageRangeWasSelected: _partnerAgeWasSelected,
                           generalController: _partnerGeneralController,

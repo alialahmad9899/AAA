@@ -28,6 +28,7 @@ class Step1BasicInfo extends StatefulWidget {
   final bool agreedToTerms;
   final File? profilePhoto;
   final String lang;
+  final bool showValidationErrors;
 
   final ValueChanged<String> onGenderChanged;
   final ValueChanged<String> onBehalfChanged;
@@ -48,6 +49,7 @@ class Step1BasicInfo extends StatefulWidget {
     required this.agreedToTerms,
     required this.profilePhoto,
     this.lang = 'ar',
+    this.showValidationErrors = false,
     required this.onGenderChanged,
     required this.onBehalfChanged,
     required this.onTermsChanged,
@@ -75,6 +77,21 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
   late final List<String> _years;
 
   bool get _isAr => widget.lang == 'ar';
+
+  Widget _validationOutline({required bool hasError, required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.all(5),
+      decoration: BoxDecoration(
+        color: hasError ? Colors.red.withValues(alpha: 0.035) : Colors.transparent,
+        border: Border.all(
+          color: hasError ? Colors.redAccent : Colors.transparent,
+          width: hasError ? 1.4 : 0,
+        ),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: child,
+    );
+  }
 
   @override
   void initState() {
@@ -359,9 +376,12 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(18),
                                 border: Border.all(
-                                  color: widget.profilePhoto != null
-                                      ? AppColors.accentWarm
-                                      : AppColors.lineColor,
+                                  color: widget.showValidationErrors &&
+                                          widget.profilePhoto == null
+                                      ? Colors.redAccent
+                                      : (widget.profilePhoto != null
+                                          ? AppColors.accentWarm
+                                          : AppColors.lineColor),
                                   width: 2.5,
                                 ),
                                 boxShadow: [
@@ -472,10 +492,12 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                       ? '1. لمن نجهّز حساب وصال اليوم؟'
                       : '1. Who are you creating this profile for?',
                 ),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _onBehalfOptions.entries.map((e) {
+                _validationOutline(
+                  hasError: widget.showValidationErrors && widget.onBehalf.trim().isEmpty,
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _onBehalfOptions.entries.map((e) {
                     final isSelected = widget.onBehalf == e.key;
                     final label = e.value[widget.lang] ?? e.value['ar']!;
                     return _buildCustomChip(
@@ -483,7 +505,8 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                       isSelected: isSelected,
                       onTap: () => widget.onBehalfChanged(e.key),
                     );
-                  }).toList(),
+                    }).toList(),
+                  ),
                 ),
                 const SizedBox(height: 18),
 
@@ -536,10 +559,12 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                 _buildQuestionTitle(
                   _isAr ? '3. ما الجنس الذي ندوّنه في ملفك؟ *' : '3. Gender *',
                 ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildGenderCard(
+                _validationOutline(
+                  hasError: widget.showValidationErrors && widget.gender.isEmpty,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _buildGenderCard(
                         '1',
                         _isAr ? 'ذكر 👨' : 'Male 👨',
                         Icons.male_rounded,
@@ -552,8 +577,9 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                         _isAr ? 'أنثى 👩' : 'Female 👩',
                         Icons.female_rounded,
                       ),
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 18),
 
@@ -565,11 +591,14 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                       ? 'اختر تاريخ ميلادك بدقة'
                       : 'Select Day, Month, and Year',
                 ),
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: DropdownButtonFormField<String>(
+                _validationOutline(
+                  hasError: widget.showValidationErrors &&
+                      widget.dobController.text.trim().isEmpty,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: DropdownButtonFormField<String>(
                         initialValue: _selectedDay,
                         isExpanded: true,
                         dropdownColor: Colors.white,
@@ -680,7 +709,8 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                         },
                       ),
                     ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 18),
 
@@ -775,10 +805,12 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                       : null,
                 ),
                 const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Theme(
-                      data: ThemeData(unselectedWidgetColor: AppColors.textLight),
+                _validationOutline(
+                  hasError: widget.showValidationErrors && !widget.agreedToTerms,
+                  child: Row(
+                    children: [
+                      Theme(
+                        data: ThemeData(unselectedWidgetColor: AppColors.textLight),
                       child: Checkbox(
                         value: widget.agreedToTerms,
                         activeColor: AppColors.primaryTeal,
@@ -830,7 +862,8 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                         ),
                       ),
                     ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),

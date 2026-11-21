@@ -6,6 +6,7 @@
 // ============================================================================
 import 'package:flutter/material.dart';
 import '../../../constants/colors.dart';
+import '../../../utils/marital_status_localizer.dart';
 import 'package:wesal_app/widgets/bottom_system_inset.dart';
 import '../../../services/api_service.dart';
 import '../search_results_screen.dart';
@@ -482,22 +483,30 @@ class _SearchTabState extends State<SearchTab> {
   /// 🟢 دالة إرجاع اسم العنصر المترجم ديناميكياً مع التغطية الشاملة
   String _getItemName(Map<String, dynamic>? item) {
     if (item == null) return '';
-    if (item['label'] != null) return item['label'].toString();
 
-    // 1️⃣ إذا كانت اللغة الحالية هي العربية
     if (_isAr) {
-      return (item['name_ar'] ?? item['name'] ?? item['name_en'] ?? '')
+      return (item['label_ar'] ??
+              item['name_ar'] ??
+              item['name'] ??
+              item['label'] ??
+              item['name_en'] ??
+              '')
           .toString();
     }
 
-    // 2️⃣ إذا كانت اللغة الحالية هي الإنجليزية
-    if (item['name_en'] != null &&
-        item['name_en'].toString().trim().isNotEmpty) {
-      return item['name_en'].toString();
-    }
+    final englishName = (item['name_en'] ?? item['label_en'] ?? '')
+        .toString()
+        .trim();
+    if (englishName.isNotEmpty) return englishName;
 
-    final String rawName = (item['name'] ?? item['name_ar'] ?? '').toString();
-    return _translateItemToEnglish(item['id'], rawName);
+    final rawName = (item['name'] ??
+            item['name_ar'] ??
+            item['label_ar'] ??
+            item['label'] ??
+            '')
+        .toString();
+    return MaritalStatusLocalizer.toEnglish(rawName) ??
+        _translateItemToEnglish(item['id'], rawName);
   }
 
   /// 🌐 دالة الترجمة الاحتياطية للغة الإنجليزية بناءً على المعرف والاسم العربي
@@ -510,25 +519,8 @@ class _SearchTabState extends State<SearchTab> {
       return 'All';
     }
 
-    // قاموس ترجمة الحالة الاجتماعية
-    final Map<String, String> statusTranslations = {
-      'أعزب': 'Single',
-      'عزباء': 'Single',
-      'أعزب / عزباء': 'Single',
-      'متزوج': 'Married',
-      'متزوجة': 'Married',
-      'متزوج / ة': 'Married',
-      'مطلق': 'Divorced',
-      'مطلقة': 'Divorced',
-      'مطلق / ة': 'Divorced',
-      'أرمل': 'Widowed',
-      'أرملة': 'Widowed',
-      'أرمل / ة': 'Widowed',
-    };
-
-    if (statusTranslations.containsKey(trimmed)) {
-      return statusTranslations[trimmed]!;
-    }
+    final statusTranslation = MaritalStatusLocalizer.toEnglish(trimmed);
+    if (statusTranslation != null) return statusTranslation;
 
     // قاموس ترجمة الديانة
     final Map<String, String> religionTranslations = {

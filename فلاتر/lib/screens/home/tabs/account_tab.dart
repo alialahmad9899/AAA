@@ -328,9 +328,58 @@ class AccountTabState extends State<AccountTab> {
     );
   }
 
+  Future<void> _confirmLogout() async {
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => Directionality(
+        textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
+        child: AlertDialog(
+          backgroundColor: AppColors.cardColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            _isAr ? 'تسجيل الخروج' : 'Log out',
+            style: const TextStyle(
+              color: AppColors.textDark,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Cairo',
+            ),
+          ),
+          content: Text(
+            _isAr
+                ? 'هل أنت متأكد أنك تريد تسجيل الخروج من حسابك؟'
+                : 'Are you sure you want to log out of your account?',
+            style: const TextStyle(
+              color: AppColors.textMuted,
+              fontFamily: 'Cairo',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(_isAr ? 'إلغاء' : 'Cancel'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(_isAr ? 'تأكيد الخروج' : 'Log out'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      await _performFullLogout();
+    }
+  }
+
   Future<void> _performFullLogout() async {
-    // إيقاف ربط التوكن فوراً حتى لا تعيد أحداث onTokenRefresh ربط الجهاز
-    // بالحساب الذي يجري تسجيل الخروج منه.
+    // إيقاف ربط التوكن فور تأكيد المستخدم.
     NotificationService.resetSession();
 
     try {
@@ -1408,7 +1457,7 @@ class AccountTabState extends State<AccountTab> {
                             Color.fromARGB(255, 232, 4, 0)
                           ],
                           showDivider: false,
-                          onTap: _performFullLogout,
+                          onTap: _confirmLogout,
                         ),
                       ],
                     ),

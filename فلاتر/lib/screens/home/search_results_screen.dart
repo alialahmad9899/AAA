@@ -10,6 +10,7 @@ import '../../constants/colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/api_service.dart';
 import '../../models/member_model.dart';
+import '../../utils/marital_status_localizer.dart';
 import '../../widgets/package_badge_widget.dart';
 import '../member_profile_screen.dart';
 
@@ -59,34 +60,8 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
 
   /// 🟢 ترجمة ديناميكية للحالة الاجتماعية عند تحويل اللغة للإنجليزي
   String _translateMaritalStatus(String rawStatus) {
-    if (rawStatus.trim().isEmpty) return '';
-    if (_isAr) return rawStatus;
-
-    final String clean = rawStatus.trim().toLowerCase();
-    if (clean.contains('أعزب') ||
-        clean.contains('اعزب') ||
-        clean.contains('عزباء') ||
-        clean == 'single') {
-      return 'Single';
-    }
-    if (clean.contains('مطلق') ||
-        clean.contains('مطلقة') ||
-        clean == 'divorced') {
-      return 'Divorced';
-    }
-    if (clean.contains('أرمل') ||
-        clean.contains('ارمل') ||
-        clean.contains('أرملة') ||
-        clean.contains('ارملة') ||
-        clean == 'widowed') {
-      return 'Widowed';
-    }
-    if (clean.contains('متزوج') ||
-        clean.contains('متزوجة') ||
-        clean == 'married') {
-      return 'Married';
-    }
-    return rawStatus;
+    if (rawStatus.trim().isEmpty || _isAr) return rawStatus;
+    return MaritalStatusLocalizer.toEnglish(rawStatus) ?? rawStatus;
   }
 
   /// 🟢 ترجمة ديناميكية للديانة المحددة عند تحويل اللغة للإنجليزي
