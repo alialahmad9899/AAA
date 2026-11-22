@@ -64,6 +64,23 @@ class ApiPerformanceQueryContractTest extends TestCase
         self::assertStringContainsString('ChatThread::with([\'sender\', \'receiver\'])', $controller);
     }
 
+    public function test_public_profile_eager_loads_both_addresses_and_reuses_the_loaded_rows(): void
+    {
+        $source = $this->source('app/Http/Controllers/Api/ProfileController.php');
+        $start = strpos($source, 'function public_profile(');
+        $end = strpos($source, 'function get_full_my_profile(', $start);
+        self::assertNotFalse($start);
+        self::assertNotFalse($end);
+        $method = substr($source, $start, $end - $start);
+
+        self::assertStringContainsString("'addresses.country'", $method);
+        self::assertStringContainsString("'addresses.state'", $method);
+        self::assertStringContainsString("'addresses.city'", $method);
+        self::assertStringContainsString("firstWhere('type', 'present')", $method);
+        self::assertStringContainsString("firstWhere('type', 'permanent')", $method);
+        self::assertStringNotContainsString("Address::where('user_id', $user->id)", $method);
+    }
+
     public function test_login_response_eager_loads_member_and_physical_data_once(): void
     {
         $source = $this->source('app/Http/Controllers/Api/AuthController.php');

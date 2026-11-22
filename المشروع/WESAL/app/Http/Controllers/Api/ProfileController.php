@@ -1311,6 +1311,9 @@ class ProfileController extends Controller
             'lifestyles',
             'astrologies',
             'partner_expectations',
+            'addresses.country',
+            'addresses.state',
+            'addresses.city',
         ]);
 
         // Resolve exact membership codes as well as internal numeric IDs.
@@ -1328,6 +1331,9 @@ class ProfileController extends Controller
                 'message' => translate('Unauthenticated'),
             ], 401);
         }
+
+        // Keep the viewer's member row in memory for the quota and privacy checks below.
+        $auth_user->loadMissing('member');
 
         if (!$user) {
             return $this->failure_message('User Not Found');
@@ -1384,7 +1390,11 @@ class ProfileController extends Controller
                 && $profile_pic_privacy == 'only_me'
                 && ($photo_view_request == null || (int) $photo_view_request->status === 0);
 
-            $data['present_address'] = Address::where('user_id', $user->id)->where('type', 'present')->first() ? new AddressResource(Address::where('user_id', $user->id)->where('type', 'present')->first()) : null;
+            $presentAddress = $user->addresses->firstWhere('type', 'present');
+            $permanentAddress = $user->addresses->firstWhere('type', 'permanent');
+            $data['present_address'] = $presentAddress
+                ? new AddressResource($presentAddress)
+                : null;
             // Contact information is private and is available only through the authenticated owner profile.
             $data['education'] = $user->education ? EducationResource::collection($user->education) : null;
             $data['career'] = $user->career ? CareerResource::collection($user->career) : null;
@@ -1403,7 +1413,9 @@ class ProfileController extends Controller
                 $data['lifestyles'] = null;
             }
             $data['astrologies'] = $user->astrologies ? new AstronomicInformation($user->astrologies) : null;
-            $data['permanent_address'] = Address::where('user_id', $user->id)->where('type', 'permanent')->first() ? new AddressResource(Address::where('user_id', $user->id)->where('type', 'permanent')->first()) : null;
+            $data['permanent_address'] = $permanentAddress
+                ? new AddressResource($permanentAddress)
+                : null;
             $data['partner_expectation'] = $user->partner_expectations ? new PartnerExpectationResource($user->partner_expectations) : null;
 
             $gallery_images = GalleryImage::where('user_id', $user->id)->get();
