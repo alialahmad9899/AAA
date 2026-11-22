@@ -28,7 +28,8 @@ void main() {
     expect(matching, contains('بيانات الملف غير كافية'));
     expect(matching, contains('Insufficient profile data'));
     expect(matching, contains('matchEvaluatedCriteriaCount < member.matchCriteriaCount'));
-    expect(matching, contains('البيانات التي تم تقييمها'));
+    expect(matching, contains('المعايير التي تم تقييمها'));
+    expect(matching, contains('member.matchCriteriaCount < 3'));
   });
 
   test('member search and matching use paginated loading', () async {
