@@ -5,6 +5,7 @@
 //        مع دعم استقبال بيانات Google التلقائية وإشتراط رفع الصورة الشخصية.
 // ============================================================================
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
@@ -36,19 +37,21 @@ class SignupScreen extends StatefulWidget {
   final String currentLanguage;
   final String? initialEmail;
   final String? initialName;
+  final bool resumeExistingDraft;
 
   const SignupScreen({
     super.key,
     this.currentLanguage = 'ar',
     this.initialEmail,
     this.initialName,
+    this.resumeExistingDraft = false,
   });
 
   @override
   State<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
+class _SignupScreenState extends State<SignupScreen> with WidgetsBindingObserver {
   // متحكم التنقل بين الصفحات
   final PageController _pageController = PageController();
   int _currentStep = 0;
@@ -141,11 +144,228 @@ class _SignupScreenState extends State<SignupScreen> {
   List<dynamic> _partnerLanguages = [];
   bool _isLoadingPartnerLanguages = true;
   int _partnerStatesRequestSequence = 0;
+  bool _isRestoringSignupDraft = false;
+  Timer? _signupDraftTimer;
 
   @override
   void initState() {
     super.initState();
-    _initializeFieldsFromGoogle();
+    WidgetsBinding.instance.addObserver(this);
+    for (final controller in <TextEditingController>[
+      _institutionController,
+      _designationController,
+      _companyController,
+      _childrenCountController,
+      _partnerGeneralController,
+      _partnerProfessionController,
+    ]) {
+      controller.addListener(_schedulePersistSignupDraft);
+    }
+
+    if (widget.resumeExistingDraft) {
+      unawaited(_restoreSignupDraft());
+    } else {
+      _initializeFieldsFromGoogle();
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      _signupDraftTimer?.cancel();
+      unawaited(_persistSignupDraft());
+    }
+  }
+
+  @override
+  void setState(VoidCallback fn) {
+    super.setState(fn);
+    _schedulePersistSignupDraft();
+  }
+
+  void _schedulePersistSignupDraft() {
+    if (!_isAccountCreated || _isRestoringSignupDraft || !mounted) return;
+    _signupDraftTimer?.cancel();
+    _signupDraftTimer = Timer(const Duration(milliseconds: 350), () {
+      unawaited(_persistSignupDraft());
+    });
+  }
+
+  Future<void> _persistSignupDraft() async {
+    if (!_isAccountCreated || _isRestoringSignupDraft) return;
+    final draft = <String, dynamic>{
+      'current_step': _currentStep,
+      'is_account_created': true,
+      'first_name': _firstNameController.text,
+      'last_name': _lastNameController.text,
+      'date_of_birth': _dobController.text,
+      'email': _emailController.text,
+      'gender': _gender,
+      'on_behalf': _onBehalf,
+      'education_degree': _educationDegree,
+      'institution': _institutionController.text,
+      'designation': _designationController.text,
+      'company': _companyController.text,
+      'drink': _personalDrink,
+      'sun_sign': _personalSunSign,
+      'affection': _personalAffection,
+      'humor': _personalHumor,
+      'height': _height,
+      'weight': _weight,
+      'height_was_selected': _heightWasSelected,
+      'weight_was_selected': _weightWasSelected,
+      'eye_color': _eyeColor,
+      'hair_color': _hairColor,
+      'complexion': _complexion,
+      'body_type': _bodyType,
+      'body_art': _bodyArt,
+      'eye_color_was_selected': _eyeColorWasSelected,
+      'hair_color_was_selected': _hairColorWasSelected,
+      'complexion_was_selected': _complexionWasSelected,
+      'body_type_was_selected': _bodyTypeWasSelected,
+      'body_art_was_selected': _bodyArtWasSelected,
+      'birth_country_id': _birthCountryId,
+      'residence_country_id': _residenceCountryId,
+      'state_id': _stateId,
+      'city_id': _cityId,
+      'religion_id': _religionId,
+      'marital_status_id': _maritalStatusId,
+      'children_count': _childrenCountController.text,
+      'partner_general': _partnerGeneralController.text,
+      'partner_profession': _partnerProfessionController.text,
+      'partner_age_range': [_partnerAgeRange.start, _partnerAgeRange.end],
+      'partner_height_range': [_partnerHeightRange.start, _partnerHeightRange.end],
+      'partner_weight_range': [_partnerWeightRange.start, _partnerWeightRange.end],
+      'partner_age_was_selected': _partnerAgeWasSelected,
+      'partner_height_was_selected': _partnerHeightWasSelected,
+      'partner_weight_was_selected': _partnerWeightWasSelected,
+      'partner_education': _partnerEducation,
+      'partner_complexion': _partnerComplexion,
+      'partner_eye_color': _partnerEyeColor,
+      'partner_hair_color': _partnerHairColor,
+      'partner_language_id': _partnerLanguageId,
+      'partner_religion_id': _partnerReligionId,
+      'partner_country_id': _partnerCountryId,
+      'partner_state_id': _partnerStateId,
+      'partner_children_acceptable': _partnerChildrenAcceptable,
+      'partner_smoking_acceptable': _partnerSmokingAcceptable,
+      'partner_drinking_acceptable': _partnerDrinkingAcceptable,
+      'education_record_id': _educationRecordId,
+      'career_record_id': _careerRecordId,
+      'education_saved_fingerprint': _educationSavedFingerprint,
+      'career_saved_fingerprint': _careerSavedFingerprint,
+    };
+    await ApiService.saveSignupDraft(draft);
+  }
+
+  Future<void> _restoreSignupDraft() async {
+    final draft = await ApiService.getSignupDraft();
+    if (!mounted) return;
+    if (draft == null || draft['is_account_created'] != true) {
+      _initializeFieldsFromGoogle();
+      return;
+    }
+
+    dynamic value(String key) => draft[key];
+    String stringValue(String key, [String fallback = '']) =>
+        (value(key) ?? fallback).toString();
+    String? nullableString(String key) {
+      final raw = value(key);
+      if (raw == null || raw.toString().trim().isEmpty) return null;
+      return raw.toString();
+    }
+    bool boolValue(String key) => value(key) == true || value(key) == 1;
+    double doubleValue(String key, double fallback) =>
+        double.tryParse(stringValue(key)) ?? fallback;
+    RangeValues rangeValue(String key, RangeValues fallback) {
+      final raw = value(key);
+      if (raw is List && raw.length >= 2) {
+        final start = double.tryParse(raw[0].toString());
+        final end = double.tryParse(raw[1].toString());
+        if (start != null && end != null && start <= end) {
+          return RangeValues(start, end);
+        }
+      }
+      return fallback;
+    }
+
+    _isRestoringSignupDraft = true;
+    setState(() {
+      _currentStep = (int.tryParse(stringValue('current_step')) ?? 1).clamp(1, 3);
+      _isAccountCreated = true;
+      _firstNameController.text = stringValue('first_name');
+      _lastNameController.text = stringValue('last_name');
+      _dobController.text = stringValue('date_of_birth');
+      _emailController.text = stringValue('email');
+      _gender = stringValue('gender');
+      _onBehalf = stringValue('on_behalf');
+      _educationDegree = nullableString('education_degree');
+      _institutionController.text = stringValue('institution');
+      _designationController.text = stringValue('designation');
+      _companyController.text = stringValue('company');
+      _personalDrink = nullableString('drink');
+      _personalSunSign = nullableString('sun_sign');
+      _personalAffection = nullableString('affection');
+      _personalHumor = nullableString('humor');
+      _height = doubleValue('height', 140);
+      _weight = doubleValue('weight', 40);
+      _heightWasSelected = boolValue('height_was_selected');
+      _weightWasSelected = boolValue('weight_was_selected');
+      _eyeColor = stringValue('eye_color');
+      _hairColor = stringValue('hair_color');
+      _complexion = stringValue('complexion');
+      _bodyType = stringValue('body_type');
+      _bodyArt = stringValue('body_art');
+      _eyeColorWasSelected = boolValue('eye_color_was_selected');
+      _hairColorWasSelected = boolValue('hair_color_was_selected');
+      _complexionWasSelected = boolValue('complexion_was_selected');
+      _bodyTypeWasSelected = boolValue('body_type_was_selected');
+      _bodyArtWasSelected = boolValue('body_art_was_selected');
+      _birthCountryId = nullableString('birth_country_id');
+      _residenceCountryId = nullableString('residence_country_id');
+      _stateId = nullableString('state_id');
+      _cityId = nullableString('city_id');
+      _religionId = nullableString('religion_id');
+      _maritalStatusId = nullableString('marital_status_id');
+      _childrenCountController.text = stringValue('children_count');
+      _partnerGeneralController.text = stringValue('partner_general');
+      _partnerProfessionController.text = stringValue('partner_profession');
+      _partnerAgeRange = rangeValue('partner_age_range', _partnerAgeRange);
+      _partnerHeightRange = rangeValue('partner_height_range', _partnerHeightRange);
+      _partnerWeightRange = rangeValue('partner_weight_range', _partnerWeightRange);
+      _partnerAgeWasSelected = boolValue('partner_age_was_selected');
+      _partnerHeightWasSelected = boolValue('partner_height_was_selected');
+      _partnerWeightWasSelected = boolValue('partner_weight_was_selected');
+      _partnerEducation = nullableString('partner_education');
+      _partnerComplexion = nullableString('partner_complexion');
+      _partnerEyeColor = nullableString('partner_eye_color');
+      _partnerHairColor = nullableString('partner_hair_color');
+      _partnerLanguageId = nullableString('partner_language_id');
+      _partnerReligionId = nullableString('partner_religion_id');
+      _partnerCountryId = nullableString('partner_country_id');
+      _partnerStateId = nullableString('partner_state_id');
+      _partnerChildrenAcceptable = stringValue('partner_children_acceptable');
+      _partnerSmokingAcceptable = stringValue('partner_smoking_acceptable');
+      _partnerDrinkingAcceptable = stringValue('partner_drinking_acceptable');
+      _educationRecordId = int.tryParse(stringValue('education_record_id'));
+      _careerRecordId = int.tryParse(stringValue('career_record_id'));
+      _educationSavedFingerprint = nullableString('education_saved_fingerprint');
+      _careerSavedFingerprint = nullableString('career_saved_fingerprint');
+    });
+    _isRestoringSignupDraft = false;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _pageController.hasClients) {
+        _pageController.jumpToPage(_currentStep);
+      }
+    });
+
+    await _loadPartnerOptions();
+    if (_partnerCountryId != null) {
+      await _loadPartnerStates(_partnerCountryId, keepSelected: true);
+    }
   }
 
   Future<void> _loadPartnerOptions() async {
@@ -184,7 +404,7 @@ class _SignupScreenState extends State<SignupScreen> {
     }
   }
 
-  Future<void> _loadPartnerStates(String? countryId) async {
+  Future<void> _loadPartnerStates(String? countryId, {bool keepSelected = false}) async {
     final int requestSequence = ++_partnerStatesRequestSequence;
     final id = int.tryParse(countryId ?? '');
     if (id == null || id <= 0) {
@@ -194,7 +414,14 @@ class _SignupScreenState extends State<SignupScreen> {
     try {
       final states = await ApiService.getStatesByCountry(id, lang: widget.currentLanguage);
       if (!mounted || requestSequence != _partnerStatesRequestSequence) return;
-      setState(() { _partnerStates = states; _partnerStateId = null; });
+      setState(() {
+        _partnerStates = states;
+        _partnerStateId = keepSelected &&
+                states.any((state) => state is Map &&
+                    state['id'].toString() == _partnerStateId)
+            ? _partnerStateId
+            : null;
+      });
     } catch (e) {
       debugPrint('Partner governorates could not be loaded: $e');
       if (mounted && requestSequence == _partnerStatesRequestSequence) setState(() => _partnerStates = []);
@@ -222,6 +449,8 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _signupDraftTimer?.cancel();
     _pageController.dispose();
     _firstNameController.dispose();
     _lastNameController.dispose();
@@ -760,6 +989,8 @@ class _SignupScreenState extends State<SignupScreen> {
         _showValidationErrors = false;
         _currentStep++;
       });
+      unawaited(_persistSignupDraft());
+      unawaited(_persistSignupDraft());
       _pageController.animateToPage(
         _currentStep,
         duration: const Duration(milliseconds: 350),
