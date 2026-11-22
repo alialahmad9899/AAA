@@ -21,16 +21,20 @@ import 'services/pending_profile_link_service.dart';
 import 'services/notification_service.dart';
 import 'services/api_service.dart';
 import 'services/fcm_service.dart';
+import 'services/wesal_secure_storage.dart';
 
 void _mainDebugLog(String message) {
   if (kDebugMode) debugPrint(message);
 }
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Paint the branded startup immediately; the intro resolves the saved
-  // session while its logo animation is running.
+  // Complete the one-time secure-storage migration before auth or chat
+  // services touch the Android storage backend.
+  await WesalSecureStorage.initialize();
+
+  // Paint the branded startup immediately after storage is ready.
   runApp(const MyApp());
 
   // Start optional services after the app can paint.
