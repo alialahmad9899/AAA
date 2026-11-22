@@ -171,6 +171,7 @@ jobs:
             phpunit --no-configuration tests/Unit/AddressCityRelationshipTest.php
             phpunit --no-configuration tests/Unit/InterestControllerIdempotencyTest.php
             phpunit --no-configuration tests/Unit/InterestServiceOwnershipTest.php
+            phpunit --no-configuration tests/Unit/InterestOwnershipDatabaseTest.php
             phpunit --no-configuration tests/Unit/MemberListingFiltersPaginationTest.php
             phpunit --no-configuration tests/Unit/ChatMessageIdempotencyContractTest.php
             phpunit --no-configuration tests/Unit/VipServiceCatalogOrderTest.php
