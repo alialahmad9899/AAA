@@ -300,10 +300,6 @@ class MemberModel {
 
     // 🟢 استخراج اسم الباقة الموحد والتأكد من قراءة كافة الاستجابات الممكنة
     final String parsedPackageName = _extractPackageName(json, basicInfo);
-
-    if (kDebugMode) {
-      debugPrint(
-          '🔍 [MemberModel] ID: ${json['id'] ?? json['user_id']} | PackageName: "$parsedPackageName" | RawReligion: "$parsedRawReligion"');
     }
 
     return MemberModel(
