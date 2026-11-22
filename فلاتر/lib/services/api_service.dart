@@ -928,7 +928,7 @@ class ApiService {
           await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
 
       if (kDebugMode) {
-        debugPrint('[API POST Generic] HTTP ${response.statusCode}.');
+        debugPrint('[API GET Generic] HTTP ${response.statusCode}.');
       }
 
       dynamic decoded;
@@ -994,8 +994,10 @@ class ApiService {
           .timeout(_timeoutDuration);
 
       if (kDebugMode) {
-        // Do not expose the returned bearer token or login response fields.
-        debugPrint('[API Signin] HTTP ${response.statusCode}.');
+        debugPrint(
+          '[API POST Generic] HTTP ${response.statusCode}; '
+          'fieldNames=${body.keys.join(',')}.',
+        );
       }
 
       dynamic decoded;
@@ -1051,8 +1053,8 @@ class ApiService {
           .timeout(_timeoutDuration);
 
       if (kDebugMode) {
-        debugPrint(
-            '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
+        // Never log the returned bearer token or personal login response fields.
+        debugPrint('[API Signin] HTTP ${response.statusCode}.');
       }
 
       dynamic decoded;
