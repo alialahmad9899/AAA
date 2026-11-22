@@ -352,6 +352,26 @@ class ChatController extends Controller
                 }
             }
 
+            // A retry after a client timeout must return the original message
+            // before quota and attachment checks, rather than creating a second one.
+            $clientMessageId = $request->input('client_message_id');
+            if (is_string($clientMessageId) && $clientMessageId !== '') {
+                $existingMessage = Chat::where('chat_thread_id', $ownedThread->id)
+                    ->where('sender_user_id', $sender_id)
+                    ->where('client_message_id', $clientMessageId)
+                    ->first();
+
+                if ($existingMessage) {
+                    return response()->json([
+                        'result' => true,
+                        'message' => 'تم إرسال الرسالة بنجاح',
+                        'chat_thread_id' => (int) $ownedThread->id,
+                        'data' => (new ChatViewResource($existingMessage))->resolve($request),
+                        'idempotent_replay' => true,
+                    ], 200);
+                }
+            }
+
             // Enforce sender entitlement even when the app sends only a thread ID.
             $expectedReceiver = (int) ($ownedThread->sender_user_id == $sender_id
                 ? $ownedThread->receiver_user_id

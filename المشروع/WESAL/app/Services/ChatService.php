@@ -29,13 +29,33 @@ class ChatService
                 : $attachments;
         }
 
-        $chat = Chat::create([
-            'chat_thread_id' => $chatThreadId,
-            'sender_user_id' => $senderUserId,
-            'message' => $message,
-            'attachment' => $attachment,
-            'seen' => 0,
-        ]);
+        $clientMessageId = isset($data['client_message_id'])
+            ? trim((string) $data['client_message_id'])
+            : null;
+
+        try {
+            $chat = Chat::create([
+                'chat_thread_id' => $chatThreadId,
+                'sender_user_id' => $senderUserId,
+                'message' => $message,
+                'attachment' => $attachment,
+                'client_message_id' => $clientMessageId !== '' ? $clientMessageId : null,
+                'seen' => 0,
+            ]);
+        } catch (QueryException $exception) {
+            // The unique (sender_user_id, client_message_id) index makes two
+            // simultaneous retries converge on the one persisted message.
+            if ($clientMessageId !== null && $clientMessageId !== '') {
+                $existing = Chat::where('chat_thread_id', $chatThreadId)
+                    ->where('sender_user_id', $senderUserId)
+                    ->where('client_message_id', $clientMessageId)
+                    ->first();
+                if ($existing) {
+                    return $existing;
+                }
+            }
+            throw $exception;
+        }
 
         try {
             if (!$chatThreadId) return $chat;
