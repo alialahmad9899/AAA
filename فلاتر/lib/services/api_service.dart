@@ -381,6 +381,8 @@ class PublicProfileNotFoundException implements Exception {
 }
 
 class ApiService {
+  // Reuse keep-alive connections across API requests instead of creating a client per call.
+  static final http.Client _httpClient = http.Client();
   static const String baseUrl = 'https://www.wesalsyria.com/api';
   static const _secureStorage = FlutterSecureStorage();
   static const Duration _timeoutDuration = Duration(seconds: 20);
@@ -583,8 +585,7 @@ class ApiService {
 
     try {
       final headers = await _getHeaders();
-      final response = await http
-          .get(Uri.parse('$baseUrl/user-by-token'), headers: headers)
+      final response = await _httpClient.get(Uri.parse('$baseUrl/user-by-token'), headers: headers)
           .timeout(_timeoutDuration);
 
       if (response.statusCode == 401) {
@@ -670,8 +671,7 @@ class ApiService {
 
       final headers = await _getHeaders();
       headers['Authorization'] = 'Bearer $oldAccessToken';
-      final response = await http
-          .post(
+      final response = await _httpClient.post(
             Uri.parse('$baseUrl/logout'),
             headers: headers,
             body: jsonEncode({
@@ -866,7 +866,7 @@ class ApiService {
       }
 
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
 
       if (kDebugMode) {
         debugPrint(
@@ -928,8 +928,7 @@ class ApiService {
         debugPrint('🌐 [API POST Generic] -> $url | Body: $body');
       }
 
-      final response = await http
-          .post(
+      final response = await _httpClient.post(
             url,
             headers: headers,
             body: jsonEncode(body),
@@ -981,8 +980,7 @@ class ApiService {
     try {
       final headers = await _getHeaders();
       if (kDebugMode) debugPrint('🌐 [API POST] Signin -> $url');
-      final response = await http
-          .post(
+      final response = await _httpClient.post(
             url,
             headers: headers,
             body: jsonEncode({
@@ -1139,8 +1137,7 @@ class ApiService {
       final headers = await _getHeaders();
       if (kDebugMode) debugPrint('🌐 [API POST] GoogleSignIn -> $url');
 
-      final response = await http
-          .post(
+      final response = await _httpClient.post(
             url,
             headers: headers,
             body: jsonEncode({
@@ -1281,7 +1278,7 @@ class ApiService {
         );
       }
 
-      var streamedResponse = await request.send().timeout(_timeoutDuration);
+      var streamedResponse = await _httpClient.send(request).timeout(_timeoutDuration);
       var response = await http.Response.fromStream(streamedResponse);
 
       if (kDebugMode) {
@@ -1432,7 +1429,7 @@ class ApiService {
       if (kDebugMode) debugPrint('🌐 [API GET] Introduction -> $url');
 
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) {
         debugPrint(
             '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
@@ -1481,8 +1478,7 @@ class ApiService {
             '🌐 [API POST] UpdateIntroduction -> $url | Payload: $payload');
       }
 
-      final response = await http
-          .post(
+      final response = await _httpClient.post(
             url,
             headers: headers,
             body: jsonEncode(payload),
@@ -1540,7 +1536,7 @@ class ApiService {
           '$baseUrl/member/profile-dropdown?lang=$currentLang&app_language=$currentLang&_t=$ts');
       if (kDebugMode) debugPrint('🌐 [API GET] ProfileDropdowns -> $url');
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) debugPrint('📥 [API RESPONSE ${response.statusCode}]');
 
       if (response.statusCode == 200) {
@@ -1574,7 +1570,7 @@ class ApiService {
           '$baseUrl/member/states/$parsedId?lang=$currentLang&app_language=$currentLang&_t=$ts');
       if (kDebugMode) debugPrint('🌐 [API GET] States -> $url');
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) debugPrint('📥 [API RESPONSE ${response.statusCode}]');
 
       if (response.statusCode == 200) {
@@ -1603,7 +1599,7 @@ class ApiService {
           '$baseUrl/cities/$parsedId?lang=$currentLang&app_language=$currentLang&_t=$ts');
       if (kDebugMode) debugPrint('🌐 [API GET] CitiesByState -> $url');
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) debugPrint('📥 [API RESPONSE ${response.statusCode}]');
 
       if (response.statusCode == 200) {
@@ -1633,7 +1629,7 @@ class ApiService {
       if (kDebugMode) debugPrint('🌐 [API GET] PublicProfile -> $url');
 
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
 
       if (response.statusCode == 404) {
         throw const PublicProfileNotFoundException();
@@ -2008,7 +2004,7 @@ class ApiService {
       if (kDebugMode) debugPrint('🌐 [API GET] ActivePackages -> $url');
 
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) {
         debugPrint(
             '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
@@ -2058,7 +2054,7 @@ class ApiService {
       if (kDebugMode) debugPrint('🌐 [API GET] ManualPaymentMethods -> $url');
 
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) {
         debugPrint(
             '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
@@ -2114,7 +2110,7 @@ class ApiService {
             '🌐 [API POST Multipart] PurchasePackageManual -> $url | Fields: ${request.fields}');
       }
 
-      var streamedResponse = await request.send().timeout(_timeoutDuration);
+      var streamedResponse = await _httpClient.send(request).timeout(_timeoutDuration);
       var response = await http.Response.fromStream(streamedResponse);
       if (kDebugMode) {
         debugPrint(
@@ -2150,7 +2146,7 @@ class ApiService {
       if (kDebugMode) debugPrint('🌐 [API GET] BasicInfo -> $url');
 
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) {
         debugPrint(
             '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
@@ -2236,7 +2232,7 @@ class ApiService {
             '🌐 [API POST Multipart] UpdateBasicInfo -> $url | Fields: ${request.fields.keys.toList()} | HasPhoto: ${photoFile != null}');
       }
 
-      final streamedResponse = await request.send().timeout(_timeoutDuration);
+      final streamedResponse = await _httpClient.send(request).timeout(_timeoutDuration);
       final response = await http.Response.fromStream(streamedResponse);
       if (kDebugMode) {
         debugPrint('📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
@@ -2297,7 +2293,7 @@ class ApiService {
       if (kDebugMode) debugPrint('🌐 [API GET] Education -> $url');
 
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) {
         debugPrint(
             '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
@@ -2369,8 +2365,7 @@ class ApiService {
       if (kDebugMode) {
         debugPrint('🌐 [API POST] UpdateEducation -> $url | Method: ${isUpdate ? 'PUT' : 'POST'} | Keys: ${bodyData.keys.toList()}');
       }
-      final response = await http
-          .post(url, headers: headers, body: jsonEncode(bodyData))
+      final response = await _httpClient.post(url, headers: headers, body: jsonEncode(bodyData))
           .timeout(_timeoutDuration);
       if (kDebugMode) {
         debugPrint('📥 [API RESPONSE UpdateEducation ${response.statusCode}]: ${response.body}');
@@ -2407,7 +2402,7 @@ class ApiService {
       if (kDebugMode) debugPrint('🌐 [API GET] Career -> $url');
 
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) {
         debugPrint(
             '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
@@ -2476,8 +2471,7 @@ class ApiService {
       if (kDebugMode) {
         debugPrint('🌐 [API POST] UpdateCareer -> $url | Method: ${isUpdate ? 'PUT' : 'POST'} | Keys: ${bodyData.keys.toList()}');
       }
-      final response = await http
-          .post(url, headers: headers, body: jsonEncode(bodyData))
+      final response = await _httpClient.post(url, headers: headers, body: jsonEncode(bodyData))
           .timeout(_timeoutDuration);
       if (kDebugMode) {
         debugPrint('📥 [API RESPONSE UpdateCareer ${response.statusCode}]: ${response.body}');
@@ -2515,7 +2509,7 @@ class ApiService {
       if (kDebugMode) debugPrint('🌐 [API GET] PhysicalAttributes -> $url');
 
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) {
         debugPrint(
             '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
@@ -2558,8 +2552,7 @@ class ApiService {
             '🌐 [API POST] UpdatePhysicalAttributes -> $url | Keys: ${enrichedPayload.keys.toList()}');
       }
 
-      final response = await http
-          .post(url, headers: headers, body: jsonEncode(enrichedPayload))
+      final response = await _httpClient.post(url, headers: headers, body: jsonEncode(enrichedPayload))
           .timeout(_timeoutDuration);
       if (kDebugMode) {
         debugPrint('📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
@@ -2597,7 +2590,7 @@ class ApiService {
       if (kDebugMode) debugPrint('🌐 [API GET] SpiritualBackground -> $url');
 
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) {
         debugPrint(
             '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
@@ -2628,8 +2621,7 @@ class ApiService {
             '🌐 [API POST] UpdateSpiritualBackground -> $url | Payload: $enrichedPayload');
       }
 
-      final response = await http
-          .post(
+      final response = await _httpClient.post(
             url,
             headers: headers,
             body: jsonEncode(enrichedPayload),
@@ -2671,7 +2663,7 @@ class ApiService {
       if (kDebugMode) debugPrint('🌐 [API GET] ResidencyInfo -> $url');
 
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) {
         debugPrint(
             '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
@@ -2716,8 +2708,7 @@ class ApiService {
             '🌐 [API POST] UpdateResidencyInfo -> $url | Payload: $enrichedPayload');
       }
 
-      final response = await http
-          .post(
+      final response = await _httpClient.post(
             url,
             headers: headers,
             body: jsonEncode(enrichedPayload),
@@ -2759,7 +2750,7 @@ class ApiService {
       if (kDebugMode) debugPrint('🌐 [API GET] LifeStyle -> $url');
 
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) {
         debugPrint(
             '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
@@ -2785,8 +2776,7 @@ class ApiService {
         debugPrint('🌐 [API POST] UpdateLifeStyle -> $url | Payload: $payload');
       }
 
-      final response = await http
-          .post(
+      final response = await _httpClient.post(
             url,
             headers: headers,
             body: jsonEncode(payload),
@@ -2824,7 +2814,7 @@ class ApiService {
       if (kDebugMode) debugPrint('🌐 [API GET] Hobbies -> $url');
 
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) {
         debugPrint(
             '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
@@ -2850,8 +2840,7 @@ class ApiService {
         debugPrint('🌐 [API POST] UpdateHobbies -> $url | Payload: $payload');
       }
 
-      final response = await http
-          .post(
+      final response = await _httpClient.post(
             url,
             headers: headers,
             body: jsonEncode(payload),
@@ -2890,7 +2879,7 @@ class ApiService {
       if (kDebugMode) debugPrint('🌐 [API GET] AttitudeBehavior -> $url');
 
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) {
         debugPrint(
             '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
@@ -2917,8 +2906,7 @@ class ApiService {
             '🌐 [API POST] UpdateAttitudeBehavior -> $url | Payload: $payload');
       }
 
-      final response = await http
-          .post(
+      final response = await _httpClient.post(
             url,
             headers: headers,
             body: jsonEncode(payload),
@@ -2956,7 +2944,7 @@ class ApiService {
       if (kDebugMode) debugPrint('🌐 [API GET] AstronomicInfo -> $url');
 
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) {
         debugPrint(
             '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
@@ -3000,8 +2988,7 @@ class ApiService {
         };
       }
 
-      final response = await http
-          .post(
+      final response = await _httpClient.post(
             url,
             headers: headers,
             body: jsonEncode(bodyData),
@@ -3039,7 +3026,7 @@ class ApiService {
       if (kDebugMode) debugPrint('🌐 [API GET] FamilyInfo -> $url');
 
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) {
         debugPrint(
             '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
@@ -3066,8 +3053,7 @@ class ApiService {
             '🌐 [API POST] UpdateFamilyInfo -> $url | Payload: $payload');
       }
 
-      final response = await http
-          .post(
+      final response = await _httpClient.post(
             url,
             headers: headers,
             body: jsonEncode(payload),
@@ -3107,7 +3093,7 @@ class ApiService {
       if (kDebugMode) debugPrint('🌐 [API GET] PartnerExpectations -> $url');
 
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) {
         debugPrint('📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
       }
@@ -3252,8 +3238,7 @@ class ApiService {
             '🌐 [API POST] UpdatePartnerExpectations -> $url | Payload: $enrichedPayload');
       }
 
-      final response = await http
-          .post(
+      final response = await _httpClient.post(
             url,
             headers: headers,
             body: jsonEncode(enrichedPayload),
@@ -3313,7 +3298,7 @@ class ApiService {
     if (kDebugMode) debugPrint('🌐 [API GET] MatchedProfiles -> $url');
 
     final response =
-        await http.get(url, headers: headers).timeout(_timeoutDuration);
+        await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
     if (kDebugMode) debugPrint('📥 [API RESPONSE ${response.statusCode}]');
 
     if (response.statusCode == 200) {
@@ -3347,7 +3332,7 @@ class ApiService {
       '$baseUrl/member/matched-profile?match_enabled=$matchParam&page=$safePage&per_page=$safePerPage',
     );
     if (kDebugMode) debugPrint('🌐 [API GET] MatchedProfilesPage -> $url');
-    final response = await http.get(url, headers: headers).timeout(_timeoutDuration);
+    final response = await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
     if (response.statusCode == 403) {
       try {
         final decoded = jsonDecode(response.body);
@@ -3381,8 +3366,7 @@ class ApiService {
         debugPrint('🌐 [API POST] ExpressInterest -> $url | UserId: $userId');
       }
 
-      final response = await http
-          .post(
+      final response = await _httpClient.post(
             url,
             headers: headers,
             body: jsonEncode({
@@ -3588,8 +3572,7 @@ class ApiService {
       final Uri url = Uri.parse('$baseUrl/member/chat-list?_t=$ts');
       if (kDebugMode) debugPrint('🌐 [API GET] ChatThreads -> $url');
 
-      final response = await http
-          .get(url, headers: headers)
+      final response = await _httpClient.get(url, headers: headers)
           .timeout(const Duration(seconds: 8));
       if (kDebugMode) debugPrint('📥 [API RESPONSE ${response.statusCode}]');
 
@@ -3639,7 +3622,7 @@ class ApiService {
 
   static Future<Map<String, dynamic>> getChatMessages(
       int threadId, int partnerUserId,
-      {String? lang}) async {
+      {String? lang, int? afterMessageId}) async {
     try {
       final connectivity = await Connectivity().checkConnectivity();
       if (connectivity.contains(ConnectivityResult.none)) {
@@ -3653,11 +3636,16 @@ class ApiService {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final int currentUserId = prefs.getInt('user_id') ?? 0;
       final int ts = DateTime.now().millisecondsSinceEpoch;
-      final Uri url = Uri.parse('$baseUrl/member/chat-view/$threadId?_t=$ts');
+      final Map<String, String> queryParameters = {'_t': '$ts'};
+      if (afterMessageId != null && afterMessageId > 0) {
+        queryParameters['after_id'] = '$afterMessageId';
+      }
+      final Uri url = Uri.parse('$baseUrl/member/chat-view/$threadId')
+          .replace(queryParameters: queryParameters);
       if (kDebugMode) debugPrint('🌐 [API GET] ChatMessages -> $url');
 
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) {
         debugPrint(
             '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
@@ -3812,8 +3800,7 @@ class ApiService {
             '🌐 [API POST] OldMessages -> $url | FirstMessageId: $firstMessageId');
       }
 
-      final response = await http
-          .post(
+      final response = await _httpClient.post(
             url,
             headers: headers,
             body: jsonEncode({'first_message_id': firstMessageId}),
@@ -4054,7 +4041,7 @@ class ApiService {
         debugPrint(
             '🌐 [API POST Multipart] SendMessage -> $url | Fields: ${request.fields}');
       }
-      var streamedResponse = await request.send().timeout(_timeoutDuration);
+      var streamedResponse = await _httpClient.send(request).timeout(_timeoutDuration);
       var response = await http.Response.fromStream(streamedResponse);
       if (kDebugMode) {
         debugPrint(
@@ -4123,8 +4110,7 @@ class ApiService {
             '🌐 [API POST] ToggleBlock -> $url | ThreadId: $chatThreadId');
       }
 
-      final response = await http
-          .post(
+      final response = await _httpClient.post(
             url,
             headers: headers,
             body: jsonEncode({'chat_thread_id': chatThreadId}),
@@ -4173,8 +4159,7 @@ class ApiService {
         debugPrint('🌐 [API POST] DeleteChat -> $url | ThreadId: $threadId');
       }
 
-      final response = await http
-          .post(
+      final response = await _httpClient.post(
             url,
             headers: headers,
             body: jsonEncode({'chat_thread_id': threadId}),
@@ -4229,7 +4214,7 @@ class ApiService {
       if (kDebugMode) debugPrint('🌐 [API GET] IgnoredUserList -> $url');
 
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) {
         debugPrint(
             '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
@@ -4253,8 +4238,7 @@ class ApiService {
         debugPrint('🌐 [API POST] AddToIgnore -> $url | UserId: $userId');
       }
 
-      final response = await http
-          .post(
+      final response = await _httpClient.post(
             url,
             headers: headers,
             body: jsonEncode({'user_id': userId, 'id': userId}),
@@ -4300,8 +4284,7 @@ class ApiService {
         debugPrint('🌐 [API POST] RemoveFromIgnore -> $url | UserId: $userId');
       }
 
-      final response = await http
-          .post(
+      final response = await _httpClient.post(
             url,
             headers: headers,
             body: jsonEncode({'user_id': userId, 'id': userId}),
@@ -4353,8 +4336,7 @@ class ApiService {
         debugPrint('🌐 [API POST] ReportMember -> $url | UserId: $userId');
       }
 
-      final response = await http
-          .post(
+      final response = await _httpClient.post(
             url,
             headers: headers,
             body: jsonEncode({
@@ -4408,8 +4390,7 @@ class ApiService {
       final Uri url = Uri.parse('$baseUrl/update-device-token');
       if (kDebugMode) debugPrint('🌐 [API POST] UpdateDeviceToken -> $url');
 
-      final response = await http
-          .post(
+      final response = await _httpClient.post(
             url,
             headers: headers,
             body: jsonEncode({
@@ -4439,7 +4420,7 @@ class ApiService {
       if (kDebugMode) debugPrint('🌐 [API GET] Notifications -> $url');
 
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) debugPrint('📥 [API RESPONSE ${response.statusCode}]');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -4480,7 +4461,7 @@ class ApiService {
       final headers = await _getHeaders(lang: lang);
       final int ts = DateTime.now().millisecondsSinceEpoch;
       final Uri url = Uri.parse('$baseUrl/member/package-purchase-history?_t=$ts');
-      final response = await http.get(url, headers: headers).timeout(_timeoutDuration);
+      final response = await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
       if (response.statusCode != 200 && response.statusCode != 201) return null;
       final dynamic decoded = jsonDecode(response.body);
       dynamic rows = decoded;
@@ -4501,7 +4482,7 @@ class ApiService {
       if (kDebugMode) debugPrint('🌐 [API GET] MarkNotificationRead -> $url');
 
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) {
         debugPrint(
             '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
@@ -4523,7 +4504,7 @@ class ApiService {
       }
 
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) {
         debugPrint(
             '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
@@ -4612,8 +4593,7 @@ class ApiService {
     };
 
     try {
-      final response = await http
-          .post(
+      final response = await _httpClient.post(
             url,
             headers: headers,
             body: jsonEncode(body),
@@ -4743,7 +4723,7 @@ class ApiService {
       if (kDebugMode) debugPrint('🌐 [API GET] SupportCategories -> $url');
 
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) {
         debugPrint(
             '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
@@ -4792,7 +4772,7 @@ class ApiService {
       if (kDebugMode) debugPrint('🌐 [API GET] MySupportTickets -> $url');
 
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) {
         debugPrint(
             '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
@@ -4866,7 +4846,7 @@ class ApiService {
         debugPrint(
             '🌐 [API POST Multipart] CreateSupportTicket -> $url | Headers: ${request.headers} | Fields: ${request.fields}');
       }
-      var streamedResponse = await request.send().timeout(_timeoutDuration);
+      var streamedResponse = await _httpClient.send(request).timeout(_timeoutDuration);
       var response = await http.Response.fromStream(streamedResponse);
       if (kDebugMode) {
         debugPrint(
@@ -4921,7 +4901,7 @@ class ApiService {
       if (kDebugMode) debugPrint('🌐 [API GET] SupportTicketDetails -> $url');
 
       final response =
-          await http.get(url, headers: headers).timeout(_timeoutDuration);
+          await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
       if (kDebugMode) {
         debugPrint(
             '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
@@ -4989,7 +4969,7 @@ class ApiService {
         debugPrint(
             '🌐 [API POST Multipart] SendTicketReply -> $url | Fields: ${request.fields}');
       }
-      var streamedResponse = await request.send().timeout(_timeoutDuration);
+      var streamedResponse = await _httpClient.send(request).timeout(_timeoutDuration);
       var response = await http.Response.fromStream(streamedResponse);
       if (kDebugMode) {
         debugPrint(

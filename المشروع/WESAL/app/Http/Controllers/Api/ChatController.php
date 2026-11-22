@@ -118,7 +118,7 @@ class ChatController extends Controller
         $auth_id = auth()->user()->id;
 
         // 1. البحث أولاً برقم المحادثة المباشر إذا كان ملكاً للمستخدم الحالي
-        $chat_thread = ChatThread::where('id', $id)
+        $chat_thread = ChatThread::with(['sender', 'receiver'])->where('id', $id)
             ->where(function ($q) use ($auth_id) {
                 $q->where('sender_user_id', $auth_id)
                   ->orWhere('receiver_user_id', $auth_id);
@@ -126,7 +126,7 @@ class ChatController extends Controller
 
         // 2. البحث عن المحادثة القائمة بين المستخدم والشريك ($id)
         if (!$chat_thread) {
-            $chat_thread = ChatThread::where(function ($q) use ($auth_id, $id) {
+            $chat_thread = ChatThread::with(['sender', 'receiver'])->where(function ($q) use ($auth_id, $id) {
                 $q->where('sender_user_id', $auth_id)->where('receiver_user_id', $id);
             })->orWhere(function ($q) use ($auth_id, $id) {
                 $q->where('sender_user_id', $id)->where('receiver_user_id', $auth_id);

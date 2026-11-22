@@ -777,6 +777,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         requestedThreadId,
         widget.thread.userId,
         lang: widget.currentLanguage,
+        afterMessageId: previousLatestMessageId,
       );
       if (!mounted || requestedThreadId != _activeThreadId) return;
 

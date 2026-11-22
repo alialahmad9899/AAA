@@ -33,10 +33,17 @@ class ChatResource extends JsonResource
             ? Carbon::parse($partnerLastSeenValue)
             : null;
 
-        // Load only the latest page; older messages use chat/old-messages.
-        $chats = $this->chats()->latest('id')->limit(41)->get();
-        $hasMoreOldMessages = $chats->count() > 40;
+        // Initial load returns the latest page. Polling sends after_id and only
+        // receives messages created since the last successful refresh.
+        $afterMessageId = max(0, (int) $request->query('after_id', 0));
+        $chatQuery = $this->chats();
+        if ($afterMessageId > 0) {
+            $chatQuery->where('id', '>', $afterMessageId);
+        }
+        $chats = $chatQuery->latest('id')->limit(41)->get();
+        $hasMoreOldMessages = $afterMessageId <= 0 && $chats->count() > 40;
         $chats = $chats->take(40);
+        ChatViewResource::preloadAttachments($chats);
         $user_to_show = auth()->id() !== $this->sender->id ? 'receiver' : 'sender';
         return [
             'partner_is_online' => Cache::has(

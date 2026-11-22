@@ -255,6 +255,17 @@ class MemberController extends Controller
         $perPage = (int) ($validated['per_page'] ?? 20);
 
         $users_query = User::query()
+            ->with([
+                'member.marital_status',
+                'member.mothereTongue',
+                'addresses' => function ($query) {
+                    $query->where('type', 'present')->with(['country', 'city']);
+                },
+                'career',
+                'physical_attributes',
+                'spiritual_backgrounds.religion',
+                'spiritual_backgrounds.caste',
+            ])
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->where('user_type', 'member')
@@ -263,9 +274,9 @@ class MemberController extends Controller
             ->where('deactivated', 0);
 
         // Gender Check
-        $user_ids = Member::where('gender', '!=', auth()->user()->member->gender)
-            ->pluck('user_id')->toArray();
-        $users_query->whereIn('id', $user_ids);
+        $users_query->whereIn('id', Member::query()
+            ->select('user_id')
+            ->where('gender', '!=', auth()->user()->member->gender));
 
         // Ignored member and ignored by member check
         $users_query->whereNotIn('id', function ($query) {
@@ -288,13 +299,15 @@ class MemberController extends Controller
         // empty. An empty match must yield zero rows, never a broader result.
         if ($age_from !== null) {
             $start = date('Y-m-d', strtotime('-' . ((int) $age_from + 1) . ' years'));
-            $user_ids = Member::where('birthday', '<=', $start)->pluck('user_id')->toArray();
-            $users_query->whereIn('id', $user_ids);
+            $users_query->whereIn('id', Member::query()
+                ->select('user_id')
+                ->where('birthday', '<=', $start));
         }
         if ($age_to !== null) {
             $end = date('Y-m-d', strtotime('-' . ((int) $age_to + 1) . ' years +1 day'));
-            $user_ids = Member::where('birthday', '>=', $end)->pluck('user_id')->toArray();
-            $users_query->whereIn('id', $user_ids);
+            $users_query->whereIn('id', Member::query()
+                ->select('user_id')
+                ->where('birthday', '>=', $end));
         }
 
         if (!empty($member_code)) {
@@ -302,61 +315,64 @@ class MemberController extends Controller
         }
 
         if ($marital_status !== null) {
-            $user_ids = Member::where('marital_status_id', $marital_status)
-                ->pluck('user_id')->toArray();
-            $users_query->whereIn('id', $user_ids);
+            $users_query->whereIn('id', Member::query()
+                ->select('user_id')
+                ->where('marital_status_id', $marital_status));
         }
 
         if (!empty($sub_caste_id)) {
-            $user_ids = SpiritualBackground::where('sub_caste_id', $sub_caste_id)
-                ->pluck('user_id')->toArray();
-            $users_query->whereIn('id', $user_ids);
+            $users_query->whereIn('id', SpiritualBackground::query()
+                ->select('user_id')
+                ->where('sub_caste_id', $sub_caste_id));
         } elseif (!empty($caste_id)) {
-            $user_ids = SpiritualBackground::where('caste_id', $caste_id)
-                ->pluck('user_id')->toArray();
-            $users_query->whereIn('id', $user_ids);
+            $users_query->whereIn('id', SpiritualBackground::query()
+                ->select('user_id')
+                ->where('caste_id', $caste_id));
         } elseif (!empty($religion_id)) {
-            $user_ids = SpiritualBackground::where('religion_id', $religion_id)
-                ->pluck('user_id')->toArray();
-            $users_query->whereIn('id', $user_ids);
+            $users_query->whereIn('id', SpiritualBackground::query()
+                ->select('user_id')
+                ->where('religion_id', $religion_id));
         }
 
         if (!empty($profession)) {
-            $user_ids = Career::where('designation', 'like', '%' . $profession . '%')
-                ->pluck('user_id')->toArray();
-            $users_query->whereIn('id', $user_ids);
+            $users_query->whereIn('id', Career::query()
+                ->select('user_id')
+                ->where('designation', 'like', '%' . $profession . '%'));
         }
 
         // Apply every selected level of the location hierarchy. The mobile
         // client sends distinct country_id, state_id, and city_id values.
         if (!empty($country_id)) {
-            $user_ids = Address::where('country_id', $country_id)->pluck('user_id')->toArray();
-            $users_query->whereIn('id', $user_ids);
+            $users_query->whereIn('id', Address::query()
+                ->select('user_id')
+                ->where('country_id', $country_id));
         }
         if (!empty($state_id)) {
-            $user_ids = Address::where('state_id', $state_id)->pluck('user_id')->toArray();
-            $users_query->whereIn('id', $user_ids);
+            $users_query->whereIn('id', Address::query()
+                ->select('user_id')
+                ->where('state_id', $state_id));
         }
         if (!empty($city_id)) {
-            $user_ids = Address::where('city_id', $city_id)->pluck('user_id')->toArray();
-            $users_query->whereIn('id', $user_ids);
+            $users_query->whereIn('id', Address::query()
+                ->select('user_id')
+                ->where('city_id', $city_id));
         }
 
         if ($mother_tongue !== null) {
-            $user_ids = Member::where('mothere_tongue', $mother_tongue)
-                ->pluck('user_id')->toArray();
-            $users_query->whereIn('id', $user_ids);
+            $users_query->whereIn('id', Member::query()
+                ->select('user_id')
+                ->where('mothere_tongue', $mother_tongue));
         }
 
         if ($min_height !== null) {
-            $user_ids = PhysicalAttribute::where('height', '>=', $min_height)
-                ->pluck('user_id')->toArray();
-            $users_query->whereIn('id', $user_ids);
+            $users_query->whereIn('id', PhysicalAttribute::query()
+                ->select('user_id')
+                ->where('height', '>=', $min_height));
         }
         if ($max_height !== null) {
-            $user_ids = PhysicalAttribute::where('height', '<=', $max_height)
-                ->pluck('user_id')->toArray();
-            $users_query->whereIn('id', $user_ids);
+            $users_query->whereIn('id', PhysicalAttribute::query()
+                ->select('user_id')
+                ->where('height', '<=', $max_height));
         }
 
         $membersPage = $users_query->paginate($perPage, ['users.*'], 'page', $page);
