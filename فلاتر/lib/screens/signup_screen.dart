@@ -1104,10 +1104,12 @@ class _SignupScreenState extends State<SignupScreen> with WidgetsBindingObserver
                           elevation: 4,
                         ),
                         onPressed: () async {
+                          final rootNavigator = Navigator.of(context);
+                          final dialogNavigator = Navigator.of(ctx);
                           await ApiService.clearSignupDraft();
-                          Navigator.pop(ctx);
-                          Navigator.pushAndRemoveUntil(
-                            context,
+                          if (!mounted) return;
+                          dialogNavigator.pop();
+                          rootNavigator.pushAndRemoveUntil(
                             MaterialPageRoute(
                               builder: (context) => const MainHomeScreen(),
                             ),
