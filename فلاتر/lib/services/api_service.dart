@@ -583,7 +583,7 @@ class ApiService {
   /// authoritative /user-by-token rejection. A stale response cannot delete
   /// a newer token written by a subsequent sign-in.
   static Future<void> clearToken({
-    String reason = 'explicit_action',
+    String reason = 'unspecified_clear',
     String? expectedToken,
   }) async {
     try {
@@ -660,6 +660,9 @@ class ApiService {
 
     try {
       final headers = await _getHeaders();
+      // Validate the exact token captured above; if a fresh login races this
+      // request, the expected-token guard below protects the new session.
+      headers['Authorization'] = 'Bearer $token';
       final authHeaderSent =
           (headers['Authorization'] ?? '').startsWith('Bearer ');
       final response = await _httpClient
@@ -814,7 +817,7 @@ class ApiService {
         );
       }
 
-      await clearToken();
+      await clearToken(reason: 'user_logout_completed');
       return response;
     } catch (error) {
       if (oldAccessToken != null && oldAccessToken.isNotEmpty) {
@@ -831,7 +834,7 @@ class ApiService {
         }
       }
       if (kDebugMode) debugPrint('[API] Logout request failed; secure retry queued when possible.');
-      await clearToken();
+      await clearToken(reason: 'user_logout_failed');
       return {
         'result': false,
         'message': 'حدث خطأ في الاتصال بالسيرفر أثناء تسجيل الخروج',
@@ -851,7 +854,7 @@ class ApiService {
           (res['result'] == true ||
               res['status'] == 200 ||
               res['success'] == true)) {
-        await clearToken();
+        await clearToken(reason: 'account_deleted');
         return {
           'success': true,
           'message': res['message'] ?? 'تم حذف حسابك بنجاح',
@@ -1247,8 +1250,7 @@ class ApiService {
           .timeout(_timeoutDuration);
 
       if (kDebugMode) {
-        debugPrint(
-            '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
+        debugPrint('[API PartnerExpectations] HTTP ${response.statusCode}.');
       }
 
       dynamic decoded;
