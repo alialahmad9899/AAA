@@ -8,7 +8,8 @@ void main() {
     final intro = await File('lib/screens/brand_intro_screen.dart').readAsString();
 
     expect(api, contains(r"Uri.parse('$baseUrl/user-by-token')"));
-    expect(api, contains("status == 401 || status == 403"));
+    expect(api, contains("if (response.statusCode == 401)"));
+    expect(api, contains("if (response.statusCode == 403) return false;"));
     expect(api, contains("await clearToken()"));
     expect(intro, contains('ApiService.validateCurrentSession()'));
   });
