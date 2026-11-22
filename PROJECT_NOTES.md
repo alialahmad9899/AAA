@@ -2701,3 +2701,32 @@ ALTER TABLE `users`
 - أرشيف `WESAL_PERFORMANCE_REPAIRS_FINAL.zip` يضم 15 ملفاً فقط بمساراتها الأصلية، دون `PROJECT_NOTES.md` أو تعليمات المستودع. فحص ZIP سليم، وتمت مطابقة Git blob لكل ملف من الملفات الـ15 مع شجرة `main` الحالية. SHA-256: `315707232648c7fca1eb109ef6b9f4c26d78b4a4590af04ae828635f51d7d3d6`.
 - لم يتم نشر التطبيق أو Laravel على الاستضافة، ولم تُشغّل migrations على قاعدة الإنتاج، ولم تُعدّل إعدادات الإنتاج. لا توجد قياسات أداء حية على هاتف فعلي أو قاعدة الإنتاج؛ يلزم ذلك قبل ادعاء زمن استجابة أو استهلاك ذاكرة رقمي.
 
+
+## 2026-11-22 — إغلاق إصلاحات الأداء واعتمادية التسجيل وبناء Android Release
+
+### دفعات إضافية وأسبابها الجذرية
+- df4de6ac4753984d3edee5d56d3f2c2fe6f81bdf: أضيف اعتماد Android مباشر 'com.squareup.okhttp3:okhttp:4.12.1' لأن image_cropper 10.0.0+1 يستخدم uCrop 2.2.11 الذي يملك مراجع إلى okhttp3 لكنه لا يعلن OkHttp اعتماداً انتقالياً. فشل Release السابق عند R8 بسبب الأصناف المفقودة؛ بعد إضافة الاعتماد تجاوز البناء مرحلة R8 ووصل إلى توقيع AAB. بقي isMinifyEnabled = true وisShrinkResources = true كما هما، ولم تُستخدم قواعد إسكات أو تعطيل للتصغير.
+- 9c939644609372a773c0be9b23ae1a42bfa5f6dc: في الخطوة الثالثة للتسجيل بدأ حفظ الإقامة والخلفية الدينية بالتوازي بعد التحقق من أن المسارين يكتبان إلى جداول مستقلة (recidencies/addresses مقابل spiritual_backgrounds/members). بقي حفظ عدد الأطفال بعدهما لأنه يكتب إلى members نفسه الذي يُحدّثه الحفظ الديني، وتجنبنا تحديثين متزامنين للصف نفسه.
+- b60c9b3abf9079dcd3a845423dcee7df01ed3e19: عولج توقيع CI المؤقت. أظهر سجل bundleRelease السابق أن keytool أنشأ مخزن PKCS12، لكنه تجاهل كلمة مرور مفتاح منفصلة؛ ثم فشل signReleaseBundle برسالة Given final block not properly padded. أصبح ملف التحقق امتداد .p12 مع -storetype PKCS12، وتُستخدم كلمة مرور واحدة للمخزن والمفتاح، وأُزيل -keypass المنفصل. أضيف اختبار Dart عقدي يقرأ Workflow ويتحقق من هذه القاعدة حتى لا تتكرر.
+
+### نتائج CI النهائية على كود main
+- GitHub Actions run 45039358451 على commit b60c9b3abf9079dcd3a845423dcee7df01ed3e19 اكتمل بنجاح:
+  - dart analyze --fatal-infos: success.
+  - flutter test: success.
+  - flutter build apk --debug: success، وتم إنشاء app-debug.apk.
+  - flutter build appbundle --release: success، وتم إنشاء app-release.aab بحجم 74.4 MB باستخدام مفتاح تحقق مؤقت.
+  - PHP syntax والاختبارات الخلفية المحددة: success.
+  - ZIP الخاص بالجلسة: success.
+- GitHub Actions run 45039358453 على commit نفسه: اختبار توجيه الإشعارات success، وبناء Android Debug المستقل مع Firebase success.
+- فشل Release في commits السابقة كان عند signReleaseBundle بسبب كلمة مرور PKCS12 المنفصلة، وليس بسبب R8 بعد إضافة OkHttp. تم إصلاح إعداد التوقيع، ثم نجح AAB على b60c9b3.
+
+### ZIP النهائي
+- WESAL_PERFORMANCE_REPAIRS_FINAL.zip يحتوي 17 ملفاً فقط، بمساراتها الأصلية: Flutter، Laravel/API، اختبارات، وملف Workflow الذي تغير. لا يحتوي PROJECT_NOTES.md أو تعليمات العمل أو المشروع كاملاً.
+- فحص ZIP سليم، ولا توجد مسارات مكررة. طابقت Git blob لكل ملف من الملفات الـ17 مع شجرة commit b60c9b3abf9079dcd3a845423dcee7df01ed3e19؛ تطابقت جميعها.
+- SHA-256: 3df71a240189e7614b6c5aa366410c18ec116e508a0a7eacaefc36c02e15381b؛ الحجم 115,042 بايت.
+
+### حدود التحقق
+- لم يتم نشر التطبيق أو Laravel على الاستضافة، ولم تُشغّل migrations أو تُعدّل قاعدة الإنتاج أو إعداداتها.
+- لم تُجرَ قياسات زمن فعلية على هاتف مستخدم أو ضغط على قاعدة الإنتاج، ولم تُضف فهارس SQL تخمينية. تحسين البحث/الملف الشخصي على مستوى قاعدة البيانات يحتاج مخطط الإنتاج ونتائج EXPLAIN وبيانات أداء فعلية.
+- اختبار AAB استخدم مفتاح CI مؤقتاً للتحقق من البناء والتوقيع فقط؛ لا يمثل مفتاح الرفع الإنتاجي أو نشر إصدار للمستخدمين.
+
