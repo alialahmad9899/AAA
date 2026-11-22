@@ -4754,13 +4754,30 @@ class ApiService {
           final serverMessage = decoded is Map
               ? (decoded['message'] ?? '').toString()
               : '';
+          final rawBodyPreview = decoded is Map
+              ? ''
+              : response.body
+                  .replaceAll(RegExp(r'Bearer\\s+[^\\s,;]+'), 'Bearer [redacted]')
+                  .replaceAll(RegExp(r'\\s+'), ' ')
+                  .trim()
+                  .substring(
+                    0,
+                    response.body
+                        .replaceAll(RegExp(r'Bearer\\s+[^\\s,;]+'), 'Bearer [redacted]')
+                        .replaceAll(RegExp(r'\\s+'), ' ')
+                        .trim()
+                        .length
+                        .clamp(0, 240),
+                  );
           final errorFields = decoded is Map && decoded['errors'] is Map
               ? (decoded['errors'] as Map).keys.join(',')
               : '';
+          final contentType = response.headers['content-type'] ?? 'unknown';
           debugPrint(
             '[SearchMembers] HTTP ${response.statusCode}; '
             'authorizationHeaderSent=${headers.containsKey('Authorization')}; '
-            'message=$serverMessage; validationFields=$errorFields.',
+            'contentType=$contentType; message=$serverMessage; '
+            'validationFields=$errorFields; bodyPreview=$rawBodyPreview.',
           );
         }
         throw SearchMembersException(
