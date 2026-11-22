@@ -53,6 +53,18 @@ void main() {
     expect(manifest, contains('android:allowBackup="false"'));
   });
 
+  test('reauthentication respects Remember Me and restores an interrupted signup', () async {
+    final api = await File('lib/services/api_service.dart').readAsString();
+    final login = await File('lib/screens/login_screen.dart').readAsString();
+
+    expect(api, contains('rememberMe = true'));
+    expect(api, contains("await prefs.setBool('remember_me', rememberMe)"));
+    expect(login, contains('rememberMe: _rememberMe'));
+    expect(login, contains('ApiService.getSignupDraft()'));
+    expect(login, contains('resumeExistingDraft: true'));
+    expect(login, contains('await _openAuthenticatedDestination()'));
+  });
+
   test('logout preserves a pending FCM detach until the server accepts it', () async {
     final api = await File('lib/services/api_service.dart').readAsString();
     final auth = await File('../المشروع/WESAL/app/Http/Controllers/Api/AuthController.php').readAsString();
