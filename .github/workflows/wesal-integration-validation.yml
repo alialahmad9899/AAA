@@ -207,6 +207,12 @@ jobs:
       - name: Resolve Flutter dependencies
         working-directory: فلاتر
         run: flutter pub get
+      - name: Upload resolved Flutter dependency lockfile
+        uses: actions/upload-artifact@v4
+        with:
+          name: resolved-flutter-pubspec-lock
+          path: فلاتر/pubspec.lock
+          if-no-files-found: error
       - name: Analyze Dart sources without the LSP server
         working-directory: فلاتر
         run: dart analyze --fatal-infos
