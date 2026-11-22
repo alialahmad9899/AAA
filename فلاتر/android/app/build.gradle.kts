@@ -1,3 +1,22 @@
+import java.util.Properties
+import java.io.FileInputStream
+
+val releaseSigningProperties = Properties()
+val releaseSigningPropertiesFile = rootProject.file("key.properties")
+if (releaseSigningPropertiesFile.exists()) {
+    FileInputStream(releaseSigningPropertiesFile).use { releaseSigningProperties.load(it) }
+}
+
+fun releaseSigningValue(propertyName: String, environmentName: String): String? {
+    return providers.environmentVariable(environmentName).orNull
+        ?: releaseSigningProperties.getProperty(propertyName)
+}
+
+val releaseStoreFile = releaseSigningValue("storeFile", "WESAL_UPLOAD_STORE_FILE")
+val releaseStorePassword = releaseSigningValue("storePassword", "WESAL_UPLOAD_STORE_PASSWORD")
+val releaseKeyAlias = releaseSigningValue("keyAlias", "WESAL_UPLOAD_KEY_ALIAS")
+val releaseKeyPassword = releaseSigningValue("keyPassword", "WESAL_UPLOAD_KEY_PASSWORD")
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -30,10 +49,21 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            // Secrets are supplied through environment variables or a local,
+            // git-ignored android/key.properties file. Never commit a keystore.
+            storeFile = releaseStoreFile?.let { file(it) }
+            storePassword = releaseStorePassword
+            keyAlias = releaseKeyAlias
+            keyPassword = releaseKeyPassword
+        }
+    }
+
     buildTypes {
         release {
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // Release artifacts must never fall back to the publicly known debug key.
+            signingConfig = signingConfigs.getByName("release")
 
             // تفعيل ضغط وتشفير الكود وربط ملف قواعد ProGuard
             isMinifyEnabled = true
