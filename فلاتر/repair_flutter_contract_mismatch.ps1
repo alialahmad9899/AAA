@@ -39,10 +39,11 @@ $Targets = @(
     'lib/services/api_service.dart',
     'lib/services/notification_service.dart',
     'lib/services/startup_manager.dart',
-    'lib/screens/chat_detail_screen.dart'
+    'lib/screens/chat_detail_screen.dart',
+    'test/chat_api_contract_test.dart'
 )
 
-foreach ($relativePath in $Targets) {
+foreach ($relativePath in ($Targets | Where-Object { $_ -like 'lib/*' })) {
     if (-not (Test-Path (Join-Path $ProjectRoot $relativePath))) {
         throw "الملف المطلوب غير موجود محلياً: $relativePath. لم يتم تعديل أي ملف."
     }
@@ -67,6 +68,11 @@ $RequiredPatterns = @{
     )
     'lib/services/startup_manager.dart' = @('chatsPage\.threads')
     'lib/screens/chat_detail_screen.dart' = @('afterMessageId:\s*previousLatestMessageId')
+    'test/chat_api_contract_test.dart' = @(
+        'chat list API returns the typed paginated response',
+        'incremental message loading keeps the afterMessageId parameter',
+        'profile deep links expose the parser used by main.dart'
+    )
 }
 
 $Headers = @{
@@ -145,7 +151,7 @@ try {
         throw
     }
 
-    Write-Host "اكتمل تحديث الملفات الستة. النسخ الاحتياطية: $BackupRoot" -ForegroundColor Cyan
+    Write-Host "اكتمل تحديث الملفات الستة واختبار العقد المحلي. النسخ الاحتياطية: $BackupRoot" -ForegroundColor Cyan
     Write-Host 'بدء تحليل Dart...' -ForegroundColor Cyan
     Push-Location $ProjectRoot
     try {
