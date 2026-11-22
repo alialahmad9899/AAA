@@ -29,7 +29,7 @@ void main() {
     expect(matching, isNot(contains('matchCoverageLabel')));
     expect(matching, isNot(contains('المعايير التي تم تقييمها')));
     expect(matching, isNot(contains('Criteria evaluated')));
-    expect(matching, contains("'${member.matchPercentage}%"));
+    expect(matching, contains(r"'${member.matchPercentage}%"));
   });
 
   test('member search and matching use paginated loading', () async {
