@@ -119,7 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       if (result['success'] == true) {
-        await ApiService.setRememberMe(true);
+        await ApiService.setRememberMe(_rememberMe);
         unawaited(_updateFcmToken());
 
         if (!mounted) return;
