@@ -141,9 +141,11 @@ class _EditProfileScreenState extends State<EditProfileScreen>
 
   List<dynamic> _residencyStates = [];
   bool _isLoadingResidencyStates = false;
+  int _residencyStatesRequestSequence = 0;
 
   List<dynamic> _residencyCities = [];
   bool _isLoadingResidencyCities = false;
+  int _residencyCitiesRequestSequence = 0;
 
   final _immigrationStatusCtrl = TextEditingController();
 
@@ -904,7 +906,11 @@ class _EditProfileScreenState extends State<EditProfileScreen>
 
   Future<void> _loadResidencyStates(String countryId,
       {bool keepSelected = false}) async {
-    if (countryId.isEmpty) return;
+    final int requestSequence = ++_residencyStatesRequestSequence;
+    if (countryId.isEmpty) {
+      if (mounted) setState(() { _residencyStates = []; _isLoadingResidencyStates = false; });
+      return;
+    }
     if (mounted) {
       setState(() {
         _isLoadingResidencyStates = true;
@@ -929,14 +935,14 @@ class _EditProfileScreenState extends State<EditProfileScreen>
         fetchedStates = response['states'];
       }
 
-      if (mounted) {
+      if (mounted && requestSequence == _residencyStatesRequestSequence) {
         setState(() {
           _residencyStates = fetchedStates;
           _isLoadingResidencyStates = false;
         });
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && requestSequence == _residencyStatesRequestSequence) {
         setState(() => _isLoadingResidencyStates = false);
       }
     }
@@ -944,7 +950,11 @@ class _EditProfileScreenState extends State<EditProfileScreen>
 
   Future<void> _loadResidencyCities(String stateId,
       {bool keepSelected = false}) async {
-    if (stateId.isEmpty) return;
+    final int requestSequence = ++_residencyCitiesRequestSequence;
+    if (stateId.isEmpty) {
+      if (mounted) setState(() { _residencyCities = []; _isLoadingResidencyCities = false; });
+      return;
+    }
     if (mounted) {
       setState(() {
         _isLoadingResidencyCities = true;
@@ -967,14 +977,14 @@ class _EditProfileScreenState extends State<EditProfileScreen>
         fetchedCities = response['cities'];
       }
 
-      if (mounted) {
+      if (mounted && requestSequence == _residencyCitiesRequestSequence) {
         setState(() {
           _residencyCities = fetchedCities;
           _isLoadingResidencyCities = false;
         });
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && requestSequence == _residencyCitiesRequestSequence) {
         setState(() => _isLoadingResidencyCities = false);
       }
     }
@@ -1316,7 +1326,9 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     );
 
     final astro = _unwrapSection(
-      fullData['astronomic_information'] ?? fullData['astro'],
+      fullData['astrologies'] ??
+          fullData['astronomic_information'] ??
+          fullData['astro'],
       fieldHints: const ['sun_sign'],
       nestedKeys: const ['astronomic_information', 'astro'],
     );
@@ -1643,6 +1655,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
       source: ImageSource.gallery,
       imageQuality: 85,
     );
+    if (!mounted) return;
 
     if (pickedFile != null) {
       final croppedFile = await ImageCropper().cropImage(
@@ -1668,6 +1681,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
           ),
         ],
       );
+      if (!mounted) return;
 
       if (croppedFile != null) {
         setState(() => _pickedImageFile = File(croppedFile.path));
@@ -1941,6 +1955,13 @@ class _EditProfileScreenState extends State<EditProfileScreen>
           }
         }
         if (allSuccess) {
+          if (index == 2 && astroPayload.isNotEmpty) {
+            _recordLoadedProfileValue(
+              'astronomic_information',
+              'sun_sign',
+              _selectedSunSign,
+            );
+          }
           lastMessage = _isArabic ? 'تمت عملية الحفظ بنجاح ✨' : 'Saved successfully ✨';
         }
       }

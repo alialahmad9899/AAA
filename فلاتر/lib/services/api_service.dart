@@ -785,7 +785,7 @@ class ApiService {
       String email, String password) async {
     final Uri url = Uri.parse('$baseUrl/signin');
     final String cleanEmail = email.trim().toLowerCase();
-    final String cleanPassword = password.trim();
+    final String cleanPassword = password;
 
     try {
       final headers = await _getHeaders();
@@ -819,22 +819,30 @@ class ApiService {
           ? Map<String, dynamic>.from(decoded)
           : <String, dynamic>{};
 
+      final dynamic rawToken = responseData['access_token'] ?? responseData['token'];
+      final String? token = rawToken is String && rawToken.trim().isNotEmpty
+          ? rawToken.trim()
+          : null;
+      final dynamic rawUserId = responseData['user'] is Map
+          ? responseData['user']['id']
+          : null;
+      final int? userId = rawUserId is int
+          ? rawUserId
+          : int.tryParse(rawUserId?.toString() ?? '');
+
       if ((response.statusCode == 200 || response.statusCode == 201) &&
-          (responseData['result'] == true ||
-              responseData['access_token'] != null ||
-              responseData['token'] != null)) {
+          responseData['result'] == true && token != null &&
+          userId != null && userId > 0) {
         await ProfileCacheService.clearCache();
         clearDropdownCache();
 
         SharedPreferences prefs = await SharedPreferences.getInstance();
-        String? token = responseData['access_token'] ?? responseData['token'];
-        if (token != null) {
-          await saveToken(token);
+        await saveToken(token);
+        final savedToken = await getToken();
+        if (savedToken == null || savedToken.isEmpty) {
+          throw StateError('The access token could not be persisted securely.');
         }
-        if (responseData['user'] != null &&
-            responseData['user']['id'] != null) {
-          await prefs.setInt('user_id', responseData['user']['id']);
-        }
+        await prefs.setInt('user_id', userId);
         return {'success': true, 'data': responseData};
       } else {
         return {

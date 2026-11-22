@@ -140,6 +140,7 @@ class _SignupScreenState extends State<SignupScreen> {
   String _partnerDrinkingAcceptable = '';
   List<dynamic> _partnerLanguages = [];
   bool _isLoadingPartnerLanguages = true;
+  int _partnerStatesRequestSequence = 0;
 
   @override
   void initState() {
@@ -184,6 +185,7 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   Future<void> _loadPartnerStates(String? countryId) async {
+    final int requestSequence = ++_partnerStatesRequestSequence;
     final id = int.tryParse(countryId ?? '');
     if (id == null || id <= 0) {
       if (mounted) setState(() { _partnerStates = []; _partnerStateId = null; });
@@ -191,11 +193,11 @@ class _SignupScreenState extends State<SignupScreen> {
     }
     try {
       final states = await ApiService.getStatesByCountry(id, lang: widget.currentLanguage);
-      if (!mounted) return;
+      if (!mounted || requestSequence != _partnerStatesRequestSequence) return;
       setState(() { _partnerStates = states; _partnerStateId = null; });
     } catch (e) {
       debugPrint('Partner governorates could not be loaded: $e');
-      if (mounted) setState(() => _partnerStates = []);
+      if (mounted && requestSequence == _partnerStatesRequestSequence) setState(() => _partnerStates = []);
     }
   }
 
