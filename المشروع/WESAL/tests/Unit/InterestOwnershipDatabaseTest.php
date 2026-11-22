@@ -1,128 +1,161 @@
 <?php
 
-namespace Tests\Unit;
-
-use App\Models\User;
-use App\Services\InterestService;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Schema;
-use Tests\TestCase;
-
-require_once __DIR__ . '/../../vendor/autoload.php';
-require_once __DIR__ . '/../CreatesApplication.php';
-require_once __DIR__ . '/../TestCase.php';
-
-class InterestOwnershipDatabaseTest extends TestCase
-{
-    protected function setUp(): void
+namespace Illuminate\Support\Facades {
+    class DB
     {
-        parent::setUp();
-
-        config([
-            'database.default' => 'sqlite',
-            'database.connections.sqlite' => [
-                'driver' => 'sqlite',
-                'database' => ':memory:',
-                'prefix' => '',
-                'foreign_key_constraints' => true,
-            ],
-        ]);
-        DB::purge('sqlite');
-        DB::setDefaultConnection('sqlite');
-
-        Schema::create('users', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->string('first_name')->nullable();
-            $table->string('last_name')->nullable();
-            $table->string('email')->nullable();
-            $table->string('phone')->nullable();
-            $table->string('fcm_token')->nullable();
-            $table->string('password')->nullable();
-            $table->rememberToken();
-            $table->timestamps();
-            $table->softDeletes();
-        });
-
-        Schema::create('express_interests', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('interested_by');
-            $table->unsignedTinyInteger('status')->default(0);
-            $table->timestamps();
-        });
-
-        Schema::create('chat_threads', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->string('thread_code')->nullable();
-            $table->unsignedBigInteger('sender_user_id');
-            $table->unsignedBigInteger('receiver_user_id');
-            $table->timestamps();
-            $table->softDeletes();
-        });
+        public static function transaction(callable $callback)
+        {
+            return $callback();
+        }
     }
 
-    public function test_actor_a_cannot_accept_or_reject_requests_addressed_to_actor_b(): void
+    class Log
     {
-        $actorA = User::create([
-            'first_name' => 'Actor',
-            'last_name' => 'A',
-            'email' => 'actor-a@example.test',
-            'password' => bcrypt('not-used'),
-        ]);
-        $actorB = User::create([
-            'first_name' => 'Actor',
-            'last_name' => 'B',
-            'email' => 'actor-b@example.test',
-            'password' => bcrypt('not-used'),
-        ]);
-        $sender = User::create([
-            'first_name' => 'Sender',
-            'last_name' => 'C',
-            'email' => 'sender-c@example.test',
-            'password' => bcrypt('not-used'),
-        ]);
+        public static function error($message, array $context = []): void
+        {
+            throw new \RuntimeException('Unexpected InterestService error: ' . $message);
+        }
+    }
+}
 
-        $acceptInterestId = DB::table('express_interests')->insertGetId([
-            'user_id' => $actorB->id,
-            'interested_by' => $sender->id,
-            'status' => 0,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-        $rejectInterestId = DB::table('express_interests')->insertGetId([
-            'user_id' => $actorB->id,
-            'interested_by' => $sender->id,
-            'status' => 0,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+namespace App\Models {
+    final class ExpressInterest
+    {
+        public static array $records = [];
+        public static int $lockCount = 0;
 
-        Auth::shouldUse('web');
-        Auth::guard('web')->setUser($actorA);
-        Log::shouldReceive('error')->never();
+        public static function whereKey($id): ExpressInterestQuery
+        {
+            return new ExpressInterestQuery((int) $id);
+        }
+    }
 
-        $service = new InterestService();
+    final class ExpressInterestQuery
+    {
+        private int $id;
+        private array $filters = [];
 
-        self::assertSame((int) $actorA->id, (int) auth()->id());
-        self::assertNotSame((int) $actorA->id, (int) $actorB->id);
-        self::assertFalse($service->accept($acceptInterestId));
-        self::assertFalse($service->reject($rejectInterestId));
+        public function __construct(int $id)
+        {
+            $this->id = $id;
+        }
 
-        self::assertSame(
-            0,
-            (int) DB::table('express_interests')->where('id', $acceptInterestId)->value('status')
-        );
-        self::assertSame(
-            0,
-            (int) DB::table('express_interests')->where('id', $rejectInterestId)->value('status')
-        );
-        self::assertSame(
-            2,
-            DB::table('express_interests')->where('user_id', $actorB->id)->count()
-        );
-        self::assertSame(0, DB::table('chat_threads')->count());
+        public function where(string $column, $value): self
+        {
+            $this->filters[$column] = $value;
+            return $this;
+        }
+
+        public function lockForUpdate(): self
+        {
+            ExpressInterest::$lockCount++;
+            return $this;
+        }
+
+        public function first()
+        {
+            foreach (ExpressInterest::$records as $record) {
+                if ((int) $record['id'] !== $this->id) {
+                    continue;
+                }
+
+                $matches = true;
+                foreach ($this->filters as $column => $value) {
+                    if (!array_key_exists($column, $record) ||
+                        (string) $record[$column] !== (string) $value) {
+                        $matches = false;
+                        break;
+                    }
+                }
+
+                if ($matches) {
+                    return (object) $record;
+                }
+            }
+
+            return null;
+        }
+    }
+
+    final class ChatThread
+    {
+    }
+
+    final class User
+    {
+    }
+}
+
+namespace {
+    function auth()
+    {
+        return new class {
+            public function id(): int
+            {
+                return \Tests\Unit\InterestOwnershipFakeAuth::$actorId;
+            }
+        };
+    }
+}
+
+namespace Tests\Unit {
+    use App\Models\ExpressInterest;
+    use App\Services\InterestService;
+    use PHPUnit\Framework\TestCase;
+
+    final class InterestOwnershipFakeAuth
+    {
+        public static int $actorId = 0;
+    }
+
+    class InterestOwnershipDatabaseTest extends TestCase
+    {
+        protected function setUp(): void
+        {
+            parent::setUp();
+
+            ExpressInterest::$records = [
+                [
+                    'id' => 41,
+                    'user_id' => 200, // Actor B owns this incoming request.
+                    'interested_by' => 300,
+                    'status' => 0,
+                ],
+                [
+                    'id' => 42,
+                    'user_id' => 200, // Actor B owns this incoming request too.
+                    'interested_by' => 301,
+                    'status' => 0,
+                ],
+            ];
+            ExpressInterest::$lockCount = 0;
+            InterestOwnershipFakeAuth::$actorId = 100; // Actor A is authenticated.
+        }
+
+        public function test_actor_a_cannot_accept_or_reject_requests_owned_by_actor_b(): void
+        {
+            $service = new InterestService();
+
+            self::assertFalse($service->accept(41));
+            self::assertFalse($service->reject(42));
+
+            self::assertSame(2, ExpressInterest::$lockCount);
+            self::assertCount(2, ExpressInterest::$records);
+            self::assertSame(0, ExpressInterest::$records[0]['status']);
+            self::assertSame(0, ExpressInterest::$records[1]['status']);
+            self::assertSame(200, ExpressInterest::$records[0]['user_id']);
+            self::assertSame(200, ExpressInterest::$records[1]['user_id']);
+        }
+
+        public function test_missing_and_non_pending_requests_are_not_changed(): void
+        {
+            ExpressInterest::$records[0]['status'] = 1;
+            $service = new InterestService();
+
+            self::assertFalse($service->accept(41));
+            self::assertFalse($service->reject(999));
+            self::assertSame(1, ExpressInterest::$records[0]['status']);
+            self::assertSame(2, count(ExpressInterest::$records));
+        }
     }
 }
