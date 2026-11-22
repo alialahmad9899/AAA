@@ -35,14 +35,17 @@ class _SearchTabState extends State<SearchTab> {
   // --------------------------------------------------------------------------
   RangeValues _ageRange = const RangeValues(18, 50);
   Map<String, dynamic>? _selectedCountry;
+  Map<String, dynamic>? _selectedState;
   Map<String, dynamic>? _selectedCity;
   Map<String, dynamic>? _selectedStatus;
   Map<String, dynamic>? _selectedReligion;
 
   bool _isLoadingDropdowns = false;
+  bool _isLoadingStates = false;
   bool _isLoadingCities = false;
 
   // عداد لتتبع تسلسل طلبات المدن ومنع السباق (Race Condition)
+  int _stateFetchSequence = 0;
   int _cityFetchSequence = 0;
 
   bool get _isAr => widget.currentLanguage == 'ar';
@@ -51,6 +54,7 @@ class _SearchTabState extends State<SearchTab> {
   // القوائم المنسدلة الديناميكية (Dynamic API Dropdown Lists)
   // --------------------------------------------------------------------------
   List<Map<String, dynamic>> _countries = [];
+  List<Map<String, dynamic>> _states = [];
   List<Map<String, dynamic>> _cities = [];
   List<Map<String, dynamic>> _statuses = [];
   List<Map<String, dynamic>> _religions = [];
@@ -275,12 +279,16 @@ class _SearchTabState extends State<SearchTab> {
           });
 
           if (_selectedCountry != null && _selectedCountry!['id'] != null) {
-            _fetchCitiesForCountry(_selectedCountry!);
+            _fetchStatesForCountry(_selectedCountry!);
           } else {
             if (mounted) {
               setState(() {
-                _cities = [allOption];
-                _selectedCity = allOption;
+                _states = [allOption];
+                _states = [allOption];
+        _cities = [allOption];
+                _selectedState = allOption;
+                _selectedState = allOption;
+        _selectedCity = allOption;
               });
             }
           }
@@ -360,19 +368,81 @@ class _SearchTabState extends State<SearchTab> {
     }
   }
 
-  Future<void> _fetchCitiesForCountry(Map<String, dynamic> country) async {
-    _cityFetchSequence++;
-    final int currentSequence = _cityFetchSequence;
+  Future<void> _fetchStatesForCountry(Map<String, dynamic> country) async {
+    final int requestSequence = ++_stateFetchSequence;
+    ++_cityFetchSequence; // Invalidate any city request from the previous state.
+    final Map<String, dynamic> allStatesOption = {
+      'id': null,
+      'name': _isAr ? 'جميع المحافظات' : 'All Governorates',
+      'name_ar': 'جميع المحافظات',
+      'name_en': 'All Governorates',
+    };
 
+    final dynamic countryId = country['id'];
+    if (countryId == null) {
+      if (mounted) {
+        setState(() {
+          _selectedState = allStatesOption;
+          _states = [allStatesOption];
+          _selectedCity = null;
+          _cities = [];
+          _isLoadingStates = false;
+          _isLoadingCities = false;
+        });
+      }
+      return;
+    }
+
+    if (mounted) {
+      setState(() {
+        _isLoadingStates = true;
+        _states = [allStatesOption];
+        _selectedState = allStatesOption;
+        _cities = [];
+        _selectedCity = null;
+        _isLoadingCities = false;
+      });
+    }
+
+    try {
+      final statesData = await ApiService.getStatesByCountry(
+        countryId,
+        lang: widget.currentLanguage,
+      );
+      if (!mounted || requestSequence != _stateFetchSequence) return;
+
+      final fetchedStates = <Map<String, dynamic>>[
+        allStatesOption,
+        ...statesData.whereType<Map>().map(
+              (item) => Map<String, dynamic>.from(item),
+            ),
+      ];
+      setState(() {
+        _states = fetchedStates;
+        _selectedState = allStatesOption;
+        _isLoadingStates = false;
+      });
+    } catch (error) {
+      if (mounted && requestSequence == _stateFetchSequence) {
+        setState(() {
+          _states = [allStatesOption];
+          _selectedState = allStatesOption;
+          _isLoadingStates = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _fetchCitiesForState(Map<String, dynamic> state) async {
+    final int requestSequence = ++_cityFetchSequence;
     final Map<String, dynamic> allCitiesOption = {
       'id': null,
       'name': _isAr ? 'جميع المدن' : 'All Cities',
       'name_ar': 'جميع المدن',
       'name_en': 'All Cities',
     };
-
-    final dynamic countryId = country['id'];
-    if (countryId == null) {
+    final dynamic stateId = state['id'];
+    if (stateId == null) {
       if (mounted) {
         setState(() {
           _selectedCity = allCitiesOption;
@@ -384,53 +454,59 @@ class _SearchTabState extends State<SearchTab> {
     }
 
     if (mounted) {
-      setState(() => _isLoadingCities = true);
+      setState(() {
+        _isLoadingCities = true;
+        _selectedCity = allCitiesOption;
+        _cities = [allCitiesOption];
+      });
     }
 
     try {
-      final statesData = await ApiService.getStatesByCountry(
-        countryId,
+      final citiesData = await ApiService.getCitiesByState(
+        stateId,
         lang: widget.currentLanguage,
       );
-
-      List<Map<String, dynamic>> fetchedCities = [allCitiesOption];
-      for (var item in statesData) {
-        if (item is Map) {
-          fetchedCities.add(Map<String, dynamic>.from(item));
-        }
-      }
-
-      if (mounted && currentSequence == _cityFetchSequence) {
+      if (!mounted || requestSequence != _cityFetchSequence) return;
+      final fetchedCities = <Map<String, dynamic>>[
+        allCitiesOption,
+        ...citiesData.whereType<Map>().map(
+              (item) => Map<String, dynamic>.from(item),
+            ),
+      ];
+      setState(() {
+        _cities = fetchedCities;
+        _selectedCity = allCitiesOption;
+        _isLoadingCities = false;
+      });
+    } catch (error) {
+      if (mounted && requestSequence == _cityFetchSequence) {
         setState(() {
-          _cities = fetchedCities;
-          _selectedCity =
-              _findMatchingOption(_cities, _selectedCity, allCitiesOption);
+          _cities = [allCitiesOption];
+          _selectedCity = allCitiesOption;
           _isLoadingCities = false;
         });
-      }
-    } catch (e) {
-      debugPrint('⚠️ [SearchTab] Error fetching states/cities: $e');
-      if (mounted && currentSequence == _cityFetchSequence) {
-        setState(() => _isLoadingCities = false);
       }
     }
   }
 
   Future<void> _onCountrySelected(Map<String, dynamic> country) async {
-    final Map<String, dynamic> allCitiesOption = {
-      'id': null,
-      'name': _isAr ? 'جميع المدن' : 'All Cities',
-      'name_ar': 'جميع المدن',
-      'name_en': 'All Cities',
-    };
-
     setState(() {
       _selectedCountry = country;
-      _selectedCity = allCitiesOption;
-      _cities = [allCitiesOption];
+      _selectedState = null;
+      _selectedCity = null;
+      _states = [];
+      _cities = [];
     });
+    await _fetchStatesForCountry(country);
+  }
 
-    await _fetchCitiesForCountry(country);
+  Future<void> _onStateSelected(Map<String, dynamic> state) async {
+    setState(() {
+      _selectedState = state;
+      _selectedCity = null;
+      _cities = [];
+    });
+    await _fetchCitiesForState(state);
   }
 
   void _resetFilters() {
@@ -441,10 +517,14 @@ class _SearchTabState extends State<SearchTab> {
       'name_en': 'All',
     };
 
+    ++_stateFetchSequence;
+    ++_cityFetchSequence;
     setState(() {
       _ageRange = const RangeValues(18, 50);
       _selectedCountry = _countries.isNotEmpty ? _countries[0] : allOption;
+      _selectedState = allOption;
       _selectedCity = allOption;
+      _states = [allOption];
       _cities = [allOption];
       _selectedStatus = _statuses.isNotEmpty ? _statuses[0] : allOption;
       _selectedReligion = _religions.isNotEmpty ? _religions[0] : allOption;
@@ -468,12 +548,14 @@ class _SearchTabState extends State<SearchTab> {
           ageFrom: _ageRange.start.round(),
           ageTo: _ageRange.end.round(),
           countryId: parseId(_selectedCountry?['id']),
+          stateId: parseId(_selectedState?['id']),
           cityId: parseId(_selectedCity?['id']),
           maritalStatus: parseId(_selectedStatus?['id']),
           religionId: parseId(_selectedReligion?['id']),
           currentLanguage: widget.currentLanguage,
           txt: widget.txt,
           countryName: _getItemName(_selectedCountry),
+          stateName: _getItemName(_selectedState),
           cityName: _getItemName(_selectedCity),
         ),
       ),
@@ -1096,6 +1178,7 @@ class _SearchTabState extends State<SearchTab> {
   @override
   Widget build(BuildContext context) {
     final String currentCountryText = _getItemName(_selectedCountry);
+    final String currentStateText = _getItemName(_selectedState);
     final String currentCityText = _getItemName(_selectedCity);
 
     return Directionality(
@@ -1280,15 +1363,32 @@ class _SearchTabState extends State<SearchTab> {
                               ),
                               const SizedBox(height: 10),
 
-                              // 3. المدينة / المحافظة
+                              // 3. المحافظة ضمن الدولة المختارة
                               _buildFilterSelectorTile(
-                                label: widget.txt('residence_filter'),
+                                label: _isAr ? 'المحافظة' : 'Governorate',
+                                value: currentStateText,
+                                icon: Icons.map_outlined,
+                                isLoading: _isLoadingStates,
+                                onTap: () {
+                                  _showSelectionBottomSheet(
+                                    title: _isAr ? 'اختر المحافظة' : 'Select Governorate',
+                                    items: _states,
+                                    currentSelection: _selectedState,
+                                    onSelect: _onStateSelected,
+                                    enableSearch: true,
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 10),
+                              // 4. المدينة ضمن المحافظة المختارة
+                              _buildFilterSelectorTile(
+                                label: _isAr ? 'المدينة' : 'City',
                                 value: currentCityText,
                                 icon: Icons.location_on_rounded,
                                 isLoading: _isLoadingCities,
                                 onTap: () {
                                   _showSelectionBottomSheet(
-                                    title: widget.txt('residence_filter'),
+                                    title: _isAr ? 'اختر المدينة' : 'Select City',
                                     items: _cities,
                                     currentSelection: _selectedCity,
                                     onSelect: (item) =>

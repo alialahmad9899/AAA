@@ -17,12 +17,14 @@ class SearchResultsScreen extends StatefulWidget {
   final int? ageFrom;
   final int? ageTo;
   final int? countryId;
+  final int? stateId;
   final int? cityId;
   final int? maritalStatus;
   final int? religionId;
   final String currentLanguage;
   final String Function(String) txt;
   final String countryName;
+  final String stateName;
   final String cityName;
 
   const SearchResultsScreen({
@@ -30,12 +32,14 @@ class SearchResultsScreen extends StatefulWidget {
     this.ageFrom,
     this.ageTo,
     this.countryId,
+    this.stateId,
     this.cityId,
     this.maritalStatus,
     this.religionId,
     required this.currentLanguage,
     required this.txt,
     required this.countryName,
+    required this.stateName,
     required this.cityName,
   });
 
@@ -45,16 +49,38 @@ class SearchResultsScreen extends StatefulWidget {
 
 class _SearchResultsScreenState extends State<SearchResultsScreen> {
   bool _isLoading = true;
+  bool _isLoadingMore = false;
+  bool _hasMore = false;
+  int _currentPage = 1;
+  int _lastPage = 1;
+  int _totalResults = 0;
   List<MemberModel> _results = [];
   String? _errorMessage;
+  String? _loadMoreError;
   int _searchFetchCounter = 0;
+  final ScrollController _scrollController = ScrollController();
 
   bool get _isAr => widget.currentLanguage.trim().toLowerCase().startsWith('ar');
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_handleSearchScroll);
     _fetchSearchResults();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_handleSearchScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _handleSearchScroll() {
+    if (!_scrollController.hasClients || !_hasMore || _isLoadingMore || _isLoading) return;
+    if (_scrollController.position.extentAfter < 420) {
+      _loadMoreSearchResults();
+    }
   }
 
   /// 🟢 ترجمة ديناميكية للحالة الاجتماعية عند تحويل اللغة للإنجليزي
@@ -130,38 +156,96 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
 
   /// جلب نتائج البحث من API السيرفر مع حماية من تضارب الطلبات (Race Conditions)
   Future<void> _fetchSearchResults() async {
-    _searchFetchCounter++;
-    final int currentFetch = _searchFetchCounter;
-
+    final int currentFetch = ++_searchFetchCounter;
     setState(() {
       _isLoading = true;
+      _isLoadingMore = false;
+      _hasMore = false;
+      _currentPage = 1;
+      _lastPage = 1;
+      _totalResults = 0;
       _errorMessage = null;
+      _loadMoreError = null;
+      _results = [];
     });
 
     try {
-      final members = await ApiService.searchMembers(
+      final page = await ApiService.searchMembers(
         ageFrom: widget.ageFrom,
         ageTo: widget.ageTo,
         countryId: widget.countryId,
+        stateId: widget.stateId,
         cityId: widget.cityId,
         maritalStatus: widget.maritalStatus,
         religionId: widget.religionId,
+        page: 1,
+        perPage: 20,
         lang: widget.currentLanguage,
       );
 
       if (mounted && currentFetch == _searchFetchCounter) {
         setState(() {
-          _results = members;
+          _results = page.members;
+          _currentPage = page.currentPage;
+          _lastPage = page.lastPage;
+          _totalResults = page.total;
+          _hasMore = page.hasMore;
           _isLoading = false;
         });
       }
-    } catch (e) {
+    } catch (error) {
       if (mounted && currentFetch == _searchFetchCounter) {
         setState(() {
           _errorMessage = _isAr
-              ? 'حدث خطأ أثناء جلب النتائج، يرجى المحاولة لاحقاً.'
-              : 'Failed to fetch search results. Please try again later.';
+              ? 'تعذر تحميل نتائج البحث بسبب مشكلة في الاتصال أو الخادم. حاول مجدداً.'
+              : 'Search could not be loaded because of a network or server error. Please retry.';
           _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadMoreSearchResults() async {
+    if (_isLoading || _isLoadingMore || !_hasMore || _errorMessage != null) return;
+    final int requestedPage = _currentPage + 1;
+    final int currentFetch = _searchFetchCounter;
+    setState(() {
+      _isLoadingMore = true;
+      _loadMoreError = null;
+    });
+
+    try {
+      final page = await ApiService.searchMembers(
+        ageFrom: widget.ageFrom,
+        ageTo: widget.ageTo,
+        countryId: widget.countryId,
+        stateId: widget.stateId,
+        cityId: widget.cityId,
+        maritalStatus: widget.maritalStatus,
+        religionId: widget.religionId,
+        page: requestedPage,
+        perPage: 20,
+        lang: widget.currentLanguage,
+      );
+      if (!mounted || currentFetch != _searchFetchCounter) return;
+
+      final seenIds = _results.map((member) => member.id).toSet();
+      final appended = page.members.where((member) => seenIds.add(member.id));
+      setState(() {
+        _results = [..._results, ...appended];
+        _currentPage = page.currentPage;
+        _lastPage = page.lastPage;
+        _totalResults = page.total;
+        _hasMore = page.hasMore;
+        _isLoadingMore = false;
+      });
+    } catch (error) {
+      if (mounted && currentFetch == _searchFetchCounter) {
+        setState(() {
+          _isLoadingMore = false;
+          _loadMoreError = _isAr
+              ? 'تعذر تحميل المزيد. اضغط لإعادة المحاولة.'
+              : 'Could not load more members. Tap to retry.';
         });
       }
     }
@@ -393,6 +477,9 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     if (widget.countryName.isNotEmpty) {
       parts.add(_translateResidence(widget.countryName));
     }
+    if (widget.stateName.isNotEmpty) {
+      parts.add(_translateResidence(widget.stateName));
+    }
     if (widget.cityName.isNotEmpty) {
       parts.add(_translateResidence(widget.cityName));
     }
@@ -471,7 +558,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
-                          _isAr ? '${_results.length} عضو' : '${_results.length} members',
+                          _isAr ? '$_totalResults عضو' : '$_totalResults members',
                           style: const TextStyle(
                             color: AppColors.primaryTeal,
                             fontSize: 10.5,
@@ -585,10 +672,31 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                                     ],
                                   )
                                 : ListView.builder(
+                                    controller: _scrollController,
                                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 18),
-                                    itemCount: _results.length,
-                                    itemBuilder: (context, index) =>
-                                        _buildMemberCard(_results[index]),
+                                    itemCount: _results.length + ((_hasMore || _isLoadingMore || _loadMoreError != null) ? 1 : 0),
+                                    itemBuilder: (context, index) {
+                                      if (index < _results.length) {
+                                        return _buildMemberCard(_results[index]);
+                                      }
+                                      if (_loadMoreError != null) {
+                                        return Padding(
+                                          padding: const EdgeInsets.symmetric(vertical: 18),
+                                          child: TextButton.icon(
+                                            onPressed: _loadMoreSearchResults,
+                                            icon: const Icon(Icons.refresh),
+                                            label: Text(_loadMoreError!),
+                                          ),
+                                        );
+                                      }
+                                      if (_isLoadingMore) {
+                                        return const Padding(
+                                          padding: EdgeInsets.all(20),
+                                          child: Center(child: CircularProgressIndicator(color: AppColors.primaryTeal)),
+                                        );
+                                      }
+                                      return const SizedBox(height: 32);
+                                    },
                                   ),
                           ),
               ),

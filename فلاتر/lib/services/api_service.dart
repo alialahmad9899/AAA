@@ -251,25 +251,28 @@ List<MemberModel> _parseIgnoredUsersIsolate(String responseBody) {
 
 List<MemberModel> _parseSearchMembersIsolate(String responseBody) {
   try {
-    final data = jsonDecode(responseBody);
-    List list = [];
-    if (data is Map && data['data'] != null) {
-      if (data['data'] is Map && data['data']['members'] is List) {
-        list = data['data']['members'];
-      } else if (data['data'] is List) {
-        list = data['data'];
-      }
-    } else if (data is Map && data['members'] is List) {
-      list = data['members'];
+    final dynamic decoded = jsonDecode(responseBody);
+    dynamic data = decoded is Map ? decoded['data'] : decoded;
+    dynamic members;
+    if (data is Map) {
+      members = data['members'];
+      if (members is Map) members = members['data'] ?? members['members'];
+    } else if (decoded is Map) {
+      members = decoded['members'];
+      if (members is Map) members = members['data'] ?? members['members'];
     } else if (data is List) {
-      list = data;
+      members = data;
     }
-    return list
+    if (members is! List && decoded is Map && decoded['members'] is List) {
+      members = decoded['members'];
+    }
+    if (members is! List) return <MemberModel>[];
+    return members
         .whereType<Map>()
         .map((item) => MemberModel.fromJson(Map<String, dynamic>.from(item)))
         .toList();
   } catch (_) {
-    return [];
+    return <MemberModel>[];
   }
 }
 
@@ -341,6 +344,34 @@ SupportTicketModel? _parseSupportTicketDetailsIsolate(String responseBody) {
 // ============================================================================
 // كلاس ApiService الرئيسي
 // ============================================================================
+
+class SearchMembersPage {
+  final List<MemberModel> members;
+  final int currentPage;
+  final int lastPage;
+  final int perPage;
+  final int total;
+
+  const SearchMembersPage({
+    required this.members,
+    required this.currentPage,
+    required this.lastPage,
+    required this.perPage,
+    required this.total,
+  });
+
+  bool get hasMore => currentPage < lastPage;
+}
+
+class SearchMembersException implements Exception {
+  final String message;
+  final int? statusCode;
+
+  const SearchMembersException(this.message, {this.statusCode});
+
+  @override
+  String toString() => message;
+}
 
 class PublicProfileNotFoundException implements Exception {
   const PublicProfileNotFoundException();
@@ -4378,39 +4409,42 @@ class ApiService {
   }
 
   // 9. البحث والفلترة للأعضاء
-  static Future<List<MemberModel>> searchMembers({
+  static Future<SearchMembersPage> searchMembers({
     int? ageFrom,
     int? ageTo,
     int? countryId,
+    int? stateId,
     int? cityId,
     int? maritalStatus,
     int? religionId,
     String? profession,
     String? memberCode,
+    int page = 1,
+    int perPage = 20,
     String? lang,
   }) async {
+    final headers = await _getHeaders(lang: lang);
+    final Uri url = Uri.parse('$baseUrl/member/member-listing');
+    final int safePage = page < 1 ? 1 : page;
+    final int safePerPage = perPage.clamp(1, 50);
+    final Map<String, dynamic> body = {
+      if (ageFrom != null) 'age_from': ageFrom,
+      if (ageTo != null) 'age_to': ageTo,
+      if (countryId != null && countryId > 0) 'country_id': countryId,
+      if (stateId != null && stateId > 0) 'state_id': stateId,
+      if (cityId != null && cityId > 0) 'city_id': cityId,
+      if (maritalStatus != null && maritalStatus > 0)
+        'marital_status': maritalStatus,
+      if (religionId != null && religionId > 0) 'religion_id': religionId,
+      if (profession != null && profession.trim().isNotEmpty)
+        'profession': profession.trim(),
+      if (memberCode != null && memberCode.trim().isNotEmpty)
+        'member_code': memberCode.trim(),
+      'page': safePage,
+      'per_page': safePerPage,
+    };
+
     try {
-      final headers = await _getHeaders(lang: lang);
-      final Uri url = Uri.parse('$baseUrl/member/member-listing');
-
-      final Map<String, dynamic> body = {
-        if (ageFrom != null) 'age_from': ageFrom,
-        if (ageTo != null) 'age_to': ageTo,
-        if (countryId != null && countryId > 0) 'country_id': countryId,
-        if (cityId != null && cityId > 0) 'city_id': cityId,
-        if (maritalStatus != null && maritalStatus > 0)
-          'marital_status': maritalStatus,
-        if (religionId != null && religionId > 0) 'religion_id': religionId,
-        if (profession != null && profession.trim().isNotEmpty)
-          'profession': profession.trim(),
-        if (memberCode != null && memberCode.trim().isNotEmpty)
-          'member_code': memberCode.trim(),
-      };
-
-      if (kDebugMode) {
-        debugPrint('🌐 [API POST] SearchMembers -> $url | Body: $body');
-      }
-
       final response = await http
           .post(
             url,
@@ -4419,18 +4453,69 @@ class ApiService {
           )
           .timeout(_timeoutDuration);
 
-      if (kDebugMode) {
-        debugPrint(
-            '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
+      dynamic decoded;
+      try {
+        decoded = jsonDecode(response.body);
+      } catch (_) {
+        decoded = null;
       }
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return await compute(_parseSearchMembersIsolate, response.body);
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw SearchMembersException(
+          _parseErrorMessage(decoded, response.statusCode),
+          statusCode: response.statusCode,
+        );
       }
-      return [];
-    } catch (e) {
-      if (kDebugMode) debugPrint('❌ [API ERROR searchMembers]: $e');
-      return [];
+
+      if (decoded is Map && decoded['result'] == false) {
+        throw SearchMembersException(
+          _parseErrorMessage(decoded, response.statusCode),
+          statusCode: response.statusCode,
+        );
+      }
+
+      final List<MemberModel> members =
+          await compute(_parseSearchMembersIsolate, response.body);
+      final Map<String, dynamic> envelope =
+          decoded is Map ? Map<String, dynamic>.from(decoded) : <String, dynamic>{};
+      final dynamic rawData = envelope['data'];
+      final Map<String, dynamic> data = rawData is Map
+          ? Map<String, dynamic>.from(rawData)
+          : <String, dynamic>{};
+      final dynamic rawPagination = data['pagination'];
+      final Map<String, dynamic> pagination = rawPagination is Map
+          ? Map<String, dynamic>.from(rawPagination)
+          : <String, dynamic>{};
+
+      final int currentPage =
+          int.tryParse((pagination['current_page'] ?? safePage).toString()) ??
+              safePage;
+      final int lastPage =
+          int.tryParse((pagination['last_page'] ?? currentPage).toString()) ??
+              currentPage;
+      final int returnedPerPage =
+          int.tryParse((pagination['per_page'] ?? safePerPage).toString()) ??
+              safePerPage;
+      final int total =
+          int.tryParse((pagination['total'] ?? members.length).toString()) ??
+              members.length;
+
+      return SearchMembersPage(
+        members: members,
+        currentPage: currentPage,
+        lastPage: lastPage,
+        perPage: returnedPerPage,
+        total: total,
+      );
+    } on SearchMembersException {
+      rethrow;
+    } on TimeoutException {
+      throw const SearchMembersException('انتهت مهلة البحث. تحقق من الاتصال ثم أعد المحاولة.');
+    } on SocketException {
+      throw const SearchMembersException('تعذر الاتصال بالشبكة. تحقق من الإنترنت ثم أعد المحاولة.');
+    } catch (error) {
+      if (kDebugMode) debugPrint('❌ [API ERROR searchMembers]: $error');
+      throw const SearchMembersException('تعذر تحميل نتائج البحث. حاول مرة أخرى.');
     }
   }
 
