@@ -728,7 +728,16 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
         ? '${member.matchPercentage}% ${_isAr ? 'توافق' : 'Match'}'
         : (member.matchStatus == 'no_preferences'
             ? (_isAr ? 'أكمل تفضيلاتك' : 'Complete preferences')
-            : (_isAr ? 'غير محسوبة' : 'Not calculated'));
+            : member.matchStatus == 'insufficient_data'
+                ? (_isAr ? 'بيانات الملف غير كافية' : 'Insufficient profile data')
+                : (_isAr ? 'لم يكتمل الحساب' : 'Calculation pending'));
+    final bool hasPartialMatchData = member.matchCriteriaCount > 0 &&
+        member.matchEvaluatedCriteriaCount < member.matchCriteriaCount;
+    final String? matchCoverageLabel = hasPartialMatchData
+        ? (_isAr
+            ? 'البيانات التي تم تقييمها: ${member.matchEvaluatedCriteriaCount} من ${member.matchCriteriaCount}'
+            : 'Profile data evaluated: ${member.matchEvaluatedCriteriaCount}/${member.matchCriteriaCount}')
+        : null;
 
     return GestureDetector(
       onTap: () => _navigateToProfile(member),
@@ -820,26 +829,44 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                               ),
                             ],
                           ),
-                          child: Row(
+                          child: Column(
                             mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(
-                                member.matchPercentage == null
-                                    ? Icons.info_outline_rounded
-                                    : Icons.auto_awesome_rounded,
-                                color: AppColors.primaryTeal,
-                                size: 15,
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    member.matchPercentage == null
+                                        ? Icons.info_outline_rounded
+                                        : Icons.auto_awesome_rounded,
+                                    color: AppColors.primaryTeal,
+                                    size: 15,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    matchLabel,
+                                    style: const TextStyle(
+                                      color: AppColors.textDark,
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w900,
+                                      fontFamily: 'Cairo',
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 6),
-                              Text(
-                                matchLabel,
-                                style: const TextStyle(
-                                  color: AppColors.textDark,
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w900,
-                                  fontFamily: 'Cairo',
+                              if (matchCoverageLabel != null) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  matchCoverageLabel,
+                                  style: const TextStyle(
+                                    color: AppColors.textMuted,
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w700,
+                                    fontFamily: 'Cairo',
+                                  ),
                                 ),
-                              ),
+                              ],
                             ],
                           ),
                         ),
