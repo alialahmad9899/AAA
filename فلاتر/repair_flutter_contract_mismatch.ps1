@@ -34,6 +34,12 @@ if (-not $ProjectRoot) {
 }
 
 $Targets = @(
+    'android/build.gradle.kts',
+    'android/settings.gradle.kts',
+    'android/app/build.gradle.kts',
+    'android/gradle/wrapper/gradle-wrapper.properties',
+    'android/gradle.properties',
+    'test/android_gradle_contract_test.dart',
     'lib/main.dart',
     'lib/utils/member_profile_link.dart',
     'lib/services/api_service.dart',
@@ -81,6 +87,31 @@ $RequiredPatterns = @{
         'incremental message loading keeps the afterMessageId parameter',
         'profile deep links expose the parser used by main.dart'
     )
+    'android/build.gradle.kts' = @(
+        'plugins\\s*\\{',
+        'tasks\\.register<Delete>\\("clean"\\)'
+    )
+    'android/settings.gradle.kts' = @(
+        'id\\("org\\.jetbrains\\.kotlin\\.android"\\)\\s+version\\s+"2\\.2\\.20"\\s+apply\\s+false'
+    )
+    'android/app/build.gradle.kts' = @(
+        'id\\("org\\.jetbrains\\.kotlin\\.android"\\)',
+        'kotlin\\s*\\{\\s*compilerOptions\\s*\\{',
+        'jvmTarget\\.set\\(org\\.jetbrains\\.kotlin\\.gradle\\.dsl\\.JvmTarget\\.JVM_17\\)'
+    )
+    'android/gradle/wrapper/gradle-wrapper.properties' = @(
+        'distributionUrl=.*gradle-8\\.14-all\\.zip'
+    )
+    'android/gradle.properties' = @(
+        'android\\.newDsl=false',
+        'android\\.builtInKotlin=false'
+    )
+    'test/android_gradle_contract_test.dart' = @(
+        'root Android Gradle file does not declare the Kotlin extension',
+        'Kotlin Android plugin is applied to the app module',
+        'Kotlin bytecode target is aligned with Java 17',
+        'Gradle and Kotlin plugin versions remain compatible'
+    )
 }
 
 $Headers = @{
@@ -123,6 +154,9 @@ try {
                 throw "فشل تحقق العقد البرمجي في $relativePath. لم يتم استبدال أي ملف."
             }
         }
+        if ($relativePath -eq 'android/build.gradle.kts' -and $sourceText -match '(?m)^\\s*kotlin\\s*\\{') {
+            throw 'يجب أن تبقى كتلة kotlin في android/app/build.gradle.kts وليس في ملف Gradle الرئيسي. لم يتم استبدال أي ملف.'
+        }
         Write-Host "تم تنزيل والتحقق: $relativePath" -ForegroundColor Green
     }
 
@@ -159,7 +193,7 @@ try {
         throw
     }
 
-    Write-Host "اكتمل تحديث الملفات السبعة واختبار العقد المحلي. النسخ الاحتياطية: $BackupRoot" -ForegroundColor Cyan
+    Write-Host "اكتمل تحديث ملفات Dart وAndroid Gradle واختبار العقد المحلي. النسخ الاحتياطية: $BackupRoot" -ForegroundColor Cyan
     Write-Host 'بدء تحليل Dart...' -ForegroundColor Cyan
     Push-Location $ProjectRoot
     try {
@@ -188,7 +222,7 @@ try {
 
     Write-Host 'نجح تحليل Dart واختبار Flutter.' -ForegroundColor Green
     if ($BuildDebugApk) { Write-Host 'نجح بناء Android Debug APK.' -ForegroundColor Green }
-    Write-Host "تم الإصلاح من commit: $CommitSha" -ForegroundColor Green
+    Write-Host "اكتمل التحديث والتحقق المحلي من commit: $CommitSha" -ForegroundColor Green
 }
 finally {
     if (Test-Path $TempRoot) { Remove-Item -LiteralPath $TempRoot -Recurse -Force }
