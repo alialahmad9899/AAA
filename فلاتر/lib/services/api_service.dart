@@ -4426,7 +4426,7 @@ class ApiService {
     final headers = await _getHeaders(lang: lang);
     final Uri url = Uri.parse('$baseUrl/member/member-listing');
     final int safePage = page < 1 ? 1 : page;
-    final int safePerPage = perPage.clamp(1, 50);
+    final int safePerPage = perPage.clamp(1, 50).toInt();
     final Map<String, dynamic> body = {
       if (ageFrom != null) 'age_from': ageFrom,
       if (ageTo != null) 'age_to': ageTo,

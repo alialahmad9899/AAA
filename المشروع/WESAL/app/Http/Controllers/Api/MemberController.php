@@ -327,16 +327,18 @@ class MemberController extends Controller
             $users_query->whereIn('id', $user_ids);
         }
 
-        // Location hierarchy: a selected city takes precedence over its state,
-        // and a selected state takes precedence over its country.
-        if (!empty($city_id)) {
-            $user_ids = Address::where('city_id', $city_id)->pluck('user_id')->toArray();
+        // Apply every selected level of the location hierarchy. The mobile
+        // client sends distinct country_id, state_id, and city_id values.
+        if (!empty($country_id)) {
+            $user_ids = Address::where('country_id', $country_id)->pluck('user_id')->toArray();
             $users_query->whereIn('id', $user_ids);
-        } elseif (!empty($state_id)) {
+        }
+        if (!empty($state_id)) {
             $user_ids = Address::where('state_id', $state_id)->pluck('user_id')->toArray();
             $users_query->whereIn('id', $user_ids);
-        } elseif (!empty($country_id)) {
-            $user_ids = Address::where('country_id', $country_id)->pluck('user_id')->toArray();
+        }
+        if (!empty($city_id)) {
+            $user_ids = Address::where('city_id', $city_id)->pluck('user_id')->toArray();
             $users_query->whereIn('id', $user_ids);
         }
 
