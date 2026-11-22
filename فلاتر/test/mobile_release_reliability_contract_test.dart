@@ -75,7 +75,7 @@ void main() {
     expect(api, contains('_pendingLogoutSessionKey'));
     expect(api, contains(r"Uri.parse('$baseUrl/logout')"));
     expect(api, contains(r"headers['Authorization'] = 'Bearer $oldAccessToken'"));
-    expect(auth, contains('public function logout(Request $request)'));
+    expect(auth, contains(r'public function logout(Request $request)'));
     expect(auth, contains(r"->where('fcm_token', trim($deviceToken))"));
     expect(routes, isNot(contains('device-token/detach')));
   });
