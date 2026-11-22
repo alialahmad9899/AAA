@@ -398,7 +398,7 @@ class AccountTabState extends State<AccountTab> {
       if (accountId > 0) {
         await ChatLocalStore.clearAccount(accountId);
       }
-      await ApiService.clearToken();
+      await ApiService.clearToken(reason: 'user_confirmed_logout');
       await ProfileCacheService.clearCache();
       await prefs.remove('last_processed_initial_msg_id');
 
