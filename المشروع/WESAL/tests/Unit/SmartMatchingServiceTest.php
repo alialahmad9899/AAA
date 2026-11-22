@@ -133,18 +133,85 @@ class SmartMatchingServiceTest extends TestCase
         $this->assertFalse($result['details'][0]['evaluated']);
     }
 
-    public function test_missing_criteria_are_excluded_from_the_percentage_denominator(): void
+    public function test_missing_candidate_criteria_remain_in_the_percentage_denominator(): void
     {
         $result = $this->service->scoreData([
-            'preferred_country_id' => 12,
-            'religion_id' => 4,
+            'preferred_country_id' => 12, // weight 18
+            'religion_id' => 4,           // weight 10, but candidate data is missing
         ], [
             'country_id' => 12,
             'religion_id' => null,
         ]);
 
-        $this->assertSame(100, $result['percentage']);
+        // One exact criterion must not turn two selected preferences into 100%.
+        $this->assertSame(64, $result['percentage']);
         $this->assertSame(2, $result['criteria_count']);
+        $this->assertSame(1, $result['evaluated_criteria_count']);
+        $this->assertSame('calculated', $result['status']);
+        $this->assertSame(100, $result['details'][0]['score']);
+        $this->assertNull($result['details'][1]['score']);
+        $this->assertFalse($result['details'][1]['evaluated']);
+    }
+
+    public function test_an_empty_candidate_does_not_receive_a_perfect_score_from_one_matching_field(): void
+    {
+        $result = $this->service->scoreData([
+            'preferred_country_id' => 12,
+            'religion_id' => 4,
+            'min_age' => 25,
+            'max_age' => 35,
+            'profession' => 'مهندس',
+        ], [
+            'country_id' => 12,
+            'religion_id' => null,
+            'age' => null,
+            'professions' => [],
+        ]);
+
+        // Country contributes 18 of the 45 selected weight points.
+        $this->assertSame(40, $result['percentage']);
+        $this->assertSame(4, $result['criteria_count']);
+        $this->assertSame(1, $result['evaluated_criteria_count']);
+        $this->assertSame('calculated', $result['status']);
+    }
+
+    public function test_placeholder_candidate_text_is_treated_as_missing_data(): void
+    {
+        $result = $this->service->scoreData([
+            'profession' => 'مهندس',
+        ], [
+            'professions' => ['غير محدد'],
+        ]);
+
+        $this->assertNull($result['percentage']);
+        $this->assertSame(1, $result['criteria_count']);
+        $this->assertSame(0, $result['evaluated_criteria_count']);
+        $this->assertSame('insufficient_data', $result['status']);
+    }
+
+    public function test_placeholder_preference_does_not_activate_smart_matching(): void
+    {
+        $result = $this->service->scoreData([
+            'profession' => 'غير محدد',
+            'complexion' => 'Not specified',
+        ], []);
+
+        $this->assertNull($result['percentage']);
+        $this->assertSame(0, $result['criteria_count']);
+        $this->assertSame(0, $result['evaluated_criteria_count']);
+        $this->assertSame('no_preferences', $result['status']);
+    }
+
+    public function test_a_single_selected_and_fully_evaluated_matching_preference_can_still_be_100_percent(): void
+    {
+        $result = $this->service->scoreData([
+            'preferred_country_id' => 12,
+        ], [
+            'country_id' => 12,
+        ]);
+
+        $this->assertSame(100, $result['percentage']);
+        $this->assertSame(1, $result['criteria_count']);
         $this->assertSame(1, $result['evaluated_criteria_count']);
         $this->assertSame('calculated', $result['status']);
     }
