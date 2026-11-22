@@ -44,6 +44,30 @@ void main() {
     });
   });
 
+  group('Mobile search request contract', () {
+    test('Flutter sends pagination and filter keys accepted by Laravel', () {
+      final api = File('lib/services/api_service.dart').readAsStringSync();
+      final backend = File(
+        '../المشروع/WESAL/app/Http/Controllers/Api/MemberController.php',
+      ).readAsStringSync();
+
+      for (final key in [
+        'age_from',
+        'age_to',
+        'country_id',
+        'state_id',
+        'city_id',
+        'marital_status',
+        'religion_id',
+        'page',
+        'per_page',
+      ]) {
+        expect(api, contains("'$key':"));
+        expect(backend, contains("'$key' =>"));
+      }
+    });
+  });
+
   group('Profile recovery safeguards', () {
     late String apiService;
     late String profileEditor;
