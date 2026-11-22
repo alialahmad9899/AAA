@@ -1799,12 +1799,11 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
     required Widget content,
     bool initiallyExpanded = false,
   }) {
+    const radius = 20.0;
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: AppColors.cardColor.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: accentColor.withValues(alpha: 0.22)),
+        borderRadius: BorderRadius.circular(radius),
         boxShadow: [
           BoxShadow(
             color: AppColors.textDark.withValues(alpha: 0.025),
@@ -1813,37 +1812,47 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
           ),
         ],
       ),
-      clipBehavior: Clip.antiAlias,
-      child: Theme(
-        data: Theme.of(context).copyWith(
-          dividerColor: Colors.transparent,
-          splashColor: AppColors.accentLight.withValues(alpha: 0.12),
-          highlightColor: AppColors.accentLight.withValues(alpha: 0.08),
+      // ExpansionTile paints its ListTile ink on the nearest Material.
+      // Keep the card's fill/border on that Material so the splash is visible.
+      child: Material(
+        color: AppColors.cardColor.withValues(alpha: 0.72),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radius),
+          side: BorderSide(color: accentColor.withValues(alpha: 0.22)),
         ),
-        child: ExpansionTile(
-          initiallyExpanded: initiallyExpanded,
-          tilePadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 3),
-          childrenPadding: const EdgeInsets.fromLTRB(15, 0, 15, 17),
-          leading: Container(
-            width: 38, height: 38,
-            decoration: BoxDecoration(
-              color: accentColor.withValues(alpha: 0.13),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: accentColor, size: 20),
+        clipBehavior: Clip.antiAlias,
+        child: Theme(
+          data: Theme.of(context).copyWith(
+            dividerColor: Colors.transparent,
+            splashColor: AppColors.accentLight.withValues(alpha: 0.12),
+            highlightColor: AppColors.accentLight.withValues(alpha: 0.08),
           ),
-          title: Text(
-            title,
-            style: const TextStyle(
-              color: AppColors.textDark,
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              fontFamily: 'Cairo',
+          child: ExpansionTile(
+            initiallyExpanded: initiallyExpanded,
+            tilePadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 3),
+            childrenPadding: const EdgeInsets.fromLTRB(15, 0, 15, 17),
+            leading: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.13),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: accentColor, size: 20),
             ),
+            title: Text(
+              title,
+              style: const TextStyle(
+                color: AppColors.textDark,
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                fontFamily: 'Cairo',
+              ),
+            ),
+            iconColor: AppColors.primaryTeal,
+            collapsedIconColor: AppColors.textMuted,
+            children: [content],
           ),
-          iconColor: AppColors.primaryTeal,
-          collapsedIconColor: AppColors.textMuted,
-          children: [content],
         ),
       ),
     );
