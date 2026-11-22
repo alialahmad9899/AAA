@@ -313,13 +313,18 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
                   size: 16, color: AppColors.primaryTeal),
               const SizedBox(width: 6),
             ],
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? AppColors.primaryTeal : AppColors.textDark,
-                fontWeight: FontWeight.bold,
-                fontSize: 13.5,
-                fontFamily: 'Cairo',
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 2,
+                softWrap: true,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: isSelected ? AppColors.primaryTeal : AppColors.textDark,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13.5,
+                  fontFamily: 'Cairo',
+                ),
               ),
             ),
           ],
@@ -912,25 +917,48 @@ class _Step1BasicInfoState extends State<Step1BasicInfo> {
             width: 1.5,
           ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final iconWidget = Icon(
               icon,
               color: isSelected ? AppColors.primaryTeal : AppColors.textDark,
               size: 20,
-            ),
-            const SizedBox(width: 8),
-            Text(
+            );
+            final labelWidget = Text(
               label,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              softWrap: true,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: isSelected ? AppColors.primaryTeal : AppColors.textDark,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Cairo',
                 fontSize: 14,
               ),
-            ),
-          ],
+            );
+
+            if (constraints.maxWidth < 150) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  iconWidget,
+                  const SizedBox(height: 4),
+                  labelWidget,
+                ],
+              );
+            }
+
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                iconWidget,
+                const SizedBox(width: 8),
+                Flexible(child: labelWidget),
+              ],
+            );
+          },
         ),
       ),
     );

@@ -19,7 +19,8 @@ void main() {
     expect(profileModel, contains("json['sun_sign']"));
     expect(backendRequest, contains("'sun_sign'"));
     expect(backendController, contains("Astrology::firstOrNew(['user_id' => auth()->id()])"));
-    expect(backendController, contains(r'$astrologies->sun_sign'));
+    expect(backendController, contains("foreach (['sun_sign', 'moon_sign', 'time_of_birth', 'city_of_birth'] as $field)"));
+    expect(backendController, contains(r'$astrologies->{$field} = $input[$field];'));
     expect(backendResource, contains(r"'sun_sign' => $this->sun_sign"));
     expect(backendModel, contains("'sun_sign'"));
   });

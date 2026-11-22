@@ -27,7 +27,7 @@ void main() {
     expect(localStore, contains('chat_mute_preferences'));
     expect(localStore, contains('partner_user_id'));
     expect(localStore, contains('final legacyMutes = await db.rawQuery'));
-    expect(localStore, contains('version: 3'));
+    expect(localStore, contains('version: 4'));
     expect(localStore, contains('sync_pending'));
     expect(localStore, contains('getPendingMuteSettings'));
     expect(localStore, contains('markMuteSynced'));

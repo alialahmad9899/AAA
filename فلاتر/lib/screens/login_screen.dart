@@ -812,19 +812,20 @@ class _LoginScreenState extends State<LoginScreen> {
                                     .withValues(alpha: 0.25),
                               ),
                             ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                            child: Wrap(
+                              alignment: WrapAlignment.center,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 4,
+                              runSpacing: 0,
                               children: [
-                                Flexible(
-                                  child: Text(
-                                    _isArabic
-                                        ? 'ليس لديك حساب بعد؟'
-                                        : 'New to Wesal?',
-                                    style: const TextStyle(
-                                      color: AppColors.textDark,
-                                      fontSize: 13,
-                                      fontFamily: 'Cairo',
-                                    ),
+                                Text(
+                                  _isArabic
+                                      ? 'ليس لديك حساب بعد؟'
+                                      : 'New to Wesal?',
+                                  style: const TextStyle(
+                                    color: AppColors.textDark,
+                                    fontSize: 13,
+                                    fontFamily: 'Cairo',
                                   ),
                                 ),
                                 TextButton(
@@ -894,13 +895,18 @@ class _LoginFeatureChip extends StatelessWidget {
         children: [
           Icon(icon, color: AppColors.accentLight, size: 15),
           const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 10.5,
-              fontWeight: FontWeight.w700,
-              fontFamily: 'Cairo',
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 2,
+              softWrap: true,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                fontFamily: 'Cairo',
+              ),
             ),
           ),
         ],
