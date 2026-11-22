@@ -7,6 +7,7 @@
 
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' as services;
@@ -66,6 +67,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   bool _hasMessageLoadError = false;
   String _messageLoadError = '';
   bool _isSending = false;
+  String? _pendingMessageFingerprint;
+  String? _pendingClientMessageId;
   bool _isLoadingMore = false;
   bool _isFetchingMessages = false;
   bool _pendingMessageRefresh = false;
@@ -1139,6 +1142,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     );
   }
 
+  String _newClientMessageId() {
+    final random = Random.secure();
+    final randomPart = List<String>.generate(
+      16,
+      (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0'),
+    ).join();
+    return '${DateTime.now().microsecondsSinceEpoch}-$randomPart';
+  }
+
   Future<void> _sendMessage({File? imageFile, String? customText}) async {
     final text = customText ?? _messageController.text.trim();
     if ((text.isEmpty && imageFile == null) || _isSending) return;
@@ -1146,6 +1158,13 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       _showImageReplyRequiredMessage();
       return;
     }
+
+    final fingerprint = '$_activeThreadId|${widget.thread.userId}|$text|${imageFile?.path ?? ''}';
+    if (_pendingMessageFingerprint != fingerprint || _pendingClientMessageId == null) {
+      _pendingMessageFingerprint = fingerprint;
+      _pendingClientMessageId = _newClientMessageId();
+    }
+    final String clientMessageId = _pendingClientMessageId!;
 
     if (customText == null) _messageController.clear();
 
@@ -1173,11 +1192,16 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         message: text,
         attachmentFile: imageFile,
         partnerUserId: widget.thread.userId,
+        clientMessageId: clientMessageId,
         lang: widget.currentLanguage,
       );
       if (!mounted) return;
 
       if (result['success'] == true) {
+        if (_pendingClientMessageId == clientMessageId) {
+          _pendingClientMessageId = null;
+          _pendingMessageFingerprint = null;
+        }
         final responseEnvelope = result['data'] is Map
             ? Map<String, dynamic>.from(result['data'] as Map)
             : <String, dynamic>{};
@@ -1235,6 +1259,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         setState(() {
           _isSending = false;
           _messages.removeWhere((message) => message.id == tempMsg.id);
+          if (_messageController.text.trim().isEmpty && text.isNotEmpty) {
+            _messageController.text = text;
+          }
+          if (imageFile != null && imageFile.existsSync()) {
+            _selectedImageFile ??= imageFile;
+          }
         });
 
         final String status = result['status'] ?? '';
@@ -1264,6 +1294,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       setState(() {
         _isSending = false;
         _messages.removeWhere((message) => message.id == tempMsg.id);
+        if (_messageController.text.trim().isEmpty && text.isNotEmpty) {
+          _messageController.text = text;
+        }
+        if (imageFile != null && imageFile.existsSync()) {
+          _selectedImageFile ??= imageFile;
+        }
       });
       AppSnackBar.show(
         context: context,

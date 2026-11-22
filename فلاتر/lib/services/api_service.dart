@@ -3827,11 +3827,12 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> sendMessage(int threadId, String message,
-      {int? partnerUserId, String? lang}) async {
+      {int? partnerUserId, String? clientMessageId, String? lang}) async {
     return sendChatMessage(
         chatThreadId: threadId,
         message: message,
         partnerUserId: partnerUserId,
+        clientMessageId: clientMessageId,
         lang: lang);
   }
 
@@ -3840,6 +3841,7 @@ class ApiService {
     required String message,
     File? attachmentFile,
     int? partnerUserId,
+    String? clientMessageId,
     String? lang,
   }) async {
     try {
@@ -3857,6 +3859,10 @@ class ApiService {
       request.headers['Accept'] = 'application/json';
       request.headers['Accept-Language'] = currentLang;
       request.headers['app_language'] = currentLang;
+
+      if (clientMessageId != null && clientMessageId.trim().isNotEmpty) {
+        request.fields['client_message_id'] = clientMessageId.trim();
+      }
 
       if (chatThreadId > 0 && chatThreadId != partnerUserId) {
         request.fields['chat_thread_id'] = chatThreadId.toString();
