@@ -58,7 +58,7 @@ class ApiPerformanceQueryContractTest extends TestCase
         $controller = $this->source('app/Http/Controllers/Api/ChatController.php');
 
         self::assertStringContainsString("request->query('after_id'", $chatResource);
-        self::assertStringContainsString("->where('id', '>', $afterMessageId)", $chatResource);
+        self::assertStringContainsString("->where('id', '>', ", $chatResource);
         self::assertStringContainsString('ChatViewResource::preloadAttachments($chats)', $chatResource);
         self::assertStringContainsString('public static function preloadAttachments(iterable $messages)', $messageResource);
         self::assertStringContainsString('ChatThread::with([\'sender\', \'receiver\'])', $controller);
@@ -68,6 +68,17 @@ class ApiPerformanceQueryContractTest extends TestCase
     {
         $source = $this->source('app/Http/Controllers/Api/AuthController.php');
         self::assertStringContainsString("loadMissing(['member.marital_status', 'physical_attributes'])", $source);
-        self::assertStringNotContainsString("MaritalStatus::where('id'", $source);
+        $authResponseStart = strpos($source, 'function authResponse(');
+        $authDataStart = strpos($source, 'function authData(');
+        $authDataEnd = strpos($source, 'function checkedData(', $authDataStart);
+        self::assertNotFalse($authResponseStart);
+        self::assertNotFalse($authDataStart);
+        self::assertNotFalse($authDataEnd);
+        $authResponse = substr($source, $authResponseStart, strpos($source, 'function forgotPassword(', $authResponseStart) - $authResponseStart);
+        $authData = substr($source, $authDataStart, $authDataEnd - $authDataStart);
+        self::assertStringContainsString("loadMissing(['member.marital_status', 'physical_attributes'])", $authResponse);
+        self::assertStringContainsString("loadMissing(['member.marital_status', 'physical_attributes'])", $authData);
+        self::assertStringNotContainsString("MaritalStatus::where('id'", $authResponse);
+        self::assertStringNotContainsString("MaritalStatus::where('id'", $authData);
     }
 }

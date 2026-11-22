@@ -596,8 +596,10 @@ class AuthController extends Controller
 
     public function authData($user)
     {
-        $maritial_status = MaritalStatus::where('id', $user->member->marital_status_id ?? 0)->first();
-        $age = Carbon::parse($user->member->birthday ?? now())->age;
+        $user->loadMissing(['member.marital_status', 'physical_attributes']);
+        $member = $user->member;
+        $maritial_status = optional($member)->marital_status;
+        $age = Carbon::parse(optional($member)->birthday ?? now())->age;
         $photoUrl = uploaded_asset($user->photo) ?: uploaded_asset($user->avatar_original ?? null);
 
         return response()->json(
@@ -615,7 +617,7 @@ class AuthController extends Controller
                 'approved' => $user->approved,
                 'email' => $user->email,
                 'birthday' => $age,
-                'height' => $user->physical_attributes ? $user->physical_attributes->height : 0,
+                'height' => optional($user->physical_attributes)->height ?? 0,
                 'marital_status_id' => $maritial_status ? new MaritialStatusResource($maritial_status) :  new MaritialStatusResource($maritial_status),
                 'avatar' => $user->avatar ?? '',
                 'photo' => $photoUrl ?? '',
