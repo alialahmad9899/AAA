@@ -928,8 +928,7 @@ class ApiService {
           await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
 
       if (kDebugMode) {
-        // Never print the access_token or personal login response fields.
-        debugPrint('[API Signin] HTTP ${response.statusCode}.');
+        debugPrint('[API POST Generic] HTTP ${response.statusCode}.');
       }
 
       dynamic decoded;
@@ -995,8 +994,8 @@ class ApiService {
           .timeout(_timeoutDuration);
 
       if (kDebugMode) {
-        debugPrint(
-            '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
+        // Do not expose the returned bearer token or login response fields.
+        debugPrint('[API Signin] HTTP ${response.statusCode}.');
       }
 
       dynamic decoded;
@@ -1089,6 +1088,12 @@ class ApiService {
         final savedToken = await getToken();
         if (savedToken == null || savedToken.isEmpty) {
           throw StateError('The access token could not be persisted securely.');
+        }
+        if (kDebugMode) {
+          debugPrint(
+            '[API Signin] tokenReturned=true; tokenPersisted=true; '
+            'userIdStored=true; rememberMe=$rememberMe.',
+          );
         }
         await prefs.setInt('user_id', userId);
         await prefs.setBool('remember_me', rememberMe);
