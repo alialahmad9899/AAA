@@ -1,8 +1,8 @@
 <?php
 
-namespace Tests\\Unit;
+namespace Tests\Unit;
 
-use PHPUnit\\Framework\\TestCase;
+use PHPUnit\Framework\TestCase;
 
 class MemberListingFiltersPaginationTest extends TestCase
 {
@@ -18,7 +18,7 @@ class MemberListingFiltersPaginationTest extends TestCase
         self::assertNotFalse($end);
         $method = substr($source, $start, $end - $start);
 
-        self::assertStringContainsString("$users_query->whereIn('id', $user_ids);", $method);
+        self::assertStringContainsString('$users_query->whereIn(\\'id\\', $user_ids);', $method);
         self::assertStringNotContainsString('if (count($user_ids) > 0)', $method);
         self::assertStringContainsString("$users_query->whereIn('id', $user_ids);", $method);
     }
@@ -35,8 +35,8 @@ class MemberListingFiltersPaginationTest extends TestCase
         self::assertNotFalse($end);
         $method = substr($source, $start, $end - $start);
 
-        self::assertStringContainsString("where('religion_id', $religion_id)", $method);
-        self::assertStringContainsString("where('state_id', $state_id)", $method);
+        self::assertStringContainsString('where(\\'religion_id\\', $religion_id)', $method);
+        self::assertStringContainsString('where(\\'state_id\\', $state_id)', $method);
         self::assertStringContainsString('$users_query->paginate($perPage', $method);
         self::assertStringContainsString("'has_more' => $membersPage->hasMorePages()", $method);
         self::assertStringContainsString("'per_page' => ['sometimes', 'integer', 'min:1', 'max:50']", $method);

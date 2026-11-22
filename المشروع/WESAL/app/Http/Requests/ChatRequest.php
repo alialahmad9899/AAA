@@ -24,7 +24,7 @@ class ChatRequest extends FormRequest
     public function rules()
     {
         return [
-            'message' => ['nullable', 'string', 'max:10000'],
+            'message'    => ['nullable'],
             'attachment' => ['sometimes'],
             'client_message_id' => ['sometimes', 'required', 'string', 'max:64', 'regex:/^[A-Za-z0-9._:-]+$/'],
         ];

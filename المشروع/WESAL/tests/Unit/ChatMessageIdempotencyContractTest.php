@@ -1,8 +1,8 @@
 <?php
 
-namespace Tests\\Unit;
+namespace Tests\Unit;
 
-use PHPUnit\\Framework\\TestCase;
+use PHPUnit\Framework\TestCase;
 
 class ChatMessageIdempotencyContractTest extends TestCase
 {
@@ -13,9 +13,9 @@ class ChatMessageIdempotencyContractTest extends TestCase
         self::assertIsString($source);
 
         self::assertStringContainsString("'client_message_id' =>", $source);
-        self::assertStringContainsString("->where('chat_thread_id', $ownedThread->id)", $source);
-        self::assertStringContainsString("->where('sender_user_id', $sender_id)", $source);
-        self::assertStringContainsString("->where('client_message_id', $clientMessageId)", $source);
+        self::assertStringContainsString('->where(\\'chat_thread_id\\', $ownedThread->id)', $source);
+        self::assertStringContainsString('->where(\\'sender_user_id\\', $sender_id)', $source);
+        self::assertStringContainsString('->where(\\'client_message_id\\', $clientMessageId)', $source);
         self::assertStringContainsString("'idempotent_replay' => true", $source);
     }
 

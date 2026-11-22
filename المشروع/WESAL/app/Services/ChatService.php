@@ -7,6 +7,7 @@ use App\Models\ChatThread;
 use App\Models\ChatMute;
 use App\Models\IgnoredUser;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
