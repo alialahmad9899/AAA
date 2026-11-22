@@ -4754,21 +4754,15 @@ class ApiService {
           final serverMessage = decoded is Map
               ? (decoded['message'] ?? '').toString()
               : '';
+          final sanitizedBody = response.body
+              .replaceAll(RegExp(r'Bearer\\s+[^\\s,;]+'), 'Bearer [redacted]')
+              .replaceAll(RegExp(r'\\s+'), ' ')
+              .trim();
           final rawBodyPreview = decoded is Map
               ? ''
-              : response.body
-                  .replaceAll(RegExp(r'Bearer\\s+[^\\s,;]+'), 'Bearer [redacted]')
-                  .replaceAll(RegExp(r'\\s+'), ' ')
-                  .trim()
-                  .substring(
-                    0,
-                    response.body
-                        .replaceAll(RegExp(r'Bearer\\s+[^\\s,;]+'), 'Bearer [redacted]')
-                        .replaceAll(RegExp(r'\\s+'), ' ')
-                        .trim()
-                        .length
-                        .clamp(0, 240),
-                  );
+              : (sanitizedBody.length <= 240
+                  ? sanitizedBody
+                  : sanitizedBody.substring(0, 240));
           final errorFields = decoded is Map && decoded['errors'] is Map
               ? (decoded['errors'] as Map).keys.join(',')
               : '';
