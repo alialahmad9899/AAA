@@ -40,6 +40,7 @@ $Targets = @(
     'lib/services/notification_service.dart',
     'lib/services/startup_manager.dart',
     'lib/screens/chat_detail_screen.dart',
+    'lib/screens/home/chats_tab.dart',
     'test/chat_api_contract_test.dart'
 )
 
@@ -68,6 +69,13 @@ $RequiredPatterns = @{
     )
     'lib/services/startup_manager.dart' = @('chatsPage\.threads')
     'lib/screens/chat_detail_screen.dart' = @('afterMessageId:\s*previousLatestMessageId')
+    'lib/screens/home/chats_tab.dart' = @(
+        'final\s+ChatThreadsPage\s+page\s*=\s*await\s+ApiService\.getChatThreads\(',
+        'for\s*\(final\s+thread\s+in\s+page\.threads\)',
+        'final\s+threads\s*=\s*page\.threads\.toList\(\)',
+        '_chatPage\s*=\s*page\.currentPage',
+        '_hasMoreChats\s*=\s*page\.hasMore'
+    )
     'test/chat_api_contract_test.dart' = @(
         'chat list API returns the typed paginated response',
         'incremental message loading keeps the afterMessageId parameter',
@@ -151,7 +159,7 @@ try {
         throw
     }
 
-    Write-Host "اكتمل تحديث الملفات الستة واختبار العقد المحلي. النسخ الاحتياطية: $BackupRoot" -ForegroundColor Cyan
+    Write-Host "اكتمل تحديث الملفات السبعة واختبار العقد المحلي. النسخ الاحتياطية: $BackupRoot" -ForegroundColor Cyan
     Write-Host 'بدء تحليل Dart...' -ForegroundColor Cyan
     Push-Location $ProjectRoot
     try {

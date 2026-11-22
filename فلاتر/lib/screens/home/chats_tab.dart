@@ -317,7 +317,7 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
     setState(() => _isLoadingMoreChats = true);
     try {
       final nextPage = _chatPage + 1;
-      final page = await ApiService.getChatThreads(
+      final ChatThreadsPage page = await ApiService.getChatThreads(
         lang: widget.currentLanguage,
         page: nextPage,
         perPage: _chatPageSize,
@@ -364,7 +364,7 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
       });
     }
     try {
-      final page = await ApiService.getChatThreads(
+      final ChatThreadsPage page = await ApiService.getChatThreads(
         lang: widget.currentLanguage,
         page: 1,
         perPage: _chatPageSize,
