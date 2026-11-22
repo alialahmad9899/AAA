@@ -2864,3 +2864,30 @@ ALTER TABLE `users`
 - فشل أول تشغيل CI بعد إضافة اختبار Gradle بسبب استخدام inline modifier `(?m)` في تعبير Dart RegExp؛ سجّل المحلل `valid_regexps`.
 - تم تصحيح الاختبار إلى `RegExp(r'^\\s*kotlin\\s*\\{', multiLine: true)` في commit `c7625a9f8abaf1d572b9e3abd3c2a15f93dd056a`.
 - يجري حالياً إعادة تشغيل تحليل Dart واختبارات Flutter وبناء Android على commit المصحح. لا يُعلن نجاح APK قبل اكتمال مهمة البناء.
+
+
+## 2026-11-23 — Hotfix isolated: Sanctum session, profile loading, search diagnostics
+
+User supplied device logs showing repeated HTTP 401 responses from `/api/user-by-token`, chat endpoints, `/member/full-my-profile`, the profile section endpoints, and `/member/partner-expectation`. The supplied log does not contain the actual HTTP 400 response for `/member/member-listing`, so the exact 400 cause is not asserted.
+
+Confirmed code-contract defects:
+- Laravel `AuthController@getUserByToken()` returns `authData()` as a top-level user object containing `id`; Flutter `validateCurrentSession()` previously accepted only `{result:true,data:{...}}`. The validator now accepts both the actual top-level Laravel shape and the wrapped legacy shape.
+- Generic `_parseErrorMessage()` previously called `clearToken()` on every 401. Removed this side-effect so unrelated/background API failures cannot race and erase the persisted token. Only authoritative 401 from `/user-by-token` clears the session.
+- `getFullProfile()` previously called twelve section endpoints after any unsuccessful consolidated request, including 401. It now raises `ApiUnauthorizedException` on 401/403, returns without fallback for other errors, and only uses section fallback for 404/405 legacy hosting.
+- `getPartnerExpectations()` now raises the same explicit unauthorized exception for 401/403 rather than quietly returning null.
+- Edit Profile and Partner Expectations now show retry/error states when authenticated data cannot be loaded and block saving from empty/default forms.
+- Search screen now displays the API validation message rather than hiding it behind a generic network error. Search diagnostics log HTTP status, whether Authorization was sent, server message, and validation field names only; no bearer token or search field values are logged.
+- Sign-in logs no longer print the access token response. Successful sign-in emits only whether the token was returned and securely persisted. Remember Me selection is now honored.
+- Added Flutter tests for actual Laravel `user-by-token` response shape, backward-compatible wrapper, safeguards against auth-triggered empty-profile fallback, no global token deletion from generic error parsing, and Flutter/Laravel search filter key agreement.
+
+Touched files (this repair branch only):
+- `فلاتر/lib/services/api_service.dart`
+- `فلاتر/lib/screens/login_screen.dart`
+- `فلاتر/lib/screens/edit_profile_screen.dart`
+- `فلاتر/lib/screens/partner_expectations_screen.dart`
+- `فلاتر/lib/screens/home/search_results_screen.dart`
+- `فلاتر/test/auth_profile_recovery_contract_test.dart`
+
+Branch: `hotfix/auth-profile-search-2026-11-23`.
+No merge to `main`, production deploy, production database changes, Laravel production configuration changes, or website changes were performed.
+Evidence limitation: the provided Android log shows 401 but not the claimed 400 search request. The new diagnostics are needed to capture the exact server response for that request before any further search backend change.
