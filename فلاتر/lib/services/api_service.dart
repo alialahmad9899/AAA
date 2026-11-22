@@ -923,7 +923,10 @@ class ApiService {
     // invalidation is centralized in validateCurrentSession(), where the
     // /user-by-token response is authoritative and cannot race background calls.
     if (statusCode == 401) {
-      return 'انتهت جلسة تسجيل الدخول، يرجى تسجيل الدخول مجدداً';
+      // A single protected endpoint may reject a request without proving that
+      // the persisted app session is invalid. Keep this message distinct from
+      // the authoritative /user-by-token session check.
+      return 'تعذّر تنفيذ هذا الطلب حالياً، ولم يتم إنهاء جلسة تسجيل الدخول.';
     }
     if (responseData == null) return 'حدث خطأ في السيرفر (رمز: $statusCode)';
     if (responseData is Map && responseData['message'] != null) {
