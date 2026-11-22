@@ -33,7 +33,7 @@ void main() {
     final intro = await File('lib/screens/brand_intro_screen.dart').readAsString();
 
     expect(api, contains('_signupDraftSecureKey'));
-    expect(api, contains('_secureStorage.write'));
+    expect(api, contains('WesalSecureStorage.write('));
     expect(signup, contains('resumeExistingDraft'));
     expect(signup, contains("'current_step': _currentStep"));
     expect(signup, contains('await ApiService.saveSignupDraft(draft)'));
@@ -45,10 +45,18 @@ void main() {
 
   test('local chat payloads use authenticated encryption and encrypted key storage', () async {
     final store = await File('lib/services/chat_local_store.dart').readAsString();
+    final secureStorage =
+        await File('lib/services/wesal_secure_storage.dart').readAsString();
     final manifest = await File('android/app/src/main/AndroidManifest.xml').readAsString();
 
     expect(store, contains('AesGcm.with256bits()'));
-    expect(store, contains('FlutterSecureStorage'));
+    expect(store, contains('WesalSecureStorage.read('));
+    expect(store, contains('WesalSecureStorage.write('));
+    expect(store, isNot(contains('FlutterSecureStorage')));
+    expect(
+      secureStorage,
+      contains('AndroidOptions(encryptedSharedPreferences: true)'),
+    );
     expect(store, contains('_payloadCipher.encrypt'));
     expect(store, contains('_payloadCipher.decrypt'));
     expect(store, contains('_encryptLegacyPayloads'));
