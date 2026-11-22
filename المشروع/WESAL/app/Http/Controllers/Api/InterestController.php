@@ -145,8 +145,11 @@ class InterestController extends Controller
      */
     public function accept_interest(Request $request)
     {
+        $validated = $request->validate([
+            'interest_id' => ['required', 'integer', 'min:1'],
+        ]);
         $interest = new InterestService();
-        $accept_interest = $interest->accept($request->interest_id);
+        $accept_interest = $interest->accept($validated['interest_id']);
 
         if ($accept_interest) {
             return response()->json([
@@ -168,8 +171,11 @@ class InterestController extends Controller
      */
     public function reject_interest(Request $request)
     {
+        $validated = $request->validate([
+            'interest_id' => ['required', 'integer', 'min:1'],
+        ]);
         $interest = new InterestService();
-        $reject_interest = $interest->reject($request->interest_id);
+        $reject_interest = $interest->reject($validated['interest_id']);
 
         if ($reject_interest) {
             return response()->json([

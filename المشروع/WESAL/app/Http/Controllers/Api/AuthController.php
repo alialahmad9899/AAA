@@ -659,8 +659,17 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $user->fcm_token = $fcmToken;
-        $user->save();
+        // A physical app installation must be bound to one member at a
+        // time. This also repairs stale server-side FCM ownership after an
+        // offline logout followed by sign-in to another account on the device.
+        DB::transaction(function () use ($user, $fcmToken) {
+            User::where('id', '!=', $user->id)
+                ->where('fcm_token', $fcmToken)
+                ->update(['fcm_token' => null]);
+
+            $user->fcm_token = $fcmToken;
+            $user->save();
+        });
 
         return response()->json([
             'result' => true,

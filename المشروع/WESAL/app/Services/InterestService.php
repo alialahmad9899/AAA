@@ -136,65 +136,91 @@ class InterestService
      */
     public function accept($interest_id)
     {
+        $actorId = (int) auth()->id();
+        if ($actorId <= 0 || !is_numeric($interest_id) || (int) $interest_id <= 0) {
+            return false;
+        }
+
         try {
-            $interest = ExpressInterest::find($interest_id);
-            if ($interest) {
-                // تحديث حالة الطلب إلى مقبول (1)
+            // Lock the incoming request and verify its owner before changing
+            // its state or creating a conversation. The lock also serializes
+            // simultaneous accept/reject requests for the same interest.
+            $accepted = DB::transaction(function () use ($interest_id, $actorId) {
+                $interest = ExpressInterest::whereKey((int) $interest_id)
+                    ->where('user_id', $actorId)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$interest || (int) $interest->status !== 0) {
+                    return null;
+                }
+
                 $interest->status = 1;
                 $interest->save();
 
-                // التحقق من عدم وجود محادثة سابقة بين الطرفين
-                $existing_chat_thread = ChatThread::where(function ($query) use ($interest) {
+                $existingThread = ChatThread::where(function ($query) use ($interest) {
                     $query->where('sender_user_id', $interest->interested_by)
-                          ->where('receiver_user_id', $interest->user_id);
+                        ->where('receiver_user_id', $interest->user_id);
                 })->orWhere(function ($query) use ($interest) {
-                    $query->where('receiver_user_id', $interest->interested_by)
-                          ->where('sender_user_id', $interest->user_id);
-                })->first();
+                    $query->where('sender_user_id', $interest->user_id)
+                        ->where('receiver_user_id', $interest->interested_by);
+                })->lockForUpdate()->first();
 
-                // إن لم توجد محادثة، يتم إنشاؤها فورياً
-                if ($existing_chat_thread == null) {
-                    $chat_thread                   = new ChatThread();
-                    $chat_thread->thread_code      = $interest->interested_by . date('Ymd') . $interest->user_id;
-                    $chat_thread->sender_user_id   = $interest->interested_by;
-                    $chat_thread->receiver_user_id = $interest->user_id;
-                    $chat_thread->save();
+                if (!$existingThread) {
+                    $thread = new ChatThread();
+                    $thread->thread_code = $interest->interested_by . date('Ymd') . $interest->user_id;
+                    $thread->sender_user_id = $interest->interested_by;
+                    $thread->receiver_user_id = $interest->user_id;
+                    $thread->save();
                 }
 
-                // إشعار مُرسل الإعجاب الأصلي بالقبول
-                $notify_user = User::find($interest->interested_by);
-                if ($notify_user) {
-                    $notify_type = 'accept_interest';
-                    $notify_by   = auth()->user()->id;
-                    $info_id     = $interest->id;
-                    $message     = auth()->user()->first_name . ' ' . auth()->user()->last_name . ' ' . translate(' has accepted your interest.');
-                    $route       = route('my_interests.index');
+                return [
+                    'interest_id' => (int) $interest->id,
+                    'interested_by' => (int) $interest->interested_by,
+                ];
+            });
 
-                    $this->notifyUser($interest->interested_by, $notify_user, $notify_type, $notify_by, $info_id, $message, $route);
-
-                    if ($notify_user->email != null && get_email_template('email_on_accepting_interest', 'status')) {
-                        try {
-                            EmailUtility::email_on_accept_request($notify_user, 'email_on_accepting_interest');
-                        } catch (\Exception $e) {
-                            Log::error("❌ [Email Accept Send Error]: " . $e->getMessage());
-                        }
-                    }
-
-                    if ($notify_user->phone != null && addon_activation('otp_system') && (get_sms_template('accept_interest', 'status') == 1)) {
-                        try {
-                            SmsUtility::sms_on_accept_request($notify_user, 'accept_interest');
-                        } catch (\Exception $e) {
-                            Log::error("❌ [SMS Accept Send Error]: " . $e->getMessage());
-                        }
-                    }
-                }
-
-                return true;
+            if (!$accepted) {
+                return false;
             }
 
-            return false;
-        } catch (\Exception $e) {
-            Log::error("❌ [InterestService Accept Error]: " . $e->getMessage());
+            // Notifications are sent after the transaction commits. Their
+            // failure must not roll back the accepted request or chat thread.
+            $notifyUser = User::find($accepted['interested_by']);
+            $actor = User::find($actorId);
+            if ($notifyUser && $actor) {
+                $message = trim(($actor->first_name ?? '') . ' ' . ($actor->last_name ?? ''))
+                    . ' ' . translate(' has accepted your interest.');
+                $this->notifyUser(
+                    $accepted['interested_by'],
+                    $notifyUser,
+                    'accept_interest',
+                    $actorId,
+                    $accepted['interest_id'],
+                    $message,
+                    route('my_interests.index')
+                );
+
+                if ($notifyUser->email != null && get_email_template('email_on_accepting_interest', 'status')) {
+                    try {
+                        EmailUtility::email_on_accept_request($notifyUser, 'email_on_accepting_interest');
+                    } catch (\\Throwable $exception) {
+                        Log::error('Interest accept email failed.', ['message' => $exception->getMessage()]);
+                    }
+                }
+
+                if ($notifyUser->phone != null && addon_activation('otp_system') && get_sms_template('accept_interest', 'status') == 1) {
+                    try {
+                        SmsUtility::sms_on_accept_request($notifyUser, 'accept_interest');
+                    } catch (\\Throwable $exception) {
+                        Log::error('Interest accept SMS failed.', ['message' => $exception->getMessage()]);
+                    }
+                }
+            }
+
+            return true;
+        } catch (\\Throwable $exception) {
+            Log::error('InterestService Accept Error.', ['message' => $exception->getMessage()]);
             return false;
         }
     }
@@ -207,29 +233,56 @@ class InterestService
      */
     public function reject($interest_id)
     {
+        $actorId = (int) auth()->id();
+        if ($actorId <= 0 || !is_numeric($interest_id) || (int) $interest_id <= 0) {
+            return false;
+        }
+
         try {
-            $interest = ExpressInterest::find($interest_id);
-            if ($interest) {
-                $interested_by = $interest->interested_by;
-                ExpressInterest::destroy($interest_id);
+            $rejected = DB::transaction(function () use ($interest_id, $actorId) {
+                $interest = ExpressInterest::whereKey((int) $interest_id)
+                    ->where('user_id', $actorId)
+                    ->lockForUpdate()
+                    ->first();
 
-                $notify_user = User::find($interested_by);
-                if ($notify_user) {
-                    $notify_type = 'reject_interest';
-                    $notify_by   = auth()->user()->id;
-                    $info_id     = $interest_id;
-                    $message     = auth()->user()->first_name . ' ' . auth()->user()->last_name . ' ' . translate(' has rejected your interest.');
-                    $route       = route('my_interests.index');
-
-                    $this->notifyUser($interested_by, $notify_user, $notify_type, $notify_by, $info_id, $message, $route);
+                // Only a still-pending incoming request can be rejected.
+                if (!$interest || (int) $interest->status !== 0) {
+                    return null;
                 }
 
-                return true;
+                $senderId = (int) $interest->interested_by;
+                $requestId = (int) $interest->id;
+                $interest->delete();
+
+                return [
+                    'interest_id' => $requestId,
+                    'interested_by' => $senderId,
+                ];
+            });
+
+            if (!$rejected) {
+                return false;
             }
 
-            return false;
-        } catch (\Exception $e) {
-            Log::error("❌ [InterestService Reject Error]: " . $e->getMessage());
+            $notifyUser = User::find($rejected['interested_by']);
+            $actor = User::find($actorId);
+            if ($notifyUser && $actor) {
+                $message = trim(($actor->first_name ?? '') . ' ' . ($actor->last_name ?? ''))
+                    . ' ' . translate(' has rejected your interest.');
+                $this->notifyUser(
+                    $rejected['interested_by'],
+                    $notifyUser,
+                    'reject_interest',
+                    $actorId,
+                    $rejected['interest_id'],
+                    $message,
+                    route('my_interests.index')
+                );
+            }
+
+            return true;
+        } catch (\\Throwable $exception) {
+            Log::error('InterestService Reject Error.', ['message' => $exception->getMessage()]);
             return false;
         }
     }

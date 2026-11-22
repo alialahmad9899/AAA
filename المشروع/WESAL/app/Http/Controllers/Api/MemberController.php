@@ -216,136 +216,156 @@ class MemberController extends Controller
 
     public function member_listing(Request $request)
     {
-        $age_from       = ($request->age_from != null) ? $request->age_from : null;
-        $age_to         = ($request->age_to != null) ? $request->age_to : null;
-        $member_code    = ($request->member_code != null) ? $request->member_code : null;
-        $marital_status = ($request->marital_status != null) ? $request->marital_status : null;
-        $religion_id    = ($request->religion_id != null) ? $request->religion_id : null;
-        $caste_id       = ($request->caste_id != null) ? $request->caste_id : null;
-        $sub_caste_id   = ($request->sub_caste_id != null) ? $request->sub_caste_id : null;
-        $mother_tongue  = ($request->mother_tongue != null) ? $request->mother_tongue : null;
-        $profession     = ($request->profession != null) ? $request->profession : null;
-        $country_id     = ($request->country_id != null) ? $request->country_id : null;
-        $state_id       = ($request->state_id != null) ? $request->state_id : null;
-        $city_id        = ($request->city_id != null) ? $request->city_id : null;
-        $min_height     = ($request->min_height != null) ? $request->min_height : null;
-        $max_height     = ($request->max_height != null) ? $request->max_height : null;
-        $member_type    = ($request->member_type != null) ? $request->member_type : 0;
+        $validated = $request->validate([
+            'age_from' => ['sometimes', 'nullable', 'integer', 'min:18', 'max:100'],
+            'age_to' => ['sometimes', 'nullable', 'integer', 'min:18', 'max:100'],
+            'member_code' => ['sometimes', 'nullable', 'string', 'max:64'],
+            'marital_status' => ['sometimes', 'nullable', 'integer', 'min:1'],
+            'religion_id' => ['sometimes', 'nullable', 'integer', 'min:1'],
+            'caste_id' => ['sometimes', 'nullable', 'integer', 'min:1'],
+            'sub_caste_id' => ['sometimes', 'nullable', 'integer', 'min:1'],
+            'mother_tongue' => ['sometimes', 'nullable', 'integer', 'min:1'],
+            'profession' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'country_id' => ['sometimes', 'nullable', 'integer', 'min:1'],
+            'state_id' => ['sometimes', 'nullable', 'integer', 'min:1'],
+            'city_id' => ['sometimes', 'nullable', 'integer', 'min:1'],
+            'min_height' => ['sometimes', 'nullable', 'numeric', 'min:0'],
+            'max_height' => ['sometimes', 'nullable', 'numeric', 'min:0'],
+            'member_type' => ['sometimes', 'nullable', 'integer', 'in:0,1,2'],
+            'page' => ['sometimes', 'integer', 'min:1'],
+            'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
+        ]);
 
-        $users_query = User::query();
-        $users_query->orderBy('created_at', 'desc')
+        $age_from = $validated['age_from'] ?? null;
+        $age_to = $validated['age_to'] ?? null;
+        $member_code = $validated['member_code'] ?? null;
+        $marital_status = $validated['marital_status'] ?? null;
+        $religion_id = $validated['religion_id'] ?? null;
+        $caste_id = $validated['caste_id'] ?? null;
+        $sub_caste_id = $validated['sub_caste_id'] ?? null;
+        $mother_tongue = $validated['mother_tongue'] ?? null;
+        $profession = $validated['profession'] ?? null;
+        $country_id = $validated['country_id'] ?? null;
+        $state_id = $validated['state_id'] ?? null;
+        $city_id = $validated['city_id'] ?? null;
+        $min_height = $validated['min_height'] ?? null;
+        $max_height = $validated['max_height'] ?? null;
+        $member_type = $validated['member_type'] ?? 0;
+        $page = (int) ($validated['page'] ?? 1);
+        $perPage = (int) ($validated['per_page'] ?? 20);
+
+        $users_query = User::query()
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
             ->where('user_type', 'member')
             ->where('id', '!=', auth()->user()->id)
             ->where('blocked', 0)
             ->where('deactivated', 0);
 
         // Gender Check
-        $user_ids = Member::where('gender', '!=', auth()->user()->member->gender)->pluck('user_id')->toArray();
+        $user_ids = Member::where('gender', '!=', auth()->user()->member->gender)
+            ->pluck('user_id')->toArray();
         $users_query->whereIn('id', $user_ids);
 
         // Ignored member and ignored by member check
-        $users_query->whereNotIn("id", function ($query) {
+        $users_query->whereNotIn('id', function ($query) {
             $query->select('user_id')
                 ->from('ignored_users')
-                ->where('ignored_by', auth()->user()->id)->orWhere('user_id', auth()->user()->id);
-        })
-            ->whereNotIn("id", function ($query) {
-                $query->select('ignored_by')
-                    ->from('ignored_users')
-                    ->where('ignored_by', auth()->user()->id)->orWhere('user_id', auth()->user()->id);
-            });
+                ->where('ignored_by', auth()->user()->id)
+                ->orWhere('user_id', auth()->user()->id);
+        })->whereNotIn('id', function ($query) {
+            $query->select('ignored_by')
+                ->from('ignored_users')
+                ->where('ignored_by', auth()->user()->id)
+                ->orWhere('user_id', auth()->user()->id);
+        });
 
-        // Membership Check
-        if ($member_type == 1 || $member_type == 2) {
+        if ($member_type === 1 || $member_type === 2) {
             $users_query->where('membership', $member_type);
         }
 
-        // Sort By age
-        if (!empty($age_from)) {
-            $age = $age_from + 1;
-            $start = date('Y-m-d', strtotime("- $age years"));
+        // Every active filter is applied even when its matching ID list is
+        // empty. An empty match must yield zero rows, never a broader result.
+        if ($age_from !== null) {
+            $start = date('Y-m-d', strtotime('-' . ((int) $age_from + 1) . ' years'));
             $user_ids = Member::where('birthday', '<=', $start)->pluck('user_id')->toArray();
-            if (count($user_ids) > 0) {
-                $users_query->whereIn('id', $user_ids);
-            }
+            $users_query->whereIn('id', $user_ids);
         }
-        if (!empty($age_to)) {
-            $age = $age_to + 1;
-            $end = date('Y-m-d', strtotime("- $age years +1 day"));
+        if ($age_to !== null) {
+            $end = date('Y-m-d', strtotime('-' . ((int) $age_to + 1) . ' years +1 day'));
             $user_ids = Member::where('birthday', '>=', $end)->pluck('user_id')->toArray();
-            if (count($user_ids) > 0) {
-                $users_query->whereIn('id', $user_ids);
-            }
+            $users_query->whereIn('id', $user_ids);
         }
 
-        // Search by Member Code
         if (!empty($member_code)) {
             $users_query->where('code', $member_code);
         }
 
-        // Sort by Marital Status
-        if ($marital_status != null) {
-            $user_ids = Member::where('marital_status_id', $marital_status)->pluck('user_id')->toArray();
-            if (count($user_ids) > 0) {
-                $users_query->whereIn('id', $user_ids);
-            }
+        if ($marital_status !== null) {
+            $user_ids = Member::where('marital_status_id', $marital_status)
+                ->pluck('user_id')->toArray();
+            $users_query->whereIn('id', $user_ids);
         }
 
-        // Sort By religion
         if (!empty($sub_caste_id)) {
-            $user_ids = SpiritualBackground::where('sub_caste_id', $sub_caste_id)->pluck('user_id')->toArray();
+            $user_ids = SpiritualBackground::where('sub_caste_id', $sub_caste_id)
+                ->pluck('user_id')->toArray();
             $users_query->whereIn('id', $user_ids);
         } elseif (!empty($caste_id)) {
-            $user_ids = SpiritualBackground::where('caste_id', $caste_id)->pluck('user_id')->toArray();
+            $user_ids = SpiritualBackground::where('caste_id', $caste_id)
+                ->pluck('user_id')->toArray();
             $users_query->whereIn('id', $user_ids);
         } elseif (!empty($religion_id)) {
-            $user_ids = SpiritualBackground::where('religion_id', $religion_id)->pluck('user_id')->toArray();
-            $users_query->whereIn('id', $religion_id);
-        }
-
-        // Sort By Profession
-        if (!empty($profession)) {
-            $user_ids = Career::where('designation', 'like', '%' . $profession . '%')->pluck('user_id')->toArray();
+            $user_ids = SpiritualBackground::where('religion_id', $religion_id)
+                ->pluck('user_id')->toArray();
             $users_query->whereIn('id', $user_ids);
         }
 
-        // Sort By location
+        if (!empty($profession)) {
+            $user_ids = Career::where('designation', 'like', '%' . $profession . '%')
+                ->pluck('user_id')->toArray();
+            $users_query->whereIn('id', $user_ids);
+        }
+
+        // Location hierarchy: a selected city takes precedence over its state,
+        // and a selected state takes precedence over its country.
         if (!empty($city_id)) {
             $user_ids = Address::where('city_id', $city_id)->pluck('user_id')->toArray();
             $users_query->whereIn('id', $user_ids);
         } elseif (!empty($state_id)) {
             $user_ids = Address::where('state_id', $state_id)->pluck('user_id')->toArray();
-            $users_query->whereIn('id', $state_id);
+            $users_query->whereIn('id', $user_ids);
         } elseif (!empty($country_id)) {
             $user_ids = Address::where('country_id', $country_id)->pluck('user_id')->toArray();
             $users_query->whereIn('id', $user_ids);
         }
 
-        // Sort By Mother Tongue
-        if ($mother_tongue != null) {
-            $user_ids = Member::where('mothere_tongue', $mother_tongue)->pluck('user_id')->toArray();
-            if (count($user_ids) > 0) {
-                $users_query->whereIn('id', $user_ids);
-            }
+        if ($mother_tongue !== null) {
+            $user_ids = Member::where('mothere_tongue', $mother_tongue)
+                ->pluck('user_id')->toArray();
+            $users_query->whereIn('id', $user_ids);
         }
 
-        // Sort by Height
-        if (!empty($min_height)) {
-            $user_ids = PhysicalAttribute::where('height', '>=', $min_height)->pluck('user_id')->toArray();
-            if (count($user_ids) > 0) {
-                $users_query->whereIn('id', $user_ids);
-            }
+        if ($min_height !== null) {
+            $user_ids = PhysicalAttribute::where('height', '>=', $min_height)
+                ->pluck('user_id')->toArray();
+            $users_query->whereIn('id', $user_ids);
         }
-        if (!empty($max_height)) {
-            $user_ids = PhysicalAttribute::where('height', '<=', $max_height)->pluck('user_id')->toArray();
-            if (count($user_ids) > 0) {
-                $users_query->whereIn('id', $user_ids);
-            }
+        if ($max_height !== null) {
+            $user_ids = PhysicalAttribute::where('height', '<=', $max_height)
+                ->pluck('user_id')->toArray();
+            $users_query->whereIn('id', $user_ids);
         }
 
-        $users_query = $users_query->get();
-
-        $data['members'] = ActiveUserResource::collection($users_query);
+        $membersPage = $users_query->paginate($perPage, ['users.*'], 'page', $page);
+        $data['members'] = ActiveUserResource::collection($membersPage->getCollection());
+        $data['pagination'] = [
+            'current_page' => $membersPage->currentPage(),
+            'last_page' => $membersPage->lastPage(),
+            'per_page' => $membersPage->perPage(),
+            'total' => $membersPage->total(),
+            'has_more' => $membersPage->hasMorePages(),
+        ];
         $data['age_from'] = $age_from;
         $data['age_to'] = $age_to;
         $data['member_code'] = $member_code;
@@ -363,17 +383,6 @@ class MemberController extends Controller
         $data['member_type'] = $member_type;
 
         return $this->response_data($data);
-    }
-
-    public function package_details()
-    {
-        $user = auth()->user();
-        SubscriptionUtility::deactivateIfInvalid($user);
-        $user->refresh();
-
-        // Never return an expired, disabled, soft-deleted or free plan as the member's active package.
-        $package = SubscriptionUtility::currentActivePaidPackage($user);
-        return new PackageResource($package);
     }
 
     public function ignored_user_list()
