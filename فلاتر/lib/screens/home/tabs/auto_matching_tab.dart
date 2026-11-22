@@ -729,18 +729,8 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
         : (member.matchStatus == 'no_preferences'
             ? (_isAr ? 'أكمل تفضيلاتك' : 'Complete preferences')
             : member.matchStatus == 'insufficient_data'
-                ? (_isAr ? 'بيانات الملف غير كافية' : 'Insufficient profile data')
-                : (_isAr ? 'لم يكتمل الحساب' : 'Calculation pending'));
-    // Show the coverage count for partial profiles and for very small
-    // preference sets, so a 100% result based on one criterion is transparent.
-    final bool shouldShowMatchCoverage = member.matchCriteriaCount > 0 &&
-        (member.matchEvaluatedCriteriaCount < member.matchCriteriaCount ||
-            member.matchCriteriaCount < 3);
-    final String? matchCoverageLabel = shouldShowMatchCoverage
-        ? (_isAr
-            ? 'المعايير التي تم تقييمها: ${member.matchEvaluatedCriteriaCount} من ${member.matchCriteriaCount}'
-            : 'Criteria evaluated: ${member.matchEvaluatedCriteriaCount}/${member.matchCriteriaCount}')
-        : null;
+                ? (_isAr ? 'ملف غير مكتمل' : 'Profile incomplete')
+                : (_isAr ? 'جاري تقييم التوافق' : 'Matching in progress'));
 
     return GestureDetector(
       onTap: () => _navigateToProfile(member),
@@ -832,44 +822,26 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                               ),
                             ],
                           ),
-                          child: Column(
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    member.matchPercentage == null
-                                        ? Icons.info_outline_rounded
-                                        : Icons.auto_awesome_rounded,
-                                    color: AppColors.primaryTeal,
-                                    size: 15,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    matchLabel,
-                                    style: const TextStyle(
-                                      color: AppColors.textDark,
-                                      fontSize: 11.5,
-                                      fontWeight: FontWeight.w900,
-                                      fontFamily: 'Cairo',
-                                    ),
-                                  ),
-                                ],
+                              Icon(
+                                member.matchPercentage == null
+                                    ? Icons.info_outline_rounded
+                                    : Icons.auto_awesome_rounded,
+                                color: AppColors.primaryTeal,
+                                size: 15,
                               ),
-                              if (matchCoverageLabel != null) ...[
-                                const SizedBox(height: 2),
-                                Text(
-                                  matchCoverageLabel,
-                                  style: const TextStyle(
-                                    color: AppColors.textMuted,
-                                    fontSize: 9.5,
-                                    fontWeight: FontWeight.w700,
-                                    fontFamily: 'Cairo',
-                                  ),
+                              const SizedBox(width: 6),
+                              Text(
+                                matchLabel,
+                                style: const TextStyle(
+                                  color: AppColors.textDark,
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w900,
+                                  fontFamily: 'Cairo',
                                 ),
-                              ],
+                              ),
                             ],
                           ),
                         ),
