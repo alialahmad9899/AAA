@@ -255,14 +255,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          KEYSTORE_PATH="$RUNNER_TEMP/wesal-ci-validation.jks"
+          KEYSTORE_PATH="$RUNNER_TEMP/wesal-ci-validation.p12"
           STORE_PASSWORD="$(openssl rand -hex 32)"
-          KEY_PASSWORD="$(openssl rand -hex 32)"
+          # JDK 17 defaults to PKCS12; PKCS12 uses the store password for the key too.
+          KEY_PASSWORD="$STORE_PASSWORD"
           keytool -genkeypair -v \
             -keystore "$KEYSTORE_PATH" \
+            -storetype PKCS12 \
             -storepass "$STORE_PASSWORD" \
             -alias wesal-ci-validation \
-            -keypass "$KEY_PASSWORD" \
             -keyalg RSA -keysize 2048 -validity 3650 \
             -dname "CN=Wesal CI Release Validation"
           WESAL_UPLOAD_STORE_FILE="$KEYSTORE_PATH" \

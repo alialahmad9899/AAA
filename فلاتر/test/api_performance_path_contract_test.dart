@@ -41,6 +41,13 @@ void main() {
     expect(screen, contains('page: nextPage'));
   });
 
+  test('Android CI release signing uses one matching PKCS12 key and store password', () async {
+    final workflow = await File('../.github/workflows/wesal-integration-validation.yml').readAsString();
+    expect(workflow, contains('-storetype PKCS12'));
+    expect(workflow, contains(r'KEY_PASSWORD="$STORE_PASSWORD"'));
+    expect(workflow, isNot(contains(r'-keypass "$KEY_PASSWORD"')));
+  });
+
   test('Android release declares OkHttp required by uCrop R8 references', () async {
     final gradle = await File('android/app/build.gradle.kts').readAsString();
     expect(gradle, contains('implementation("com.squareup.okhttp3:okhttp:4.12.1")'));
