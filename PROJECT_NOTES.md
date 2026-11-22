@@ -2857,3 +2857,10 @@ ALTER TABLE `users`
 - تحديث `فلاتر/repair_flutter_contract_mismatch.ps1` ليزامن ملفات Android Gradle الخمسة، ويختبر مكان كتلة Kotlin قبل استبدال الملفات، ويسترجع النسخ الاحتياطية عند فشل النسخ.
 - إضافة `فلاتر/test/android_gradle_contract_test.dart` للتحقق من خلو ملف Gradle الرئيسي من كتلة Kotlin، وتطبيق الإضافة على app، ومحاذاة JVM 17، وتوافق الإصدارات.
 - لا يوجد نشر إنتاجي، ولا تغييرات على Laravel أو قاعدة البيانات أو الاستضافة. بناء APK على جهاز المستخدم لم يُتحقق منه بعد؛ يجب أن يحسمه تشغيل `flutter build apk --debug` / GitHub Actions على النسخة المحدثة.
+
+
+## 2026-11-23 — تصحيح اختبار إعداد Gradle
+
+- فشل أول تشغيل CI بعد إضافة اختبار Gradle بسبب استخدام inline modifier `(?m)` في تعبير Dart RegExp؛ سجّل المحلل `valid_regexps`.
+- تم تصحيح الاختبار إلى `RegExp(r'^\\s*kotlin\\s*\\{', multiLine: true)` في commit `c7625a9f8abaf1d572b9e3abd3c2a15f93dd056a`.
+- يجري حالياً إعادة تشغيل تحليل Dart واختبارات Flutter وبناء Android على commit المصحح. لا يُعلن نجاح APK قبل اكتمال مهمة البناء.
