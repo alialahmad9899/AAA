@@ -25,7 +25,7 @@ class InterestServiceOwnershipTest extends TestCase
         $method = $this->methodSource('accept', 'reject');
 
         self::assertStringContainsString('DB::transaction(', $method);
-        self::assertStringContainsString('where(\\'user_id\\', $actorId)', $method);
+        self::assertStringContainsString("where('user_id', \\$actorId)", $method);
         self::assertStringContainsString('lockForUpdate()', $method);
         self::assertStringContainsString('(int) $interest->status !== 0', $method);
         self::assertStringContainsString('$interest->status = 1', $method);
@@ -43,7 +43,7 @@ class InterestServiceOwnershipTest extends TestCase
         $method = substr($source, $start, $end - $start);
 
         self::assertStringContainsString('DB::transaction(', $method);
-        self::assertStringContainsString("where('user_id', $actorId)", $method);
+        self::assertStringContainsString("where('user_id', \\$actorId)", $method);
         self::assertStringContainsString('lockForUpdate()', $method);
         self::assertStringContainsString('(int) $interest->status !== 0', $method);
         self::assertStringContainsString('$interest->delete()', $method);
