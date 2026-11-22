@@ -14,7 +14,6 @@ import 'package:http/http.dart' as http;
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../models/member_model.dart';
 import '../models/chat_model.dart';
@@ -24,6 +23,7 @@ import '../models/support_ticket_model.dart';
 import '../models/blocked_account_status.dart';
 import 'profile_cache_service.dart';
 import 'chat_local_store.dart';
+import 'wesal_secure_storage.dart';
 
 // ============================================================================
 // دوال معالجة الـ JSON في خلفية النظام (Top-Level Isolates Parsers)
@@ -407,7 +407,6 @@ class ApiService {
   // Reuse keep-alive connections across API requests instead of creating a client per call.
   static final http.Client _httpClient = http.Client();
   static const String baseUrl = 'https://www.wesalsyria.com/api';
-  static const _secureStorage = FlutterSecureStorage();
   static const Duration _timeoutDuration = Duration(seconds: 20);
   static const Duration _accessSummaryCacheDuration = Duration(seconds: 20);
   static final Map<int, Map<String, dynamic>> _accessSummaryCache = {};
@@ -553,7 +552,7 @@ class ApiService {
   /// جلب التوكن المشفّر بآمان
   static Future<String?> getToken() async {
     try {
-      final token = await _secureStorage.read(key: 'user_token');
+      final token = await WesalSecureStorage.read(key: 'user_token');
       if (token == null || token.isEmpty) return null;
       String cleaned = token.trim();
       if (cleaned.startsWith('Bearer ')) {
@@ -575,7 +574,7 @@ class ApiService {
       cleaned = cleaned.substring(7).trim();
     }
     if (cleaned.isNotEmpty) {
-      await _secureStorage.write(key: 'user_token', value: cleaned);
+      await WesalSecureStorage.write(key: 'user_token', value: cleaned);
     }
   }
 
@@ -588,7 +587,7 @@ class ApiService {
   }) async {
     try {
       if (expectedToken != null) {
-        String? storedToken = await _secureStorage.read(key: 'user_token');
+        String? storedToken = await WesalSecureStorage.read(key: 'user_token');
         storedToken = storedToken?.trim();
         if (storedToken != null && storedToken.startsWith('Bearer ')) {
           storedToken = storedToken.substring(7).trim();
@@ -607,7 +606,7 @@ class ApiService {
       if (kDebugMode) {
         debugPrint('[AuthStorage] Clearing local session; reason=$reason.');
       }
-      await _secureStorage.delete(key: 'user_token');
+      await WesalSecureStorage.delete(key: 'user_token');
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.remove('user_id');
       await ProfileCacheService.clearCache();
@@ -717,7 +716,7 @@ class ApiService {
 
   static Future<void> saveSignupDraft(Map<String, dynamic> draft) async {
     if (draft.isEmpty) return;
-    await _secureStorage.write(
+    await WesalSecureStorage.write(
       key: _signupDraftSecureKey,
       value: jsonEncode(draft),
     );
@@ -725,7 +724,7 @@ class ApiService {
 
   static Future<Map<String, dynamic>?> getSignupDraft() async {
     try {
-      final raw = await _secureStorage.read(key: _signupDraftSecureKey);
+      final raw = await WesalSecureStorage.read(key: _signupDraftSecureKey);
       if (raw == null || raw.trim().isEmpty) return null;
       final decoded = jsonDecode(raw);
       if (decoded is Map) return Map<String, dynamic>.from(decoded);
@@ -736,7 +735,7 @@ class ApiService {
   }
 
   static Future<void> clearSignupDraft() async {
-    await _secureStorage.delete(key: _signupDraftSecureKey);
+    await WesalSecureStorage.delete(key: _signupDraftSecureKey);
   }
 
   static const String _pendingLogoutSessionKey = 'pending_logout_session_v1';
@@ -746,7 +745,7 @@ class ApiService {
   /// to repeat the same authenticated /logout operation.
   static Future<void> syncPendingLogout() async {
     try {
-      final raw = await _secureStorage.read(key: _pendingLogoutSessionKey);
+      final raw = await WesalSecureStorage.read(key: _pendingLogoutSessionKey);
       if (raw == null || raw.trim().isEmpty) return;
       final decoded = jsonDecode(raw);
       if (decoded is! Map) return;
@@ -754,7 +753,7 @@ class ApiService {
       final oldAccessToken = (decoded['access_token'] ?? '').toString().trim();
       final oldDeviceToken = (decoded['device_token'] ?? '').toString().trim();
       if (oldAccessToken.isEmpty) {
-        await _secureStorage.delete(key: _pendingLogoutSessionKey);
+        await WesalSecureStorage.delete(key: _pendingLogoutSessionKey);
         return;
       }
 
@@ -774,7 +773,7 @@ class ApiService {
       if ((response.statusCode >= 200 && response.statusCode < 300) ||
           response.statusCode == 401 ||
           response.statusCode == 403) {
-        await _secureStorage.delete(key: _pendingLogoutSessionKey);
+        await WesalSecureStorage.delete(key: _pendingLogoutSessionKey);
       }
     } catch (error) {
       if (kDebugMode) debugPrint('[Pending Logout] Secure retry deferred.');
@@ -806,9 +805,9 @@ class ApiService {
           response != null && response['result'] == true;
 
       if (serverLogoutSucceeded) {
-        await _secureStorage.delete(key: _pendingLogoutSessionKey);
+        await WesalSecureStorage.delete(key: _pendingLogoutSessionKey);
       } else if (oldAccessToken != null && oldAccessToken.isNotEmpty) {
-        await _secureStorage.write(
+        await WesalSecureStorage.write(
           key: _pendingLogoutSessionKey,
           value: jsonEncode({
             'access_token': oldAccessToken,
@@ -822,7 +821,7 @@ class ApiService {
     } catch (error) {
       if (oldAccessToken != null && oldAccessToken.isNotEmpty) {
         try {
-          await _secureStorage.write(
+          await WesalSecureStorage.write(
             key: _pendingLogoutSessionKey,
             value: jsonEncode({
               'access_token': oldAccessToken,
