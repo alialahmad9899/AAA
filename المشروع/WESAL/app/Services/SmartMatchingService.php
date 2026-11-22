@@ -385,10 +385,13 @@ class SmartMatchingService
         $evaluatedCriteriaCount = 0;
 
         $add = function (string $key, float $weight, ?float $score) use (&$weightedScore, &$totalWeight, &$details, &$evaluatedCriteriaCount) {
+            // Every selected preference remains in the denominator. Missing
+            // candidate data must never inflate a partial result to 100%.
+            $totalWeight += $weight;
+
             if ($score !== null) {
                 $score = max(0.0, min(1.0, $score));
                 $weightedScore += $weight * $score;
-                $totalWeight += $weight;
                 $evaluatedCriteriaCount++;
             }
 
@@ -492,6 +495,10 @@ class SmartMatchingService
         if ($this->hasMeaningfulPreference($education)) {
             $candidateDegrees = $candidate['education'] ?? [];
             $candidateDegrees = is_array($candidateDegrees) ? $candidateDegrees : [$candidateDegrees];
+            $candidateDegrees = array_values(array_filter(
+                $candidateDegrees,
+                fn ($degree) => $this->hasValue($degree)
+            ));
             $levels = array_filter(array_map([$this, 'educationLevel'], $candidateDegrees));
             if (empty($candidateDegrees)) {
                 $score = null;
@@ -613,7 +620,9 @@ class SmartMatchingService
             : ($evaluatedCriteriaCount === 0 ? 'insufficient_data' : 'calculated');
 
         return [
-            'percentage' => $totalWeight > 0
+            // If no selected criterion has usable candidate data, keep the
+            // result unknown instead of inventing a 0% compatibility score.
+            'percentage' => $evaluatedCriteriaCount > 0 && $totalWeight > 0
                 ? (int) round(($weightedScore / $totalWeight) * 100)
                 : null,
             'criteria_count' => $criteriaCount,
@@ -657,12 +666,23 @@ class SmartMatchingService
             }
         }
 
+        // Prefer the dedicated residency record, but fall back to the
+        // current address when the dedicated field is null or an empty string.
+        $countryId = $residency->recidency_country_id ?? null;
+        if (!$this->hasValue($countryId)) {
+            $countryId = optional($presentAddress)->country_id;
+        }
+        $stateId = $residency->recidency_state_id ?? null;
+        if (!$this->hasValue($stateId)) {
+            $stateId = optional($presentAddress)->state_id;
+        }
+
         return [
             'age' => $this->candidateAge($member),
             'marital_status_id' => $member->marital_status_id ?? null,
             'children' => $member->children ?? null,
-            'country_id' => $residency->recidency_country_id ?? $presentAddress->country_id ?? null,
-            'state_id' => $residency->recidency_state_id ?? $presentAddress->state_id ?? null,
+            'country_id' => $countryId,
+            'state_id' => $stateId,
             'religion_id' => $spiritual->religion_id ?? null,
             'caste_id' => $spiritual->caste_id ?? null,
             'sub_caste_id' => $spiritual->sub_caste_id ?? null,
@@ -731,7 +751,33 @@ class SmartMatchingService
         }
 
         $text = trim((string) $value);
-        return $text !== '' && $text !== '0' && strtolower($text) !== 'null';
+        if ($text === '' || $text === '0' || strtolower($text) === 'null') {
+            return false;
+        }
+
+        // These values are UI/database placeholders, not member attributes.
+        // Treat them as missing so they cannot create false matches or misses.
+        $normalised = $this->normaliseText($text);
+        if ($normalised === '') {
+            return false;
+        }
+
+        return !in_array($normalised, [
+            'غير محدد',
+            'غير محدده',
+            'غير معروف',
+            'غير متوفر',
+            'لم يحدد',
+            'لم يتم التحديد',
+            'not specified',
+            'unspecified',
+            'unknown',
+            'not provided',
+            'not available',
+            'n a',
+            'na',
+            'none',
+        ], true);
     }
 
     private function hasMeaningfulPreference($value): bool
@@ -831,6 +877,9 @@ class SmartMatchingService
         $best = null;
         $expectedTokens = array_values(array_filter(explode(' ', $expectedText)));
         foreach ($actualValues as $actual) {
+            if (!$this->hasValue($actual)) {
+                continue;
+            }
             $actualText = $this->normaliseComparableText($actual);
             if ($actualText === '') {
                 continue;
