@@ -88,23 +88,23 @@ $RequiredPatterns = @{
         'profile deep links expose the parser used by main.dart'
     )
     'android/build.gradle.kts' = @(
-        'plugins\\s*\\{',
-        'tasks\\.register<Delete>\\("clean"\\)'
+        'plugins\s*\{',
+        'tasks\.register<Delete>\("clean"\)'
     )
     'android/settings.gradle.kts' = @(
-        'id\\("org\\.jetbrains\\.kotlin\\.android"\\)\\s+version\\s+"2\\.2\\.20"\\s+apply\\s+false'
+        'id\("org\.jetbrains\.kotlin\.android"\)\s+version\s+"2\.2\.20"\s+apply\s+false'
     )
     'android/app/build.gradle.kts' = @(
-        'id\\("org\\.jetbrains\\.kotlin\\.android"\\)',
-        'kotlin\\s*\\{\\s*compilerOptions\\s*\\{',
-        'jvmTarget\\.set\\(org\\.jetbrains\\.kotlin\\.gradle\\.dsl\\.JvmTarget\\.JVM_17\\)'
+        'id\("org\.jetbrains\.kotlin\.android"\)',
+        'kotlin\s*\{\s*compilerOptions\s*\{',
+        'jvmTarget\.set\(org\.jetbrains\.kotlin\.gradle\.dsl\.JvmTarget\.JVM_17\)'
     )
     'android/gradle/wrapper/gradle-wrapper.properties' = @(
-        'distributionUrl=.*gradle-8\\.14-all\\.zip'
+        'distributionUrl=.*gradle-8\.14-all\.zip'
     )
     'android/gradle.properties' = @(
-        'android\\.newDsl=false',
-        'android\\.builtInKotlin=false'
+        'android\.newDsl=false',
+        'android\.builtInKotlin=false'
     )
     'test/android_gradle_contract_test.dart' = @(
         'root Android Gradle file does not declare the Kotlin extension',
@@ -154,7 +154,7 @@ try {
                 throw "فشل تحقق العقد البرمجي في $relativePath. لم يتم استبدال أي ملف."
             }
         }
-        if ($relativePath -eq 'android/build.gradle.kts' -and $sourceText -match '(?m)^\\s*kotlin\\s*\\{') {
+        if ($relativePath -eq 'android/build.gradle.kts' -and $sourceText -match '(?m)^\s*kotlin\s*\{') {
             throw 'يجب أن تبقى كتلة kotlin في android/app/build.gradle.kts وليس في ملف Gradle الرئيسي. لم يتم استبدال أي ملف.'
         }
         Write-Host "تم تنزيل والتحقق: $relativePath" -ForegroundColor Green
