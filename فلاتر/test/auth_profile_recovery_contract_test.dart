@@ -219,4 +219,65 @@ void main() {
       expect(model, isNot(contains('RawReligion:')));
     });
   });
+
+  group('Unified secure-storage configuration', () {
+    late String storageService;
+    late String apiService;
+    late String profileCache;
+    late String chatStore;
+    late String mainEntry;
+
+    setUpAll(() {
+      storageService =
+          File('lib/services/wesal_secure_storage.dart').readAsStringSync();
+      apiService = File('lib/services/api_service.dart').readAsStringSync();
+      profileCache =
+          File('lib/services/profile_cache_service.dart').readAsStringSync();
+      chatStore = File('lib/services/chat_local_store.dart').readAsStringSync();
+      mainEntry = File('lib/main.dart').readAsStringSync();
+    });
+
+    test('auth, profile cache, and chat cache share one storage service', () {
+      for (final source in [apiService, profileCache, chatStore]) {
+        expect(source, contains("import 'wesal_secure_storage.dart';"));
+        expect(source, contains('WesalSecureStorage.'));
+        expect(source, isNot(contains('FlutterSecureStorage')));
+      }
+      expect(
+        storageService,
+        contains('AndroidOptions(encryptedSharedPreferences: true)'),
+      );
+      expect(storageService, contains('KeychainAccessibility.first_unlock_this_device'));
+    });
+
+    test('legacy auth and cache keys migrate before any app service starts', () {
+      for (final key in [
+        'user_token',
+        'wesal_signup_draft_v1',
+        'pending_logout_session_v1',
+        'cached_user_profile_data',
+        'cached_user_identity_summary',
+        'cached_fcm_token',
+      ]) {
+        expect(storageService, contains("'$key'"));
+      }
+      expect(storageService, contains('Secure-storage migration verification failed'));
+      expect(storageService, contains('_primaryWarmUpKey'));
+      expect(
+        mainEntry.indexOf('await WesalSecureStorage.initialize();'),
+        lessThan(mainEntry.indexOf('runApp(')),
+      );
+      expect(mainEntry, contains('Future<void> main() async'));
+    });
+
+    test('chat encryption key stays in the existing target storage namespace', () {
+      expect(chatStore, contains("_encryptionKeyStorageName = 'wesal_chat_cache_aes_key_v1'"));
+      expect(
+        storageService,
+        contains("static const String _primaryWarmUpKey = 'wesal_chat_cache_aes_key_v1'"),
+      );
+      expect(storageService, isNot(contains('_legacyKeys.add(_primaryWarmUpKey)')));
+    });
+  });
+
 }
