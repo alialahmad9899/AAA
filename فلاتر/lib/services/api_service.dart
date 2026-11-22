@@ -4752,8 +4752,14 @@ class ApiService {
       if (response.statusCode < 200 || response.statusCode >= 300) {
         if (kDebugMode) {
           final serverMessage = decoded is Map
-              ? (decoded['message'] ?? '').toString()
+              ? (decoded['message'] ??
+                      decoded['error'] ??
+                      decoded['detail'] ??
+                      '')
+                  .toString()
               : '';
+          final responseFields =
+              decoded is Map ? decoded.keys.join(',') : '';
           final sanitizedBody = response.body
               .replaceAll(RegExp(r'Bearer\s+[^\s,;]+'), 'Bearer [redacted]')
               .replaceAll(RegExp(r'\s+'), ' ')
@@ -4770,8 +4776,9 @@ class ApiService {
           debugPrint(
             '[SearchMembers] HTTP ${response.statusCode}; '
             'authorizationHeaderSent=${headers.containsKey('Authorization')}; '
-            'contentType=$contentType; message=$serverMessage; '
-            'validationFields=$errorFields; bodyPreview=$rawBodyPreview.',
+            'contentType=$contentType; responseFields=$responseFields; '
+            'message=$serverMessage; validationFields=$errorFields; '
+            'bodyPreview=$rawBodyPreview.',
           );
         }
         throw SearchMembersException(
