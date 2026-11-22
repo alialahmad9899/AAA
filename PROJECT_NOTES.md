@@ -2864,3 +2864,32 @@ ALTER TABLE `users`
 - فشل أول تشغيل CI بعد إضافة اختبار Gradle بسبب استخدام inline modifier `(?m)` في تعبير Dart RegExp؛ سجّل المحلل `valid_regexps`.
 - تم تصحيح الاختبار إلى `RegExp(r'^\\s*kotlin\\s*\\{', multiLine: true)` في commit `c7625a9f8abaf1d572b9e3abd3c2a15f93dd056a`.
 - يجري حالياً إعادة تشغيل تحليل Dart واختبارات Flutter وبناء Android على commit المصحح. لا يُعلن نجاح APK قبل اكتمال مهمة البناء.
+
+
+## 2026-11-23 — إصلاح فقدان جلسة المصادقة وظهور الملف فارغاً وتنبيه ListTile
+
+### الدليل والسبب الجذري
+- السجل المرسل من جهاز المستخدم أظهر صراحةً: `[SearchMembers] HTTP 401; authorizationHeaderSent=false`. لم يكن هذا الطلب HTTP 400؛ الخادم أعاد `Unauthenticated.` لأن Flutter أرسل طلب البحث من دون ترويسة Bearer.
+- السبب المباشر في المصدر على `main`: `ApiService._parseErrorMessage()` كان يستدعي `clearToken()` عند أي HTTP 401 من أي endpoint. و`clearToken()` يحذف `user_token` من Flutter Secure Storage، لذلك خطأ 401 صادر من طلب خلفي/ثانوي كان يمسح الجلسة قبل الطلب التالي؛ بعد ذلك تُبنى بقية الطلبات بلا Authorization وتظهر سلسلة 401.
+- سبب إضافي مستقل عند إعادة التشغيل: Laravel `AuthController@getUserByToken()` يعيد بيانات المستخدم ككائن top-level يحوي `id`، في حين كان Flutter `validateCurrentSession()` يشترط فقط `result=true,data={...}`. هذا التعارض كان يرفض الاستجابة الصحيحة ويعامل الجلسة المحفوظة كأنها غير صالحة.
+- السجل أكد كذلك تحذير Flutter من `ListTile` داخل `DecoratedBox` ذي خلفية؛ المصدر هو بطاقة `ExpansionTile` في شاشة ملف العضو. كان الـink splash يرسم على Material أقدم خلف زخرفة البطاقة.
+- كانت `MemberModel.fromJson` تطبع معرفات أعضاء واسم الباقة والديانة الخام في debug log. أزيل هذا السطر حفاظاً على الخصوصية. كما أزيل import غير المستخدم الذي نتج عن حذف التسجيل.
+
+### الإصلاحات في الملفات الأصلية على main
+- `فلاتر/lib/services/api_service.dart`: أزيل مسح التوكن من محلل الأخطاء العام؛ أصبح الإبطال فقط عند 401 الصريح من `/user-by-token`، مع مقارنة التوكن المتوقع بالتوكن الحالي حتى لا تمسح استجابة تحقق متأخرة جلسة تسجيل دخول أحدث. أضيف دعم الصيغة الفعلية top-level والصيغتين المتوافقتين wrapped في `isValidUserByTokenPayload`. أضيف سبب واضح لكل مسح مقصود، وتشخيص لا يكشف التوكن. أوقف تحميل 12 قسماً بعد رفض المصادقة في `getFullProfile`، وجعل أخطاء 401/403 صريحة في الملف وتوقعات الشريك. أضيف تشخيص HTTP آمن للبحث لا يطبع قيم الفلاتر أو بيانات العضو.
+- `فلاتر/lib/screens/edit_profile_screen.dart`: إظهار حالة تعذر تحميل الملف وإعادة المحاولة؛ منع اعتبار الاستجابة الفارغة ملفاً صحيحاً ومنع الحفظ عند فشل التحميل.
+- `فلاتر/lib/screens/partner_expectations_screen.dart`: إظهار حالة تحميل/إعادة محاولة ومنع حفظ التوقعات الافتراضية بعد فشل جلبها.
+- `فلاتر/lib/screens/home/search_results_screen.dart`: عرض رسالة API الفعلية بدلاً من إخفائها خلف رسالة اتصال عامة.
+- `فلاتر/lib/screens/login_screen.dart`: عدم الكتابة فوق اختيار «تذكرني» بعد نجاح تسجيل الدخول؛ القيمة التي يحفظها `signin()` تبقى محترمة.
+- `فلاتر/lib/screens/home/tabs/account_tab.dart`: تمييز مسح الجلسة بعد تأكيد المستخدم تسجيل الخروج.
+- `فلاتر/lib/models/member_model.dart`: حذف سجل debug الذي كان يعرض معرف العضو والديانة واسم الباقة وإزالة الاستيراد غير المستخدم.
+- `فلاتر/lib/screens/member_profile_screen.dart`: نقل خلفية/حد بطاقة `ExpansionTile` إلى Material نفسه مع الحفاظ على الشكل والظل حتى تظهر ListTile ink/splash بشكل صحيح.
+- `فلاتر/test/auth_profile_recovery_contract_test.dart`: اختبارات لعقد استعادة الجلسة، وعدم حذف التوكن من 401 عشوائي، وحماية التوكن الجديد من رد تحقق قديم، وحراسة حفظ الملف والتوقعات، وتوافق حقول البحث، وإصلاح Material والخصوصية في debug logs.
+
+### Git والتحقق
+- جميع تغييرات المصدر في هذه الدفعة موجودة مباشرة على `main`؛ لم يُدمج فرع جانبي أو PR قديم ولم يتم نشرها على الاستضافة.
+- آخر commit مصدر مسجل عند تحديث هذه الملاحظة: `f8b0b9eb24cb7b24c24e7c084a7945b0e34e958c`. commits الدفعة تسلسلياً تتضمن: `7b0e5072831b00ce60bf58aee645d9bfa8f27ee8`, `d336b2594db3fff1e723cd90e819afa900470c5b`, `b5348e618815905790ffbec8aa0aac4535ef414b`, `ca3cde85512f82b6122397c282ae3ea09827ce97`, `1134caada0318f1ddb525e40dc418cf19bbd8cbd`, `4f5e159028432c29e6e82d416e6d8fbf15829f96`, `59b6cdf8e5ea79ac9a2da87c2dfeeef759df59c0`, `b66b6287136ac3f35fe2dbce8bd0fd2099d09e68`, `76980003da5e7447f5638174278ebab1e748efad`, `e362058cb7d263f9e18915f0eb7e5d618c325b55`, `f84dbbf5752a1eb867b5334584a47b79cf1c0246`, `f8b0b9eb24cb7b24c24e7c084a7945b0e34e958c`.
+- تشغيل CI على commit `59b6cdf...` و`b66b628...` كشف ملاحظة analyzer واحدة: import `foundation.dart` غير مستخدم بعد حذف debug log. أزيل الاستيراد في `f8b0b9e...`؛ لا تنسب نتيجة الفشل القديمة إلى المصدر الحالي.
+- على آخر commit `f8b0b9e...`: GitHub Actions run `45082506775` كان يجري فحص PHP وتهيئة dependencies لـFlutter؛ run `45082506748` أكمل اختبار Notification Routing بنجاح وكان بناء Android يحل dependencies. لم تكن نتائج Dart analyze أو Flutter tests أو APK/AAB مكتملة وقت كتابة هذه الملاحظة.
+- لا توجد تغييرات Laravel أو migrations أو تعديل قاعدة الإنتاج أو نشر استضافة في هذه الدفعة. التحسينات تتعلق بتطبيق Flutter وعقد استجابة API الحالي فقط؛ يتطلب اختبار قبول التوكن على الخادم الفعلي تشغيل نسخة التطبيق المبنية من هذا المصدر.
+- أرشيف ZIP لهذه الدفعة يجب أن يتضمن الملفات التشغيلية التسعة المعدّلة فقط بمساراتها الأصلية، دون `PROJECT_NOTES.md` أو `AGENTS.md`. تُضاف نتيجة CI النهائية وبصمة ZIP في متابعة هذه الملاحظة بعد التحقق الفعلي.
