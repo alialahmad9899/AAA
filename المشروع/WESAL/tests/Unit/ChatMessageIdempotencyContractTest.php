@@ -21,11 +21,19 @@ SOURCE;
         $keyQuery = <<<'SOURCE'
 ->where('client_message_id', $clientMessageId)
 SOURCE;
-        self::assertStringContainsString("'client_message_id' =>", $source);
+        self::assertStringContainsString("$" . "clientMessageId = $" . "request->input('client_message_id')", $source);
         self::assertStringContainsString($threadQuery, $source);
         self::assertStringContainsString($senderQuery, $source);
         self::assertStringContainsString($keyQuery, $source);
         self::assertStringContainsString("'idempotent_replay' => true", $source);
+
+        $servicePath = __DIR__ . '/../../app/Services/ChatService.php';
+        $serviceSource = file_get_contents($servicePath);
+        self::assertIsString($serviceSource);
+        $persistedKey = <<<'SOURCE'
+'client_message_id' => $clientMessageId !== '' ? $clientMessageId : null,
+SOURCE;
+        self::assertStringContainsString($persistedKey, $serviceSource);
     }
 
     public function test_database_enforces_a_unique_client_message_key_per_sender(): void
