@@ -866,7 +866,9 @@ class _SignupScreenState extends State<SignupScreen> with WidgetsBindingObserver
         // next step has its selectors ready without adding a separate wait.
         final partnerOptionsFuture = _loadPartnerOptions();
 
-        await _requireSignupSave(
+        // These endpoints write to independent tables (residency/address vs.
+        // spiritual background/member); start both saves before awaiting either.
+        final residencySave = _requireSignupSave(
           ApiService.updateResidencyInfo({
             'birth_country_id': _birthCountryId!,
             'recidency_country_id': _residenceCountryId!,
@@ -880,13 +882,14 @@ class _SignupScreenState extends State<SignupScreen> with WidgetsBindingObserver
           'member_religion_id': _religionId!,
           'marital_status': _maritalStatusId!,
         };
-        await _requireSignupSave(
+        final spiritualSave = _requireSignupSave(
           ApiService.updateSpiritualBackground(
             spiritualPayload,
             lang: widget.currentLanguage,
           ),
           isAr ? 'تعذر حفظ البيانات الدينية' : 'Failed to save religious details',
         );
+        await Future.wait([residencySave, spiritualSave]);
 
         if (_requiresChildrenCount) {
           final childCount = int.tryParse(_childrenCountController.text.trim());

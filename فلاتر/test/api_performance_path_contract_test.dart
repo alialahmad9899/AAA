@@ -109,7 +109,17 @@ void main() {
   test('signup step three loads partner dropdowns alongside profile updates', () async {
     final signup = await File('lib/screens/signup_screen.dart').readAsString();
     expect(signup, contains('final partnerOptionsFuture = _loadPartnerOptions()'));
+    expect(signup, contains('final residencySave = _requireSignupSave('));
+    expect(signup, contains('final spiritualSave = _requireSignupSave('));
+    expect(signup, contains('await Future.wait([residencySave, spiritualSave])'));
     expect(signup, contains('await partnerOptionsFuture'));
+    final stepThreeStart = signup.indexOf('else if (_currentStep == 2)');
+    final stepFourStart = signup.indexOf('الخطوة الرابعة', stepThreeStart);
+    final stepThree = signup.substring(stepThreeStart, stepFourStart);
+    expect(
+      stepThree.indexOf('await Future.wait([residencySave, spiritualSave])'),
+      lessThan(stepThree.indexOf('ApiService.updateChildrenCount')),
+    );
   });
 
   test('signup has a saved resumable draft and login validates the returned token', () async {
