@@ -190,7 +190,8 @@ void main() {
       final screen =
           File('lib/screens/home/search_results_screen.dart').readAsStringSync();
       expect(screen, contains('error is SearchMembersException'));
-      expect(screen, contains('_errorMessage = error.message'));
+      expect(screen, contains('error is SearchMembersException'));
+      expect(screen, contains('? error.message'));
     });
   });
 
