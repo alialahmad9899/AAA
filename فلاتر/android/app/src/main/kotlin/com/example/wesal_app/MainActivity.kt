@@ -1,6 +1,7 @@
 package com.example.wesal_app
 
 import android.content.Intent
+import android.net.Uri
 import android.provider.Settings
 import android.view.WindowManager
 import io.flutter.embedding.android.FlutterFragmentActivity
@@ -23,11 +24,27 @@ class MainActivity : FlutterFragmentActivity() {
                 return@setMethodCallHandler
             }
 
-            val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-                putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+            try {
+                val notificationIntent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                    putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                }
+                val intent = if (notificationIntent.resolveActivity(packageManager) != null) {
+                    notificationIntent
+                } else {
+                    Intent(
+                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                        Uri.fromParts("package", packageName, null)
+                    )
+                }
+                startActivity(intent)
+                result.success(true)
+            } catch (error: Exception) {
+                result.error(
+                    "notification_settings_unavailable",
+                    "Unable to open application notification settings.",
+                    null
+                )
             }
-            startActivity(intent)
-            result.success(true)
         }
 
         MethodChannel(
