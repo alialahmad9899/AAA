@@ -25,11 +25,19 @@ class InterestController extends Controller
      */
     public function my_interests()
     {
-        $interests = ExpressInterest::orderBy('id', 'desc')
-            ->where('interested_by', auth()->user()->id)
-            ->join('users', 'express_interests.user_id', '=', 'users.id')
-            ->select('express_interests.id')
-            ->distinct()
+        $interests = ExpressInterest::query()
+            ->where('interested_by', auth()->id())
+            ->whereHas('user', function ($query) {
+                $query->whereNull('users.deleted_at');
+            })
+            ->with([
+                'user.member.mothereTongue',
+                'user.spiritual_backgrounds.religion',
+                'user.addresses' => function ($query) {
+                    $query->where('type', 'present')->with('country');
+                },
+            ])
+            ->orderByDesc('id')
             ->paginate(10);
 
         return MyInterestResource::collection($interests)->additional([
@@ -134,7 +142,20 @@ class InterestController extends Controller
      */
     public function interest_requests()
     {
-        $interests = ExpressInterest::where('user_id', auth()->user()->id)->latest()->paginate(10);
+        $interests = ExpressInterest::query()
+            ->where('user_id', auth()->id())
+            ->whereHas('interestedBy', function ($query) {
+                $query->whereNull('users.deleted_at');
+            })
+            ->with([
+                'interestedBy.member.mothereTongue',
+                'interestedBy.spiritual_backgrounds.religion',
+                'interestedBy.addresses' => function ($query) {
+                    $query->where('type', 'present')->with('country');
+                },
+            ])
+            ->latest()
+            ->paginate(10);
         return ExpressInterestResource::collection($interests)->additional([
             'result' => true
         ]);

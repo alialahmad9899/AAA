@@ -12,6 +12,11 @@ class ExpressInterest extends Model
         return $this->belongsTo(User::class)->withTrashed();
     }
 
+    public function interestedBy()
+    {
+        return $this->belongsTo(User::class, 'interested_by')->withTrashed();
+    }
+
     public function notifications()
     {
         return $this->hasmany(Notification::class);
