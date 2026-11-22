@@ -103,6 +103,8 @@ namespace Tests\Unit {
     use App\Services\InterestService;
     use PHPUnit\Framework\TestCase;
 
+    require_once __DIR__ . '/../../app/Services/InterestService.php';
+
     final class InterestOwnershipFakeAuth
     {
         public static int $actorId = 0;
