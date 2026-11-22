@@ -35,10 +35,32 @@ void main() {
     expect(api, contains('class ChatThreadsPage'));
     expect(api, contains('int page = 1'));
     expect(api, contains('int perPage = 30'));
-    expect(api, contains("'per_page': '$safePerPage'"));
+    expect(api, contains(r"'per_page': '$safePerPage'"));
     expect(screen, contains('_loadMoreChats()'));
     expect(screen, contains('controller: _chatScrollController'));
     expect(screen, contains('page: nextPage'));
+  });
+
+  test('chat notification lookup follows paginated history and stops on repeated legacy pages', () async {
+    final notification = await File('lib/services/notification_service.dart').readAsString();
+    expect(notification, contains('page: pageNumber'));
+    expect(notification, contains('perPage: 30'));
+    expect(notification, contains('page.hasMore'));
+    expect(notification, contains('!foundNewThread'));
+  });
+
+  test('startup compatibility callback receives chat thread models from the page', () async {
+    final startup = await File('lib/services/startup_manager.dart').readAsString();
+    expect(startup, contains('onChatsLoaded(chatsPage.threads)'));
+  });
+
+  test('member card images use bounded decode widths and chat mute sync does not block first messages', () async {
+    final matching = await File('lib/screens/home/tabs/auto_matching_tab.dart').readAsString();
+    final search = await File('lib/screens/home/search_results_screen.dart').readAsString();
+    final chat = await File('lib/screens/chat_detail_screen.dart').readAsString();
+    expect(matching, contains('memCacheWidth: 900'));
+    expect(search, contains('memCacheWidth: 240'));
+    expect(chat, contains('unawaited(\n      ApiService.syncChatMuteSettings(partnerUserId: widget.thread.userId),'));
   });
 
   test('public profile is rendered before the secondary account permission request finishes', () async {

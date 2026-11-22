@@ -50,9 +50,9 @@ class StartupManager {
 
     // 2. جلب قائمة المحادثات
     try {
-      final chats = await ApiService.getChatThreads();
+      final chatsPage = await ApiService.getChatThreads();
       if (isMounted == null || isMounted()) {
-        onChatsLoaded(chats);
+        onChatsLoaded(chatsPage.threads);
       }
     } catch (e) {
       if (kDebugMode) {

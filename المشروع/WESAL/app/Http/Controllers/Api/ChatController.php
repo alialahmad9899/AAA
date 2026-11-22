@@ -252,6 +252,8 @@ class ChatController extends Controller
 
         $hasMore = $chats->count() > 20;
         $chats = $chats->take(20);
+        // Resolve all upload records once instead of querying once per message.
+        ChatViewResource::preloadAttachments($chats);
 
         if ($chats->isNotEmpty()) {
             return response()->json([

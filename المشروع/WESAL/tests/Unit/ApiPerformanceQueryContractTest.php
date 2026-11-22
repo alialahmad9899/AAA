@@ -64,6 +64,22 @@ class ApiPerformanceQueryContractTest extends TestCase
         self::assertStringContainsString('ChatThread::with([\'sender\', \'receiver\'])', $controller);
     }
 
+    public function test_old_chat_history_preloads_attachments_before_resource_serialization(): void
+    {
+        $source = $this->source('app/Http/Controllers/Api/ChatController.php');
+        $start = strpos($source, 'public function get_old_messages(');
+        $end = strpos($source, 'public function chat_reply(', $start);
+        self::assertNotFalse($start);
+        self::assertNotFalse($end);
+        $method = substr($source, $start, $end - $start);
+
+        $preloadPosition = strpos($method, 'ChatViewResource::preloadAttachments($chats);');
+        $resourcePosition = strpos($method, 'ChatViewResource::collection($chats)');
+        self::assertNotFalse($preloadPosition);
+        self::assertNotFalse($resourcePosition);
+        self::assertLessThan($resourcePosition, $preloadPosition);
+    }
+
     public function test_public_profile_eager_loads_both_addresses_and_reuses_the_loaded_rows(): void
     {
         $source = $this->source('app/Http/Controllers/Api/ProfileController.php');

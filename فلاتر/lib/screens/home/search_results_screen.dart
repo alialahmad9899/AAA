@@ -350,6 +350,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                               width: 76,
                               height: 82,
                               fit: BoxFit.cover,
+                              memCacheWidth: 240,
                               placeholder: (context, url) => Container(
                                 color: AppColors.sectionBackground,
                               ),

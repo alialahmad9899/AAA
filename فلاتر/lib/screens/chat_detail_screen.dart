@@ -246,7 +246,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         threadId: _activeThreadId,
         appIsActive: true,
       ));
-    await ApiService.syncChatMuteSettings(partnerUserId: widget.thread.userId);
+    unawaited(
+      ApiService.syncChatMuteSettings(partnerUserId: widget.thread.userId),
+    );
     if (!mounted) return;
     _startMessageRefreshTimer();
     await _loadMessages(

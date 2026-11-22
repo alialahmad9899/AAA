@@ -759,6 +759,7 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
                     CachedNetworkImage(
                       imageUrl: member.image,
                       fit: BoxFit.cover,
+                      memCacheWidth: 900,
                       placeholder: (context, url) => Container(
                         color: AppColors.sectionBackground,
                         child: const Center(

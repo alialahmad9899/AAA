@@ -736,15 +736,29 @@ class NotificationService {
         final int? threadId = destination.id;
         if (threadId == null || threadId < 1) return null;
         try {
-          final List<ChatThreadModel> threads =
-              await ApiService.getChatThreads(lang: language);
-          for (final ChatThreadModel thread in threads) {
-            if (thread.id == threadId) {
-              return (_) => ChatDetailScreen(
-                    thread: thread,
-                    currentLanguage: language,
-                  );
+          var pageNumber = 1;
+          final seenThreadIds = <int>{};
+          while (true) {
+            final ChatThreadsPage page = await ApiService.getChatThreads(
+              lang: language,
+              page: pageNumber,
+              perPage: 30,
+            );
+            var foundNewThread = false;
+            for (final ChatThreadModel thread in page.threads) {
+              if (thread.id == threadId) {
+                return (_) => ChatDetailScreen(
+                      thread: thread,
+                      currentLanguage: language,
+                    );
+              }
+              foundNewThread = seenThreadIds.add(thread.id) || foundNewThread;
             }
+            // Older servers may ignore pagination and repeat the full list.
+            if (!page.hasMore || page.threads.isEmpty || !foundNewThread) {
+              break;
+            }
+            pageNumber++;
           }
         } catch (error) {
           _notificationDebugLog('[Notification Chat Route] $error');
