@@ -8,6 +8,7 @@ import '../utils/wesal_page_route.dart';
 import '../widgets/wesal_logo.dart';
 import 'main_home_screen.dart';
 import 'welcome_screen.dart';
+import 'signup_screen.dart';
 
 /// First-frame branded intro for signed-out users.
 ///
@@ -94,7 +95,13 @@ class _BrandIntroScreenState extends State<BrandIntroScreen>
     _sessionResolved = true;
     if (isValidSession) {
       _introTimer?.cancel();
-      _openMainHome();
+      final signupDraft = await ApiService.getSignupDraft();
+      if (!mounted || _navigationStarted) return;
+      if (signupDraft != null && signupDraft['is_account_created'] == true) {
+        _openSignupResume();
+      } else {
+        _openMainHome();
+      }
     } else if (_introElapsed) {
       _openWelcome();
     }
@@ -111,6 +118,13 @@ class _BrandIntroScreenState extends State<BrandIntroScreen>
 
   void _openMainHome() {
     _navigateTo(const MainHomeScreen());
+  }
+
+  void _openSignupResume() {
+    _navigateTo(SignupScreen(
+      currentLanguage: widget.currentLanguage,
+      resumeExistingDraft: true,
+    ));
   }
 
   void _navigateTo(Widget page) {

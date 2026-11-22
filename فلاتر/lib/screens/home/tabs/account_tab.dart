@@ -390,6 +390,7 @@ class AccountTabState extends State<AccountTab> {
 
     try {
       await ApiService.logout();
+      await ApiService.clearSignupDraft();
     } catch (e) {
       debugPrint("⚠️ تعذر إتمام طلب تسجيل الخروج على السيرفر: $e");
     } finally {
