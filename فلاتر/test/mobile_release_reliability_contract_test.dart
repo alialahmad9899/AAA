@@ -7,7 +7,7 @@ void main() {
     final api = await File('lib/services/api_service.dart').readAsString();
     final intro = await File('lib/screens/brand_intro_screen.dart').readAsString();
 
-    expect(api, contains("get('/user-by-token')"));
+    expect(api, contains(r"Uri.parse('$baseUrl/user-by-token')"));
     expect(api, contains("status == 401 || status == 403"));
     expect(api, contains("await clearToken()"));
     expect(intro, contains('ApiService.validateCurrentSession()'));
