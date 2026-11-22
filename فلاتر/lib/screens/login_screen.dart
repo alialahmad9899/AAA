@@ -119,7 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       if (result['success'] == true) {
-        await ApiService.setRememberMe(true);
+        // signin() persists the checkbox selection; do not override it here.
         unawaited(_updateFcmToken());
 
         if (!mounted) return;
