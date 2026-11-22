@@ -15,7 +15,7 @@ void main() {
       'root Android Gradle file does not declare the Kotlin extension',
       () {
         expect(
-          RegExp(r'(?m)^\\s*kotlin\\s*\\{').hasMatch(rootGradle),
+          RegExp(r'(?m)^\s*kotlin\s*\{').hasMatch(rootGradle),
           isFalse,
         );
       },
@@ -23,9 +23,12 @@ void main() {
 
     test('Kotlin Android plugin is applied to the app module', () {
       expect(appGradle, contains('id("org.jetbrains.kotlin.android")'));
-      expect(settingsGradle, contains(
-        'id("org.jetbrains.kotlin.android") version "2.2.20" apply false',
-      ));
+      expect(
+        settingsGradle,
+        contains(
+          'id("org.jetbrains.kotlin.android") version "2.2.20" apply false',
+        ),
+      );
     });
 
     test('Kotlin bytecode target is aligned with Java 17', () {
@@ -35,18 +38,28 @@ void main() {
           'jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)',
         ),
       );
-      expect(appGradle, contains('sourceCompatibility = JavaVersion.VERSION_17'));
-      expect(appGradle, contains('targetCompatibility = JavaVersion.VERSION_17'));
+      expect(
+        appGradle,
+        contains('sourceCompatibility = JavaVersion.VERSION_17'),
+      );
+      expect(
+        appGradle,
+        contains('targetCompatibility = JavaVersion.VERSION_17'),
+      );
     });
 
     test('Gradle and Kotlin plugin versions remain compatible', () {
       expect(
         wrapperProperties,
-        contains('distributionUrl=https\\://services.gradle.org/distributions/gradle-8.14-all.zip'),
+        contains(
+          'distributionUrl=https\\://services.gradle.org/distributions/gradle-8.14-all.zip',
+        ),
       );
       expect(
         settingsGradle,
-        contains('id("org.jetbrains.kotlin.android") version "2.2.20" apply false'),
+        contains(
+          'id("org.jetbrains.kotlin.android") version "2.2.20" apply false',
+        ),
       );
     });
   });
