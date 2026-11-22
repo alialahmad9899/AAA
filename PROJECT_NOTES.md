@@ -2877,7 +2877,7 @@ Confirmed code-contract defects:
 - `getPartnerExpectations()` now raises the same explicit unauthorized exception for 401/403 rather than quietly returning null.
 - Edit Profile and Partner Expectations now show retry/error states when authenticated data cannot be loaded and block saving from empty/default forms.
 - Search screen now displays the API validation message rather than hiding it behind a generic network error. Search diagnostics log HTTP status, whether Authorization was sent, server message, and validation field names only; no bearer token or search field values are logged.
-- Sign-in logs no longer print the access token response. Successful sign-in emits only whether the token was returned and securely persisted. Remember Me selection is now honored.
+- Sign-in logs no longer print the access token response. Successful sign-in emits only whether the token was returned and securely persisted. Successful login remains persisted across app restarts by default.
 - Added Flutter tests for actual Laravel `user-by-token` response shape, backward-compatible wrapper, safeguards against auth-triggered empty-profile fallback, no global token deletion from generic error parsing, and Flutter/Laravel search filter key agreement.
 
 Touched files (this repair branch only):
