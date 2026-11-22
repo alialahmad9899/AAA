@@ -12,10 +12,19 @@ class ChatMessageIdempotencyContractTest extends TestCase
         $source = file_get_contents($path);
         self::assertIsString($source);
 
+        $threadQuery = <<<'SOURCE'
+->where('chat_thread_id', $ownedThread->id)
+SOURCE;
+        $senderQuery = <<<'SOURCE'
+->where('sender_user_id', $sender_id)
+SOURCE;
+        $keyQuery = <<<'SOURCE'
+->where('client_message_id', $clientMessageId)
+SOURCE;
         self::assertStringContainsString("'client_message_id' =>", $source);
-        self::assertStringContainsString("->where('chat_thread_id', \\$ownedThread->id)", $source);
-        self::assertStringContainsString("->where('sender_user_id', \\$sender_id)", $source);
-        self::assertStringContainsString("->where('client_message_id', \\$clientMessageId)", $source);
+        self::assertStringContainsString($threadQuery, $source);
+        self::assertStringContainsString($senderQuery, $source);
+        self::assertStringContainsString($keyQuery, $source);
         self::assertStringContainsString("'idempotent_replay' => true", $source);
     }
 
@@ -24,7 +33,6 @@ class ChatMessageIdempotencyContractTest extends TestCase
         $path = __DIR__ . '/../../database/migrations/2026_11_22_000003_add_client_message_id_to_chats_table.php';
         $source = file_get_contents($path);
         self::assertIsString($source);
-
         self::assertStringContainsString("Schema::hasColumn('chats', 'client_message_id')", $source);
         self::assertStringContainsString("['sender_user_id', 'client_message_id']", $source);
         self::assertStringContainsString("'chats_sender_client_message_unique'", $source);
