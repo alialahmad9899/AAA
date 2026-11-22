@@ -37,6 +37,14 @@ import '../utils/chat_notification_utils.dart';
 import '../utils/chat_activity_state.dart';
 import '../utils/notification_route_resolver.dart';
 
+void _notificationDebugLog(String message) {
+  if (kDebugMode) debugPrint(message);
+}
+
+void _notificationDebugStack(StackTrace? stackTrace) {
+  if (kDebugMode && stackTrace != null) debugPrintStack(stackTrace: stackTrace);
+}
+
 const AndroidNotificationChannel _notificationChannel =
     AndroidNotificationChannel(
   'wesal_high_importance_channel_v2',
@@ -134,8 +142,8 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       payload: jsonEncode(message.data),
     );
   } catch (error, stackTrace) {
-    debugPrint('[FCM Background] $error');
-    debugPrintStack(stackTrace: stackTrace);
+    _notificationDebugLog('[FCM Background] $error');
+    _notificationDebugStack(stackTrace);
   }
 }
 
@@ -208,7 +216,7 @@ class NotificationService {
           ));
         }
       } catch (error) {
-        debugPrint('[Notifications] Initial FCM message failed: $error');
+        _notificationDebugLog('[Notifications] Initial FCM message failed: $error');
       }
 
       if (_localNotificationsInitialized) {
@@ -223,13 +231,13 @@ class NotificationService {
             _handleLocalPayload(launchPayload);
           }
         } catch (error) {
-          debugPrint('[Notifications] Local launch details failed: $error');
+          _notificationDebugLog('[Notifications] Local launch details failed: $error');
         }
       }
     } catch (error, stackTrace) {
       _initialized = false;
-      debugPrint('[NotificationService Initialize] $error');
-      debugPrintStack(stackTrace: stackTrace);
+      _notificationDebugLog('[NotificationService Initialize] $error');
+      _notificationDebugStack(stackTrace);
       rethrow;
     }
   }
@@ -256,7 +264,7 @@ class NotificationService {
       );
       return settings.authorizationStatus.name;
     } catch (error) {
-      if (kDebugMode) debugPrint('[Notifications] Permission request failed.');
+      if (kDebugMode) _notificationDebugLog('[Notifications] Permission request failed.');
       return 'unknown';
     }
   }
@@ -272,7 +280,7 @@ class NotificationService {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       }
     } catch (error) {
-      if (kDebugMode) debugPrint('[Notifications] Could not open system settings.');
+      if (kDebugMode) _notificationDebugLog('[Notifications] Could not open system settings.');
     }
   }
 
@@ -307,10 +315,10 @@ class NotificationService {
       return true;
     } catch (error, stackTrace) {
       _localNotificationsInitialized = false;
-      debugPrint(
+      _notificationDebugLog(
         '[Notifications] Local notification initialization failed: $error',
       );
-      debugPrintStack(stackTrace: stackTrace);
+      _notificationDebugStack(stackTrace);
       return false;
     }
   }
@@ -325,7 +333,7 @@ class NotificationService {
         sound: true,
       );
     } catch (error) {
-      debugPrint(
+      _notificationDebugLog(
         '[Notifications] Foreground presentation setup failed: $error',
       );
     }
@@ -366,7 +374,7 @@ class NotificationService {
       await _configureForegroundPresentationOptions();
     }
     if (!_localNotificationsInitialized) {
-      debugPrint('[Notifications] Foreground alert skipped because local notifications are unavailable.');
+      _notificationDebugLog('[Notifications] Foreground alert skipped because local notifications are unavailable.');
       return;
     }
 
@@ -418,7 +426,7 @@ class NotificationService {
         ));
       }
     } catch (error) {
-      debugPrint('[Notification Payload] Invalid payload: $error');
+      _notificationDebugLog('[Notification Payload] Invalid payload: $error');
     }
   }
 
@@ -433,7 +441,7 @@ class NotificationService {
       final String? userToken = await ApiService.getToken();
       if (userToken == null || userToken.isEmpty) {
         _sessionEnabled = false;
-        debugPrint('[Notifications] Token sync skipped: no saved member session.');
+        _notificationDebugLog('[Notifications] Token sync skipped: no saved member session.');
         return false;
       }
 
@@ -445,7 +453,7 @@ class NotificationService {
 
       final String? fcmToken = await _messaging.getToken();
       if (fcmToken == null || fcmToken.isEmpty) {
-        debugPrint('[Notifications] Firebase returned no device token.');
+        _notificationDebugLog('[Notifications] Firebase returned no device token.');
         return false;
       }
       final bool synced = await _syncSpecificToken(
@@ -453,11 +461,11 @@ class NotificationService {
         expectedUserToken: userToken,
       );
       if (!synced) {
-        debugPrint('[Notifications] Device token registration did not complete.');
+        _notificationDebugLog('[Notifications] Device token registration did not complete.');
       }
       return synced;
     } catch (error) {
-      debugPrint('[Notification Token Sync] $error');
+      _notificationDebugLog('[Notification Token Sync] $error');
       return false;
     }
   }
@@ -530,7 +538,7 @@ class NotificationService {
         (await ApiService.getToken()) == userToken) {
       _lastSyncedFcmToken = fcmToken;
       _lastSyncedUserToken = userToken;
-      debugPrint('[Notifications] Device token synchronized.');
+      _notificationDebugLog('[Notifications] Device token synchronized.');
       return true;
     }
     return false;
@@ -674,8 +682,8 @@ class NotificationService {
           activeDestinations: _activeNotificationDestinations,
         );
       }
-      debugPrint('[Notification Navigation] $error');
-      debugPrintStack(stackTrace: stackTrace);
+      _notificationDebugLog('[Notification Navigation] $error');
+      _notificationDebugStack(stackTrace);
       return false;
     } finally {
       _messagesBeingHandled.remove(dedupeId);
@@ -739,7 +747,7 @@ class NotificationService {
             }
           }
         } catch (error) {
-          debugPrint('[Notification Chat Route] $error');
+          _notificationDebugLog('[Notification Chat Route] $error');
         }
         return null;
     }
@@ -769,7 +777,7 @@ class NotificationService {
       }
       await Future<void>.delayed(const Duration(milliseconds: 250));
     }
-    debugPrint('[Notification Navigation] Navigator was not ready.');
+    _notificationDebugLog('[Notification Navigation] Navigator was not ready.');
     return false;
   }
 }

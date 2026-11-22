@@ -6,6 +6,7 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:app_links/app_links.dart';
 import 'theme/app_theme.dart';
 
@@ -20,6 +21,10 @@ import 'services/pending_profile_link_service.dart';
 import 'services/notification_service.dart';
 import 'services/api_service.dart';
 import 'services/fcm_service.dart';
+
+void _mainDebugLog(String message) {
+  if (kDebugMode) debugPrint(message);
+}
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,7 +48,7 @@ Future<void> _initializeNotificationServices() async {
     // FCM token even though no login screen is shown this time.
     await NotificationService.syncCurrentToken();
   } catch (e) {
-    debugPrint('⚠️ خطأ أثناء تهيئة Firebase والإشعارات: $e');
+    _mainDebugLog('⚠️ خطأ أثناء تهيئة Firebase والإشعارات: $e');
   }
 }
 
@@ -58,14 +63,14 @@ void _setupDeepLinks() async {
       _handleDeepLinkUri(initialUri);
     }
   } catch (e) {
-    debugPrint('⚠️ خطأ أثناء قراءة الرابط الابتدائي: $e');
+    _mainDebugLog('⚠️ خطأ أثناء قراءة الرابط الابتدائي: $e');
   }
 
   // ب) الاستماع للروابط المنقورة أثناء تشغيل التطبيق بالخلفية
   appLinks.uriLinkStream.listen((Uri uri) {
     _handleDeepLinkUri(uri);
   }, onError: (err) {
-    debugPrint('⚠️ خطأ في استقبال تدفق الروابط العميقة: $err');
+    _mainDebugLog('⚠️ خطأ في استقبال تدفق الروابط العميقة: $err');
   });
 }
 
