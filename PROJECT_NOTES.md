@@ -2846,3 +2846,14 @@ ALTER TABLE `users`
 ### 2026-11-23 — ضبط توليد ZIP لهذه الدفعة فقط
 - أضيف معرّف الحزمة [package-wesal-chat-pagination-contract] إلى .github/workflows/wesal-integration-validation.yml ليقارن هذه الدفعة تحديداً بقاعدة a98c06c604bcd8f2ef0f7a51cf614dac6f69f0a5؛ يضمن ذلك أن ZIP لهذه المهمة يحتوي ملفاتها المتغيرة فقط، لا ملفات الدفعات الأقدم.
 - Commit إعداد الحزمة: 3ddd72b094887daa0cc901ebcd3f507f69f67de4. سيُذكر محتوى ZIP ورقم تشغيل CI بعد اكتمال خطوة الأرشفة؛ لا تُسجل سلامة الأرشيف قبل فحصه فعلياً.
+
+
+## 2026-11-23 — إصلاح توافق Kotlin / Android Gradle
+
+- سبب الخطأ الذي ظهر على جهاز التطوير: الملف المحلي `android/build.gradle.kts` يحتوي كتلة `kotlin { compilerOptions { ... } }` في مستوى المشروع الرئيسي، بينما إضافة Kotlin غير مطبقة على هذا المشروع. لذلك يعجز Gradle عن حل `kotlin` و`compilerOptions` و`jvmTarget`.
+- الملف `فلاتر/android/build.gradle.kts` على `main` لا يحتوي تلك الكتلة؛ مكان إعداد Kotlin الصحيح هو وحدة التطبيق `فلاتر/android/app/build.gradle.kts`.
+- إصلاح وحدة التطبيق بتطبيق `id("org.jetbrains.kotlin.android")` داخل `plugins`، واستخدام `jvmTarget.set(JvmTarget.JVM_17)` في `kotlin.compilerOptions`.
+- إصدارات التكوين المثبتة: Kotlin Gradle Plugin 2.2.20، Android Gradle Plugin 8.11.1، Gradle 8.14، وJava target 17. هذه التركيبات ضمن نطاق التوافق المعلن من Kotlin.
+- تحديث `فلاتر/repair_flutter_contract_mismatch.ps1` ليزامن ملفات Android Gradle الخمسة، ويختبر مكان كتلة Kotlin قبل استبدال الملفات، ويسترجع النسخ الاحتياطية عند فشل النسخ.
+- إضافة `فلاتر/test/android_gradle_contract_test.dart` للتحقق من خلو ملف Gradle الرئيسي من كتلة Kotlin، وتطبيق الإضافة على app، ومحاذاة JVM 17، وتوافق الإصدارات.
+- لا يوجد نشر إنتاجي، ولا تغييرات على Laravel أو قاعدة البيانات أو الاستضافة. بناء APK على جهاز المستخدم لم يُتحقق منه بعد؛ يجب أن يحسمه تشغيل `flutter build apk --debug` / GitHub Actions على النسخة المحدثة.
