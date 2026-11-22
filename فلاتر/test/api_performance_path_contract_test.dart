@@ -41,6 +41,12 @@ void main() {
     expect(screen, contains('page: nextPage'));
   });
 
+  test('Android release declares OkHttp required by uCrop R8 references', () async {
+    final gradle = await File('android/app/build.gradle.kts').readAsString();
+    expect(gradle, contains('implementation("com.squareup.okhttp3:okhttp:4.12.1")'));
+    expect(gradle, contains('isMinifyEnabled = true'));
+  });
+
   test('home setup parallelizes local reads and pauses blocked-status polling in background', () async {
     final home = await File('lib/screens/main_home_screen.dart').readAsString();
     expect(home, contains('await Future.wait<void>(['));

@@ -88,6 +88,10 @@ flutter {
 }
 
 dependencies {
+    // uCrop 2.2.11 references okhttp3 classes but no longer declares OkHttp as a transitive dependency.
+    // Pin the compatible 4.x line explicitly so R8 can resolve those classes in minified release builds.
+    implementation("com.squareup.okhttp3:okhttp:4.12.1")
+
     // مكتبة التوافق المطلوبة لتفعيل ميزة Desugaring بأسلوب Kotlin DSL
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }
