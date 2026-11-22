@@ -708,77 +708,79 @@ class _SignupScreenState extends State<SignupScreen> with WidgetsBindingObserver
           'institution': _institutionController.text.trim(),
         };
         final educationFingerprint = jsonEncode(educationPayload);
+
+        final careerResponse = existingProfileRecords[1];
+        if (careerResponse == null || careerResponse['result'] == false) {
+          throw _SignupStepSaveException(
+            isAr
+                ? 'تعذر التحقق من سجل العمل الحالي. لم نرسل طلب إنشاء جديد لتجنب التكرار.'
+                : 'Could not verify existing career records. No create request was sent to avoid duplicates.',
+          );
+        }
+        _careerRecordId ??= _extractRecordId(
+          careerResponse,
+          const {'id', 'career_id'},
+        );
+
+        final careerPayload = <String, dynamic>{
+          'designation': _designationController.text.trim(),
+          if (_companyController.text.trim().isNotEmpty)
+            'company': _companyController.text.trim(),
+        };
+        final careerFingerprint = jsonEncode(careerPayload);
+
         Future<void> saveEducation() async {
-          
-                    if (_educationSavedFingerprint != null && _educationRecordId == null) {
-                      throw _SignupStepSaveException(
-                        isAr
-                            ? 'تم حفظ التعليم سابقاً، لكن الخادم لم يُرجع معرّف السجل اللازم لتعديله. لم نكرر الإرسال حتى لا ينشأ سجل مكرر.'
-                            : 'Education was saved already, but the server did not return its record ID. It was not resent to avoid a duplicate row.',
-                      );
-                    }
-                    final educationRequest = <String, dynamic>{
-                      ...educationPayload,
-                      if (_educationRecordId != null) 'id': _educationRecordId,
-                    };
-                    final result = await _requireSignupSave(
-                      ApiService.updateEducation(
-                        educationRequest,
-                        lang: widget.currentLanguage,
-                      ),
-                      isAr ? 'تعذر حفظ البيانات التعليمية' : 'Failed to save education details',
-                    );
-                    _educationRecordId ??=
-                        _extractRecordId(result, const {'id', 'education_id'});
-                    _educationSavedFingerprint = educationFingerprint;
-                  }
-          
-                  final careerResponse = existingProfileRecords[1];
-                  if (careerResponse == null || careerResponse['result'] == false) {
-                    throw _SignupStepSaveException(
-                      isAr
-                          ? 'تعذر التحقق من سجل العمل الحالي. لم نرسل طلب إنشاء جديد لتجنب التكرار.'
-                          : 'Could not verify existing career records. No create request was sent to avoid duplicates.',
-                    );
-                  }
-                  _careerRecordId ??= _extractRecordId(
-                    careerResponse,
-                    const {'id', 'career_id'},
-                  );
-          
-                  final careerPayload = <String, dynamic>{
-                    'designation': _designationController.text.trim(),
-                    if (_companyController.text.trim().isNotEmpty)
-                      'company': _companyController.text.trim(),
+          if (_educationSavedFingerprint == educationFingerprint) return;
+          if (_educationSavedFingerprint != null && _educationRecordId == null) {
+            throw _SignupStepSaveException(
+              isAr
+                  ? 'تم حفظ التعليم سابقاً، لكن الخادم لم يُرجع معرّف السجل اللازم لتعديله. لم نكرر الإرسال حتى لا ينشأ سجل مكرر.'
+                  : 'Education was saved already, but the server did not return its record ID. It was not resent to avoid a duplicate row.',
+            );
+          }
+          final educationRequest = <String, dynamic>{
+            ...educationPayload,
+            if (_educationRecordId != null) 'id': _educationRecordId,
+          };
+          final result = await _requireSignupSave(
+            ApiService.updateEducation(
+              educationRequest,
+              lang: widget.currentLanguage,
+            ),
+            isAr ? 'تعذر حفظ البيانات التعليمية' : 'Failed to save education details',
+          );
+          _educationRecordId ??=
+              _extractRecordId(result, const {'id', 'education_id'});
+          _educationSavedFingerprint = educationFingerprint;
         }
 
-                Future<void> saveCareer() async {
-          
-                    if (_careerSavedFingerprint != null && _careerRecordId == null) {
-                      throw _SignupStepSaveException(
-                        isAr
-                            ? 'تم حفظ العمل سابقاً، لكن الخادم لم يُرجع معرّف السجل اللازم لتعديله. لم نكرر الإرسال حتى لا ينشأ سجل مكرر.'
-                            : 'Career was saved already, but the server did not return its record ID. It was not resent to avoid a duplicate row.',
-                      );
-                    }
-                    final careerRequest = <String, dynamic>{
-                      ...careerPayload,
-                      if (_careerRecordId != null) 'id': _careerRecordId,
-                    };
-                    final result = await _requireSignupSave(
-                      ApiService.updateCareer(
-                        careerRequest,
-                        lang: widget.currentLanguage,
-                      ),
-                      isAr ? 'تعذر حفظ بيانات العمل' : 'Failed to save career details',
-                    );
-                    _careerRecordId ??=
-                        _extractRecordId(result, const {'id', 'career_id'});
-                    _careerSavedFingerprint = careerFingerprint;
+        Future<void> saveCareer() async {
+          if (_careerSavedFingerprint == careerFingerprint) return;
+          if (_careerSavedFingerprint != null && _careerRecordId == null) {
+            throw _SignupStepSaveException(
+              isAr
+                  ? 'تم حفظ العمل سابقاً، لكن الخادم لم يُرجع معرّف السجل اللازم لتعديله. لم نكرر الإرسال حتى لا ينشأ سجل مكرر.'
+                  : 'Career was saved already, but the server did not return its record ID. It was not resent to avoid a duplicate row.',
+            );
+          }
+          final careerRequest = <String, dynamic>{
+            ...careerPayload,
+            if (_careerRecordId != null) 'id': _careerRecordId,
+          };
+          final result = await _requireSignupSave(
+            ApiService.updateCareer(
+              careerRequest,
+              lang: widget.currentLanguage,
+            ),
+            isAr ? 'تعذر حفظ بيانات العمل' : 'Failed to save career details',
+          );
+          _careerRecordId ??=
+              _extractRecordId(result, const {'id', 'career_id'});
+          _careerSavedFingerprint = careerFingerprint;
         }
 
-        // These records live in separate tables. Wait for both writes, but do
-        // not force the user through two sequential network round-trips.
+        // Education and career are independent writes and have already been
+        // verified as separate records; wait for both without serialising them.
         await Future.wait<void>([saveEducation(), saveCareer()]);
 
         final preferenceWrites = <Future<Map<String, dynamic>>>[];
