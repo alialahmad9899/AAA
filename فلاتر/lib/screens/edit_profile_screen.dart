@@ -1755,6 +1755,10 @@ class _EditProfileScreenState extends State<EditProfileScreen>
 
   Future<void> _saveCurrentSection() async {
     if (_isSaving || !mounted) return;
+    if (_isLoading || _profileLoadError != null) {
+      _showNotification('', false);
+      return;
+    }
     setState(() => _isSaving = true);
 
     bool allSuccess = true;
@@ -2836,7 +2840,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                 height: 52,
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _isSaving ? null : _saveCurrentSection,
+                  onPressed: (_isSaving || _isLoading || _profileLoadError != null) ? null : _saveCurrentSection,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: AppColors.primaryTeal,
