@@ -193,9 +193,11 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     } catch (error) {
       if (mounted && currentFetch == _searchFetchCounter) {
         setState(() {
-          _errorMessage = _isAr
-              ? 'تعذر تحميل نتائج البحث بسبب مشكلة في الاتصال أو الخادم. حاول مجدداً.'
-              : 'Search could not be loaded because of a network or server error. Please retry.';
+          _errorMessage = error is SearchMembersException
+              ? error.message
+              : (_isAr
+                  ? 'تعذر تحميل نتائج البحث بسبب مشكلة في الاتصال أو الخادم. حاول مجدداً.'
+                  : 'Search could not be loaded because of a network or server error. Please retry.');
           _isLoading = false;
         });
       }
@@ -239,9 +241,11 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
       if (mounted && currentFetch == _searchFetchCounter) {
         setState(() {
           _isLoadingMore = false;
-          _loadMoreError = _isAr
-              ? 'تعذر تحميل المزيد. اضغط لإعادة المحاولة.'
-              : 'Could not load more members. Tap to retry.';
+          _loadMoreError = error is SearchMembersException
+              ? error.message
+              : (_isAr
+                  ? 'تعذر تحميل المزيد. اضغط لإعادة المحاولة.'
+                  : 'Could not load more members. Tap to retry.');
         });
       }
     }
