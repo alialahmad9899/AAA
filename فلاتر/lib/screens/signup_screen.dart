@@ -369,6 +369,7 @@ class _SignupScreenState extends State<SignupScreen> {
               return;
             }
             _isAccountCreated = true;
+            await ApiService.setRememberMe(true);
 
             // ربط رمز الإشعارات عبر الخدمة المركزية بعد حفظ جلسة الحساب.
             try {
@@ -872,7 +873,8 @@ class _SignupScreenState extends State<SignupScreen> {
                           ),
                           elevation: 4,
                         ),
-                        onPressed: () {
+                        onPressed: () async {
+                          await ApiService.clearSignupDraft();
                           Navigator.pop(ctx);
                           Navigator.pushAndRemoveUntil(
                             context,

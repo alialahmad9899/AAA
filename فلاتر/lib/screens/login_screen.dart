@@ -39,7 +39,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _isLoading = false;
   bool _obscurePassword = true;
-  bool _rememberMe = false;
+  bool _rememberMe = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _restoreRememberPreference();
+  }
+
+  Future<void> _restoreRememberPreference() async {
+    final value = await ApiService.getRememberMe();
+    if (mounted) setState(() => _rememberMe = value);
+  }
 
   /// تهيئة كائن تسجيل الدخول الرسمي المباشر بواسطة Google
   final GoogleSignIn _googleSignIn = GoogleSignIn(
@@ -80,7 +91,8 @@ class _LoginScreenState extends State<LoginScreen> {
       // 1. إرسال طلب تسجيل الدخول للسيرفر
       final result = await ApiService.signin(
         _emailController.text.trim(),
-        _passwordController.text.trim(),
+        _passwordController.text,
+        rememberMe: _rememberMe,
       );
 
       if (!mounted) return;
@@ -617,7 +629,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                                 BorderRadius.circular(5),
                                           ),
                                           onChanged: (value) => setState(
-                                            () => _rememberMe = value ?? false,
+                                            () {
+            _rememberMe = value ?? false;
+            ApiService.setRememberMe(_rememberMe);
+          },
                                           ),
                                         ),
                                         Text(

@@ -13,8 +13,8 @@ import 'theme/app_theme.dart';
 import 'screens/brand_intro_screen.dart';
 import 'screens/main_home_screen.dart';
 import 'screens/my_interests_screen.dart';
-import 'screens/member_profile_screen.dart';
 import 'utils/member_profile_link.dart';
+import 'services/pending_profile_link_service.dart';
 
 // 🟢 خدمة الإشعارات المركزية مع مفتاح الملاحة العام
 import 'services/notification_service.dart';
@@ -71,18 +71,10 @@ void _setupDeepLinks() async {
 
 /// تحليل الرابط واستخراج المعاملات للتوجه لشاشة بروفايل العضو
 void _handleDeepLinkUri(Uri uri) {
-  debugPrint('🔗 [Deep Link Received]: $uri');
-
   final int? memberReference = MemberProfileLink.parseProfileUri(uri);
   if (memberReference == null) return;
-
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    FCMService.navigatorKey.currentState?.push(
-      MaterialPageRoute(
-        builder: (context) => MemberProfileScreen(userId: memberReference),
-      ),
-    );
-  });
+  // Keep the destination until MainHomeScreen confirms the authenticated route.
+  unawaited(PendingProfileLinkService.save(memberReference));
 }
 
 /// الكلاس الرئيسي للتطبيق المسؤول عن ضبط الثيم العام والمسار الابتدائي

@@ -88,11 +88,11 @@ class _BrandIntroScreenState extends State<BrandIntroScreen>
   }
 
   Future<void> _resolveSavedSession() async {
-    final token = await ApiService.getToken();
+    final isValidSession = await ApiService.validateCurrentSession();
     if (!mounted || _navigationStarted) return;
 
     _sessionResolved = true;
-    if (token != null && token.trim().isNotEmpty) {
+    if (isValidSession) {
       _introTimer?.cancel();
       _openMainHome();
     } else if (_introElapsed) {

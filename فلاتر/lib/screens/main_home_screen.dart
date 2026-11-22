@@ -14,6 +14,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../constants/colors.dart';
 
 import '../services/api_service.dart';
+import '../services/pending_profile_link_service.dart';
 import '../models/app_announcement.dart';
 import '../services/notification_service.dart';
 import 'notifications_screen.dart';
@@ -200,6 +201,11 @@ class _MainHomeScreenState extends State<MainHomeScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        PendingProfileLinkService.openPending(context);
+      }
+    });
     _currentLanguage = widget.currentLanguage;
     WidgetsBinding.instance.addObserver(this);
     NotificationService.foregroundMessageVersion

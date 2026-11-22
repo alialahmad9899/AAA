@@ -567,6 +567,42 @@ class ApiService {
     }
   }
 
+  /// Validate the persisted Sanctum token with the backend before restoring a session.
+  static Future<bool> validateCurrentSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    final rememberMe = prefs.getBool('remember_me') ?? true;
+    if (!rememberMe) {
+      await clearToken();
+      return false;
+    }
+
+    final token = await getToken();
+    if (token == null || token.isEmpty) return false;
+
+    final response = await get('/user-by-token');
+    if (response != null &&
+        response['result'] == true &&
+        response['data'] is Map) {
+      return true;
+    }
+
+    final status = response?['status'];
+    if (status == 401 || status == 403) {
+      await clearToken();
+    }
+    return false;
+  }
+
+  static Future<void> setRememberMe(bool remember) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('remember_me', remember);
+  }
+
+  static Future<bool> getRememberMe() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('remember_me') ?? true;
+  }
+
   static const String _pendingLogoutFcmTokenKey = 'pending_logout_fcm_token';
 
   /// Retry a device-token detach after an earlier logout happened offline.
@@ -861,7 +897,7 @@ class ApiService {
 
   // 1. قسم المصادقة وتسجيل الدخول
   static Future<Map<String, dynamic>> signin(
-      String email, String password) async {
+      String email, String password, {bool rememberMe = true}) async {
     final Uri url = Uri.parse('$baseUrl/signin');
     final String cleanEmail = email.trim().toLowerCase();
     final String cleanPassword = password;
@@ -922,6 +958,7 @@ class ApiService {
           throw StateError('The access token could not be persisted securely.');
         }
         await prefs.setInt('user_id', userId);
+        await prefs.setBool('remember_me', rememberMe);
         return {'success': true, 'data': responseData};
       } else {
         return {
