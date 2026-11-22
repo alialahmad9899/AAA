@@ -338,28 +338,36 @@ class SmartMatchingServiceTest extends TestCase
             'family_value_id' => 3,
             'personal_value' => 'ملتزم',
             'body_type' => 'رياضي',
+            'preferred_country_id' => 12,
         ], [
             'caste_id' => 2,
             'sub_caste_id' => 8,
             'family_value_id' => 3,
             'personal_value' => 'ملتزم',
             'body_type' => 'رياضي',
+            'country_id' => 12,
         ]);
 
         $this->assertSame(100, $result['percentage']);
-        $this->assertSame(5, $result['criteria_count']);
-        $this->assertSame(5, $result['evaluated_criteria_count']);
+        $this->assertSame(6, $result['criteria_count']);
+        $this->assertSame(6, $result['evaluated_criteria_count']);
     }
 
     public function test_partial_profession_overlap_is_not_reported_as_a_perfect_match(): void
     {
         $result = $this->service->scoreData([
             'profession' => 'مهندس برمجيات',
+            'preferred_country_id' => 12,
+            'religion_id' => 4,
         ], [
             'professions' => ['مهندس'],
+            'country_id' => 44,
+            'religion_id' => 5,
         ]);
 
-        $this->assertSame(50, $result['percentage']);
+        // The text similarity itself is 50%; the other two criteria are also evaluated.
+        $this->assertSame(50, $result['details'][0]['score']);
+        $this->assertSame('calculated', $result['status']);
     }
 
 
