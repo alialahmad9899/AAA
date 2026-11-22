@@ -19,55 +19,163 @@ class SmartMatchingService
      */
     public function getMatches(User $viewer): Collection
     {
-        $viewer->loadMissing(['member', 'partner_expectations']);
+        $candidates = $this->eligibleCandidatesQuery($viewer);
+        if ($candidates === null) {
+            return collect();
+        }
 
+        return $this->scoreCandidates($viewer, $candidates->get(), true);
+    }
+
+    /**
+     * Score the full eligible pool in bounded chunks, then hydrate full models
+     * and relations for only the requested globally-ranked page.
+     *
+     * @return array{members:Collection<int,User>,has_more:bool}
+     */
+    public function getMatchesPage(User $viewer, int $page, int $perPage): array
+    {
+        $page = max(1, $page);
+        $perPage = max(1, min(30, $perPage));
+        $candidates = $this->eligibleCandidatesQuery($viewer);
+        if ($candidates === null) {
+            return ['members' => collect(), 'has_more' => false];
+        }
+
+        $rankedRows = [];
+        $candidates->chunkById(200, function (Collection $chunk) use ($viewer, &$rankedRows) {
+            $scoredChunk = $this->scoreCandidates($viewer, $chunk, true);
+            foreach ($scoredChunk as $candidate) {
+                $rankedRows[] = [
+                    'id' => (int) $candidate->id,
+                    'percentage' => $candidate->profile_match_percentage,
+                    'details' => $candidate->match_details,
+                    'criteria_count' => (int) $candidate->match_criteria_count,
+                    'evaluated_criteria_count' => (int) $candidate->match_evaluated_criteria_count,
+                    'status' => (string) $candidate->match_status,
+                    'created_at' => (string) ($candidate->created_at ?? ''),
+                ];
+            }
+        });
+
+        $rankedRows = $this->sortRankedRows($rankedRows);
+        $offset = ($page - 1) * $perPage;
+        $pageRows = array_slice($rankedRows, $offset, $perPage);
+        $hasMore = count($rankedRows) > ($offset + count($pageRows));
+        if ($pageRows === []) {
+            return ['members' => collect(), 'has_more' => $hasMore];
+        }
+
+        $ids = array_column($pageRows, 'id');
+        $usersById = User::query()
+            ->with($this->candidateRelations())
+            ->whereIn('id', $ids)
+            ->get()
+            ->keyBy('id');
+
+        $members = collect();
+        foreach ($pageRows as $row) {
+            /** @var User|null $candidate */
+            $candidate = $usersById->get($row['id']);
+            if (!$candidate) {
+                continue;
+            }
+
+            $candidate->setAttribute('profile_match_percentage', $row['percentage']);
+            $candidate->setAttribute('match_details', $row['details']);
+            $candidate->setAttribute('match_criteria_count', $row['criteria_count']);
+            $candidate->setAttribute('match_evaluated_criteria_count', $row['evaluated_criteria_count']);
+            $candidate->setAttribute('match_status', $row['status']);
+            $members->push($candidate);
+        }
+
+        return ['members' => $members, 'has_more' => $hasMore];
+    }
+
+    /**
+     * Order compact score rows with the same global tie-breaking rules used by
+     * scoreCandidates(). Exposed so the ranking contract can be unit-tested.
+     */
+    public function sortRankedRows(array $rows): array
+    {
+        usort($rows, static function (array $left, array $right): int {
+            $leftScore = $left['percentage'];
+            $rightScore = $right['percentage'];
+            if ($leftScore === null && $rightScore !== null) return 1;
+            if ($leftScore !== null && $rightScore === null) return -1;
+
+            if ($leftScore !== null && $rightScore !== null) {
+                $scoreOrder = (int) $rightScore <=> (int) $leftScore;
+                if ($scoreOrder !== 0) return $scoreOrder;
+            }
+
+            $dateOrder = strcmp($right['created_at'], $left['created_at']);
+            return $dateOrder !== 0 ? $dateOrder : ($right['id'] <=> $left['id']);
+        });
+
+        return array_values($rows);
+    }
+
+    /**
+     * Eager-loaded relationships needed to calculate compatibility and build a card.
+     *
+     * @return array<int,string>
+     */
+    private function candidateRelations(): array
+    {
+        return [
+            'member.marital_status',
+            'member.mothereTongue',
+            'addresses.country',
+            'addresses.state',
+            'addresses.city',
+            'recidency',
+            'physical_attributes',
+            'spiritual_backgrounds.religion',
+            'spiritual_backgrounds.caste',
+            'spiritual_backgrounds.sub_caste',
+            'spiritual_backgrounds.family_value',
+            'lifestyles',
+            'education',
+            'career',
+        ];
+    }
+
+    /**
+     * Shared eligibility query for paginated and legacy full-list requests.
+     */
+    private function eligibleCandidatesQuery(User $viewer): ?Builder
+    {
+        $viewer->loadMissing(['member', 'partner_expectations']);
         $gender = (int) optional($viewer->member)->gender;
         if (!in_array($gender, [1, 2], true)) {
-            return collect();
+            return null;
         }
 
         $oppositeGender = $gender === 1 ? 2 : 1;
         $viewerId = (int) $viewer->id;
-
-        $candidates = User::query()
-            ->with([
-                'member.marital_status',
-                'member.mothereTongue',
-                'addresses.country',
-                'addresses.state',
-                'addresses.city',
-                'recidency',
-                'physical_attributes',
-                'spiritual_backgrounds.religion',
-                'spiritual_backgrounds.caste',
-                'spiritual_backgrounds.sub_caste',
-                'spiritual_backgrounds.family_value',
-                'lifestyles',
-                'education',
-                'career',
-            ])
+        $query = User::query()
+            ->with($this->candidateRelations())
             ->where('user_type', 'member')
             ->where('id', '!=', $viewerId)
             ->where('blocked', 0)
             ->where('deactivated', 0)
-            ->whereHas('member', function ($query) use ($oppositeGender) {
-                $query->where('gender', $oppositeGender);
+            ->whereHas('member', function ($memberQuery) use ($oppositeGender) {
+                $memberQuery->where('gender', $oppositeGender);
             })
-            ->whereNotIn('id', function ($query) use ($viewerId) {
-                $query->select('user_id')
+            ->whereNotIn('id', function ($ignoredByViewer) use ($viewerId) {
+                $ignoredByViewer->select('user_id')
                     ->from('ignored_users')
                     ->where('ignored_by', $viewerId);
             })
-            ->whereNotIn('id', function ($query) use ($viewerId) {
-                $query->select('ignored_by')
+            ->whereNotIn('id', function ($ignoredViewer) use ($viewerId) {
+                $ignoredViewer->select('ignored_by')
                     ->from('ignored_users')
                     ->where('user_id', $viewerId);
             });
 
-        $this->applyPartnerAgeRangeFilter($candidates, $viewer);
-        $candidates = $candidates->get();
-
-        return $this->scoreCandidates($viewer, $candidates, true);
+        $this->applyPartnerAgeRangeFilter($query, $viewer);
+        return $query;
     }
 
     /**
@@ -156,27 +264,10 @@ class SmartMatchingService
     {
         $viewer->loadMissing(['member', 'partner_expectations']);
 
-        $relations = [
-            'member.marital_status',
-            'member.mothereTongue',
-            'addresses.country',
-            'addresses.state',
-            'addresses.city',
-            'recidency',
-            'physical_attributes',
-            'spiritual_backgrounds.religion',
-            'spiritual_backgrounds.caste',
-            'spiritual_backgrounds.sub_caste',
-            'spiritual_backgrounds.family_value',
-            'lifestyles',
-            'education',
-            'career',
-        ];
-
-        // Eloquent Collection loads all missing relations in batches, avoiding
-        // per-candidate queries while the home list is scored.
+        // Eloquent Collection loads missing relations in batches, avoiding
+        // per-candidate queries while each matching chunk is scored.
         if (method_exists($candidates, 'loadMissing')) {
-            $candidates->loadMissing($relations);
+            $candidates->loadMissing($this->candidateRelations());
         }
 
         $expectations = $viewer->partner_expectations;

@@ -125,19 +125,19 @@ class MemberController extends Controller
                 ], 403);
             }
 
-            // Smart matching needs global ranking; page only after the scores are ordered.
-            $matches = app(SmartMatchingService::class)->getMatches($user);
+            $matchingService = app(SmartMatchingService::class);
             if ($isPagedRequest) {
-                $pageRows = $matches
-                    ->slice(($page - 1) * $perPage, $perPage + 1)
-                    ->values();
-                $hasMore = $pageRows->count() > $perPage;
-                $matches = $pageRows->take($perPage)->values();
+                // Keep the global score order, but only hydrate full models for this page.
+                $matchPage = $matchingService->getMatchesPage($user, $page, $perPage);
+                $matches = $matchPage['members'];
                 $pagination = [
                     'current_page' => $page,
                     'per_page' => $perPage,
-                    'has_more' => $hasMore,
+                    'has_more' => $matchPage['has_more'],
                 ];
+            } else {
+                // Preserve the complete-list contract for older mobile clients.
+                $matches = $matchingService->getMatches($user);
             }
 
             $matches = $this->attachInterestStatusToProfiles($matches, $user);

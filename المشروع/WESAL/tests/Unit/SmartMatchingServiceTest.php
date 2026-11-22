@@ -17,6 +17,22 @@ class SmartMatchingServiceTest extends TestCase
         $this->service = new SmartMatchingService();
     }
 
+    public function test_global_rank_sort_keeps_real_scores_ahead_of_unknown_scores(): void
+    {
+        $rows = [
+            ['id' => 9, 'percentage' => null, 'details' => [], 'criteria_count' => 1, 'evaluated_criteria_count' => 0, 'status' => 'insufficient_data', 'created_at' => '2026-11-22 12:00:00'],
+            ['id' => 4, 'percentage' => 80, 'details' => [], 'criteria_count' => 1, 'evaluated_criteria_count' => 1, 'status' => 'calculated', 'created_at' => '2026-11-22 13:00:00'],
+            ['id' => 2, 'percentage' => 100, 'details' => [], 'criteria_count' => 1, 'evaluated_criteria_count' => 1, 'status' => 'calculated', 'created_at' => '2026-11-22 10:00:00'],
+            ['id' => 7, 'percentage' => 100, 'details' => [], 'criteria_count' => 1, 'evaluated_criteria_count' => 1, 'status' => 'calculated', 'created_at' => '2026-11-22 14:00:00'],
+            ['id' => 6, 'percentage' => 100, 'details' => [], 'criteria_count' => 1, 'evaluated_criteria_count' => 1, 'status' => 'calculated', 'created_at' => '2026-11-22 14:00:00'],
+            ['id' => 8, 'percentage' => null, 'details' => [], 'criteria_count' => 1, 'evaluated_criteria_count' => 0, 'status' => 'insufficient_data', 'created_at' => '2026-11-22 15:00:00'],
+        ];
+
+        $sorted = $this->service->sortRankedRows($rows);
+
+        $this->assertSame([7, 6, 2, 4, 8, 9], array_column($sorted, 'id'));
+    }
+
     public function test_only_selected_preferences_contribute_to_the_score(): void
     {
         $result = $this->service->scoreData([

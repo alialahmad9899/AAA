@@ -24,6 +24,21 @@ class MobileApiPerformanceContractTest extends TestCase
         $this->assertStringContainsString("'has_more' => $hasMore", $source);
     }
 
+    public function test_paged_smart_matching_scores_in_chunks_and_hydrates_only_the_requested_page(): void
+    {
+        $controller = $this->source('app/Http/Controllers/Api/MemberController.php');
+        $service = $this->source('app/Services/SmartMatchingService.php');
+
+        $this->assertStringContainsString(
+            '$matchingService->getMatchesPage($user, $page, $perPage)',
+            $controller
+        );
+        $this->assertStringContainsString('->chunkById(200', $service);
+        $this->assertStringContainsString('$this->sortRankedRows($rankedRows)', $service);
+        $this->assertStringContainsString('array_slice($rankedRows, $offset, $perPage)', $service);
+        $this->assertStringContainsString("->whereIn('id', $ids)", $service);
+    }
+
     public function test_compact_mobile_summary_returns_identity_and_access_flags(): void
     {
         $controller = $this->source('app/Http/Controllers/Api/ProfileController.php');
