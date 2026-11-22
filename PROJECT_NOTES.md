@@ -2920,3 +2920,31 @@ ALTER TABLE `users`
 - Commit تعديل الرسالة: 94985c9e579f475bcfe8f0c26edb1a13193dd353.
 - Commit اختبار الانحدار: 156121e352a205838084c2ad53a37b905552dad3.
 - يجب انتظار GitHub Actions لهذا التعديل قبل ادعاء نجاح Dart analyze أو Flutter tests أو بناء Android. لم يُجر اختبار على جهاز المستخدم أو على بيانات الإنتاج ضمن هذه الدفعة.
+
+## 2026-11-23 — توحيد إعداد Flutter Secure Storage وإصلاح اختفاء Bearer token بعد فتح المحادثات
+
+### السبب الجذري المثبت من المصدر والسجل
+- سجل الجهاز يثبت أن تسجيل الدخول أعاد HTTP 200، وأن التطبيق أكد حفظ التوكن ومعرّف المستخدم؛ كما نجحت عدة طلبات محمية بعد تسجيل الدخول. بعد ذلك ظهر أول HTTP 401 عند طلب قائمة المحادثات، ثم ظهرت 401 متتابعة، وأخيراً سجّل البحث أن Authorization لم يعد موجوداً.
+- مسار فتح تبويب المحادثات كان يقرأ SQLite cache أولاً عبر ChatLocalStore.getThreads() قبل تنفيذ طلب chat-list. هذا المسار يستدعي مفتاح تشفير الذاكرة المحلية من FlutterSecureStorage.
+- قفل pubspec.lock يثبت أن الاعتمادية الحالية هي flutter_secure_storage 9.2.4. في الكود السابق كانت ApiService وProfileCacheService تستخدمان FlutterSecureStorage() الافتراضي، بينما ChatLocalStore يستخدم AndroidOptions(encryptedSharedPreferences: true) من دون عزل إعداد التخزين.
+- توثيق الإصدار 9.2.4 يحذر صراحة من أخطاء mixed usage عند خلط encryptedSharedPreferences مع الإعداد الافتراضي، ويوصي بتحديد الإعداد في منشئ التخزين. هذه المطابقة بين تحذير المكتبة وتوقيت أول 401 بعد قراءة chat cache تفسر تسلسل فقدان قراءة التوكن؛ وليست مشكلة فلاتر بحث أو حظر حساب.
+- Laravel auth:sanctum وapi_member يرجعان Unauthenticated عندما لا يوجد مستخدم مصادق، بينما الحظر يرجع 403؛ فحص المسارات والـmiddleware لا يظهر حذفاً للتوكن بعد signin أو من طلب تحديث FCM. لذلك عولج تضارب التخزين في Flutter بدلاً من تغيير Laravel أو مدد انتهاء الجلسات.
+- خطأ الإنتاج المنفصل Session store not set on request ظهر أثناء عرض صفحة 404 في واجهة Blade، ولا يحتوي السجل على عنوان الطلب الذي أدى إلى 404؛ لذلك لم يُربط بسبب المصادقة ولم تُجر تغييرات على الموقع.
+
+### الإصلاح في الملفات الأصلية على main
+- فلاتر/lib/services/wesal_secure_storage.dart: إضافة خدمة مركزية وحيدة بإعداد Android encryptedSharedPreferences=true وiOS first_unlock_this_device. تنفذ ترحيلاً لمرة واحدة لمفاتيح user_token وبيانات الملف وFCM ومسودة التسجيل وpending logout من الإعداد الافتراضي القديم، وتتحقق من كل قيمة بعد نسخها. تُحذف مفاتيح Android القديمة فقط بعد نجاح النسخ والتحقق؛ مفاتيح Keychain القديمة لا تحذف بإعداد وصول مختلف.
+- فلاتر/lib/services/api_service.dart: توحيد قراءة وكتابة وحذف user_token ومسودة التسجيل وسجل تسجيل الخروج المعلّق عبر الخدمة المركزية.
+- فلاتر/lib/services/profile_cache_service.dart: توحيد مخزن الملف والهوية وذاكرة FCM مع الإعداد المركزي.
+- فلاتر/lib/services/chat_local_store.dart: استخدام الخدمة نفسها بدلاً من إنشاء instance مستقل بإعداد Android مختلف. بقي اسم مفتاح AES كما هو، ولم تحذف قاعدة SQLite أو صفوفها.
+- فلاتر/lib/main.dart: انتظار ترحيل التخزين قبل تشغيل أي خدمة مصادقة أو قراءة cache.
+- فلاتر/test/auth_profile_recovery_contract_test.dart: إضافة اختبارات عقدية توثق وحدة الإعدادات، مفاتيح الترحيل، والتحقق من بدء التهيئة قبل runApp.
+
+### Git والتحقق وحدود التنفيذ
+- جميع التعديلات على main فقط. لا تغيير على Laravel أو schema أو قاعدة الإنتاج أو الموقع، ولا نشر إنتاجي.
+- Commit إنشاء الخدمة المركزية: 0a059c6fca97c740ead1ed34f29435fdd2938f77.
+- Commit توحيد ApiService: 566c323fc0ce35c6647a3f3cc4c4c049dc4d0fbd.
+- Commit توحيد ProfileCacheService: 59b0f4ab3a2921787fad80711a20042bb195dd13.
+- Commit توحيد ChatLocalStore: 256a305bcbdcc70d8441d8d4a24603c9c5d28d86.
+- Commit تهيئة التخزين قبل runApp: 294b1f7f7979fd94cbc0df13f499115662246b2f.
+- Commit اختبار الانحدار: af7518d5f581a8196fa95976d0a35062da72b08e.
+- يجب اعتماد نتيجة GitHub Actions النهائية قبل إعلان نجاح التحليل أو الاختبارات أو بناء APK. لم يتم تشغيل التطبيق على جهاز TECNO ضمن هذه الجلسة؛ الاختبار الميداني بعد تثبيت APK مطلوب لتأكيد زوال 401 على الجهاز.
