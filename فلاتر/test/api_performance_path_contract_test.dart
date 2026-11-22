@@ -41,6 +41,17 @@ void main() {
     expect(screen, contains('page: nextPage'));
   });
 
+  test('FCM registration runs in the background after login and signup', () async {
+    final login = await File('lib/screens/login_screen.dart').readAsString();
+    final signup = await File('lib/screens/signup_screen.dart').readAsString();
+    final home = await File('lib/screens/main_home_screen.dart').readAsString();
+    expect(login, contains('unawaited(_updateFcmToken());'));
+    expect(login, isNot(contains('await _updateFcmToken();')));
+    expect(signup, contains('unawaited(\n              NotificationService.syncCurrentToken(force: true).then<void>((_) {}),'));
+    expect(signup, isNot(contains('await NotificationService.syncCurrentToken(force: true)')));
+    expect(home, contains('unawaited(NotificationService.syncCurrentToken().then<void>((_) {}));'));
+  });
+
   test('chat notification lookup follows paginated history and stops on repeated legacy pages', () async {
     final notification = await File('lib/services/notification_service.dart').readAsString();
     expect(notification, contains('page: pageNumber'));

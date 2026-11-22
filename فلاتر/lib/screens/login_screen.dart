@@ -120,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (result['success'] == true) {
         await ApiService.setRememberMe(true);
-        await _updateFcmToken();
+        unawaited(_updateFcmToken());
 
         if (!mounted) return;
         setState(() => _isLoading = false);
@@ -208,7 +208,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // 🟢 الحالة الأولى: الحساب موجود وتم تسجيل الدخول بنجاح
       if (result['success'] == true) {
-        await _updateFcmToken();
+        unawaited(_updateFcmToken());
 
         if (!mounted) return;
         setState(() => _isLoading = false);

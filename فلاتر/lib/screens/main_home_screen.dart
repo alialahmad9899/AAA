@@ -210,6 +210,9 @@ class _MainHomeScreenState extends State<MainHomeScreen>
     WidgetsBinding.instance.addObserver(this);
     NotificationService.foregroundMessageVersion
         .addListener(_onForegroundNotificationReceived);
+    // The launch-time sync may have run before a restored/login session existed.
+    // Retry now without delaying the first home frame.
+    unawaited(NotificationService.syncCurrentToken().then<void>((_) {}));
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _loadSavedLanguage();
       if (!mounted) return;

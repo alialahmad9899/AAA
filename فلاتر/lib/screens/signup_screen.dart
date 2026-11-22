@@ -600,12 +600,11 @@ class _SignupScreenState extends State<SignupScreen> with WidgetsBindingObserver
             _isAccountCreated = true;
             await ApiService.setRememberMe(true);
 
-            // ربط رمز الإشعارات عبر الخدمة المركزية بعد حفظ جلسة الحساب.
-            try {
-              await NotificationService.syncCurrentToken(force: true);
-            } catch (e) {
-              debugPrint('⚠️ تعذرت مزامنة رمز الإشعارات بعد إنشاء الحساب: $e');
-            }
+            // Start device-token sync after the account session is saved;
+            // it must not hold up the next registration step.
+            unawaited(
+              NotificationService.syncCurrentToken(force: true).then<void>((_) {}),
+            );
 
             _goToNextPage();
           } else {
