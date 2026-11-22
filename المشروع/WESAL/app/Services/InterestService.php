@@ -204,7 +204,7 @@ class InterestService
                 if ($notifyUser->email != null && get_email_template('email_on_accepting_interest', 'status')) {
                     try {
                         EmailUtility::email_on_accept_request($notifyUser, 'email_on_accepting_interest');
-                    } catch (\\Throwable $exception) {
+                    } catch (\Throwable $exception) {
                         Log::error('Interest accept email failed.', ['message' => $exception->getMessage()]);
                     }
                 }
@@ -212,14 +212,14 @@ class InterestService
                 if ($notifyUser->phone != null && addon_activation('otp_system') && get_sms_template('accept_interest', 'status') == 1) {
                     try {
                         SmsUtility::sms_on_accept_request($notifyUser, 'accept_interest');
-                    } catch (\\Throwable $exception) {
+                    } catch (\Throwable $exception) {
                         Log::error('Interest accept SMS failed.', ['message' => $exception->getMessage()]);
                     }
                 }
             }
 
             return true;
-        } catch (\\Throwable $exception) {
+        } catch (\Throwable $exception) {
             Log::error('InterestService Accept Error.', ['message' => $exception->getMessage()]);
             return false;
         }
@@ -281,7 +281,7 @@ class InterestService
             }
 
             return true;
-        } catch (\\Throwable $exception) {
+        } catch (\Throwable $exception) {
             Log::error('InterestService Reject Error.', ['message' => $exception->getMessage()]);
             return false;
         }
