@@ -1487,7 +1487,7 @@ class ApiService {
         'lifestyle': results[6],
         'hobbies_interest': results[7],
         'attitude_behavior': results[8],
-        'astrologic_information': results[9],
+        'astronomic_information': results[9],
         'intoduction': results[10],
         'introduction': results[10],
         'partner_expectation': results[11],
