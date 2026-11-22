@@ -293,7 +293,7 @@ class _SignupScreenState extends State<SignupScreen> with WidgetsBindingObserver
 
     _isRestoringSignupDraft = true;
     setState(() {
-      _currentStep = (int.tryParse(stringValue('current_step')) ?? 1).clamp(1, 3);
+      _currentStep = (int.tryParse(stringValue('current_step')) ?? 1).clamp(1, 3).toInt();
       _isAccountCreated = true;
       _firstNameController.text = stringValue('first_name');
       _lastNameController.text = stringValue('last_name');
@@ -989,7 +989,6 @@ class _SignupScreenState extends State<SignupScreen> with WidgetsBindingObserver
         _showValidationErrors = false;
         _currentStep++;
       });
-      unawaited(_persistSignupDraft());
       unawaited(_persistSignupDraft());
       _pageController.animateToPage(
         _currentStep,

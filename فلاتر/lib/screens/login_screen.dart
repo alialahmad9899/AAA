@@ -5,6 +5,8 @@
 //        ونظام الإشعارات المنبثقة المزدوجة العائمة والتخزين المشفّر.
 // ============================================================================
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -632,7 +634,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                           onChanged: (value) => setState(
                                             () {
             _rememberMe = value ?? false;
-            ApiService.setRememberMe(_rememberMe);
+            unawaited(ApiService.setRememberMe(_rememberMe));
           },
                                           ),
                                         ),
