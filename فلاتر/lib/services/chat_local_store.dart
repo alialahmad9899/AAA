@@ -2,10 +2,10 @@
 import 'dart:convert';
 
 import 'package:cryptography/cryptography.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../models/chat_model.dart';
+import 'wesal_secure_storage.dart';
 
 class ChatLocalStore {
   ChatLocalStore._();
@@ -16,17 +16,13 @@ class ChatLocalStore {
   static const String _encryptionKeyStorageName = 'wesal_chat_cache_aes_key_v1';
   static const String _encryptedPayloadPrefix = 'enc:v1:';
   static final AesGcm _payloadCipher = AesGcm.with256bits();
-  static const FlutterSecureStorage _secureStorage = FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
-    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock_this_device),
-  );
 
   static Future<SecretKey> _cacheEncryptionKey() {
     return _cacheEncryptionKeyFuture ??= _loadCacheEncryptionKey();
   }
 
   static Future<SecretKey> _loadCacheEncryptionKey() async {
-    final stored = await _secureStorage.read(key: _encryptionKeyStorageName);
+    final stored = await WesalSecureStorage.read(key: _encryptionKeyStorageName);
     if (stored != null && stored.isNotEmpty) {
       try {
         final bytes = base64Decode(stored);
@@ -38,7 +34,7 @@ class ChatLocalStore {
 
     final generated = await _payloadCipher.newSecretKey();
     final bytes = await generated.extractBytes();
-    await _secureStorage.write(
+    await WesalSecureStorage.write(
       key: _encryptionKeyStorageName,
       value: base64Encode(bytes),
     );
