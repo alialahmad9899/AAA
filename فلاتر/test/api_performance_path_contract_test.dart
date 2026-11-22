@@ -21,15 +21,15 @@ void main() {
     expect(screen, contains('afterMessageId: previousLatestMessageId'));
   });
 
-  test('smart matching separates missing preferences from incomplete candidate data', () async {
+  test('smart matching shows only a simple status or percentage without criteria counters', () async {
     final matching = await File('lib/screens/home/tabs/auto_matching_tab.dart').readAsString();
     expect(matching, contains("member.matchStatus == 'no_preferences'"));
     expect(matching, contains("member.matchStatus == 'insufficient_data'"));
-    expect(matching, contains('بيانات الملف غير كافية'));
-    expect(matching, contains('Insufficient profile data'));
-    expect(matching, contains('matchEvaluatedCriteriaCount < member.matchCriteriaCount'));
-    expect(matching, contains('المعايير التي تم تقييمها'));
-    expect(matching, contains('member.matchCriteriaCount < 3'));
+    expect(matching, contains('ملف غير مكتمل'));
+    expect(matching, isNot(contains('matchCoverageLabel')));
+    expect(matching, isNot(contains('المعايير التي تم تقييمها')));
+    expect(matching, isNot(contains('Criteria evaluated')));
+    expect(matching, contains("'${member.matchPercentage}%"));
   });
 
   test('member search and matching use paginated loading', () async {
