@@ -15,7 +15,7 @@ void main() {
       'root Android Gradle file does not declare the Kotlin extension',
       () {
         expect(
-          RegExp(r'(?m)^\s*kotlin\s*\{').hasMatch(rootGradle),
+          RegExp(r'^\s*kotlin\s*\{', multiLine: true).hasMatch(rootGradle),
           isFalse,
         );
       },
