@@ -82,6 +82,25 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  Future<void> _openAuthenticatedDestination() async {
+    final draft = await ApiService.getSignupDraft();
+    if (!mounted) return;
+
+    final Widget destination =
+        draft != null && draft['is_account_created'] == true
+            ? SignupScreen(
+                currentLanguage: widget.currentLanguage,
+                resumeExistingDraft: true,
+              )
+            : MainHomeScreen(currentLanguage: widget.currentLanguage);
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => destination),
+      (route) => false,
+    );
+  }
+
   /// 🟢 دالة معالجة تسجيل الدخول وربط FCM Token بشكل آمن
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
@@ -115,16 +134,8 @@ class _LoginScreenState extends State<LoginScreen> {
           isSuccess: true,
         );
 
-        // 3. الانتقال للشاشة الرئيسية وتفريغ كدس التنقل بالكامل
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(
-            builder: (context) => MainHomeScreen(
-              currentLanguage: widget.currentLanguage,
-            ),
-          ),
-          (route) => false,
-        );
+        // Resume incomplete signup before opening the main tabs.
+        await _openAuthenticatedDestination();
       } else {
         if (!mounted) return;
         setState(() => _isLoading = false);
@@ -211,16 +222,8 @@ class _LoginScreenState extends State<LoginScreen> {
           isSuccess: true,
         );
 
-        // الانتقال المباشر وتفريغ الكدس
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(
-            builder: (context) => MainHomeScreen(
-              currentLanguage: widget.currentLanguage,
-            ),
-          ),
-          (route) => false,
-        );
+        // Resume an interrupted registration before opening the main tabs.
+        await _openAuthenticatedDestination();
       }
       // 🟡 الحالة الثانية: المستخدم لا يملك حساباً -> التحويل لإنشاء حساب مع تعبئة البيانات تلقائياً
       else if (result['is_registered'] == false) {
