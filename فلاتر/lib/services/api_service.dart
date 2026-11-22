@@ -603,6 +603,32 @@ class ApiService {
     return prefs.getBool('remember_me') ?? true;
   }
 
+  static const String _signupDraftSecureKey = 'wesal_signup_draft_v1';
+
+  static Future<void> saveSignupDraft(Map<String, dynamic> draft) async {
+    if (draft.isEmpty) return;
+    await _secureStorage.write(
+      key: _signupDraftSecureKey,
+      value: jsonEncode(draft),
+    );
+  }
+
+  static Future<Map<String, dynamic>?> getSignupDraft() async {
+    try {
+      final raw = await _secureStorage.read(key: _signupDraftSecureKey);
+      if (raw == null || raw.trim().isEmpty) return null;
+      final decoded = jsonDecode(raw);
+      if (decoded is Map) return Map<String, dynamic>.from(decoded);
+    } catch (error) {
+      if (kDebugMode) debugPrint('[Signup Draft] Secure draft could not be read.');
+    }
+    return null;
+  }
+
+  static Future<void> clearSignupDraft() async {
+    await _secureStorage.delete(key: _signupDraftSecureKey);
+  }
+
   static const String _pendingLogoutFcmTokenKey = 'pending_logout_fcm_token';
 
   /// Retry a device-token detach after an earlier logout happened offline.
