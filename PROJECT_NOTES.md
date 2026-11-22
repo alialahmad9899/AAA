@@ -2797,3 +2797,21 @@ ALTER TABLE `users`
 - خطوة Android Debug APK كانت لا تزال `in_progress` عند التحديث، وخطوة Release AAB لم تبدأ بعد. تشغيل البناء المستقل مع Firebase رقم `45069512042` كان أيضاً في خطوة Debug build وقت التحقق. لا تُسجل نجاح APK/AAB حتى يكتمل سجل Actions.
 - حزمة الجلسة `WESAL_SMART_MATCHING_AVAILABLE_DATA_FIXES.zip` تم إنشاؤها من أربعة ملفات تشغيل/اختبار فقط، مع سلامة ZIP وعدم وجود مسارات مكررة، وجميع Git blob hashes مطابقة إلى commit الكود `44192c83d3a163721e4c3340e09ccf67d028045b`. SHA-256: `5706654687a4486d9c786f75c46fb0d2d9601d4036d7635acf6e5004c5bafed4`.
 - لا نشر إنتاجي ولا تعديل قاعدة الإنتاج. لا تزال مطابقة النسب على بيانات حسابات حقيقية مجهولة الهوية بحاجة إلى تحقق بعد نشر متوافق.
+
+
+## 2026-11-23 — إضافة إصلاح محلي آمن لتباين عقود Flutter للمحادثات والروابط
+
+### السبب الجذري
+- أخطاء VS Code المرفقة (parseProfileUri, afterMessageId, ChatThreadsPage, page/perPage, وقراءة .threads) تطابق وجود مجموعة ملفات محلية غير متزامنة مع عقود الملفات المرتبطة في main.
+- الملفات الأصلية الحالية على main كانت تحتوي بالفعل على العقود المتوافقة: MemberProfileLink.parseProfileUri، وChatThreadsPage، وApiService.getChatThreads(page, perPage)، وApiService.getChatMessages(afterMessageId). لذلك لم يكن من الصحيح حذف الوسائط أو تحويل النتيجة إلى List لإسكات الأخطاء.
+
+### ما أضيف
+- فلاتر/repair_flutter_contract_mismatch.ps1: سكربت PowerShell يعمل من جذر مشروع Flutter المستقل أو عند حفظه داخله. يقرأ SHA الحالي لفرع main مرة واحدة، وينزّل الملفات الستة من ذلك الـSHA نفسه، ويتحقق من العقود المطلوبة قبل تعديل أي ملف، ثم يحفظ نسخ الملفات الحالية خارج المشروع في %USERPROFILE%\WesalRepairBackups\<timestamp> ويحدّث المجموعة المتوافقة. إذا فشل تنزيل أو تحقق أي ملف فلا يبدأ الاستبدال. يشغّل dart analyze --fatal-infos ثم flutter test، ويمكن تمرير -BuildDebugApk لتضمين بناء Debug APK.
+- فلاتر/test/chat_api_contract_test.dart: اختبار تجميعي/عقدي يثبت تواقيع getChatThreads وgetChatMessages(afterMessageId)، وبنية ChatThreadsPage، ووجود محلل رابط الملف الشخصي. أي تغيير مستقبلي يكسر هذه العقود سيؤدي إلى فشل التحليل/الاختبارات في CI.
+- لم تُعدّل ملفات التشغيل الستة على main لأن النسخ الحالية فيها الإصلاح بالفعل؛ أضيفت آلية آمنة لجعل نسخة الجهاز تتطابق معها، واختبار يمنع تراجع العقود. السكربت لا يغيّر قاعدة البيانات أو Laravel أو ملفات الاعتماديات.
+
+### Git والاختبارات
+- فرع العمل: main.
+- Commit إضافة السكربت واختبار العقد: a51c62141657ee88b5c99866f8cf6d41474a6de5.
+- يتبع ذلك فحص CI على GitHub Actions. لم يُشغّل PowerShell أو Flutter داخل بيئة هذه الجلسة، لذا لا تُسجّل نتائج التحليل والاختبارات المحلية نجاحاً قبل اكتمال CI.
+- لم يتم نشر التطبيق أو API إلى الإنتاج، ولم يتم إجراء أي تعديل على قاعدة بيانات الإنتاج.
