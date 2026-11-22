@@ -5,7 +5,6 @@
 //        مع تحصين شامل لاستخراج وقراءة بيانات الباقات والاشتراكات.
 // ============================================================================
 
-import 'package:flutter/foundation.dart';
 import 'member_profile_model.dart';
 
 class MemberModel {
