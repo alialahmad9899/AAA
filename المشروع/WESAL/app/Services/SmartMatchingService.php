@@ -12,6 +12,11 @@ use Illuminate\Support\Collection;
  */
 class SmartMatchingService
 {
+    // A score is shown only when the candidate has enough real data to make
+    // the percentage meaningful. Missing fields are excluded from the score.
+    private const MIN_EVALUATED_MATCH_CRITERIA = 2;
+    private const MIN_EVALUATED_MATCH_WEIGHT = 25.0;
+
     /**
      * إعادة المرشحين المؤهلين مرتبين حسب نسبة التوافق من الأعلى إلى الأقل.
      *
@@ -385,13 +390,12 @@ class SmartMatchingService
         $evaluatedCriteriaCount = 0;
 
         $add = function (string $key, float $weight, ?float $score) use (&$weightedScore, &$totalWeight, &$details, &$evaluatedCriteriaCount) {
-            // Every selected preference remains in the denominator. Missing
-            // candidate data must never inflate a partial result to 100%.
-            $totalWeight += $weight;
-
+            // Only criteria with real candidate data contribute points and
+            // denominator weight. Missing fields are unknown, not mismatches.
             if ($score !== null) {
                 $score = max(0.0, min(1.0, $score));
                 $weightedScore += $weight * $score;
+                $totalWeight += $weight;
                 $evaluatedCriteriaCount++;
             }
 
@@ -615,14 +619,16 @@ class SmartMatchingService
         }
 
         $criteriaCount = count($details);
+        $hasEnoughEvidence = $evaluatedCriteriaCount >= self::MIN_EVALUATED_MATCH_CRITERIA
+            && $totalWeight >= self::MIN_EVALUATED_MATCH_WEIGHT;
         $status = $criteriaCount === 0
             ? 'no_preferences'
-            : ($evaluatedCriteriaCount === 0 ? 'insufficient_data' : 'calculated');
+            : (!$hasEnoughEvidence ? 'insufficient_data' : 'calculated');
 
         return [
-            // If no selected criterion has usable candidate data, keep the
-            // result unknown instead of inventing a 0% compatibility score.
-            'percentage' => $evaluatedCriteriaCount > 0 && $totalWeight > 0
+            // The percentage is normalised over available candidate data only.
+            // Very sparse profiles remain unscored until enough evidence exists.
+            'percentage' => $status === 'calculated' && $totalWeight > 0
                 ? (int) round(($weightedScore / $totalWeight) * 100)
                 : null,
             'criteria_count' => $criteriaCount,
