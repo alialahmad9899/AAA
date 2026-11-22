@@ -373,6 +373,15 @@ class SearchMembersException implements Exception {
   String toString() => message;
 }
 
+class ApiUnauthorizedException implements Exception {
+  final int statusCode;
+
+  const ApiUnauthorizedException({this.statusCode = 401});
+
+  @override
+  String toString() => 'انتهت صلاحية جلسة الدخول أو تعذر التحقق منها. سجّل الدخول مجدداً.';
+}
+
 class PublicProfileNotFoundException implements Exception {
   const PublicProfileNotFoundException();
 
@@ -570,40 +579,102 @@ class ApiService {
     }
   }
 
-  /// مسح التوكن والكاش عند تسجيل الخروج أو انتهاء الجلسة
-  static Future<void> clearToken() async {
+  /// Clear a session only after an explicit logout/account action or an
+  /// authoritative /user-by-token rejection. A stale response cannot delete
+  /// a newer token written by a subsequent sign-in.
+  static Future<void> clearToken({
+    String reason = 'explicit_action',
+    String? expectedToken,
+  }) async {
     try {
+      if (expectedToken != null) {
+        String? storedToken = await _secureStorage.read(key: 'user_token');
+        storedToken = storedToken?.trim();
+        if (storedToken != null && storedToken.startsWith('Bearer ')) {
+          storedToken = storedToken.substring(7).trim();
+        }
+        if (storedToken != expectedToken) {
+          if (kDebugMode) {
+            debugPrint(
+              '[AuthStorage] Skipped stale token clear; reason=$reason; '
+              'storedTokenChanged=true.',
+            );
+          }
+          return;
+        }
+      }
+
+      if (kDebugMode) {
+        debugPrint('[AuthStorage] Clearing local session; reason=$reason.');
+      }
       await _secureStorage.delete(key: 'user_token');
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.remove('user_id');
       await ProfileCacheService.clearCache();
       clearDropdownCache();
-    } catch (e) {
-      if (kDebugMode) debugPrint('⚠ [Error Clearing Token]: $e');
+    } catch (error) {
+      if (kDebugMode) {
+        debugPrint(
+          '[AuthStorage] Local session clear failed; '
+          'reason=$reason; error=${error.runtimeType}.',
+        );
+      }
     }
+  }
+  /// Laravel's current /user-by-token response is a top-level user map.
+  /// Older deployments may wrap the same user in {result:true,data:{...}}.
+  static bool isValidUserByTokenPayload(dynamic payload) {
+    if (payload is! Map || payload['result'] == false) return false;
+
+    final dynamic nestedData = payload['data'];
+    final dynamic nestedUser = payload['user'];
+    final dynamic user = nestedData is Map
+        ? nestedData
+        : nestedUser is Map
+            ? nestedUser
+            : payload;
+
+    final rawId = user['id'] ?? user['user_id'];
+    final userId = rawId is int ? rawId : int.tryParse(rawId?.toString() ?? '');
+    return userId != null && userId > 0;
   }
 
   /// Validate the persisted Sanctum token before restoring a member session.
-  /// A transient network failure keeps the local session available for offline use;
-  /// an actual 401 invalidates and clears it.
+  /// Transient network/server failures retain the token; only an authoritative
+  /// 401 from /user-by-token clears it.
   static Future<bool> validateCurrentSession() async {
     final prefs = await SharedPreferences.getInstance();
     final rememberMe = prefs.getBool('remember_me') ?? true;
     if (!rememberMe) {
-      await clearToken();
+      await clearToken(reason: 'remember_me_disabled');
       return false;
     }
 
     final token = await getToken();
-    if (token == null || token.isEmpty) return false;
+    if (token == null || token.isEmpty) {
+      if (kDebugMode) {
+        debugPrint('[Session Validation] No secure token was found.');
+      }
+      return false;
+    }
 
     try {
       final headers = await _getHeaders();
-      final response = await _httpClient.get(Uri.parse('$baseUrl/user-by-token'), headers: headers)
+      final authHeaderSent =
+          (headers['Authorization'] ?? '').startsWith('Bearer ');
+      final response = await _httpClient
+          .get(Uri.parse('$baseUrl/user-by-token'), headers: headers)
           .timeout(_timeoutDuration);
 
+      if (kDebugMode) {
+        debugPrint(
+          '[Session Validation] HTTP ${response.statusCode}; '
+          'storedTokenPresent=true; authorizationHeaderSent=$authHeaderSent.',
+        );
+      }
+
       if (response.statusCode == 401) {
-        await clearToken();
+        await clearToken(reason: 'user_by_token_401', expectedToken: token);
         return false;
       }
       if (response.statusCode == 403) return false;
@@ -612,18 +683,19 @@ class ApiService {
       }
 
       final dynamic decoded = jsonDecode(response.body);
-      if (decoded is Map) {
-        final result = decoded['result'];
-        final data = decoded['data'];
-        return result == true && data is Map;
+      final valid = isValidUserByTokenPayload(decoded);
+      if (kDebugMode) {
+        debugPrint('[Session Validation] User payload accepted=$valid.');
       }
-      return false;
+      return valid;
     } on TimeoutException {
       return true;
     } on SocketException {
       return true;
     } catch (error) {
-      if (kDebugMode) debugPrint('[Session Validation] Temporary validation failure.');
+      if (kDebugMode) {
+        debugPrint('[Session Validation] Temporary validation failure: ${error.runtimeType}.');
+      }
       return true;
     }
   }
@@ -844,8 +916,10 @@ class ApiService {
   }
 
   static String _parseErrorMessage(dynamic responseData, int statusCode) {
+    // Do not erase secure storage from a generic endpoint error. Session
+    // invalidation is centralized in validateCurrentSession(), where the
+    // /user-by-token response is authoritative and cannot race background calls.
     if (statusCode == 401) {
-      unawaited(clearToken());
       return 'انتهت جلسة تسجيل الدخول، يرجى تسجيل الدخول مجدداً';
     }
     if (responseData == null) return 'حدث خطأ في السيرفر (رمز: $statusCode)';
@@ -883,8 +957,7 @@ class ApiService {
           await _httpClient.get(url, headers: headers).timeout(_timeoutDuration);
 
       if (kDebugMode) {
-        debugPrint(
-            '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
+        debugPrint('[API GET Generic] HTTP ${response.statusCode}.');
       }
 
       dynamic decoded;
@@ -951,7 +1024,9 @@ class ApiService {
 
       if (kDebugMode) {
         debugPrint(
-            '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
+          '[API POST Generic] HTTP ${response.statusCode}; '
+          'fieldNames=${body.keys.join(',')}.',
+        );
       }
 
       dynamic decoded;
@@ -1007,8 +1082,8 @@ class ApiService {
           .timeout(_timeoutDuration);
 
       if (kDebugMode) {
-        debugPrint(
-            '📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
+        // Never log the returned bearer token or personal login response fields.
+        debugPrint('[API Signin] HTTP ${response.statusCode}.');
       }
 
       dynamic decoded;
@@ -1044,6 +1119,12 @@ class ApiService {
         final savedToken = await getToken();
         if (savedToken == null || savedToken.isEmpty) {
           throw StateError('The access token could not be persisted securely.');
+        }
+        if (kDebugMode) {
+          debugPrint(
+            '[API Signin] tokenReturned=true; tokenPersisted=true; '
+            'userIdStored=true; rememberMe=$rememberMe.',
+          );
         }
         await prefs.setInt('user_id', userId);
         await prefs.setBool('remember_me', rememberMe);
@@ -1386,15 +1467,30 @@ class ApiService {
   static Future<Map<String, dynamic>?> getFullProfile({String? lang}) async {
     try {
       // Prefer the consolidated Laravel endpoint (one authenticated request).
-      // Fall back to the established per-section requests on older hosting builds.
       final consolidatedResponse =
           await get('/member/full-my-profile', lang: lang);
+
+      if (consolidatedResponse == null) return null;
+      final statusCode = int.tryParse(
+        consolidatedResponse['status']?.toString() ?? '',
+      );
+
+      // Never fan out into twelve empty requests after authentication was denied.
+      if (statusCode == 401 || statusCode == 403) {
+        throw ApiUnauthorizedException(statusCode: statusCode!);
+      }
+
       final consolidatedData = _extractMapData(consolidatedResponse);
-      if (consolidatedResponse != null &&
-          consolidatedResponse['result'] != false &&
+      if (consolidatedResponse['result'] != false &&
           consolidatedData != null &&
           consolidatedData.containsKey('basic_info')) {
         return consolidatedData;
+      }
+
+      // The section-by-section contract is retained only for older hosting
+      // versions that do not expose the consolidated endpoint.
+      if (statusCode != 404 && statusCode != 405) {
+        return null;
       }
 
       final results = await Future.wait([
@@ -1412,8 +1508,11 @@ class ApiService {
         getPartnerExpectations(lang: lang),
       ]);
 
+      final basicInfo = results[0];
+      if (basicInfo == null || basicInfo.isEmpty) return null;
+
       return {
-        'basic_info': results[0],
+        'basic_info': basicInfo,
         'education': results[1],
         'career': results[2],
         'physical_attributes': results[3],
@@ -1429,8 +1528,12 @@ class ApiService {
         'introduction': results[10],
         'partner_expectation': results[11],
       };
+    } on ApiUnauthorizedException {
+      rethrow;
     } catch (e) {
-      if (kDebugMode) debugPrint('❌ [API ERROR getFullProfile]: $e');
+      if (kDebugMode) {
+        debugPrint('[API getFullProfile] Request failed: ${e.runtimeType}.');
+      }
       return null;
     }
   }
@@ -3112,6 +3215,9 @@ class ApiService {
         debugPrint('📥 [API RESPONSE ${response.statusCode}]: ${response.body}');
       }
 
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        throw ApiUnauthorizedException(statusCode: response.statusCode);
+      }
       if (response.statusCode != 200) return null;
       final parsed = await compute(_parseGenericMapIsolate, response.body);
       if (parsed == null || !isSuccessfulResult(parsed)) return null;
@@ -3119,8 +3225,12 @@ class ApiService {
       final record = extractFirstResourceMap(parsed);
       if (record == null) return null;
       return {...record, 'result': true};
+    } on ApiUnauthorizedException {
+      rethrow;
     } catch (e) {
-      if (kDebugMode) debugPrint('❌ [API ERROR getPartnerExpectations]: $e');
+      if (kDebugMode) {
+        debugPrint('[API getPartnerExpectations] Request failed: ${e.runtimeType}.');
+      }
       return null;
     }
   }
@@ -4669,6 +4779,37 @@ class ApiService {
       }
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
+        if (kDebugMode) {
+          final serverMessage = decoded is Map
+              ? (decoded['message'] ??
+                      decoded['error'] ??
+                      decoded['detail'] ??
+                      '')
+                  .toString()
+              : '';
+          final responseFields =
+              decoded is Map ? decoded.keys.join(',') : '';
+          final sanitizedBody = response.body
+              .replaceAll(RegExp(r'Bearer\s+[^\s,;]+'), 'Bearer [redacted]')
+              .replaceAll(RegExp(r'\s+'), ' ')
+              .trim();
+          final rawBodyPreview = decoded is Map
+              ? ''
+              : (sanitizedBody.length <= 240
+                  ? sanitizedBody
+                  : sanitizedBody.substring(0, 240));
+          final errorFields = decoded is Map && decoded['errors'] is Map
+              ? (decoded['errors'] as Map).keys.join(',')
+              : '';
+          final contentType = response.headers['content-type'] ?? 'unknown';
+          debugPrint(
+            '[SearchMembers] HTTP ${response.statusCode}; '
+            'authorizationHeaderSent=${headers.containsKey('Authorization')}; '
+            'contentType=$contentType; responseFields=$responseFields; '
+            'message=$serverMessage; validationFields=$errorFields; '
+            'bodyPreview=$rawBodyPreview.',
+          );
+        }
         throw SearchMembersException(
           _parseErrorMessage(decoded, response.statusCode),
           statusCode: response.statusCode,
