@@ -284,9 +284,7 @@ class _SearchTabState extends State<SearchTab> {
             if (mounted) {
               setState(() {
                 _states = [allOption];
-                _states = [allOption];
         _cities = [allOption];
-                _selectedState = allOption;
                 _selectedState = allOption;
         _selectedCity = allOption;
               });

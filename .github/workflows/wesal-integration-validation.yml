@@ -170,6 +170,9 @@ jobs:
             phpunit --no-configuration tests/Unit/SmartMatchingServiceTest.php
             phpunit --no-configuration tests/Unit/AddressCityRelationshipTest.php
             phpunit --no-configuration tests/Unit/InterestControllerIdempotencyTest.php
+            phpunit --no-configuration tests/Unit/InterestServiceOwnershipTest.php
+            phpunit --no-configuration tests/Unit/MemberListingFiltersPaginationTest.php
+            phpunit --no-configuration tests/Unit/ChatMessageIdempotencyContractTest.php
             phpunit --no-configuration tests/Unit/VipServiceCatalogOrderTest.php
             phpunit --no-configuration tests/Unit/PackagePresentationTest.php
             phpunit --no-configuration tests/Unit/SubscriptionUtilityProfileViewerQuotaTest.php
@@ -218,28 +221,26 @@ jobs:
       - name: Build Android debug APK and validate native resources
         working-directory: فلاتر
         run: flutter build apk --debug
-      - name: Generate an ephemeral signing key for Release variant validation
+      - name: Build Android release app bundle with an ephemeral validation key
+        working-directory: فلاتر
         shell: bash
         run: |
           set -euo pipefail
+          KEYSTORE_PATH="$RUNNER_TEMP/wesal-ci-validation.jks"
+          STORE_PASSWORD="$(openssl rand -hex 32)"
+          KEY_PASSWORD="$(openssl rand -hex 32)"
           keytool -genkeypair -v \
-            -keystore "$RUNNER_TEMP/wesal-ci-validation.jks" \
-            -storepass "$WESAL_CI_STORE_PASSWORD" \
+            -keystore "$KEYSTORE_PATH" \
+            -storepass "$STORE_PASSWORD" \
             -alias wesal-ci-validation \
-            -keypass "$WESAL_CI_KEY_PASSWORD" \
+            -keypass "$KEY_PASSWORD" \
             -keyalg RSA -keysize 2048 -validity 3650 \
             -dname "CN=Wesal CI Release Validation"
-        env:
-          WESAL_CI_STORE_PASSWORD: ${{ runner.temp }}-Wesal-CI-Store-91
-          WESAL_CI_KEY_PASSWORD: ${{ runner.temp }}-Wesal-CI-Key-91
-      - name: Build signed Android release app bundle
-        working-directory: فلاتر
-        env:
-          WESAL_UPLOAD_STORE_FILE: ${{ runner.temp }}/wesal-ci-validation.jks
-          WESAL_UPLOAD_STORE_PASSWORD: ${{ runner.temp }}-Wesal-CI-Store-91
-          WESAL_UPLOAD_KEY_ALIAS: wesal-ci-validation
-          WESAL_UPLOAD_KEY_PASSWORD: ${{ runner.temp }}-Wesal-CI-Key-91
-        run: flutter build appbundle --release
+          WESAL_UPLOAD_STORE_FILE="$KEYSTORE_PATH" \
+          WESAL_UPLOAD_STORE_PASSWORD="$STORE_PASSWORD" \
+          WESAL_UPLOAD_KEY_ALIAS="wesal-ci-validation" \
+          WESAL_UPLOAD_KEY_PASSWORD="$KEY_PASSWORD" \
+            flutter build appbundle --release
 
   session-repair-zip:
     if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'

@@ -1,6 +1,14 @@
 import java.util.Properties
 import java.io.FileInputStream
 
+plugins {
+    id("com.android.application")
+    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    id("dev.flutter.flutter-gradle-plugin")
+    // إضافة محرك خدمات جوجل وفايربيس بأسلوب Kotlin DSL
+    id("com.google.gms.google-services")
+}
+
 val releaseSigningProperties = Properties()
 val releaseSigningPropertiesFile = rootProject.file("key.properties")
 if (releaseSigningPropertiesFile.exists()) {
@@ -17,13 +25,6 @@ val releaseStorePassword = releaseSigningValue("storePassword", "WESAL_UPLOAD_ST
 val releaseKeyAlias = releaseSigningValue("keyAlias", "WESAL_UPLOAD_KEY_ALIAS")
 val releaseKeyPassword = releaseSigningValue("keyPassword", "WESAL_UPLOAD_KEY_PASSWORD")
 
-plugins {
-    id("com.android.application")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
-    id("dev.flutter.flutter-gradle-plugin")
-    // إضافة محرك خدمات جوجل وفايربيس بأسلوب Kotlin DSL
-    id("com.google.gms.google-services")
-}
 
 android {
     namespace = "com.example.wesal_app"
