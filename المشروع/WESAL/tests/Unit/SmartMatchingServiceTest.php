@@ -33,33 +33,45 @@ class SmartMatchingServiceTest extends TestCase
         $this->assertSame([7, 6, 2, 4, 8, 9], array_column($sorted, 'id'));
     }
 
-    public function test_only_selected_preferences_contribute_to_the_score(): void
+    public function test_only_selected_and_available_preferences_contribute_to_the_score(): void
     {
         $result = $this->service->scoreData([
             'preferred_country_id' => 12,
+            'religion_id' => 4,
+            'marital_status_id' => 2,
             'education' => 'لا يهم',
             'smoking_acceptable' => 'does_not_matter',
             'drinking_acceptable' => 'dose_not_matter',
         ], [
             'country_id' => 12,
+            'religion_id' => 4,
+            'marital_status_id' => 2,
         ]);
 
         $this->assertSame(100, $result['percentage']);
-        $this->assertSame(1, $result['criteria_count']);
-        $this->assertSame(1, $result['evaluated_criteria_count']);
+        $this->assertSame(3, $result['criteria_count']);
+        $this->assertSame(3, $result['evaluated_criteria_count']);
         $this->assertSame('calculated', $result['status']);
         $this->assertSame('country', $result['details'][0]['key']);
     }
 
     public function test_same_country_ranks_above_a_different_country(): void
     {
-        $expectations = ['preferred_country_id' => 12];
+        $expectations = [
+            'preferred_country_id' => 12,
+            'religion_id' => 4,
+            'marital_status_id' => 2,
+        ];
 
-        $sameCountry = $this->service->scoreData($expectations, ['country_id' => 12]);
-        $otherCountry = $this->service->scoreData($expectations, ['country_id' => 44]);
+        $sameCountry = $this->service->scoreData($expectations, [
+            'country_id' => 12, 'religion_id' => 4, 'marital_status_id' => 2,
+        ]);
+        $otherCountry = $this->service->scoreData($expectations, [
+            'country_id' => 44, 'religion_id' => 4, 'marital_status_id' => 2,
+        ]);
 
         $this->assertSame(100, $sameCountry['percentage']);
-        $this->assertSame(25, $otherCountry['percentage']);
+        $this->assertSame(64, $otherCountry['percentage']);
         $this->assertGreaterThan($otherCountry['percentage'], $sameCountry['percentage']);
     }
 
@@ -70,14 +82,16 @@ class SmartMatchingServiceTest extends TestCase
             'max_height' => 1.82,
             'min_weight' => 50,
             'max_weight' => 85,
+            'preferred_country_id' => 12,
         ], [
             'height' => 1.75,
             'weight' => 72,
+            'country_id' => 12,
         ]);
 
         $this->assertSame(100, $result['percentage']);
-        $this->assertSame(2, $result['criteria_count']);
-        $this->assertSame(2, $result['evaluated_criteria_count']);
+        $this->assertSame(3, $result['criteria_count']);
+        $this->assertSame(3, $result['evaluated_criteria_count']);
     }
 
     public function test_age_range_scores_inside_range_above_outside_range(): void
@@ -85,13 +99,19 @@ class SmartMatchingServiceTest extends TestCase
         $expectations = [
             'min_age' => 25,
             'max_age' => 35,
+            'preferred_country_id' => 12,
+            'religion_id' => 4,
         ];
 
-        $inside = $this->service->scoreData($expectations, ['age' => 30]);
-        $nearOutside = $this->service->scoreData($expectations, ['age' => 38]);
+        $inside = $this->service->scoreData($expectations, [
+            'age' => 30, 'country_id' => 12, 'religion_id' => 4,
+        ]);
+        $nearOutside = $this->service->scoreData($expectations, [
+            'age' => 38, 'country_id' => 12, 'religion_id' => 4,
+        ]);
 
         $this->assertSame(100, $inside['percentage']);
-        $this->assertSame(30, $nearOutside['percentage']);
+        $this->assertSame(79, $nearOutside['percentage']);
         $this->assertGreaterThan($nearOutside['percentage'], $inside['percentage']);
     }
 
@@ -100,24 +120,35 @@ class SmartMatchingServiceTest extends TestCase
         $result = $this->service->scoreData([
             'partner_age' => 25,
             'partner_max_age' => 35,
+            'preferred_country_id' => 12,
+            'religion_id' => 4,
         ], [
             'age' => 30,
+            'country_id' => 12,
+            'religion_id' => 4,
         ]);
 
         $this->assertSame(100, $result['percentage']);
-        $this->assertSame(1, $result['criteria_count']);
+        $this->assertSame(3, $result['criteria_count']);
     }
 
     public function test_candidate_outside_a_rejected_children_preference_loses_that_criterion(): void
     {
         $result = $this->service->scoreData([
             'children_acceptable' => 'no',
+            'preferred_country_id' => 12,
+            'religion_id' => 4,
+            'marital_status_id' => 2,
         ], [
             'children' => 2,
+            'country_id' => 12,
+            'religion_id' => 4,
+            'marital_status_id' => 2,
         ]);
 
-        $this->assertSame(0, $result['percentage']);
-        $this->assertSame(1, $result['criteria_count']);
+        $this->assertSame(90, $result['percentage']);
+        $this->assertSame(4, $result['criteria_count']);
+        $this->assertSame(0, $result['details'][3]['score']);
     }
 
     public function test_missing_candidate_data_is_not_counted_as_a_match_or_a_zero(): void
@@ -133,27 +164,31 @@ class SmartMatchingServiceTest extends TestCase
         $this->assertFalse($result['details'][0]['evaluated']);
     }
 
-    public function test_missing_candidate_criteria_remain_in_the_percentage_denominator(): void
+    public function test_missing_candidate_fields_are_excluded_from_the_percentage_denominator(): void
     {
         $result = $this->service->scoreData([
             'preferred_country_id' => 12, // weight 18
-            'religion_id' => 4,           // weight 10, but candidate data is missing
+            'religion_id' => 4,           // weight 10
+            'marital_status_id' => 2,     // weight 10
+            'eye_color' => 'brown',       // candidate data is missing
         ], [
             'country_id' => 12,
-            'religion_id' => null,
+            'religion_id' => 4,
+            'marital_status_id' => 2,
+            'eye_color' => null,
         ]);
 
-        // One exact criterion must not turn two selected preferences into 100%.
-        $this->assertSame(64, $result['percentage']);
-        $this->assertSame(2, $result['criteria_count']);
-        $this->assertSame(1, $result['evaluated_criteria_count']);
+        // The missing eye-colour weight is omitted, not counted as a mismatch.
+        $this->assertSame(100, $result['percentage']);
+        $this->assertSame(4, $result['criteria_count']);
+        $this->assertSame(3, $result['evaluated_criteria_count']);
         $this->assertSame('calculated', $result['status']);
         $this->assertSame(100, $result['details'][0]['score']);
-        $this->assertNull($result['details'][1]['score']);
-        $this->assertFalse($result['details'][1]['evaluated']);
+        $this->assertNull($result['details'][3]['score']);
+        $this->assertFalse($result['details'][3]['evaluated']);
     }
 
-    public function test_an_empty_candidate_does_not_receive_a_perfect_score_from_one_matching_field(): void
+    public function test_sparse_candidate_with_one_available_field_is_not_given_a_fake_percentage(): void
     {
         $result = $this->service->scoreData([
             'preferred_country_id' => 12,
@@ -168,10 +203,34 @@ class SmartMatchingServiceTest extends TestCase
             'professions' => [],
         ]);
 
-        // Country contributes 18 of the 45 selected weight points.
-        $this->assertSame(40, $result['percentage']);
+        $this->assertNull($result['percentage']);
         $this->assertSame(4, $result['criteria_count']);
         $this->assertSame(1, $result['evaluated_criteria_count']);
+        $this->assertSame('insufficient_data', $result['status']);
+    }
+
+    public function test_incomplete_candidate_is_scored_only_on_fields_that_are_available(): void
+    {
+        $result = $this->service->scoreData([
+            'preferred_country_id' => 12,
+            'religion_id' => 4,
+            'marital_status_id' => 2,
+            'min_age' => 25,
+            'max_age' => 35,
+            'profession' => 'مهندس',
+        ], [
+            'country_id' => 12,
+            'religion_id' => 4,
+            'marital_status_id' => 2,
+            'age' => null,
+            'professions' => [],
+        ]);
+
+        // Three available fields carry 38 points; missing age and profession
+        // are excluded, so the available data itself scores 100%.
+        $this->assertSame(100, $result['percentage']);
+        $this->assertSame(5, $result['criteria_count']);
+        $this->assertSame(3, $result['evaluated_criteria_count']);
         $this->assertSame('calculated', $result['status']);
     }
 
@@ -202,7 +261,7 @@ class SmartMatchingServiceTest extends TestCase
         $this->assertSame('no_preferences', $result['status']);
     }
 
-    public function test_a_single_selected_and_fully_evaluated_matching_preference_can_still_be_100_percent(): void
+    public function test_a_single_matching_preference_does_not_produce_a_trustworthy_percentage(): void
     {
         $result = $this->service->scoreData([
             'preferred_country_id' => 12,
@@ -210,23 +269,29 @@ class SmartMatchingServiceTest extends TestCase
             'country_id' => 12,
         ]);
 
-        $this->assertSame(100, $result['percentage']);
+        $this->assertNull($result['percentage']);
         $this->assertSame(1, $result['criteria_count']);
         $this->assertSame(1, $result['evaluated_criteria_count']);
-        $this->assertSame('calculated', $result['status']);
+        $this->assertSame('insufficient_data', $result['status']);
     }
 
     public function test_a_real_zero_match_is_preserved_when_data_is_present(): void
     {
         $result = $this->service->scoreData([
             'religion_id' => 4,
+            'marital_status_id' => 1,
+            'caste_id' => 2,
+            'family_value_id' => 3,
         ], [
             'religion_id' => 5,
+            'marital_status_id' => 2,
+            'caste_id' => 4,
+            'family_value_id' => 6,
         ]);
 
         $this->assertSame(0, $result['percentage']);
-        $this->assertSame(1, $result['criteria_count']);
-        $this->assertSame(1, $result['evaluated_criteria_count']);
+        $this->assertSame(4, $result['criteria_count']);
+        $this->assertSame(4, $result['evaluated_criteria_count']);
         $this->assertSame('calculated', $result['status']);
     }
 
@@ -234,12 +299,16 @@ class SmartMatchingServiceTest extends TestCase
     {
         $result = $this->service->scoreData([
             'profession' => 'مهندس برمجيات',
+            'preferred_country_id' => 12,
+            'religion_id' => 4,
         ], [
             'professions' => ['مُهَنْدِس برمجيات'],
+            'country_id' => 12,
+            'religion_id' => 4,
         ]);
 
         $this->assertSame(100, $result['percentage']);
-        $this->assertSame(1, $result['criteria_count']);
+        $this->assertSame(3, $result['criteria_count']);
     }
 
     public function test_does_not_matter_values_do_not_create_a_fake_match_score(): void
@@ -298,20 +367,28 @@ class SmartMatchingServiceTest extends TestCase
     {
         $result = $this->service->scoreData([
             'hair_color' => 'أشقر',
+            'preferred_country_id' => 12,
+            'religion_id' => 4,
         ], [
             'hair_color' => 'Blonde',
+            'country_id' => 12,
+            'religion_id' => 4,
         ]);
 
         $this->assertSame(100, $result['percentage']);
-        $this->assertSame(1, $result['evaluated_criteria_count']);
+        $this->assertSame(3, $result['evaluated_criteria_count']);
     }
 
     public function test_arabic_and_english_profession_labels_resolve_to_the_same_value(): void
     {
         $result = $this->service->scoreData([
             'profession' => 'Engineer',
+            'preferred_country_id' => 12,
+            'religion_id' => 4,
         ], [
             'professions' => ['مهندس'],
+            'country_id' => 12,
+            'religion_id' => 4,
         ]);
 
         $this->assertSame(100, $result['percentage']);
@@ -322,13 +399,17 @@ class SmartMatchingServiceTest extends TestCase
         $result = $this->service->scoreData([
             'personal_value' => 'Very Religious',
             'body_type' => 'Athletic',
+            'preferred_country_id' => 12,
+            'religion_id' => 4,
         ], [
             'personal_value' => 'ملتزم جداً',
             'body_type' => 'رياضي / متناسق',
+            'country_id' => 12,
+            'religion_id' => 4,
         ]);
 
         $this->assertSame(100, $result['percentage']);
-        $this->assertSame(2, $result['evaluated_criteria_count']);
+        $this->assertSame(4, $result['evaluated_criteria_count']);
     }
 
     public function test_partner_age_range_normalises_canonical_legacy_and_one_sided_values(): void
@@ -358,7 +439,8 @@ class SmartMatchingServiceTest extends TestCase
             'country_id' => 44,
         ]);
 
-        // Age scores 30% (three years outside the range); country scores 25%.
+        // Both data points are available, so they alone form the denominator.
+        // Age contributes 3.6 points and country contributes 4.5 of 30.
         $this->assertSame(27, $result['percentage']);
         $this->assertSame(2, $result['criteria_count']);
         $this->assertSame(2, $result['evaluated_criteria_count']);
