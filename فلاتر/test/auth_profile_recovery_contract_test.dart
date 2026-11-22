@@ -59,7 +59,7 @@ void main() {
       loginScreen = File('lib/screens/login_screen.dart').readAsStringSync();
     });
 
-    test('generic API 401 parsing never deletes the saved token', () {
+    test('generic API 401 does not delete the token or falsely report expiry', () {
       final start = apiService.indexOf('static String _parseErrorMessage');
       final end = apiService.indexOf(
         'static Future<Map<String, dynamic>?> get(',
@@ -70,6 +70,8 @@ void main() {
       final method = apiService.substring(start, end);
 
       expect(method, isNot(contains('clearToken(')));
+      expect(method, contains('لم يتم إنهاء جلسة تسجيل الدخول'));
+      expect(method, isNot(contains('انتهت جلسة تسجيل الدخول')));
       expect(apiService, contains("reason: 'user_by_token_401'"));
       expect(apiService, contains('expectedToken: token'));
     });
