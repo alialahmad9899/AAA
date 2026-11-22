@@ -300,7 +300,6 @@ class MemberModel {
 
     // 🟢 استخراج اسم الباقة الموحد والتأكد من قراءة كافة الاستجابات الممكنة
     final String parsedPackageName = _extractPackageName(json, basicInfo);
-    }
 
     return MemberModel(
       id: json['user_id'] ?? json['id'] ?? basicInfo['id'] ?? 0,
