@@ -1,6 +1,8 @@
 // Persistent account-scoped chat cache for offline reading and chat preferences.
 import 'dart:convert';
 
+import 'package:cryptography/cryptography.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../models/chat_model.dart';
@@ -9,7 +11,100 @@ class ChatLocalStore {
   ChatLocalStore._();
 
   static Database? _database;
+  static Future<SecretKey>? _cacheEncryptionKeyFuture;
   static const int maxMessagesPerThread = 2000;
+  static const String _encryptionKeyStorageName = 'wesal_chat_cache_aes_key_v1';
+  static const String _encryptedPayloadPrefix = 'enc:v1:';
+  static const AesGcm _payloadCipher = AesGcm.with256bits();
+  static const FlutterSecureStorage _secureStorage = FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock_this_device),
+  );
+
+  static Future<SecretKey> _cacheEncryptionKey() {
+    return _cacheEncryptionKeyFuture ??= _loadCacheEncryptionKey();
+  }
+
+  static Future<SecretKey> _loadCacheEncryptionKey() async {
+    final stored = await _secureStorage.read(key: _encryptionKeyStorageName);
+    if (stored != null && stored.isNotEmpty) {
+      try {
+        final bytes = base64Decode(stored);
+        if (bytes.length == 32) return SecretKey(bytes);
+      } catch (_) {
+        // Replace an invalid key rather than attempting unauthenticated reads.
+      }
+    }
+
+    final generated = await _payloadCipher.newSecretKey();
+    final bytes = await generated.extractBytes();
+    await _secureStorage.write(
+      key: _encryptionKeyStorageName,
+      value: base64Encode(bytes),
+    );
+    return SecretKey(bytes);
+  }
+
+  static Future<String> _encryptPayload(String plainText) async {
+    if (plainText.startsWith(_encryptedPayloadPrefix)) return plainText;
+    final key = await _cacheEncryptionKey();
+    final box = await _payloadCipher.encrypt(
+      utf8.encode(plainText),
+      secretKey: key,
+    );
+    return '$_encryptedPayloadPrefix${base64Encode(box.nonce)}:${base64Encode(box.cipherText)}:${base64Encode(box.mac.bytes)}';
+  }
+
+  static Future<String> _decryptPayload(String storedText) async {
+    if (!storedText.startsWith(_encryptedPayloadPrefix)) {
+      // Plaintext v3 rows are converted in the v4 database migration.
+      return storedText;
+    }
+    final parts = storedText.split(':');
+    if (parts.length != 5 || parts[0] != 'enc' || parts[1] != 'v1') {
+      throw const FormatException('Unsupported encrypted chat cache payload.');
+    }
+    final key = await _cacheEncryptionKey();
+    final box = SecretBox(
+      base64Decode(parts[3]),
+      nonce: base64Decode(parts[2]),
+      mac: Mac(base64Decode(parts[4])),
+    );
+    final clearBytes = await _payloadCipher.decrypt(box, secretKey: key);
+    return utf8.decode(clearBytes);
+  }
+
+  static Future<void> _encryptLegacyPayloads(DatabaseExecutor db) async {
+    final threadRows = await db.query(
+      'chat_threads',
+      columns: ['account_id', 'thread_id', 'payload'],
+    );
+    for (final row in threadRows) {
+      final payload = row['payload'] as String?;
+      if (payload == null || payload.startsWith(_encryptedPayloadPrefix)) continue;
+      await db.update(
+        'chat_threads',
+        {'payload': await _encryptPayload(payload)},
+        where: 'account_id = ? AND thread_id = ?',
+        whereArgs: [row['account_id'], row['thread_id']],
+      );
+    }
+
+    final messageRows = await db.query(
+      'chat_messages',
+      columns: ['account_id', 'thread_id', 'message_id', 'payload'],
+    );
+    for (final row in messageRows) {
+      final payload = row['payload'] as String?;
+      if (payload == null || payload.startsWith(_encryptedPayloadPrefix)) continue;
+      await db.update(
+        'chat_messages',
+        {'payload': await _encryptPayload(payload)},
+        where: 'account_id = ? AND thread_id = ? AND message_id = ?',
+        whereArgs: [row['account_id'], row['thread_id'], row['message_id']],
+      );
+    }
+  }
 
   static Future<Database> get _db async {
     if (_database != null) return _database!;
@@ -17,7 +112,7 @@ class ChatLocalStore {
     final path = '$databasePath/wesal_chat_cache.db';
     _database = await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE chat_threads (
@@ -137,6 +232,10 @@ class ChatLocalStore {
             {'sync_pending': 1},
           );
         }
+
+        if (oldVersion < 4) {
+          await _encryptLegacyPayloads(db);
+        }
       },
     );
     return _database!;
@@ -162,7 +261,7 @@ class ChatLocalStore {
           {
             'account_id': accountId,
             'thread_id': thread.id,
-            'payload': jsonEncode(thread.toJson()),
+            'payload': await _encryptPayload(jsonEncode(thread.toJson())),
             'updated_at': DateTime.now().millisecondsSinceEpoch,
           },
           conflictAlgorithm: ConflictAlgorithm.replace,
@@ -184,7 +283,7 @@ class ChatLocalStore {
     final result = <ChatThreadModel>[];
     for (final row in rows) {
       try {
-        final decoded = jsonDecode(row['payload'] as String);
+        final decoded = jsonDecode(await _decryptPayload(row['payload'] as String));
         if (decoded is Map) {
           result.add(
             ChatThreadModel.fromJson(Map<String, dynamic>.from(decoded)),
@@ -214,7 +313,7 @@ class ChatLocalStore {
             'account_id': accountId,
             'thread_id': threadId,
             'message_id': message.id,
-            'payload': jsonEncode(message.toJson()),
+            'payload': await _encryptPayload(jsonEncode(message.toJson())),
           },
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
@@ -259,7 +358,7 @@ class ChatLocalStore {
     return _withoutHiddenMessages(
       accountId,
       threadId,
-      _decodeMessages(rows, currentUserId ?? accountId),
+      await _decodeMessages(rows, currentUserId ?? accountId),
     );
   }
 
@@ -281,7 +380,7 @@ class ChatLocalStore {
       orderBy: 'message_id DESC',
       limit: limit + 1,
     );
-    final decodedMessages = _decodeMessages(
+    final decodedMessages = await _decodeMessages(
       rows.take(limit).toList().reversed.toList(),
       accountId,
       partnerUserId: partnerUserId,
@@ -292,7 +391,7 @@ class ChatLocalStore {
     };
   }
 
-  static List<ChatMessageModel> _decodeMessages(
+  static Future<List<ChatMessageModel>> _decodeMessages(
     List<Map<String, Object?>> rows,
     int currentUserId, {
     int partnerUserId = 0,
@@ -329,19 +428,20 @@ class ChatLocalStore {
     final rows = await (await _db).query(
       'chat_messages',
       columns: ['payload'],
-      where: 'account_id = ? AND thread_id = ? AND payload LIKE ?',
-      whereArgs: [accountId, threadId, '%$cleanQuery%'],
+      where: 'account_id = ? AND thread_id = ?',
+      whereArgs: [accountId, threadId],
       orderBy: 'message_id DESC',
-      limit: limit,
+      limit: maxMessagesPerThread,
     );
-    return _withoutHiddenMessages(
-      accountId,
-      threadId,
-      _decodeMessages(
-        rows.reversed.toList(),
-        currentUserId > 0 ? currentUserId : accountId,
-      ),
+    final decoded = await _decodeMessages(
+      rows.reversed.toList(),
+      currentUserId > 0 ? currentUserId : accountId,
     );
+    final matches = decoded
+        .where((message) => message.message.toLowerCase().contains(cleanQuery.toLowerCase()))
+        .toList();
+    final limited = matches.length > limit ? matches.sublist(0, limit) : matches;
+    return _withoutHiddenMessages(accountId, threadId, limited);
   }
 
   static Future<void> setMuted(

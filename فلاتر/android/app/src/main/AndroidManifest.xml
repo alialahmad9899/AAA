@@ -28,7 +28,8 @@
         android:name="${applicationName}"
         android:icon="@drawable/wesal_logo"
         android:enableOnBackInvokedCallback="true"
-        android:usesCleartextTraffic="true">
+        android:allowBackup="false"
+        android:fullBackupContent="false">
 
         <!-- ============================================================= -->
         <!-- النشاط الرئيسي للتطبيق (MainActivity)                         -->

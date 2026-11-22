@@ -44,6 +44,8 @@ dependencies:
   # مكتبة فتح الروابط الخارجية والتخزين الآمن
   url_launcher: ^6.3.0
   flutter_secure_storage: ^9.2.2
+  cryptography: ^2.9.0
+  cryptography_flutter: ^2.3.4
 
   # المكتبة الرسمية لعرض نافذة الدفع المباشرة والأصلية (Stripe Native Payment Sheet)
   flutter_stripe: ^11.2.0
