@@ -224,8 +224,101 @@ class _MainHomeScreenState extends State<MainHomeScreen>
       if (!_isBlocked) {
         _fetchNotificationsCount();
         unawaited(_loadAndShowAppAnnouncement());
+        unawaited(_showNotificationPermissionGuidance());
       }
     });
+  }
+
+  Future<void> _showNotificationPermissionGuidance() async {
+    if (!mounted) return;
+    final prefs = await SharedPreferences.getInstance();
+    final status = await NotificationService.getPermissionStatus();
+    if (!mounted || status == 'authorized' || status == 'provisional') return;
+
+    final bool hasShownGuidance =
+        prefs.getBool('notifications_permission_guidance_shown') ?? false;
+    if (status == 'notDetermined' && hasShownGuidance) return;
+    if (status == 'denied' && hasShownGuidance) return;
+
+    final bool isArabic = _currentLanguage.toLowerCase().startsWith('ar');
+    final bool? shouldRequest = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => Directionality(
+        textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+        child: AlertDialog(
+          backgroundColor: AppColors.cardColor,
+          title: Text(
+            isArabic ? 'فعّل تنبيهات وصال' : 'Enable Wesal notifications',
+            style: const TextStyle(
+              color: AppColors.textDark,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Cairo',
+            ),
+          ),
+          content: Text(
+            isArabic
+                ? 'حتى تصلك رسائل المحادثات والتنبيهات المهمة في وقتها، يمكنك السماح للتطبيق بإرسال الإشعارات.'
+                : 'Allow notifications so chat messages and important account updates can reach you on time.',
+            style: const TextStyle(color: AppColors.textMuted, fontFamily: 'Cairo'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(isArabic ? 'ليس الآن' : 'Not now'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(isArabic ? 'متابعة' : 'Continue'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    await prefs.setBool('notifications_permission_guidance_shown', true);
+    if (!mounted || shouldRequest != true) return;
+
+    final newStatus = await NotificationService.requestUserPermission();
+    if (!mounted ||
+        newStatus == 'authorized' ||
+        newStatus == 'provisional' ||
+        newStatus == 'notDetermined') {
+      return;
+    }
+
+    final bool? openSettings = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => Directionality(
+        textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+        child: AlertDialog(
+          backgroundColor: AppColors.cardColor,
+          title: Text(
+            isArabic ? 'الإشعارات متوقفة' : 'Notifications are disabled',
+            style: const TextStyle(color: AppColors.textDark, fontFamily: 'Cairo'),
+          ),
+          content: Text(
+            isArabic
+                ? 'رفضت صلاحية الإشعارات. يمكنك تفعيلها يدوياً من إعدادات التطبيق في جهازك.'
+                : 'Notification permission was denied. You can enable it manually in your device settings.',
+            style: const TextStyle(color: AppColors.textMuted, fontFamily: 'Cairo'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(isArabic ? 'إغلاق' : 'Close'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(isArabic ? 'فتح الإعدادات' : 'Open settings'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (openSettings == true) {
+      await NotificationService.openSystemNotificationSettings();
+    }
   }
 
   Future<void> _loadAndShowAppAnnouncement() async {

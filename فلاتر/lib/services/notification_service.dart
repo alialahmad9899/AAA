@@ -10,6 +10,11 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -177,21 +182,7 @@ class NotificationService {
         firebaseMessagingBackgroundHandler,
       );
 
-      try {
-        final NotificationSettings permission =
-            await _messaging.requestPermission(
-          alert: true,
-          badge: true,
-          sound: true,
-          provisional: false,
-        );
-        debugPrint(
-          '[Notifications] Authorization: ${permission.authorizationStatus}',
-        );
-      } catch (error) {
-        debugPrint('[Notifications] Permission request failed: $error');
-      }
-
+      // Permission is requested later from a contextual explanation on Home.
       await _ensureLocalNotificationsInitialized();
       await _configureForegroundPresentationOptions();
 
@@ -240,6 +231,48 @@ class NotificationService {
       debugPrint('[NotificationService Initialize] $error');
       debugPrintStack(stackTrace: stackTrace);
       rethrow;
+    }
+  }
+
+  static const MethodChannel _notificationSettingsChannel =
+      MethodChannel('com.wesalsyria.wesal/notification_settings');
+
+  static Future<String> getPermissionStatus() async {
+    try {
+      return (await _messaging.getNotificationSettings())
+          .authorizationStatus.name;
+    } catch (_) {
+      return 'unknown';
+    }
+  }
+
+  static Future<String> requestUserPermission() async {
+    try {
+      final settings = await _messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+        provisional: false,
+      );
+      return settings.authorizationStatus.name;
+    } catch (error) {
+      if (kDebugMode) debugPrint('[Notifications] Permission request failed.');
+      return 'unknown';
+    }
+  }
+
+  static Future<void> openSystemNotificationSettings() async {
+    try {
+      if (Platform.isAndroid) {
+        await _notificationSettingsChannel.invokeMethod<bool>(
+          'openAppNotificationSettings',
+        );
+      } else if (Platform.isIOS) {
+        final uri = Uri.parse('app-settings:');
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    } catch (error) {
+      if (kDebugMode) debugPrint('[Notifications] Could not open system settings.');
     }
   }
 
