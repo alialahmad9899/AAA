@@ -4755,8 +4755,8 @@ class ApiService {
               ? (decoded['message'] ?? '').toString()
               : '';
           final sanitizedBody = response.body
-              .replaceAll(RegExp(r'Bearer\\s+[^\\s,;]+'), 'Bearer [redacted]')
-              .replaceAll(RegExp(r'\\s+'), ' ')
+              .replaceAll(RegExp(r'Bearer\s+[^\s,;]+'), 'Bearer [redacted]')
+              .replaceAll(RegExp(r'\s+'), ' ')
               .trim();
           final rawBodyPreview = decoded is Map
               ? ''
