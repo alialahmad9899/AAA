@@ -202,9 +202,9 @@ class _MainHomeScreenState extends State<MainHomeScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        PendingProfileLinkService.openPending(context);
-      }
+      if (!mounted) return;
+      PendingProfileLinkService.markAuthenticatedHomeReady();
+      unawaited(PendingProfileLinkService.openPending(context));
     });
     _currentLanguage = widget.currentLanguage;
     WidgetsBinding.instance.addObserver(this);
@@ -581,6 +581,7 @@ class _MainHomeScreenState extends State<MainHomeScreen>
 
   @override
   void dispose() {
+    PendingProfileLinkService.markAuthenticatedHomeNotReady();
     _blockedStatusTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     NotificationService.foregroundMessageVersion

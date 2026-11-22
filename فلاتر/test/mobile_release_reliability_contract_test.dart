@@ -22,6 +22,8 @@ void main() {
     expect(pending, contains("pending_profile_deep_link_id"));
     expect(pending, contains('Navigator.of(context, rootNavigator: true).push'));
     expect(home, contains('PendingProfileLinkService.openPending(context)'));
+    expect(home, contains('PendingProfileLinkService.markAuthenticatedHomeReady()'));
+    expect(main, contains('isAuthenticatedHomeReady'));
   });
 
   test('signup resume stores profile progress securely but never serializes passwords', () async {
@@ -70,9 +72,11 @@ void main() {
     final auth = await File('../المشروع/WESAL/app/Http/Controllers/Api/AuthController.php').readAsString();
     final routes = await File('../المشروع/WESAL/routes/api.php').readAsString();
 
-    expect(api, contains('_pendingLogoutFcmTokenKey'));
-    expect(api, contains("post('/device-token/detach'"));
-    expect(auth, contains('function detach_device_token'));
-    expect(routes, contains("AuthController@detach_device_token"));
+    expect(api, contains('_pendingLogoutSessionKey'));
+    expect(api, contains("Uri.parse('$baseUrl/logout')"));
+    expect(api, contains("headers['Authorization'] = 'Bearer $oldAccessToken'"));
+    expect(auth, contains('public function logout(Request $request)'));
+    expect(auth, contains("->where('fcm_token', trim($deviceToken))"));
+    expect(routes, isNot(contains('device-token/detach')));
   });
 }

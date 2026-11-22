@@ -88,7 +88,6 @@ Route::group(['namespace' => 'Api', 'middleware' => ['app_language']], function 
     });
 
     Route::post('/logout', 'AuthController@logout')->name('logout')->middleware('auth:sanctum');
-    Route::post('/device-token/detach', 'AuthController@detach_device_token')->middleware('throttle:20,1');
     Route::get('/member-validate', 'MemberController@member_validate');
 
     Route::group(['middleware' => ['auth:sanctum']], function () {

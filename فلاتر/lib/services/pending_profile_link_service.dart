@@ -8,6 +8,17 @@ class PendingProfileLinkService {
   PendingProfileLinkService._();
 
   static const String _pendingMemberIdKey = 'pending_profile_deep_link_id';
+  static bool _authenticatedHomeReady = false;
+
+  static bool get isAuthenticatedHomeReady => _authenticatedHomeReady;
+
+  static void markAuthenticatedHomeReady() {
+    _authenticatedHomeReady = true;
+  }
+
+  static void markAuthenticatedHomeNotReady() {
+    _authenticatedHomeReady = false;
+  }
 
   static Future<void> save(int memberReference) async {
     if (memberReference <= 0) return;

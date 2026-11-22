@@ -567,7 +567,9 @@ class ApiService {
     }
   }
 
-  /// Validate the persisted Sanctum token with the backend before restoring a session.
+  /// Validate the persisted Sanctum token before restoring a member session.
+  /// A transient network failure keeps the local session available for offline use;
+  /// an actual 401 invalidates and clears it.
   static Future<bool> validateCurrentSession() async {
     final prefs = await SharedPreferences.getInstance();
     final rememberMe = prefs.getBool('remember_me') ?? true;
@@ -579,18 +581,36 @@ class ApiService {
     final token = await getToken();
     if (token == null || token.isEmpty) return false;
 
-    final response = await get('/user-by-token');
-    if (response != null &&
-        response['result'] == true &&
-        response['data'] is Map) {
+    try {
+      final headers = await _getHeaders();
+      final response = await http
+          .get(Uri.parse('$baseUrl/user-by-token'), headers: headers)
+          .timeout(_timeoutDuration);
+
+      if (response.statusCode == 401) {
+        await clearToken();
+        return false;
+      }
+      if (response.statusCode == 403) return false;
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        return false;
+      }
+
+      final dynamic decoded = jsonDecode(response.body);
+      if (decoded is Map) {
+        final result = decoded['result'];
+        final data = decoded['data'];
+        return result == true && data is Map;
+      }
+      return false;
+    } on TimeoutException {
+      return true;
+    } on SocketException {
+      return true;
+    } catch (error) {
+      if (kDebugMode) debugPrint('[Session Validation] Temporary validation failure.');
       return true;
     }
-
-    final status = response?['status'];
-    if (status == 401 || status == 403) {
-      await clearToken();
-    }
-    return false;
   }
 
   static Future<void> setRememberMe(bool remember) async {
@@ -629,35 +649,59 @@ class ApiService {
     await _secureStorage.delete(key: _signupDraftSecureKey);
   }
 
-  static const String _pendingLogoutFcmTokenKey = 'pending_logout_fcm_token';
+  static const String _pendingLogoutSessionKey = 'pending_logout_session_v1';
 
-  /// Retry a device-token detach after an earlier logout happened offline.
-  /// This endpoint only clears the exact opaque FCM token and returns no user data.
+  /// Retry a logout that could not reach Laravel before the app cleared local auth.
+  /// The previous Sanctum token is held only in secure storage and is used solely
+  /// to repeat the same authenticated /logout operation.
   static Future<void> syncPendingLogout() async {
     try {
-      final pendingToken =
-          await _secureStorage.read(key: _pendingLogoutFcmTokenKey);
-      if (pendingToken == null || pendingToken.trim().isEmpty) return;
+      final raw = await _secureStorage.read(key: _pendingLogoutSessionKey);
+      if (raw == null || raw.trim().isEmpty) return;
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return;
 
-      final response = await post('/device-token/detach', {
-        'device_token': pendingToken,
-      });
-      if (response != null && response['result'] == true) {
-        await _secureStorage.delete(key: _pendingLogoutFcmTokenKey);
+      final oldAccessToken = (decoded['access_token'] ?? '').toString().trim();
+      final oldDeviceToken = (decoded['device_token'] ?? '').toString().trim();
+      if (oldAccessToken.isEmpty) {
+        await _secureStorage.delete(key: _pendingLogoutSessionKey);
+        return;
+      }
+
+      final headers = await _getHeaders();
+      headers['Authorization'] = 'Bearer $oldAccessToken';
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/logout'),
+            headers: headers,
+            body: jsonEncode({
+              if (oldDeviceToken.isNotEmpty) 'device_token': oldDeviceToken,
+            }),
+          )
+          .timeout(_timeoutDuration);
+
+      // A successful logout or an already-revoked token both mean the old
+      // installation session can no longer receive authenticated pushes.
+      if ((response.statusCode >= 200 && response.statusCode < 300) ||
+          response.statusCode == 401 ||
+          response.statusCode == 403) {
+        await _secureStorage.delete(key: _pendingLogoutSessionKey);
       }
     } catch (error) {
-      if (kDebugMode) debugPrint('[Pending Logout] Device token detach deferred.');
+      if (kDebugMode) debugPrint('[Pending Logout] Secure retry deferred.');
     }
   }
 
-  /// Log out and queue FCM detachment when the network is unavailable.
+  /// Log out locally immediately and securely queue the old Sanctum session
+  /// if the server cannot be reached. The queued session is never reused for login.
   static Future<Map<String, dynamic>?> logout() async {
+    final oldAccessToken = await getToken();
     String? deviceToken;
     try {
       try {
         deviceToken = await FirebaseMessaging.instance.getToken();
       } catch (_) {
-        // The cached token is the last known registration for this install.
+        // The cached token is the last known registration for this installation.
       }
 
       if (deviceToken == null || deviceToken.trim().isEmpty) {
@@ -673,28 +717,34 @@ class ApiService {
           response != null && response['result'] == true;
 
       if (serverLogoutSucceeded) {
-        await _secureStorage.delete(key: _pendingLogoutFcmTokenKey);
-      } else if (deviceToken != null && deviceToken.trim().isNotEmpty) {
+        await _secureStorage.delete(key: _pendingLogoutSessionKey);
+      } else if (oldAccessToken != null && oldAccessToken.isNotEmpty) {
         await _secureStorage.write(
-          key: _pendingLogoutFcmTokenKey,
-          value: deviceToken.trim(),
+          key: _pendingLogoutSessionKey,
+          value: jsonEncode({
+            'access_token': oldAccessToken,
+            'device_token': deviceToken?.trim() ?? '',
+          }),
         );
       }
 
       await clearToken();
       return response;
     } catch (error) {
-      if (deviceToken != null && deviceToken.trim().isNotEmpty) {
+      if (oldAccessToken != null && oldAccessToken.isNotEmpty) {
         try {
           await _secureStorage.write(
-            key: _pendingLogoutFcmTokenKey,
-            value: deviceToken.trim(),
+            key: _pendingLogoutSessionKey,
+            value: jsonEncode({
+              'access_token': oldAccessToken,
+              'device_token': deviceToken?.trim() ?? '',
+            }),
           );
         } catch (_) {
           // Local session cleanup remains mandatory even if queue persistence fails.
         }
       }
-      if (kDebugMode) debugPrint('[API] Logout request failed; FCM detach queued when possible.');
+      if (kDebugMode) debugPrint('[API] Logout request failed; secure retry queued when possible.');
       await clearToken();
       return {
         'result': false,

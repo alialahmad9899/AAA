@@ -78,8 +78,16 @@ void _setupDeepLinks() async {
 void _handleDeepLinkUri(Uri uri) {
   final int? memberReference = MemberProfileLink.parseProfileUri(uri);
   if (memberReference == null) return;
-  // Keep the destination until MainHomeScreen confirms the authenticated route.
-  unawaited(PendingProfileLinkService.save(memberReference));
+
+  unawaited(() async {
+    await PendingProfileLinkService.save(memberReference);
+    if (!PendingProfileLinkService.isAuthenticatedHomeReady) return;
+
+    final context = FCMService.navigatorKey.currentContext;
+    if (context != null && context.mounted) {
+      await PendingProfileLinkService.openPending(context);
+    }
+  }());
 }
 
 /// الكلاس الرئيسي للتطبيق المسؤول عن ضبط الثيم العام والمسار الابتدائي
