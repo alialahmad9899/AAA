@@ -46,9 +46,9 @@ class ChatViewResource extends JsonResource
         }
 
         return [
-            'id'                => $this->id,
+            'id'             => $this->id,
             'client_message_id' => $this->client_message_id,
-            'chat_thread_id'    => $this->chat_thread_id,
+            'chat_thread_id' => $this->chat_thread_id,
             'sender_user_id' => $this->sender_user_id,
             'message'        => $this->message,
             'attachment'     => $attachments,
