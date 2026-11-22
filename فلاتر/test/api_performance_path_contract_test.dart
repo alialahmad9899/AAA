@@ -41,6 +41,14 @@ void main() {
     expect(screen, contains('page: nextPage'));
   });
 
+  test('home setup parallelizes local reads and pauses blocked-status polling in background', () async {
+    final home = await File('lib/screens/main_home_screen.dart').readAsString();
+    expect(home, contains('await Future.wait<void>(['));
+    expect(home, contains('void _startBlockedStatusTimer()'));
+    expect(home, contains('if (state == AppLifecycleState.resumed)'));
+    expect(home, contains('_blockedStatusTimer = null;'));
+  });
+
   test('FCM registration runs in the background after login and signup', () async {
     final login = await File('lib/screens/login_screen.dart').readAsString();
     final signup = await File('lib/screens/signup_screen.dart').readAsString();

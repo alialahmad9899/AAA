@@ -214,22 +214,36 @@ class _MainHomeScreenState extends State<MainHomeScreen>
     // Retry now without delaying the first home frame.
     unawaited(NotificationService.syncCurrentToken().then<void>((_) {}));
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await _loadSavedLanguage();
+      await Future.wait<void>([
+        _loadSavedLanguage(),
+        _loadCachedBlockedStatus(),
+      ]);
       if (!mounted) return;
-      await _loadCachedBlockedStatus();
       await _refreshBlockedStatus();
       if (!mounted) return;
-      _blockedStatusTimer?.cancel();
-      _blockedStatusTimer = Timer.periodic(
-        const Duration(seconds: 20),
-        (_) => unawaited(_refreshBlockedStatus()),
-      );
+      _startBlockedStatusTimer();
       if (!_isBlocked) {
         _fetchNotificationsCount();
         unawaited(_loadAndShowAppAnnouncement());
         unawaited(_showNotificationPermissionGuidance());
       }
     });
+  }
+
+  void _startBlockedStatusTimer() {
+    if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
+      return;
+    }
+    _blockedStatusTimer?.cancel();
+    _blockedStatusTimer = Timer.periodic(
+      const Duration(seconds: 20),
+      (_) {
+        if (WidgetsBinding.instance.lifecycleState ==
+            AppLifecycleState.resumed) {
+          unawaited(_refreshBlockedStatus());
+        }
+      },
+    );
   }
 
   Future<void> _showNotificationPermissionGuidance() async {
@@ -574,11 +588,15 @@ class _MainHomeScreenState extends State<MainHomeScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      _startBlockedStatusTimer();
       unawaited(_refreshBlockedStatus().then((_) {
         if (!mounted || _isBlocked) return;
         _fetchNotificationsCount();
         unawaited(NotificationService.syncCurrentToken());
       }));
+    } else {
+      _blockedStatusTimer?.cancel();
+      _blockedStatusTimer = null;
     }
   }
 
