@@ -9,6 +9,7 @@ class PendingProfileLinkService {
 
   static const String _pendingMemberIdKey = 'pending_profile_deep_link_id';
   static bool _authenticatedHomeReady = false;
+  static bool _openingPendingRoute = false;
 
   static bool get isAuthenticatedHomeReady => _authenticatedHomeReady;
 
@@ -27,17 +28,28 @@ class PendingProfileLinkService {
   }
 
   static Future<void> openPending(BuildContext context) async {
-    if (!context.mounted) return;
-    final prefs = await SharedPreferences.getInstance();
-    final memberReference = prefs.getInt(_pendingMemberIdKey);
-    if (memberReference == null || memberReference <= 0) return;
+    if (!context.mounted || !_authenticatedHomeReady || _openingPendingRoute) {
+      return;
+    }
+    _openingPendingRoute = true;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final memberReference = prefs.getInt(_pendingMemberIdKey);
+      if (memberReference == null || memberReference <= 0) return;
 
-    await prefs.remove(_pendingMemberIdKey);
-    if (!context.mounted) return;
-    await Navigator.of(context, rootNavigator: true).push(
-      MaterialPageRoute(
-        builder: (_) => MemberProfileScreen(userId: memberReference),
-      ),
-    );
+      await prefs.remove(_pendingMemberIdKey);
+      if (!context.mounted || !_authenticatedHomeReady) {
+        // Keep the reference if the authenticated route disappeared meanwhile.
+        await prefs.setInt(_pendingMemberIdKey, memberReference);
+        return;
+      }
+      await Navigator.of(context, rootNavigator: true).push(
+        MaterialPageRoute(
+          builder: (_) => MemberProfileScreen(userId: memberReference),
+        ),
+      );
+    } finally {
+      _openingPendingRoute = false;
+    }
   }
 }
