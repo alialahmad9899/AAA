@@ -10,7 +10,7 @@ void main() {
     expect(api, contains(r"Uri.parse('$baseUrl/user-by-token')"));
     expect(api, contains("if (response.statusCode == 401)"));
     expect(api, contains("if (response.statusCode == 403) return false;"));
-    expect(api, contains("await clearToken()"));
+    expect(api, contains("await clearToken(reason: 'user_by_token_401', expectedToken: token);"));
     expect(intro, contains('ApiService.validateCurrentSession()'));
   });
 
