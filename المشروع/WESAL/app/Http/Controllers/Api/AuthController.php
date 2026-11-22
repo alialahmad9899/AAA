@@ -369,6 +369,25 @@ class AuthController extends Controller
     }
 
     /**
+     * Remove a stale FCM registration from the device after an offline logout.
+     * This endpoint accepts only the opaque token and reveals no account data.
+     */
+    public function detach_device_token(Request $request)
+    {
+        $validated = $request->validate([
+            'device_token' => ['required', 'string', 'max:4096'],
+        ]);
+
+        User::where('fcm_token', trim($validated['device_token']))
+            ->update(['fcm_token' => null]);
+
+        return response()->json([
+            'result' => true,
+            'message' => translate('device token detached'),
+        ]);
+    }
+
+    /**
      * Log in success
      */
     protected function authResponse($user)

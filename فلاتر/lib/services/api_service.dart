@@ -567,24 +567,72 @@ class ApiService {
     }
   }
 
-  /// 🟢 دالة تسجيل الخروج المباشرة وإبلاغ سيرفر Laravel بتصفير الجلسة وتوكن FCM
-  static Future<Map<String, dynamic>?> logout() async {
+  static const String _pendingLogoutFcmTokenKey = 'pending_logout_fcm_token';
+
+  /// Retry a device-token detach after an earlier logout happened offline.
+  /// This endpoint only clears the exact opaque FCM token and returns no user data.
+  static Future<void> syncPendingLogout() async {
     try {
-      String? deviceToken;
+      final pendingToken =
+          await _secureStorage.read(key: _pendingLogoutFcmTokenKey);
+      if (pendingToken == null || pendingToken.trim().isEmpty) return;
+
+      final response = await post('/device-token/detach', {
+        'device_token': pendingToken,
+      });
+      if (response != null && response['result'] == true) {
+        await _secureStorage.delete(key: _pendingLogoutFcmTokenKey);
+      }
+    } catch (error) {
+      if (kDebugMode) debugPrint('[Pending Logout] Device token detach deferred.');
+    }
+  }
+
+  /// Log out and queue FCM detachment when the network is unavailable.
+  static Future<Map<String, dynamic>?> logout() async {
+    String? deviceToken;
+    try {
       try {
         deviceToken = await FirebaseMessaging.instance.getToken();
-      } catch (e) {
-        if (kDebugMode) debugPrint('⚠️ تعذر قراءة FCM token عند الخروج: $e');
+      } catch (_) {
+        // The cached token is the last known registration for this install.
       }
-      if (kDebugMode) debugPrint('🌐 [API POST] Logout -> $baseUrl/logout');
+
+      if (deviceToken == null || deviceToken.trim().isEmpty) {
+        final prefs = await SharedPreferences.getInstance();
+        deviceToken = prefs.getString('cached_fcm_token');
+      }
+
       final response = await post('/logout', {
-        if (deviceToken != null && deviceToken.isNotEmpty)
-          'device_token': deviceToken,
+        if (deviceToken != null && deviceToken.trim().isNotEmpty)
+          'device_token': deviceToken.trim(),
       });
+      final bool serverLogoutSucceeded =
+          response != null && response['result'] == true;
+
+      if (serverLogoutSucceeded) {
+        await _secureStorage.delete(key: _pendingLogoutFcmTokenKey);
+      } else if (deviceToken != null && deviceToken.trim().isNotEmpty) {
+        await _secureStorage.write(
+          key: _pendingLogoutFcmTokenKey,
+          value: deviceToken.trim(),
+        );
+      }
+
       await clearToken();
       return response;
-    } catch (e) {
-      if (kDebugMode) debugPrint('❌ [API ERROR Logout]: $e');
+    } catch (error) {
+      if (deviceToken != null && deviceToken.trim().isNotEmpty) {
+        try {
+          await _secureStorage.write(
+            key: _pendingLogoutFcmTokenKey,
+            value: deviceToken.trim(),
+          );
+        } catch (_) {
+          // Local session cleanup remains mandatory even if queue persistence fails.
+        }
+      }
+      if (kDebugMode) debugPrint('[API] Logout request failed; FCM detach queued when possible.');
       await clearToken();
       return {
         'result': false,

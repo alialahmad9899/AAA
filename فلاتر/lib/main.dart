@@ -18,6 +18,7 @@ import 'utils/member_profile_link.dart';
 
 // 🟢 خدمة الإشعارات المركزية مع مفتاح الملاحة العام
 import 'services/notification_service.dart';
+import 'services/api_service.dart';
 import 'services/fcm_service.dart';
 
 void main() {
@@ -36,6 +37,7 @@ void main() {
 
 Future<void> _initializeNotificationServices() async {
   try {
+    await ApiService.syncPendingLogout();
     await NotificationService.initialize();
     // A cold-started, already-authenticated member must register the current
     // FCM token even though no login screen is shown this time.

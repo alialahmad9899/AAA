@@ -20,6 +20,7 @@ import '../../../services/api_service.dart';
 import '../../../utils/package_catalog_utils.dart';
 import '../../../services/profile_cache_service.dart';
 import '../../../services/notification_service.dart';
+import '../../../services/chat_local_store.dart';
 import '../../../models/member_profile_model.dart';
 import '../../../widgets/about_app_dialog.dart';
 import '../../../widgets/app_action_bottom_sheet.dart';
@@ -380,6 +381,10 @@ class AccountTabState extends State<AccountTab> {
   }
 
   Future<void> _performFullLogout() async {
+    // Read the account partition before ApiService clears the session.
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final int accountId = prefs.getInt('user_id') ?? 0;
+
     // إيقاف ربط التوكن فور تأكيد المستخدم.
     NotificationService.resetSession();
 
@@ -388,10 +393,12 @@ class AccountTabState extends State<AccountTab> {
     } catch (e) {
       debugPrint("⚠️ تعذر إتمام طلب تسجيل الخروج على السيرفر: $e");
     } finally {
-      // تنظيف بيانات الجلسة فقط مع الإبقاء على لغة التطبيق وإعداداته العامة.
+      // Clear only this account's local chat partition and keep app-wide settings.
+      if (accountId > 0) {
+        await ChatLocalStore.clearAccount(accountId);
+      }
       await ApiService.clearToken();
       await ProfileCacheService.clearCache();
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.remove('last_processed_initial_msg_id');
 
       if (mounted) {

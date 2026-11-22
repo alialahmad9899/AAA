@@ -75,6 +75,8 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
+      // Complete a queued offline FCM detach before binding this install to a new account.
+      await ApiService.syncPendingLogout();
       // 1. إرسال طلب تسجيل الدخول للسيرفر
       final result = await ApiService.signin(
         _emailController.text.trim(),
