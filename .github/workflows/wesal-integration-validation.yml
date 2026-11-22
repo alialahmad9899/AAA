@@ -82,6 +82,11 @@ jobs:
             "المشروع/WESAL/app/Services/InterestService.php"
             "المشروع/WESAL/app/Http/Requests/ChatRequest.php"
             "المشروع/WESAL/app/Http/Resources/Chat/ChatViewResource.php"
+            "المشروع/WESAL/app/Http/Resources/ChatResource.php"
+            "المشروع/WESAL/app/Http/Resources/MyInterestResource.php"
+            "المشروع/WESAL/app/Http/Resources/ExpressInterestResource.php"
+            "المشروع/WESAL/app/Models/ExpressInterest.php"
+            "المشروع/WESAL/tests/Unit/ApiPerformanceQueryContractTest.php"
             "المشروع/WESAL/app/Services/ChatService.php"
             "المشروع/WESAL/database/migrations/2026_11_22_000003_add_client_message_id_to_chats_table.php"
             "المشروع/WESAL/tests/Unit/InterestServiceOwnershipTest.php"
@@ -173,6 +178,7 @@ jobs:
             phpunit --no-configuration tests/Unit/InterestServiceOwnershipTest.php
             phpunit --no-configuration tests/Unit/InterestOwnershipDatabaseTest.php
             phpunit --no-configuration tests/Unit/MemberListingFiltersPaginationTest.php
+            phpunit --no-configuration tests/Unit/ApiPerformanceQueryContractTest.php
             phpunit --no-configuration tests/Unit/ChatMessageIdempotencyContractTest.php
             phpunit --no-configuration tests/Unit/VipServiceCatalogOrderTest.php
             phpunit --no-configuration tests/Unit/PackagePresentationTest.php

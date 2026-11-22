@@ -21,10 +21,12 @@ class MemberListingFiltersPaginationTest extends TestCase
     public function test_member_listing_applies_empty_filter_results_without_broadening_results(): void
     {
         $method = $this->listingMethod();
-        $expectedWhereIn = <<<'SOURCE'
-$users_query->whereIn('id', $user_ids);
+        $expectedSubquery = <<<'SOURCE'
+$users_query->whereIn('id', Member::query()
+            ->select('user_id')
 SOURCE;
-        self::assertStringContainsString($expectedWhereIn, $method);
+        self::assertStringContainsString($expectedSubquery, $method);
+        self::assertStringNotContainsString("->pluck('user_id')->toArray()", $method);
         self::assertStringNotContainsString('if (count($user_ids) > 0)', $method);
     }
 
