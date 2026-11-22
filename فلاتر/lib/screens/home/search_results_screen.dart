@@ -52,7 +52,6 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
   bool _isLoadingMore = false;
   bool _hasMore = false;
   int _currentPage = 1;
-  int _lastPage = 1;
   int _totalResults = 0;
   List<MemberModel> _results = [];
   String? _errorMessage;
@@ -162,7 +161,6 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
       _isLoadingMore = false;
       _hasMore = false;
       _currentPage = 1;
-      _lastPage = 1;
       _totalResults = 0;
       _errorMessage = null;
       _loadMoreError = null;
@@ -187,7 +185,6 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
         setState(() {
           _results = page.members;
           _currentPage = page.currentPage;
-          _lastPage = page.lastPage;
           _totalResults = page.total;
           _hasMore = page.hasMore;
           _isLoading = false;
@@ -234,7 +231,6 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
       setState(() {
         _results = [..._results, ...appended];
         _currentPage = page.currentPage;
-        _lastPage = page.lastPage;
         _totalResults = page.total;
         _hasMore = page.hasMore;
         _isLoadingMore = false;

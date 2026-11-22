@@ -1955,7 +1955,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
           }
         }
         if (allSuccess) {
-          if (index == 2 && astroPayload.isNotEmpty) {
+          if (index == 2) {
             _recordLoadedProfileValue(
               'astronomic_information',
               'sun_sign',

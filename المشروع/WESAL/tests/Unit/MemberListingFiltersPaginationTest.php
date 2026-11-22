@@ -40,7 +40,10 @@ SOURCE;
         self::assertStringContainsString($religionQuery, $method);
         self::assertStringContainsString($stateQuery, $method);
         self::assertStringContainsString('$users_query->paginate($perPage', $method);
-        self::assertStringContainsString("'has_more' => $membersPage->hasMorePages()", $method);
+        $paginationFlag = <<<'SOURCE'
+'has_more' => $membersPage->hasMorePages()
+SOURCE;
+        self::assertStringContainsString($paginationFlag, $method);
         self::assertStringContainsString("'per_page' => ['sometimes', 'integer', 'min:1', 'max:50']", $method);
     }
 }

@@ -15,7 +15,7 @@ class ChatLocalStore {
   static const int maxMessagesPerThread = 2000;
   static const String _encryptionKeyStorageName = 'wesal_chat_cache_aes_key_v1';
   static const String _encryptedPayloadPrefix = 'enc:v1:';
-  static const AesGcm _payloadCipher = AesGcm.with256bits();
+  static final AesGcm _payloadCipher = AesGcm.with256bits();
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
     iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock_this_device),
@@ -395,11 +395,11 @@ class ChatLocalStore {
     List<Map<String, Object?>> rows,
     int currentUserId, {
     int partnerUserId = 0,
-  }) {
+  }) async {
     final result = <ChatMessageModel>[];
     for (final row in rows) {
       try {
-        final decoded = jsonDecode(row['payload'] as String);
+        final decoded = jsonDecode(await _decryptPayload(row['payload'] as String));
         if (decoded is Map) {
           result.add(
             ChatMessageModel.fromJson(
@@ -440,7 +440,9 @@ class ChatLocalStore {
     final matches = decoded
         .where((message) => message.message.toLowerCase().contains(cleanQuery.toLowerCase()))
         .toList();
-    final limited = matches.length > limit ? matches.sublist(0, limit) : matches;
+    final limited = matches.length > limit
+        ? matches.sublist(matches.length - limit)
+        : matches;
     return _withoutHiddenMessages(accountId, threadId, limited);
   }
 
