@@ -366,7 +366,7 @@ class SmartMatchingServiceTest extends TestCase
         ]);
 
         // The text similarity itself is 50%; the other two criteria are also evaluated.
-        $this->assertSame(50, $result['details'][0]['score']);
+        $this->assertSame(50, $result['details'][2]['score']);
         $this->assertSame('calculated', $result['status']);
     }
 
