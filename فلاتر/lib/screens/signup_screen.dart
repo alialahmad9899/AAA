@@ -684,8 +684,13 @@ class _SignupScreenState extends State<SignupScreen> with WidgetsBindingObserver
 
         // Read the current user's rows first. This makes retries safe even after
         // the app is closed or the previous create response was interrupted.
-        final educationResponse =
-            await ApiService.getEducation(lang: widget.currentLanguage);
+        // Education and career are independent reads; fetch both over the
+        // persistent HTTP connection without serialising two network round-trips.
+        final existingProfileRecords = await Future.wait([
+          ApiService.getEducation(lang: widget.currentLanguage),
+          ApiService.getCareer(lang: widget.currentLanguage),
+        ]);
+        final educationResponse = existingProfileRecords[0];
         if (educationResponse == null || educationResponse['result'] == false) {
           throw _SignupStepSaveException(
             isAr
@@ -703,96 +708,119 @@ class _SignupScreenState extends State<SignupScreen> with WidgetsBindingObserver
           'institution': _institutionController.text.trim(),
         };
         final educationFingerprint = jsonEncode(educationPayload);
-        if (_educationSavedFingerprint != educationFingerprint) {
-          if (_educationSavedFingerprint != null && _educationRecordId == null) {
-            throw _SignupStepSaveException(
-              isAr
-                  ? 'تم حفظ التعليم سابقاً، لكن الخادم لم يُرجع معرّف السجل اللازم لتعديله. لم نكرر الإرسال حتى لا ينشأ سجل مكرر.'
-                  : 'Education was saved already, but the server did not return its record ID. It was not resent to avoid a duplicate row.',
-            );
-          }
-          final educationRequest = <String, dynamic>{
-            ...educationPayload,
-            if (_educationRecordId != null) 'id': _educationRecordId,
-          };
-          final result = await _requireSignupSave(
-            ApiService.updateEducation(
-              educationRequest,
-              lang: widget.currentLanguage,
-            ),
-            isAr ? 'تعذر حفظ البيانات التعليمية' : 'Failed to save education details',
-          );
-          _educationRecordId ??=
-              _extractRecordId(result, const {'id', 'education_id'});
-          _educationSavedFingerprint = educationFingerprint;
+        Future<void> saveEducation() async {
+          
+                    if (_educationSavedFingerprint != null && _educationRecordId == null) {
+                      throw _SignupStepSaveException(
+                        isAr
+                            ? 'تم حفظ التعليم سابقاً، لكن الخادم لم يُرجع معرّف السجل اللازم لتعديله. لم نكرر الإرسال حتى لا ينشأ سجل مكرر.'
+                            : 'Education was saved already, but the server did not return its record ID. It was not resent to avoid a duplicate row.',
+                      );
+                    }
+                    final educationRequest = <String, dynamic>{
+                      ...educationPayload,
+                      if (_educationRecordId != null) 'id': _educationRecordId,
+                    };
+                    final result = await _requireSignupSave(
+                      ApiService.updateEducation(
+                        educationRequest,
+                        lang: widget.currentLanguage,
+                      ),
+                      isAr ? 'تعذر حفظ البيانات التعليمية' : 'Failed to save education details',
+                    );
+                    _educationRecordId ??=
+                        _extractRecordId(result, const {'id', 'education_id'});
+                    _educationSavedFingerprint = educationFingerprint;
+                  }
+          
+                  final careerResponse = existingProfileRecords[1];
+                  if (careerResponse == null || careerResponse['result'] == false) {
+                    throw _SignupStepSaveException(
+                      isAr
+                          ? 'تعذر التحقق من سجل العمل الحالي. لم نرسل طلب إنشاء جديد لتجنب التكرار.'
+                          : 'Could not verify existing career records. No create request was sent to avoid duplicates.',
+                    );
+                  }
+                  _careerRecordId ??= _extractRecordId(
+                    careerResponse,
+                    const {'id', 'career_id'},
+                  );
+          
+                  final careerPayload = <String, dynamic>{
+                    'designation': _designationController.text.trim(),
+                    if (_companyController.text.trim().isNotEmpty)
+                      'company': _companyController.text.trim(),
         }
 
-        final careerResponse =
-            await ApiService.getCareer(lang: widget.currentLanguage);
-        if (careerResponse == null || careerResponse['result'] == false) {
-          throw _SignupStepSaveException(
-            isAr
-                ? 'تعذر التحقق من سجل العمل الحالي. لم نرسل طلب إنشاء جديد لتجنب التكرار.'
-                : 'Could not verify existing career records. No create request was sent to avoid duplicates.',
-          );
+                Future<void> saveCareer() async {
+          
+                    if (_careerSavedFingerprint != null && _careerRecordId == null) {
+                      throw _SignupStepSaveException(
+                        isAr
+                            ? 'تم حفظ العمل سابقاً، لكن الخادم لم يُرجع معرّف السجل اللازم لتعديله. لم نكرر الإرسال حتى لا ينشأ سجل مكرر.'
+                            : 'Career was saved already, but the server did not return its record ID. It was not resent to avoid a duplicate row.',
+                      );
+                    }
+                    final careerRequest = <String, dynamic>{
+                      ...careerPayload,
+                      if (_careerRecordId != null) 'id': _careerRecordId,
+                    };
+                    final result = await _requireSignupSave(
+                      ApiService.updateCareer(
+                        careerRequest,
+                        lang: widget.currentLanguage,
+                      ),
+                      isAr ? 'تعذر حفظ بيانات العمل' : 'Failed to save career details',
+                    );
+                    _careerRecordId ??=
+                        _extractRecordId(result, const {'id', 'career_id'});
+                    _careerSavedFingerprint = careerFingerprint;
         }
-        _careerRecordId ??= _extractRecordId(
-          careerResponse,
-          const {'id', 'career_id'},
-        );
 
-        final careerPayload = <String, dynamic>{
-          'designation': _designationController.text.trim(),
-          if (_companyController.text.trim().isNotEmpty)
-            'company': _companyController.text.trim(),
-        };
-        final careerFingerprint = jsonEncode(careerPayload);
-        if (_careerSavedFingerprint != careerFingerprint) {
-          if (_careerSavedFingerprint != null && _careerRecordId == null) {
-            throw _SignupStepSaveException(
-              isAr
-                  ? 'تم حفظ العمل سابقاً، لكن الخادم لم يُرجع معرّف السجل اللازم لتعديله. لم نكرر الإرسال حتى لا ينشأ سجل مكرر.'
-                  : 'Career was saved already, but the server did not return its record ID. It was not resent to avoid a duplicate row.',
-            );
-          }
-          final careerRequest = <String, dynamic>{
-            ...careerPayload,
-            if (_careerRecordId != null) 'id': _careerRecordId,
-          };
-          final result = await _requireSignupSave(
-            ApiService.updateCareer(
-              careerRequest,
-              lang: widget.currentLanguage,
-            ),
-            isAr ? 'تعذر حفظ بيانات العمل' : 'Failed to save career details',
-          );
-          _careerRecordId ??=
-              _extractRecordId(result, const {'id', 'career_id'});
-          _careerSavedFingerprint = careerFingerprint;
-        }
+        // These records live in separate tables. Wait for both writes, but do
+        // not force the user through two sequential network round-trips.
+        await Future.wait<void>([saveEducation(), saveCareer()]);
+
+        final preferenceWrites = <Future<Map<String, dynamic>>>[];
 
         if (_personalDrink != null && _personalDrink!.isNotEmpty) {
-          await _requireSignupSave(
-            ApiService.updateLifeStyle({'drink': _personalDrink}, lang: widget.currentLanguage),
+          preferenceWrites.add(_requireSignupSave(
+            ApiService.updateLifeStyle(
+              {'drink': _personalDrink},
+              lang: widget.currentLanguage,
+            ),
             isAr ? 'تعذر حفظ تفضيل المشروبات' : 'Failed saving drink preference',
-          );
+          ));
         }
+
         final attitudePayload = <String, dynamic>{
-          if (_personalAffection != null && _personalAffection!.isNotEmpty) 'affection': _personalAffection,
-          if (_personalHumor != null && _personalHumor!.isNotEmpty) 'humor': _personalHumor,
+          if (_personalAffection != null && _personalAffection!.isNotEmpty)
+            'affection': _personalAffection,
+          if (_personalHumor != null && _personalHumor!.isNotEmpty)
+            'humor': _personalHumor,
         };
         if (attitudePayload.isNotEmpty) {
-          await _requireSignupSave(
-            ApiService.updateAttitudeBehavior(attitudePayload, lang: widget.currentLanguage),
+          preferenceWrites.add(_requireSignupSave(
+            ApiService.updateAttitudeBehavior(
+              attitudePayload,
+              lang: widget.currentLanguage,
+            ),
             isAr ? 'تعذر حفظ طريقة التعبير وحس الفكاهة' : 'Failed saving attitude preferences',
-          );
+          ));
         }
+
         if (_personalSunSign != null && _personalSunSign!.isNotEmpty) {
-          await _requireSignupSave(
-            ApiService.updateAstronomicInfo({'sun_sign': _personalSunSign}, lang: widget.currentLanguage),
+          preferenceWrites.add(_requireSignupSave(
+            ApiService.updateAstronomicInfo(
+              {'sun_sign': _personalSunSign},
+              lang: widget.currentLanguage,
+            ),
             isAr ? 'تعذر حفظ البرج الشمسي' : 'Failed saving zodiac sign',
-          );
+          ));
         }
+
+        // Lifestyle, attitude and astrology are stored independently.
+        await Future.wait(preferenceWrites);
         if (!mounted) return;
         _goToNextPage();
       } catch (e) {
@@ -833,6 +861,10 @@ class _SignupScreenState extends State<SignupScreen> with WidgetsBindingObserver
 
       setState(() => _isLoading = true);
       try {
+        // Load partner options in parallel with profile persistence so the
+        // next step has its selectors ready without adding a separate wait.
+        final partnerOptionsFuture = _loadPartnerOptions();
+
         await _requireSignupSave(
           ApiService.updateResidencyInfo({
             'birth_country_id': _birthCountryId!,
@@ -866,9 +898,7 @@ class _SignupScreenState extends State<SignupScreen> with WidgetsBindingObserver
           );
         }
 
-        // Profile-dropdown endpoints require an authenticated member account.
-        // Load the mandatory partner language options only after signup/login.
-        await _loadPartnerOptions();
+        await partnerOptionsFuture;
 
         if (!mounted) return;
         _goToNextPage();

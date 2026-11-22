@@ -37,6 +37,22 @@ void main() {
     expect(profile, contains('Show the requested profile as soon as its own response is ready'));
   });
 
+  test('signup step two overlaps independent profile reads and writes', () async {
+    final signup = await File('lib/screens/signup_screen.dart').readAsString();
+    expect(signup, contains('final existingProfileRecords = await Future.wait(['));
+    expect(signup, contains('Future<void> saveEducation() async'));
+    expect(signup, contains('Future<void> saveCareer() async'));
+    expect(signup, contains('await Future.wait<void>([saveEducation(), saveCareer()])'));
+    expect(signup, contains('final preferenceWrites = <Future<Map<String, dynamic>>>[]'));
+    expect(signup, contains('await Future.wait(preferenceWrites)'));
+  });
+
+  test('signup step three loads partner dropdowns alongside profile updates', () async {
+    final signup = await File('lib/screens/signup_screen.dart').readAsString();
+    expect(signup, contains('final partnerOptionsFuture = _loadPartnerOptions()'));
+    expect(signup, contains('await partnerOptionsFuture'));
+  });
+
   test('signup has a saved resumable draft and login validates the returned token', () async {
     final signup = await File('lib/screens/signup_screen.dart').readAsString();
     final loginApi = await File('lib/services/api_service.dart').readAsString();

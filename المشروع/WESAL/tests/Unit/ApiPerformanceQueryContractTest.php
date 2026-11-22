@@ -68,7 +68,7 @@ class ApiPerformanceQueryContractTest extends TestCase
     {
         $source = $this->source('app/Http/Controllers/Api/ProfileController.php');
         $start = strpos($source, 'function public_profile(');
-        $end = strpos($source, 'function get_full_my_profile(', $start);
+        $end = strpos($source, 'function sendFirebaseNotification(', $start);
         self::assertNotFalse($start);
         self::assertNotFalse($end);
         $method = substr($source, $start, $end - $start);
