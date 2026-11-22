@@ -29,6 +29,18 @@ void main() {
     expect(matching, contains('perPage: _matchPageSize'));
   });
 
+  test('chat room list is paginated and loads the next page near the end', () async {
+    final api = await File('lib/services/api_service.dart').readAsString();
+    final screen = await File('lib/screens/home/chats_tab.dart').readAsString();
+    expect(api, contains('class ChatThreadsPage'));
+    expect(api, contains('int page = 1'));
+    expect(api, contains('int perPage = 30'));
+    expect(api, contains("'per_page': '$safePerPage'"));
+    expect(screen, contains('_loadMoreChats()'));
+    expect(screen, contains('controller: _chatScrollController'));
+    expect(screen, contains('page: nextPage'));
+  });
+
   test('public profile is rendered before the secondary account permission request finishes', () async {
     final profile = await File('lib/screens/member_profile_screen.dart').readAsString();
     expect(profile, contains('final currentUserFuture ='));

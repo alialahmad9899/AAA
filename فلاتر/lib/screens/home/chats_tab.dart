@@ -53,6 +53,11 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
   String? _chatsErrorMessage;
   int _chatFetchCounter = 0;
   bool _isFetchingChats = false;
+  bool _isLoadingMoreChats = false;
+  bool _hasMoreChats = false;
+  int _chatPage = 1;
+  static const int _chatPageSize = 30;
+  final ScrollController _chatScrollController = ScrollController();
   Timer? _chatRefreshTimer;
 
   bool _isSubscribedOrFemale = true;
@@ -96,6 +101,7 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _chatScrollController.addListener(_handleChatScroll);
     if (widget.isActive) _startChatRefreshTimer();
     _checkSubscriptionAndFetch();
   }
@@ -103,6 +109,9 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
   @override
   void dispose() {
     _chatRefreshTimer?.cancel();
+    _chatScrollController
+      ..removeListener(_handleChatScroll)
+      ..dispose();
     WidgetsBinding.instance.removeObserver(this);
     _searchController.dispose();
     super.dispose();
@@ -284,6 +293,65 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
     });
   }
 
+  void _handleChatScroll() {
+    if (!_chatScrollController.hasClients ||
+        !_hasMoreChats ||
+        _isLoadingMoreChats ||
+        _isFetchingChats) {
+      return;
+    }
+    if (_chatScrollController.position.extentAfter < 360) {
+      _loadMoreChats();
+    }
+  }
+
+  Future<void> _loadMoreChats() async {
+    if (!mounted ||
+        !_hasMoreChats ||
+        _isLoadingMoreChats ||
+        _isFetchingChats) {
+      return;
+    }
+
+    _isFetchingChats = true;
+    setState(() => _isLoadingMoreChats = true);
+    try {
+      final nextPage = _chatPage + 1;
+      final page = await ApiService.getChatThreads(
+        lang: widget.currentLanguage,
+        page: nextPage,
+        perPage: _chatPageSize,
+      );
+      if (!mounted) return;
+
+      final byId = <int, ChatThreadModel>{
+        for (final thread in _chatThreads) thread.id: thread,
+      };
+      for (final thread in page.threads) {
+        byId[thread.id] = thread;
+      }
+      final merged = byId.values.toList()
+        ..sort((a, b) {
+          final timeOrder = _parseChatTimeToDateTime(b.time)
+              .compareTo(_parseChatTimeToDateTime(a.time));
+          return timeOrder != 0 ? timeOrder : b.id.compareTo(a.id);
+        });
+
+      setState(() {
+        _chatThreads = merged;
+        _chatPage = page.currentPage;
+        _hasMoreChats = page.hasMore;
+      });
+    } catch (error) {
+      if (mounted && _chatThreads.isEmpty) {
+        setState(() => _chatsErrorMessage = widget.txt('retry'));
+      }
+    } finally {
+      _isFetchingChats = false;
+      if (mounted) setState(() => _isLoadingMoreChats = false);
+    }
+  }
+
   Future<void> _fetchChats({bool silent = false}) async {
     if (!mounted || _isFetchingChats) return;
     _isFetchingChats = true;
@@ -296,7 +364,12 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
       });
     }
     try {
-      final threads = await ApiService.getChatThreads();
+      final page = await ApiService.getChatThreads(
+        lang: widget.currentLanguage,
+        page: 1,
+        perPage: _chatPageSize,
+      );
+      final threads = page.threads.toList();
       Map<int, bool> mutedSettings = {};
       try {
         final prefs = await SharedPreferences.getInstance();
@@ -311,11 +384,28 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
         return timeOrder != 0 ? timeOrder : b.id.compareTo(a.id);
       });
       if (mounted && currentFetch == _chatFetchCounter) {
+        final Map<int, ChatThreadModel> byId = {
+          if (silent)
+            for (final thread in _chatThreads) thread.id: thread,
+        };
+        for (final thread in threads) {
+          byId[thread.id] = thread;
+        }
+        final visibleThreads = byId.values.toList()
+          ..sort((a, b) {
+            final timeOrder = _parseChatTimeToDateTime(b.time)
+                .compareTo(_parseChatTimeToDateTime(a.time));
+            return timeOrder != 0 ? timeOrder : b.id.compareTo(a.id);
+          });
         setState(() {
-          _chatThreads = threads;
+          _chatThreads = visibleThreads;
           _mutedThreads = mutedSettings;
           _isChatsLoading = false;
-          if (!silent) _chatsErrorMessage = null;
+          if (!silent) {
+            _chatPage = page.currentPage;
+            _chatsErrorMessage = null;
+          }
+          _hasMoreChats = page.hasMore;
         });
       }
     } catch (e) {
@@ -1030,12 +1120,26 @@ class _ChatsTabState extends State<ChatsTab> with WidgetsBindingObserver {
                                 ],
                               )
                             : ListView.builder(
+                                controller: _chatScrollController,
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 16,
                                   vertical: 8,
                                 ),
-                                itemCount: filteredList.length,
+                                itemCount: filteredList.length +
+                                    (_isLoadingMoreChats ? 1 : 0),
                                 itemBuilder: (context, index) {
+                                  if (index >= filteredList.length) {
+                                    return const Padding(
+                                      padding: EdgeInsets.symmetric(vertical: 18),
+                                      child: Center(
+                                        child: SizedBox(
+                                          width: 22,
+                                          height: 22,
+                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                        ),
+                                      ),
+                                    );
+                                  }
                                   final chat = filteredList[index];
                                   final String displayTime =
                                       _formatChatTimeDynamic(chat.time);

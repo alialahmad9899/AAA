@@ -380,6 +380,20 @@ class PublicProfileNotFoundException implements Exception {
   String toString() => 'Member profile not found';
 }
 
+class ChatThreadsPage {
+  final List<ChatThreadModel> threads;
+  final int currentPage;
+  final int perPage;
+  final bool hasMore;
+
+  const ChatThreadsPage({
+    required this.threads,
+    required this.currentPage,
+    required this.perPage,
+    required this.hasMore,
+  });
+}
+
 class ApiService {
   // Reuse keep-alive connections across API requests instead of creating a client per call.
   static final http.Client _httpClient = http.Client();
@@ -3554,23 +3568,42 @@ class ApiService {
     }
   }
 
-  static Future<List<ChatThreadModel>> getChatThreads({String? lang}) async {
+  static Future<ChatThreadsPage> getChatThreads({
+    String? lang,
+    int page = 1,
+    int perPage = 30,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     final accountId = prefs.getInt('user_id') ?? 0;
+    final safePage = page < 1 ? 1 : page;
+    final safePerPage = perPage < 1 ? 30 : (perPage > 50 ? 50 : perPage);
+
+    ChatThreadsPage cachedPage(List<ChatThreadModel> cached) => ChatThreadsPage(
+          threads: cached,
+          currentPage: safePage,
+          perPage: safePerPage,
+          hasMore: false,
+        );
 
     try {
       final connectivity = await Connectivity().checkConnectivity();
       if (connectivity.contains(ConnectivityResult.none)) {
         final cached = await ChatLocalStore.getThreads(accountId);
-        if (cached.isNotEmpty) return cached;
+        if (cached.isNotEmpty) return cachedPage(cached);
       }
     } catch (_) {}
 
     try {
       final headers = await _getHeaders(lang: lang);
       final int ts = DateTime.now().millisecondsSinceEpoch;
-      final Uri url = Uri.parse('$baseUrl/member/chat-list?_t=$ts');
-      if (kDebugMode) debugPrint('🌐 [API GET] ChatThreads -> $url');
+      final Uri url = Uri.parse('$baseUrl/member/chat-list').replace(
+        queryParameters: {
+          '_t': '$ts',
+          'page': '$safePage',
+          'per_page': '$safePerPage',
+        },
+      );
+      if (kDebugMode) debugPrint('🌐 [API GET] ChatThreads page $safePage -> $url');
 
       final response = await _httpClient.get(url, headers: headers)
           .timeout(const Duration(seconds: 8));
@@ -3601,21 +3634,49 @@ class ApiService {
       if (!containsThreadList) {
         throw const FormatException('هيكل استجابة المحادثات غير متوقع');
       }
+
       final threads = await compute(_parseChatThreadsIsolate, response.body);
+      final metadata = decoded is Map && decoded['pagination'] is Map
+          ? Map<String, dynamic>.from(decoded['pagination'] as Map)
+          : <String, dynamic>{};
+      final rawHasMore = metadata['has_more'];
+      final hasMore = rawHasMore == true ||
+          rawHasMore == 1 ||
+          rawHasMore?.toString().toLowerCase() == 'true' ||
+          rawHasMore?.toString() == '1' ||
+          (metadata.isEmpty && threads.length >= safePerPage);
+
       if (accountId > 0) {
         try {
-          await ChatLocalStore.saveThreads(accountId, threads);
+          if (safePage == 1) {
+            await ChatLocalStore.saveThreads(accountId, threads);
+          } else {
+            final existing = await ChatLocalStore.getThreads(accountId);
+            final byId = <int, ChatThreadModel>{
+              for (final thread in existing) thread.id: thread,
+            };
+            for (final thread in threads) {
+              byId[thread.id] = thread;
+            }
+            await ChatLocalStore.saveThreads(accountId, byId.values.toList());
+          }
         } catch (cacheError) {
           if (kDebugMode) {
             debugPrint('⚠️ [Chat Cache] Could not save threads: $cacheError');
           }
         }
       }
-      return threads;
+
+      return ChatThreadsPage(
+        threads: threads,
+        currentPage: safePage,
+        perPage: safePerPage,
+        hasMore: hasMore,
+      );
     } catch (error) {
       if (kDebugMode) debugPrint('❌ [API ERROR getChatThreads]: $error');
       final cached = await ChatLocalStore.getThreads(accountId);
-      if (cached.isNotEmpty) return cached;
+      if (cached.isNotEmpty) return cachedPage(cached);
       rethrow;
     }
   }

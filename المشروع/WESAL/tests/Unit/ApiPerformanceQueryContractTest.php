@@ -81,6 +81,21 @@ class ApiPerformanceQueryContractTest extends TestCase
         self::assertStringNotContainsString("Address::where('user_id', $user->id)", $method);
     }
 
+    public function test_chat_list_uses_bounded_pages_for_mobile_requests(): void
+    {
+        $source = $this->source('app/Http/Controllers/Api/ChatController.php');
+        $start = strpos($source, 'function chat_list(');
+        $end = strpos($source, 'function chat_view(', $start);
+        self::assertNotFalse($start);
+        self::assertNotFalse($end);
+        $method = substr($source, $start, $end - $start);
+
+        self::assertStringContainsString('$request->has(\'per_page\')', $method);
+        self::assertStringContainsString('->offset(($page - 1) * $perPage)', $method);
+        self::assertStringContainsString('->limit($perPage + 1)', $method);
+        self::assertStringContainsString("'has_more' => ", $method);
+    }
+
     public function test_login_response_eager_loads_member_and_physical_data_once(): void
     {
         $source = $this->source('app/Http/Controllers/Api/AuthController.php');

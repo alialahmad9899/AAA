@@ -73,7 +73,7 @@ class ChatController extends Controller
     // ==========================================
     // جلب قائمة المحادثات مرتبة حسـب أحدث نشاط
     // ==========================================
-    public function chat_list()
+    public function chat_list(Request $request)
     {
         $auth_id = auth()->user()->id;
 
@@ -102,12 +102,34 @@ class ChatController extends Controller
                     ->orWhere('receiver_user_id', $auth_id);
             })
             ->orderByDesc('updated_at')
-            ->orderByDesc('id')
-            ->get();
+            ->orderByDesc('id');
 
-        return ChatThreadResource::collection($chat_threads)->additional([
-            'result' => true,
-        ]);
+        $pagination = null;
+        if ($request->has('per_page')) {
+            $perPage = max(1, min(50, (int) $request->input('per_page', 30)));
+            $page = max(1, (int) $request->input('page', 1));
+            $pageRows = $chat_threads
+                ->offset(($page - 1) * $perPage)
+                ->limit($perPage + 1)
+                ->get();
+            $hasMore = $pageRows->count() > $perPage;
+            $chat_threads = $pageRows->take($perPage)->values();
+            $pagination = [
+                'current_page' => $page,
+                'per_page' => $perPage,
+                'has_more' => $hasMore,
+            ];
+        } else {
+            // Preserve the old contract for app versions that omit per_page.
+            $chat_threads = $chat_threads->get();
+        }
+
+        $additional = ['result' => true];
+        if ($pagination !== null) {
+            $additional['pagination'] = $pagination;
+        }
+
+        return ChatThreadResource::collection($chat_threads)->additional($additional);
     }
 
     // ==========================================
