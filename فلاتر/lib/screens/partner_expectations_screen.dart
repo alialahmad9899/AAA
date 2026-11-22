@@ -50,6 +50,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
   bool _isLoading = true;
   bool _isSaving = false;
   bool _isLoadingStates = false;
+  String? _loadErrorMessage;
   int _statesRequestGeneration = 0;
 
   // متحكمات النصوص
@@ -162,6 +163,12 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
   /// 2️⃣ جلب البيانات والقوائم المنسدلة من السيرفر بشكل محسن
   Future<void> _loadDataOptimized() async {
     final lang = widget.currentLanguage;
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _loadErrorMessage = null;
+      });
+    }
     try {
       await Future.delayed(const Duration(milliseconds: 150));
 
@@ -361,8 +368,23 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
           }
         }
       }
-    } catch (e) {
-      debugPrint('❌ خطأ في تحميل بيانات توقعات الشريك: $e');
+    } on ApiUnauthorizedException {
+      if (mounted) {
+        setState(() {
+          _loadErrorMessage = widget.currentLanguage == 'ar'
+              ? 'تعذر التحقق من جلسة الدخول. ارجع وسجّل الدخول مجدداً قبل تعديل توقعات الشريك.'
+              : 'Your login session could not be verified. Sign in again before editing partner expectations.';
+        });
+      }
+    } catch (error) {
+      debugPrint('[PartnerExpectations] Load failed: ${error.runtimeType}');
+      if (mounted) {
+        setState(() {
+          _loadErrorMessage = widget.currentLanguage == 'ar'
+              ? 'تعذر تحميل توقعات الشريك من الخادم. لم نغيّر أي بيانات محفوظة. أعد المحاولة.'
+              : 'Partner expectations could not be loaded. No saved data was changed. Please retry.';
+        });
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -424,7 +446,7 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
   /// 4️⃣ إرسال وحفظ بيانات توقعات الشريك للسيرفر
   Future<void> _saveExpectations() async {
     FocusScope.of(context).unfocus();
-    if (_isSaving) return;
+    if (_isSaving || _loadErrorMessage != null || _isLoading) return;
     setState(() => _isSaving = true);
 
     try {
@@ -1036,7 +1058,39 @@ class _PartnerExpectationsScreenState extends State<PartnerExpectationsScreen> {
                               ? const Center(
                                   child: CircularProgressIndicator(
                                       color: AppColors.primaryTeal))
-                              : SingleChildScrollView(
+                              : _loadErrorMessage != null
+                                  ? Center(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(28),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(
+                                              Icons.lock_clock_outlined,
+                                              color: AppColors.primaryTeal,
+                                              size: 48,
+                                            ),
+                                            const SizedBox(height: 14),
+                                            Text(
+                                              _loadErrorMessage!,
+                                              textAlign: TextAlign.center,
+                                              style: const TextStyle(
+                                                color: AppColors.textDark,
+                                                fontFamily: 'Cairo',
+                                                height: 1.7,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 16),
+                                            ElevatedButton.icon(
+                                              onPressed: _loadDataOptimized,
+                                              icon: const Icon(Icons.refresh_rounded),
+                                              label: Text(isAr ? 'إعادة المحاولة' : 'Retry'),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  : SingleChildScrollView(
                                   physics: const BouncingScrollPhysics(),
                                   padding: const EdgeInsets.all(18),
                                   child: ClipRRect(
