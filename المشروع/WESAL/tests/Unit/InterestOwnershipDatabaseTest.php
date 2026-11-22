@@ -11,6 +11,10 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
+require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/../CreatesApplication.php';
+require_once __DIR__ . '/../TestCase.php';
+
 class InterestOwnershipDatabaseTest extends TestCase
 {
     protected function setUp(): void
