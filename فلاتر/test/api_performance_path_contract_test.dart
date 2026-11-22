@@ -21,6 +21,16 @@ void main() {
     expect(screen, contains('afterMessageId: previousLatestMessageId'));
   });
 
+  test('smart matching separates missing preferences from incomplete candidate data', () async {
+    final matching = await File('lib/screens/home/tabs/auto_matching_tab.dart').readAsString();
+    expect(matching, contains("member.matchStatus == 'no_preferences'"));
+    expect(matching, contains("member.matchStatus == 'insufficient_data'"));
+    expect(matching, contains('بيانات الملف غير كافية'));
+    expect(matching, contains('Insufficient profile data'));
+    expect(matching, contains('matchEvaluatedCriteriaCount < member.matchCriteriaCount'));
+    expect(matching, contains('البيانات التي تم تقييمها'));
+  });
+
   test('member search and matching use paginated loading', () async {
     final search = await File('lib/screens/home/search_results_screen.dart').readAsString();
     final matching = await File('lib/screens/home/tabs/auto_matching_tab.dart').readAsString();
