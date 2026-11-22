@@ -7,13 +7,13 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+import 'wesal_secure_storage.dart';
 
 class ProfileCacheService {
   static const String _profileKey = 'cached_user_profile_data';
   static const String _identitySummaryKey = 'cached_user_identity_summary';
   static const String _fcmTokenKey = 'cached_fcm_token';
-  static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
 
   /// حفظ بيانات البروفايل الكاملة محلياً بتنسيق JSON
   static Future<void> saveProfileToCache(
@@ -21,7 +21,7 @@ class ProfileCacheService {
     try {
       if (jsonResponse.isEmpty) return;
       final String rawJson = jsonEncode(jsonResponse);
-      await _secureStorage.write(key: _profileKey, value: rawJson);
+      await WesalSecureStorage.write(key: _profileKey, value: rawJson);
       // إزالة النسخة القديمة غير المشفرة بعد نجاح الكتابة الآمنة.
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_profileKey);
@@ -35,13 +35,13 @@ class ProfileCacheService {
   /// استرجاع بيانات البروفايل المحفوظة محلياً بسرعة البرق (خلال ملي ثوانٍ)
   static Future<Map<String, dynamic>?> getCachedProfile() async {
     try {
-      String? rawJson = await _secureStorage.read(key: _profileKey);
+      String? rawJson = await WesalSecureStorage.read(key: _profileKey);
       if (rawJson == null || rawJson.trim().isEmpty) {
         // ترحيل تلقائي للبيانات القديمة من SharedPreferences إلى التخزين الآمن.
         final prefs = await SharedPreferences.getInstance();
         rawJson = prefs.getString(_profileKey);
         if (rawJson != null && rawJson.trim().isNotEmpty) {
-          await _secureStorage.write(key: _profileKey, value: rawJson);
+          await WesalSecureStorage.write(key: _profileKey, value: rawJson);
           await prefs.remove(_profileKey);
         }
       }
@@ -66,7 +66,7 @@ class ProfileCacheService {
     try {
       final int userId = int.tryParse((summary['user_id'] ?? '').toString()) ?? 0;
       if (userId <= 0) return;
-      await _secureStorage.write(
+      await WesalSecureStorage.write(
         key: _identitySummaryKey,
         value: jsonEncode(<String, dynamic>{...summary, 'user_id': userId}),
       );
@@ -80,7 +80,7 @@ class ProfileCacheService {
     try {
       final prefs = await SharedPreferences.getInstance();
       if ((prefs.getInt('user_id') ?? 0) != userId) return null;
-      final rawJson = await _secureStorage.read(key: _identitySummaryKey);
+      final rawJson = await WesalSecureStorage.read(key: _identitySummaryKey);
       if (rawJson == null || rawJson.trim().isEmpty) return null;
       final decoded = jsonDecode(rawJson);
       if (decoded is! Map) return null;
@@ -95,8 +95,8 @@ class ProfileCacheService {
 
   static Future<void> clearProfileCache() async {
     try {
-      await _secureStorage.delete(key: _profileKey);
-      await _secureStorage.delete(key: _identitySummaryKey);
+      await WesalSecureStorage.delete(key: _profileKey);
+      await WesalSecureStorage.delete(key: _identitySummaryKey);
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_profileKey);
     } catch (e) {
