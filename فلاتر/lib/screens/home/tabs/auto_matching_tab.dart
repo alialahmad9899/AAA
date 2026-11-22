@@ -731,12 +731,15 @@ class _AutoMatchingTabState extends State<AutoMatchingTab>
             : member.matchStatus == 'insufficient_data'
                 ? (_isAr ? 'بيانات الملف غير كافية' : 'Insufficient profile data')
                 : (_isAr ? 'لم يكتمل الحساب' : 'Calculation pending'));
-    final bool hasPartialMatchData = member.matchCriteriaCount > 0 &&
-        member.matchEvaluatedCriteriaCount < member.matchCriteriaCount;
-    final String? matchCoverageLabel = hasPartialMatchData
+    // Show the coverage count for partial profiles and for very small
+    // preference sets, so a 100% result based on one criterion is transparent.
+    final bool shouldShowMatchCoverage = member.matchCriteriaCount > 0 &&
+        (member.matchEvaluatedCriteriaCount < member.matchCriteriaCount ||
+            member.matchCriteriaCount < 3);
+    final String? matchCoverageLabel = shouldShowMatchCoverage
         ? (_isAr
-            ? 'البيانات التي تم تقييمها: ${member.matchEvaluatedCriteriaCount} من ${member.matchCriteriaCount}'
-            : 'Profile data evaluated: ${member.matchEvaluatedCriteriaCount}/${member.matchCriteriaCount}')
+            ? 'المعايير التي تم تقييمها: ${member.matchEvaluatedCriteriaCount} من ${member.matchCriteriaCount}'
+            : 'Criteria evaluated: ${member.matchEvaluatedCriteriaCount}/${member.matchCriteriaCount}')
         : null;
 
     return GestureDetector(
