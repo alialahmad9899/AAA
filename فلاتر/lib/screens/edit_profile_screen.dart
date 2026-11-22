@@ -38,6 +38,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
 
   bool _isLoading = true;
   bool _isSaving = false;
+  String? _profileLoadError;
 
   bool get _isArabic => widget.currentLanguage.trim().toLowerCase().startsWith('ar');
   bool get _requiresChildrenCount => const {'2', '3', '4'}.contains(_selectedMaritalStatusId);
@@ -1175,11 +1176,19 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     final lang = widget.currentLanguage;
     Map<String, dynamic>? cachedData;
 
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _profileLoadError = null;
+      });
+    }
+
     try {
       cachedData = await ProfileCacheService.getCachedProfile();
       if (cachedData != null && _hasProfileData(cachedData) && mounted) {
+        // Cache may be displayed only after the fresh authenticated response
+        // succeeds; it is not permission to overwrite the account with blanks.
         await _applyProfileDataToState(cachedData, dropdowns: null);
-        if (mounted) setState(() => _isLoading = false);
       }
 
       final results = await Future.wait<dynamic>(
@@ -1195,26 +1204,48 @@ class _EditProfileScreenState extends State<EditProfileScreen>
           ? Map<String, dynamic>.from(results[1] as Map)
           : null;
 
-      if (rawFullProfile is Map) {
-        final parsed = await compute(
-          parseProfileData,
-          Map<String, dynamic>.from(rawFullProfile),
-        );
-        final merged = _mergeProfileResponses(cachedData, parsed);
-
-        // لا نحفظ استجابة فارغة/ناقصة عندما فشل أحد طلبات جلب الأقسام.
-        if (_hasProfileData(merged)) {
-          await ProfileCacheService.saveProfileToCache(merged);
-          if (mounted) {
-            await _applyProfileDataToState(merged, dropdowns: dropdowns);
-            if (mounted) setState(() => _isLoading = false);
-          }
-        }
+      if (rawFullProfile is! Map) {
+        throw StateError('تعذر استلام بيانات الملف الشخصي من الخادم.');
       }
-    } catch (e) {
-      debugPrint('خطأ في تحديث البيانات: $e');
+
+      final parsed = await compute(
+        parseProfileData,
+        Map<String, dynamic>.from(rawFullProfile),
+      );
+      final merged = _mergeProfileResponses(cachedData, parsed);
+
+      // A partial/empty response must never be treated as a blank profile.
+      if (!_hasProfileData(merged)) {
+        throw StateError('لم تصل بيانات الملف الشخصي كاملة من الخادم.');
+      }
+
+      await ProfileCacheService.saveProfileToCache(merged);
+      if (mounted) {
+        await _applyProfileDataToState(merged, dropdowns: dropdowns);
+        setState(() {
+          _profileLoadError = null;
+          _isLoading = false;
+        });
+      }
+    } on ApiUnauthorizedException {
+      if (mounted) {
+        setState(() {
+          _profileLoadError = _isArabic
+              ? 'تعذر التحقق من جلسة الدخول. ارجع وسجّل الدخول مجدداً قبل تعديل بياناتك.'
+              : 'Your login session could not be verified. Sign in again before editing your profile.';
+        });
+      }
+    } catch (error) {
+      debugPrint('[EditProfile] Profile load failed: ${error.runtimeType}');
+      if (mounted) {
+        setState(() {
+          _profileLoadError = _isArabic
+              ? 'تعذر تحميل بيانات الملف الشخصي. لم نغيّر أو نمسح أي بيانات محفوظة. تحقق من الاتصال ثم أعد المحاولة.'
+              : 'The profile could not be loaded. No saved data was changed. Check the connection and retry.';
+        });
+      }
     } finally {
-      if (mounted && _isLoading) {
+      if (mounted) {
         setState(() => _isLoading = false);
       }
     }
@@ -1724,6 +1755,10 @@ class _EditProfileScreenState extends State<EditProfileScreen>
 
   Future<void> _saveCurrentSection() async {
     if (_isSaving || !mounted) return;
+    if (_isLoading || _profileLoadError != null) {
+      _showNotification('', false);
+      return;
+    }
     setState(() => _isSaving = true);
 
     bool allSuccess = true;
@@ -1991,6 +2026,62 @@ class _EditProfileScreenState extends State<EditProfileScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (_profileLoadError != null) {
+      return Directionality(
+        textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
+        child: Scaffold(
+          backgroundColor: AppColors.backgroundColor,
+          body: SafeArea(
+            child: Column(
+              children: [
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.arrow_back_rounded),
+                    tooltip: _isArabic ? 'رجوع' : 'Back',
+                  ),
+                ),
+                Expanded(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(28),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.lock_clock_outlined,
+                            size: 54,
+                            color: AppColors.primaryTeal,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _profileLoadError!,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: AppColors.textDark,
+                              fontFamily: 'Cairo',
+                              height: 1.7,
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          ElevatedButton.icon(
+                            onPressed: _isLoading ? null : _loadAllProfileDataFast,
+                            icon: const Icon(Icons.refresh_rounded),
+                            label: Text(_isArabic ? 'إعادة المحاولة' : 'Retry'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     final missingProfileFields = _missingProfileFields();
     final double completionRatio = _calculateProfileCompletion();
 
@@ -2749,7 +2840,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                 height: 52,
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _isSaving ? null : _saveCurrentSection,
+                  onPressed: (_isSaving || _isLoading || _profileLoadError != null) ? null : _saveCurrentSection,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: AppColors.primaryTeal,
