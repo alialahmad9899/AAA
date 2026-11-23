@@ -268,8 +268,14 @@ void main() {
         storageService,
         contains('AndroidOptions(encryptedSharedPreferences: true)'),
       );
-      expect('WesalSecureStorage.read(key: _encryptionKeyStorageName)',
-          isNotEmpty);
+      expect(
+        chatStore,
+        contains('WesalSecureStorage.read(key: _encryptionKeyStorageName)'),
+      );
+      expect(
+        RegExp(r'FlutterSecureStorage\\(').allMatches(storageService).length,
+        1,
+      );
     });
   });
 
