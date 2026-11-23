@@ -273,7 +273,7 @@ void main() {
         contains('WesalSecureStorage.read(key: _encryptionKeyStorageName)'),
       );
       expect(
-        RegExp(r'FlutterSecureStorage\\(').allMatches(storageService).length,
+        storageService.split('FlutterSecureStorage(').length - 1,
         1,
       );
     });
