@@ -66,7 +66,13 @@ class WesalSecureStorage {
       }
 
       // Phase 2: copy and verify each value using the single target config.
+      // Never overwrite a value already written by this version of the app:
+      // a new sign-in may have completed after an earlier migration attempt
+      // was deferred, and that newer token must win over the stale legacy one.
       for (final entry in legacyValues.entries) {
+        final current = await _storage.read(key: entry.key);
+        if (current != null && current.isNotEmpty) continue;
+
         await _storage.write(key: entry.key, value: entry.value);
         final copied = await _storage.read(key: entry.key);
         if (copied != entry.value) {
