@@ -262,6 +262,8 @@ void main() {
         expect(storageService, contains("'$key'"));
       }
       expect(storageService, contains('Secure-storage migration verification failed'));
+      expect(storageService, contains('final current = await _storage.read(key: entry.key)'));
+      expect(storageService, contains('if (current != null && current.isNotEmpty) continue;'));
       expect(storageService, contains('_primaryWarmUpKey'));
       expect(
         mainEntry.indexOf('await WesalSecureStorage.initialize();'),
