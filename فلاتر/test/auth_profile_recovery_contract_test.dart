@@ -252,6 +252,9 @@ void main() {
 
     test('the package migrates prior secure values before app services start', () {
       expect(storageService, contains('await _storage.readAll();'));
+      expect(storageService, contains("final savedUserId = prefs.getInt('user_id') ?? 0;"));
+      expect(storageService, contains("final savedToken = values['user_token'];"));
+      expect(storageService, contains('The saved member token is not available'));
       expect(storageService, contains('built-in Android migration'));
       expect(storageService, isNot(contains('_legacyDefaultStorage')));
       expect(storageService, isNot(contains('FlutterSecureStorage();')));
