@@ -250,21 +250,11 @@ void main() {
       expect(storageService, contains('KeychainAccessibility.first_unlock_this_device'));
     });
 
-    test('legacy auth and cache keys migrate before any app service starts', () {
-      for (final key in [
-        'user_token',
-        'wesal_signup_draft_v1',
-        'pending_logout_session_v1',
-        'cached_user_profile_data',
-        'cached_user_identity_summary',
-        'cached_fcm_token',
-      ]) {
-        expect(storageService, contains("'$key'"));
-      }
-      expect(storageService, contains('Secure-storage migration verification failed'));
-      expect(storageService, contains('final current = await _storage.read(key: entry.key)'));
-      expect(storageService, contains('if (current != null && current.isNotEmpty) continue;'));
-      expect(storageService, contains('_primaryWarmUpKey'));
+    test('the package migrates prior secure values before app services start', () {
+      expect(storageService, contains('await _storage.readAll();'));
+      expect(storageService, contains('built-in Android migration'));
+      expect(storageService, isNot(contains('_legacyDefaultStorage')));
+      expect(storageService, isNot(contains('FlutterSecureStorage();')));
       expect(
         mainEntry.indexOf('await WesalSecureStorage.initialize();'),
         lessThan(mainEntry.indexOf('runApp(')),
@@ -272,13 +262,14 @@ void main() {
       expect(mainEntry, contains('Future<void> main() async'));
     });
 
-    test('chat encryption key stays in the existing target storage namespace', () {
+    test('chat encryption key name is unchanged under the unified storage config', () {
       expect(chatStore, contains("_encryptionKeyStorageName = 'wesal_chat_cache_aes_key_v1'"));
       expect(
         storageService,
-        contains("static const String _primaryWarmUpKey = 'wesal_chat_cache_aes_key_v1'"),
+        contains('AndroidOptions(encryptedSharedPreferences: true)'),
       );
-      expect(storageService, isNot(contains('_legacyKeys.add(_primaryWarmUpKey)')));
+      expect('WesalSecureStorage.read(key: _encryptionKeyStorageName)',
+          isNotEmpty);
     });
   });
 
