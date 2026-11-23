@@ -43,6 +43,13 @@ class WesalSecureStorage {
       // default-mode value to EncryptedSharedPreferences and removes the old
       // entry. On iOS, readAll simply reads the existing Keychain records.
       final values = await _storage.readAll();
+      final savedUserId = prefs.getInt('user_id') ?? 0;
+      final savedToken = values['user_token'];
+      if (savedUserId > 0 && (savedToken == null || savedToken.trim().isEmpty)) {
+        throw StateError(
+          'The saved member token is not available after secure-storage initialization.',
+        );
+      }
 
       await prefs.setBool(_migrationMarker, true);
       if (kDebugMode) {
